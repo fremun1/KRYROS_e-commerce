@@ -88,6 +88,21 @@ export default function ShopPage() {
   const cmsBanner = brandSlug ? brandBanners[brandSlug] : undefined;
   const hero = cmsBanner && (cmsBanner.tagline || cmsBanner.description || cmsBanner.bgColor || cmsBanner.imageUrl) ? { pre: cmsBanner.tagline || '', brand: cmsBanner.brandName ? cmsBanner.brandName + '.' : '', sub: cmsBanner.description || '', bg: cmsBanner.bgColor || '#f5f5f5', brandColor: cmsBanner.bgGradient || 'var(--kryros-primary)', ctaText: cmsBanner.ctaText, ctaLink: cmsBanner.ctaLink, imageUrl: cmsBanner.imageUrl || '' } : null;
 
+  // Brand panel promotional banner
+  const panelHero = cmsBanner && (cmsBanner.tagline || cmsBanner.description || cmsBanner.bgColor || cmsBanner.imageUrl)
+    ? {
+        pre: cmsBanner.tagline || '',
+        brand: cmsBanner.brandName || activeBrandPanel || '',
+        sub: cmsBanner.description || '',
+        bg: cmsBanner.bgColor || '#f5f5f5',
+        brandColor: cmsBanner.bgGradient || 'var(--kryros-primary)',
+        ctaText: cmsBanner.ctaText,
+        ctaLink: cmsBanner.ctaLink,
+        imageUrl: cmsBanner.imageUrl || '',
+        hasImage: !!cmsBanner.imageUrl,
+      }
+    : null;
+
   const filteredProducts = selectedCat === "All"
     ? allProducts
     : allProducts.filter((p) => p.category === selectedCat || p.categoryId === selectedCat);
@@ -202,6 +217,50 @@ export default function ShopPage() {
               </div>
             )}
           </SheetHeader>
+
+          {/* Brand Promotional Banner inside panel */}
+          {panelHero && (
+            <div
+              className="mx-3 mt-3 rounded-2xl overflow-hidden flex-shrink-0"
+              style={
+                panelHero.hasImage
+                  ? { backgroundImage: `url(${panelHero.imageUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+                  : { background: panelHero.bg }
+              }
+            >
+              <div className="flex items-center min-h-[110px] relative overflow-hidden p-4">
+                {panelHero.hasImage && (
+                  <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.2) 100%)' }} />
+                )}
+                <div className="flex-1 z-10">
+                  {panelHero.pre && (
+                    <p className="text-[10px] font-bold uppercase tracking-widest mb-1"
+                      style={{ color: panelHero.hasImage ? 'rgba(255,255,255,0.7)' : '#6b7280' }}>
+                      {panelHero.pre}
+                    </p>
+                  )}
+                  <h2 className="text-xl font-black leading-tight mb-1"
+                    style={{ color: panelHero.hasImage ? '#ffffff' : panelHero.brandColor }}>
+                    {panelHero.brand}
+                  </h2>
+                  {panelHero.sub && (
+                    <p className="text-[11px] mb-3 leading-relaxed"
+                      style={{ color: panelHero.hasImage ? 'rgba(255,255,255,0.8)' : '#6b7280' }}>
+                      {panelHero.sub}
+                    </p>
+                  )}
+                  {panelHero.ctaLink && (
+                    <Link href={panelHero.ctaLink}>
+                      <button className="flex items-center gap-1.5 bg-white text-teal-700 text-xs font-bold px-4 py-2 rounded-full hover:opacity-90 transition-opacity">
+                        {panelHero.ctaText || `Shop ${activeBrandPanel}`}
+                        <ChevronRight className="w-3.5 h-3.5" />
+                      </button>
+                    </Link>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Panel Product Grid (scrollable) */}
           <div className="flex-1 overflow-y-auto px-3 pt-3 pb-8">
