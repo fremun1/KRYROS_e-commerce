@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "wouter";
 import {
-  Heart, ShoppingCart, Star, ChevronRight, Zap, Headphones,
+  Heart, ShoppingCart, Star, ChevronRight, Zap, Headphones, X, ChevronDown,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useCartStore } from "@/store/cartStore";
@@ -10,42 +10,16 @@ import { useCurrencyStore } from "@/store/currencyStore";
 import { fetchProducts, fetchCategories, fetchBrands, fetchAllBrandBanners, API_BASE } from "@/lib/api";
 import type { Product, ApiCategory, ApiBrand, ApiBrandBanner } from "@/lib/api";
 import UnifiedProductCard from "@/components/UnifiedProductCard";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 
 /** Convert brand name to a safe anchor slug */
 function toAnchor(name: string) {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
-}
-
-function BrandProductSection({ title, brandName }: { title: string; brandName?: string }) {
-  const [products, setProducts] = useState<Product[]>([]);
-
-  useEffect(() => {
-    fetchProducts({ take: 8 }).then((all) => {
-      const filtered = all.filter((p) => {
-        if (brandName && p.brand !== brandName) return false;
-        return true;
-      });
-      setProducts(filtered);
-    });
-  }, [brandName]);
-
-  if (products.length === 0) return null;
-
-  return (
-    <div className="mb-5 mx-2 bg-card border border-border/50 rounded-2xl shadow-md overflow-hidden">
-      <div className="flex items-center justify-between px-4 pt-4 pb-3">
-        <h2 className="text-base font-black text-foreground">{title}</h2>
-        <Link href="/shop">
-          <span className="text-xs font-semibold text-teal-600 flex items-center gap-0.5 cursor-pointer">
-            View All <ChevronRight className="w-3.5 h-3.5" />
-          </span>
-        </Link>
-      </div>
-      <div className="grid grid-cols-2 gap-2 px-2 pb-3">
-        {products.map((p) => <UnifiedProductCard key={p.id} product={p} />)}
-      </div>
-    </div>
-  );
 }
 
 export default function ShopPage() {
@@ -58,6 +32,10 @@ export default function ShopPage() {
   const [categories, setCategories] = useState<ApiCategory[]>([]);
   const [brands, setBrands] = useState<ApiBrand[]>([]);
   const [allProducts, setAllProducts] = useState<Product[]>([]);
+
+  // Brand panel state
+  const [activeBrandPanel, setActiveBrandPanel] = useState<string | null>(null);
+  const [brandPanelCat, setBrandPanelCat] = useState<string>("All");
 
   // Read search query from URL (?search=...)
   const searchParam = typeof window !== "undefined"
@@ -101,26 +79,10 @@ export default function ShopPage() {
       .catch(() => {});
   }, []);
 
-  // Auto-scroll to brand anchor when URL has #brand-{slug} hash
+  // Reset panel category filter when brand changes
   useEffect(() => {
-    if (brands.length === 0) return;
-    const hash = typeof window !== "undefined" ? window.location.hash : "";
-    if (hash && hash.startsWith("#brand-")) {
-      // Wait for brand sections to render then scroll
-      setTimeout(() => {
-        const el = document.getElementById(hash.slice(1));
-        if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-      }, 600);
-    }
-  }, [brands]);
-
-  const scrollToBrand = (brandName: string) => {
-    const slug = toAnchor(brandName);
-    const el = document.getElementById(`brand-${slug}`);
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-  };
+    setBrandPanelCat("All");
+  }, [activeBrandPanel]);
 
   const brandSlug = selectedBrand ? selectedBrand.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : '';
   const cmsBanner = brandSlug ? brandBanners[brandSlug] : undefined;
@@ -142,8 +104,122 @@ export default function ShopPage() {
 
   const uniqueBrands = Array.from(new Set(allProducts.map((p) => p.brand).filter(Boolean)));
 
+  // Brand panel: products for active brand, optionally filtered by category
+  const brandPanelProducts = activeBrandPanel
+    ? allProducts.filter((p) => p.brand === activeBrandPanel)
+    : [];
+  const brandPanelFiltered = brandPanelCat === "All"
+    ? brandPanelProducts
+    : brandPanelProducts.filter((p) => p.category === brandPanelCat || p.categoryId === brandPanelCat);
+
+  // Categories that exist for the active brand (for filtering inside panel)
+  const brandCategories = activeBrandPanel
+    ? categories.filter((cat) =>
+        brandPanelProducts.some((p) => p.category === cat.name || p.categoryId === cat.id)
+      )
+    : [];
+
+  const openBrandPanel = (brandName: string) => {
+    setSelectedBrand(brandName);
+    setHeroDot(0);
+    setActiveBrandPanel(brandName);
+  };
+
+  const closeBrandPanel = () => {
+    setActiveBrandPanel(null);
+    setBrandPanelCat("All");
+  };
+
   return (
     <div className="pb-24 md:pb-10">
+
+      {/* ── Brand Panel (Bottom Sheet) ── */}
+      <Sheet open={!!activeBrandPanel} onOpenChange={(open) => { if (!open) closeBrandPanel(); }}>
+        <SheetContent
+          side="bottom"
+          className="h-[88vh] rounded-t-3xl px-0 pb-0 flex flex-col"
+        >
+          {/* Panel Header */}
+          <SheetHeader className="px-4 pt-2 pb-3 border-b border-border flex-shrink-0">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                  Shop by Brand
+                </p>
+                <SheetTitle className="text-lg font-black text-foreground leading-tight mt-0.5">
+                  {activeBrandPanel}
+                </SheetTitle>
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  {brandPanelProducts.length} product{brandPanelProducts.length !== 1 ? "s" : ""}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                {/* View All button resets to full shop */}
+                <button
+                  onClick={closeBrandPanel}
+                  className="flex items-center gap-1 text-xs font-bold text-teal-600 bg-teal-50 dark:bg-teal-950/40 px-3 py-1.5 rounded-full border border-teal-200 dark:border-teal-800"
+                >
+                  All Products
+                </button>
+                <button
+                  onClick={closeBrandPanel}
+                  className="w-8 h-8 rounded-full bg-muted flex items-center justify-center"
+                >
+                  <X className="w-4 h-4 text-foreground" />
+                </button>
+              </div>
+            </div>
+
+            {/* Category filter inside panel */}
+            {brandCategories.length > 0 && (
+              <div className="flex gap-2 overflow-x-auto no-scrollbar pt-3 pb-1">
+                <button
+                  onClick={() => setBrandPanelCat("All")}
+                  className={`flex-shrink-0 px-3.5 py-1.5 rounded-full border text-xs font-semibold transition-all ${
+                    brandPanelCat === "All"
+                      ? "bg-foreground text-background border-foreground"
+                      : "bg-card border-border text-foreground hover:border-teal-600/50"
+                  }`}
+                >
+                  All
+                </button>
+                {brandCategories.map((cat) => {
+                  const active = brandPanelCat === cat.name || brandPanelCat === cat.id;
+                  return (
+                    <button
+                      key={cat.id}
+                      onClick={() => setBrandPanelCat(cat.name)}
+                      className={`flex-shrink-0 px-3.5 py-1.5 rounded-full border text-xs font-semibold transition-all ${
+                        active
+                          ? "bg-foreground text-background border-foreground"
+                          : "bg-card border-border text-foreground hover:border-teal-600/50"
+                      }`}
+                    >
+                      {cat.name}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </SheetHeader>
+
+          {/* Panel Product Grid (scrollable) */}
+          <div className="flex-1 overflow-y-auto px-3 pt-3 pb-8">
+            {brandPanelFiltered.length > 0 ? (
+              <div className="grid grid-cols-2 gap-2">
+                {brandPanelFiltered.map((p) => (
+                  <UnifiedProductCard key={p.id} product={p} />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-16 text-muted-foreground">
+                <p className="text-sm font-semibold">No products found</p>
+                <p className="text-xs mt-1">Try a different category</p>
+              </div>
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
 
       {/* ── Search Results Section ── */}
       {searchParam && (
@@ -256,11 +332,12 @@ export default function ShopPage() {
               <p className="text-xs text-gray-600 font-medium">{hero.pre}</p>
               <h2 className="text-2xl font-black leading-tight mb-1" style={{ color: hero.brandColor }}>{hero.brand}</h2>
               <p className="text-[11px] text-gray-600 mb-3 leading-relaxed whitespace-pre-line">{hero.sub}</p>
-              <Link href="/shop">
-                <button className="flex items-center gap-1.5 bg-foreground text-background text-xs font-bold px-4 py-2 rounded-full hover:opacity-90 transition-opacity">
-                  Shop {selectedBrand} <ChevronRight className="w-3.5 h-3.5" />
-                </button>
-              </Link>
+              <button
+                onClick={() => openBrandPanel(selectedBrand)}
+                className="flex items-center gap-1.5 bg-foreground text-background text-xs font-bold px-4 py-2 rounded-full hover:opacity-90 transition-opacity"
+              >
+                Shop {selectedBrand} <ChevronRight className="w-3.5 h-3.5" />
+              </button>
             </div>
           </div>
           <div className="flex justify-center gap-1.5 pb-3">
@@ -273,7 +350,7 @@ export default function ShopPage() {
 
       <div className="mx-4 mb-4 border-t border-border" />
 
-      {/* Shop by Brand — text only, click scrolls to that brand section */}
+      {/* Shop by Brand — tap a brand to open its panel */}
       {uniqueBrands.length > 0 && (
         <div className="px-4 mb-5">
           <p className="text-sm font-bold text-foreground mb-2.5">Shop by Brand</p>
@@ -283,11 +360,7 @@ export default function ShopPage() {
               return (
                 <button
                   key={name}
-                  onClick={() => {
-                    setSelectedBrand(name);
-                    setHeroDot(0);
-                    scrollToBrand(name);
-                  }}
+                  onClick={() => openBrandPanel(name!)}
                   className={`flex-shrink-0 px-3.5 py-2 rounded-full border text-xs font-semibold transition-all ${active ? "bg-foreground text-background border-foreground" : "bg-card border-border text-foreground hover:border-teal-600/50"}`}
                 >
                   {name}
@@ -295,12 +368,15 @@ export default function ShopPage() {
               );
             })}
           </div>
+          <p className="text-[10px] text-muted-foreground mt-2 flex items-center gap-1">
+            <ChevronDown className="w-3 h-3" /> Tap a brand to browse its products
+          </p>
         </div>
       )}
 
       <div className="mx-4 mb-4 border-t border-border" />
 
-      {/* Products grid / scroll */}
+      {/* Products grid */}
       {filteredProducts.length > 0 ? (
         <div className="px-3 mb-5">
           <div className="flex items-center justify-between mb-3">
@@ -346,13 +422,6 @@ export default function ShopPage() {
         </div>
       </div>
       )}
-
-      {/* Dynamic brand sections — each has id="brand-{slug}" for auto-scroll */}
-      {brands.map((brand) => (
-        <div key={brand.id} id={`brand-${toAnchor(brand.name)}`} className="scroll-mt-20">
-          <BrandProductSection title={brand.name} brandName={brand.name} />
-        </div>
-      ))}
       </>
       )}
     </div>
