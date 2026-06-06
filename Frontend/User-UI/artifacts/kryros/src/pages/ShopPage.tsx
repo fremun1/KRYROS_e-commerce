@@ -88,18 +88,26 @@ export default function ShopPage() {
   const cmsBanner = brandSlug ? brandBanners[brandSlug] : undefined;
   const hero = cmsBanner && (cmsBanner.tagline || cmsBanner.description || cmsBanner.bgColor || cmsBanner.imageUrl) ? { pre: cmsBanner.tagline || '', brand: cmsBanner.brandName ? cmsBanner.brandName + '.' : '', sub: cmsBanner.description || '', bg: cmsBanner.bgColor || '#f5f5f5', brandColor: cmsBanner.bgGradient || 'var(--kryros-primary)', ctaText: cmsBanner.ctaText, ctaLink: cmsBanner.ctaLink, imageUrl: cmsBanner.imageUrl || '' } : null;
 
-  // Brand panel promotional banner
-  const panelHero = cmsBanner && (cmsBanner.tagline || cmsBanner.description || cmsBanner.bgColor || cmsBanner.imageUrl)
+  // Brand panel promotional banner — always defined when panel is open
+  // Use case-insensitive slug lookup as fallback
+  const panelSlug = activeBrandPanel ? activeBrandPanel.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : '';
+  const panelCmsBanner = panelSlug
+    ? (brandBanners[panelSlug]
+       || brandBanners[activeBrandPanel || '']
+       || Object.values(brandBanners).find(b => b.brandSlug?.toLowerCase() === panelSlug)
+      )
+    : undefined;
+  const panelHero = activeBrandPanel
     ? {
-        pre: cmsBanner.tagline || '',
-        brand: cmsBanner.brandName || activeBrandPanel || '',
-        sub: cmsBanner.description || '',
-        bg: cmsBanner.bgColor || '#f5f5f5',
-        brandColor: cmsBanner.bgGradient || 'var(--kryros-primary)',
-        ctaText: cmsBanner.ctaText,
-        ctaLink: cmsBanner.ctaLink,
-        imageUrl: cmsBanner.imageUrl || '',
-        hasImage: !!cmsBanner.imageUrl,
+        pre: panelCmsBanner?.tagline || '',
+        brand: panelCmsBanner?.brandName || activeBrandPanel,
+        sub: panelCmsBanner?.description || '',
+        bg: panelCmsBanner?.bgColor || panelCmsBanner?.bgGradient || '#0f172a',
+        brandColor: panelCmsBanner?.bgGradient || panelCmsBanner?.bgColor || '#0d9488',
+        ctaText: panelCmsBanner?.ctaText,
+        ctaLink: panelCmsBanner?.ctaLink,
+        imageUrl: panelCmsBanner?.imageUrl || '',
+        hasImage: !!(panelCmsBanner?.imageUrl),
       }
     : null;
 
