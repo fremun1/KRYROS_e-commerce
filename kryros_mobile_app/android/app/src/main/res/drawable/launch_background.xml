@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modified for Kryros branded splash screen -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Background color - using primary purple color -->
+    <item android:drawable="@color/splash_background" />
+    
+    <!-- Centered Kryros logo text -->
+    <item>
+        <bitmap
+            android:gravity="center"
+            android:src="@mipmap/ic_launcher" />
+    </item>
+</layer-list>

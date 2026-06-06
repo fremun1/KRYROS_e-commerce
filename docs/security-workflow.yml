@@ -1,0 +1,71 @@
+# Security CI Workflow Template
+# Copy this file to: .github/workflows/security.yml
+# (Requires creating .github/workflows/ directory in your repo)
+
+name: Security Scan
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  schedule:
+    - cron: '0 7 * * 1'  # Weekly Monday 07:00 UTC
+
+jobs:
+  snyk-backend:
+    name: Snyk — Backend Vulnerabilities
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm ci --ignore-scripts
+      - name: Snyk vulnerability scan
+        uses: snyk/actions/node@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=high
+        continue-on-error: true
+
+  snyk-admin-panel:
+    name: Snyk — Admin Panel Vulnerabilities
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Frontend/Admi-Panel
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm ci --ignore-scripts
+      - name: Snyk vulnerability scan
+        uses: snyk/actions/node@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=high
+        continue-on-error: true
+
+  secret-scan:
+    name: Gitleaks Secret Scanner
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+# Setup:
+#   1. Sign up at https://snyk.io (free tier)
+#   2. Get your API token from https://app.snyk.io/account
+#   3. Add as GitHub secret: Settings -> Secrets -> Actions -> New secret -> SNYK_TOKEN
+#   4. Copy this file to .github/workflows/security.yml

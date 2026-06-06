@@ -1,0 +1,100 @@
+2026-05-26T14:42:13.343526778Z  3 | 
+2026-05-26T14:42:13.343529178Z  4 | import { ArrowLeft } from "lucide-react";
+2026-05-26T14:42:13.343531588Z  5 | import { useEffect, useState, useRef } from "react";
+2026-05-26T14:42:13.343538058Z    :          ^^^^^^^^^
+2026-05-26T14:42:13.343540658Z  6 | import { Save, Plus, Trash2, Bell, Calendar, Sun, Moon, Menu, ChevronDown, Search } from "lucide-react";
+2026-05-26T14:42:13.343543058Z  7 | import { useTheme } from "@/providers/ThemeProvider";
+2026-05-26T14:42:13.343545489Z    `----
+2026-05-26T14:42:13.343547709Z 
+2026-05-26T14:42:13.343549969Z   x You're importing a component that needs useState. It only works in a Client Component but none of its parents are marked with "use client", so they're Server Components by default.
+2026-05-26T14:42:13.343552389Z   | Learn more: https://nextjs.org/docs/getting-started/react-essentials
+2026-05-26T14:42:13.343554789Z   | 
+2026-05-26T14:42:13.343557139Z   | 
+2026-05-26T14:42:13.343559679Z    ,-[/opt/render/project/src/Frontend/Admi-Panel/src/app/admin/cms/header/page.tsx:2:1]
+2026-05-26T14:42:13.343562049Z  2 | "use client";
+2026-05-26T14:42:13.343564439Z  3 | 
+2026-05-26T14:42:13.343566839Z  4 | import { ArrowLeft } from "lucide-react";
+2026-05-26T14:42:13.343569179Z  5 | import { useEffect, useState, useRef } from "react";
+2026-05-26T14:42:13.343571579Z    :                     ^^^^^^^^
+2026-05-26T14:42:13.343574109Z  6 | import { Save, Plus, Trash2, Bell, Calendar, Sun, Moon, Menu, ChevronDown, Search } from "lucide-react";
+2026-05-26T14:42:13.343576449Z  7 | import { useTheme } from "@/providers/ThemeProvider";
+2026-05-26T14:42:13.343578839Z    `----
+2026-05-26T14:42:13.343580979Z 
+2026-05-26T14:42:13.343583279Z   x You're importing a component that needs useRef. It only works in a Client Component but none of its parents are marked with "use client", so they're Server Components by default.
+2026-05-26T14:42:13.34358571Z   | Learn more: https://nextjs.org/docs/getting-started/react-essentials
+2026-05-26T14:42:13.343588179Z   | 
+2026-05-26T14:42:13.34359065Z   | 
+2026-05-26T14:42:13.34359317Z    ,-[/opt/render/project/src/Frontend/Admi-Panel/src/app/admin/cms/header/page.tsx:2:1]
+2026-05-26T14:42:13.34359562Z  2 | "use client";
+2026-05-26T14:42:13.34359813Z  3 | 
+2026-05-26T14:42:13.34360057Z  4 | import { ArrowLeft } from "lucide-react";
+2026-05-26T14:42:13.34360309Z  5 | import { useEffect, useState, useRef } from "react";
+2026-05-26T14:42:13.34360557Z    :                               ^^^^^^
+2026-05-26T14:42:13.34360809Z  6 | import { Save, Plus, Trash2, Bell, Calendar, Sun, Moon, Menu, ChevronDown, Search } from "lucide-react";
+2026-05-26T14:42:13.34361069Z  7 | import { useTheme } from "@/providers/ThemeProvider";
+2026-05-26T14:42:13.34362191Z    `----
+2026-05-26T14:42:13.34362455Z 
+2026-05-26T14:42:13.34362717Z Import trace for requested module:
+2026-05-26T14:42:13.343629671Z ./src/app/admin/cms/header/page.tsx
+2026-05-26T14:42:13.34363204Z 
+2026-05-26T14:42:13.343634531Z ./src/app/admin/cms/members-banner/page.tsx
+2026-05-26T14:42:13.343637011Z Error: 
+2026-05-26T14:42:13.343639531Z   x The "use client" directive must be placed before other expressions. Move it to the top of the file to resolve this issue.
+2026-05-26T14:42:13.343642071Z    ,-[/opt/render/project/src/Frontend/Admi-Panel/src/app/admin/cms/members-banner/page.tsx:1:1]
+2026-05-26T14:42:13.343644561Z  1 | import Link from "next/link";
+2026-05-26T14:42:13.343647031Z  2 | "use client";
+2026-05-26T14:42:13.343649431Z    : ^^^^^^^^^^^^^
+2026-05-26T14:42:13.343651811Z  3 | 
+2026-05-26T14:42:13.343657391Z  4 | import { ArrowLeft } from "lucide-react";
+2026-05-26T14:42:13.343660051Z  5 | import { useEffect, useState, useRef } from "react";
+2026-05-26T14:42:13.343662521Z    `----
+2026-05-26T14:42:13.343664701Z 
+2026-05-26T14:42:13.343667441Z   x You're importing a component that needs useEffect. It only works in a Client Component but none of its parents are marked with "use client", so they're Server Components by default.
+2026-05-26T14:42:13.343669971Z   | Learn more: https://nextjs.org/docs/getting-started/react-essentials
+2026-05-26T14:42:13.343672361Z   | 
+2026-05-26T14:42:13.343674761Z   | 
+2026-05-26T14:42:13.343677201Z    ,-[/opt/render/project/src/Frontend/Admi-Panel/src/app/admin/cms/members-banner/page.tsx:2:1]
+2026-05-26T14:42:13.343679612Z  2 | "use client";
+2026-05-26T14:42:13.343682042Z  3 | 
+2026-05-26T14:42:13.343684522Z  4 | import { ArrowLeft } from "lucide-react";
+2026-05-26T14:42:13.343686932Z  5 | import { useEffect, useState, useRef } from "react";
+2026-05-26T14:42:13.343689412Z    :          ^^^^^^^^^
+2026-05-26T14:42:13.343691942Z  6 | import { Save, Bell, Calendar, Sun, Moon, Menu, ChevronDown, Search } from "lucide-react";
+2026-05-26T14:42:13.343694452Z  7 | import { useTheme } from "@/providers/ThemeProvider";
+2026-05-26T14:42:13.343696822Z    `----
+2026-05-26T14:42:13.343699052Z 
+2026-05-26T14:42:13.343701562Z   x You're importing a component that needs useState. It only works in a Client Component but none of its parents are marked with "use client", so they're Server Components by default.
+2026-05-26T14:42:13.343703992Z   | Learn more: https://nextjs.org/docs/getting-started/react-essentials
+2026-05-26T14:42:13.343706422Z   | 
+2026-05-26T14:42:13.343708742Z   | 
+2026-05-26T14:42:13.343711142Z    ,-[/opt/render/project/src/Frontend/Admi-Panel/src/app/admin/cms/members-banner/page.tsx:2:1]
+2026-05-26T14:42:13.343713522Z  2 | "use client";
+2026-05-26T14:42:13.343715882Z  3 | 
+2026-05-26T14:42:13.343718322Z  4 | import { ArrowLeft } from "lucide-react";
+2026-05-26T14:42:13.343720842Z  5 | import { useEffect, useState, useRef } from "react";
+2026-05-26T14:42:13.343723233Z    :                     ^^^^^^^^
+2026-05-26T14:42:13.343725633Z  6 | import { Save, Bell, Calendar, Sun, Moon, Menu, ChevronDown, Search } from "lucide-react";
+2026-05-26T14:42:13.343728103Z  7 | import { useTheme } from "@/providers/ThemeProvider";
+2026-05-26T14:42:13.343730533Z    `----
+2026-05-26T14:42:13.343732713Z 
+2026-05-26T14:42:13.343735063Z   x You're importing a component that needs useRef. It only works in a Client Component but none of its parents are marked with "use client", so they're Server Components by default.
+2026-05-26T14:42:13.343737633Z   | Learn more: https://nextjs.org/docs/getting-started/react-essentials
+2026-05-26T14:42:13.343740073Z   | 
+2026-05-26T14:42:13.343742573Z   | 
+2026-05-26T14:42:13.343744923Z    ,-[/opt/render/project/src/Frontend/Admi-Panel/src/app/admin/cms/members-banner/page.tsx:2:1]
+2026-05-26T14:42:13.343748463Z  2 | "use client";
+2026-05-26T14:42:13.343750843Z  3 | 
+2026-05-26T14:42:13.343753313Z  4 | import { ArrowLeft } from "lucide-react";
+2026-05-26T14:42:13.343755953Z  5 | import { useEffect, useState, useRef } from "react";
+2026-05-26T14:42:13.343758263Z    :                               ^^^^^^
+2026-05-26T14:42:13.343760574Z  6 | import { Save, Bell, Calendar, Sun, Moon, Menu, ChevronDown, Search } from "lucide-react";
+2026-05-26T14:42:13.343766094Z  7 | import { useTheme } from "@/providers/ThemeProvider";
+2026-05-26T14:42:13.343768724Z    `----
+2026-05-26T14:42:13.343770894Z 
+2026-05-26T14:42:13.343773144Z Import trace for requested module:
+2026-05-26T14:42:13.343775424Z ./src/app/admin/cms/members-banner/page.tsx
+2026-05-26T14:42:13.343777624Z 
+2026-05-26T14:42:13.353803917Z 
+2026-05-26T14:42:13.3539336Z > Build failed because of webpack errors
+2026-05-26T14:42:13.418096062Z ==> Build failed 😞
+2026-05-26T14:42:13.418113432Z ==> Common ways to troubleshoot your deploy: https://render.com/docs/troubleshooting-deploys

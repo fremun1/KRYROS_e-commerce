@@ -1,0 +1,243 @@
+/**
+ * product-image-wrapper.css
+ * =============================================================================
+ * BEM-flavored Vanilla CSS for the KRYROS product card image wrapper.
+ * This is the CSS-only reference/equivalent of the Tailwind implementation
+ * in UnifiedProductCard.tsx.
+ *
+ * Usage (HTML structure):
+ *
+ *   <div class="product-image-wrapper">
+ *     <img class="product-image-wrapper__img" src="..." alt="..." />
+ *     <span class="product-image-wrapper__badge product-image-wrapper__badge--discount">-40%</span>
+ *     <button class="product-image-wrapper__wishlist">♥</button>
+ *   </div>
+ *
+ *   <!-- For lifestyle/scenery images: add modifier to <img> -->
+ *   <img class="product-image-wrapper__img product-image-wrapper__img--cover" ... />
+ *
+ * =============================================================================
+ */
+
+/* =============================================================================
+   BLOCK: .product-image-wrapper
+   =============================================================================
+   The dedicated container element for the product image.
+
+   Key responsibilities:
+   - Enforces strict 4:5 portrait aspect ratio — prevents CLS before image loads
+   - Locks the zoom animation boundary via overflow:hidden
+   - Establishes stacking context for absolute-positioned overlays
+   - Provides border-radius of exactly 12px on this layer
+   ============================================================================= */
+.product-image-wrapper {
+  /* ── Layout ── */
+  position: relative;          /* Stacking context for badges + wishlist button */
+  overflow: hidden;            /* Clips img zoom animation at border boundary */
+
+  /* ── Aspect ratio — strict 4:5 portrait (width:height = 0.8) ─────────────
+   * Using aspect-ratio property (modern browsers).
+   * This reserves exact vertical space before img loads → zero CLS.
+   * Responsive: width adapts to parent; height is always width × (5/4).
+   * ──────────────────────────────────────────────────────────────────────── */
+  aspect-ratio: 4 / 5;
+  width: 100%;                 /* Fill parent column/cell width */
+
+  /* ── Aesthetics ── */
+  border-radius: 12px;         /* Clean, consistent corner radius on this layer */
+  background-color: #F1F1F1;   /* Light mode fallback background (neutral grey) */
+}
+
+/* Dark mode background fallback */
+@media (prefers-color-scheme: dark) {
+  .product-image-wrapper {
+    background-color: #101826;
+  }
+}
+
+/* =============================================================================
+   ELEMENT: .product-image-wrapper__img
+   =============================================================================
+   The core <img> asset inside the wrapper.
+
+   Default fitting mode: CONTAIN (best for electronics / isolated product cuts).
+   - object-fit: contain  — no distortion; entire product is always visible
+   - padding: 12px        — safety margin so edges never touch the boundary
+   - mix-blend-multiply   — removes white halo on PNG product shots (light mode)
+   ============================================================================= */
+.product-image-wrapper__img {
+  /* ── Fill the wrapper boundary exactly ── */
+  width: 100%;
+  height: 100%;
+
+  /* ── Default: CONTAIN mode (electronics / isolated product cuts) ── */
+  object-fit: contain;
+  object-position: center;
+
+  /* 12px safety padding — edges never clip against boundary */
+  padding: 12px;
+
+  /* Remove white halos from transparent PNGs in light mode */
+  mix-blend-mode: multiply;
+
+  /* ── Hardware-accelerated hover micro-zoom ────────────────────────────────
+   * Uses transform (GPU composited layer) not width/height changes.
+   * cubic-bezier(0.25, 1, 0.5, 1) = fast acceleration, smooth deceleration.
+   * scale(1.04) = 4% zoom — subtle enough to feel premium, not jarring.
+   *
+   * Performance note: `will-change: transform` is intentionally omitted here.
+   * It creates a new compositor layer for EVERY card on load which wastes GPU
+   * memory. The transform already promotes the layer on interaction.
+   * Only add `will-change: transform` if you have 100+ cards visible at once.
+   * ──────────────────────────────────────────────────────────────────────── */
+  transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.product-image-wrapper:hover .product-image-wrapper__img {
+  transform: scale(1.04);
+}
+
+/* Dark mode: restore normal blending so dark backgrounds don't wash out */
+@media (prefers-color-scheme: dark) {
+  .product-image-wrapper__img {
+    mix-blend-mode: normal;
+  }
+}
+
+/* =============================================================================
+   ELEMENT MODIFIER: .product-image-wrapper__img--cover
+   =============================================================================
+   Switch to COVER mode for lifestyle / scenery / fashion photography.
+   Add this class to <img> in addition to the base element class.
+
+   Differences from default:
+   - object-fit: cover   — fills frame edge-to-edge, crops overflow
+   - padding: 0          — no safety pad needed (image fills frame intentionally)
+   - mix-blend: normal   — no blend trick needed (solid backgrounds)
+   ============================================================================= */
+.product-image-wrapper__img--cover {
+  object-fit: cover;
+  object-position: center;
+  padding: 0;                  /* Override default 12px safety padding */
+  mix-blend-mode: normal;      /* Override default multiply blend */
+}
+
+/* =============================================================================
+   ELEMENT: .product-image-wrapper__badge
+   =============================================================================
+   Micro-badges floated absolutely on top of the image.
+   Base class — extend with modifiers for specific badge types.
+   ============================================================================= */
+.product-image-wrapper__badge {
+  position: absolute;
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  padding: 3px 6px;
+  border-radius: 8px;
+  color: #ffffff;
+  white-space: nowrap;
+  pointer-events: none;        /* Badges don't block clicks through to the card */
+}
+
+/* ── Modifier: discount tag — top-left corner ── */
+.product-image-wrapper__badge--discount {
+  top: 12px;
+  left: 12px;
+  background-color: #B91C1C;   /* Kryros red */
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+
+/* ── Modifier: wholesale tag — top-left corner (same position as discount) ── */
+.product-image-wrapper__badge--wholesale {
+  top: 12px;
+  left: 12px;
+  background-color: #2563EB;   /* Blue-600 */
+  font-size: 9px;
+}
+
+/* ── Modifier: extra / custom badge — bottom-left corner ── */
+.product-image-wrapper__badge--extra {
+  bottom: 12px;
+  left: 12px;
+  background-color: var(--color-primary, #1FA89A); /* Uses CSS variable or fallback */
+  font-size: 9px;
+}
+
+/* =============================================================================
+   ELEMENT: .product-image-wrapper__wishlist
+   =============================================================================
+   Interactive heart button — top-right corner.
+   ============================================================================= */
+.product-image-wrapper__wishlist {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 10;
+
+  /* ── Size & shape ── */
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;          /* Fully circular */
+  border: 1px solid transparent;
+
+  /* ── Appearance ── */
+  background-color: rgba(255, 255, 255, 0.90);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+
+  /* ── Layout ── */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+
+  /* ── Interaction ── */
+  transition: background-color 0.2s ease, transform 0.15s ease;
+}
+
+.product-image-wrapper__wishlist:hover {
+  background-color: rgba(255, 255, 255, 1);
+  transform: scale(1.1);
+}
+
+.product-image-wrapper__wishlist:active {
+  transform: scale(0.95);
+}
+
+/* Dark mode wishlist button */
+@media (prefers-color-scheme: dark) {
+  .product-image-wrapper__wishlist {
+    background-color: rgba(43, 47, 57, 0.80);
+    border-color: rgba(255, 255, 255, 0.10);
+  }
+
+  .product-image-wrapper__wishlist:hover {
+    background-color: rgba(43, 47, 57, 0.95);
+  }
+}
+
+/* ── Wishlisted state (add .is-wishlisted to the button element via JS) ── */
+.product-image-wrapper__wishlist.is-wishlisted .product-image-wrapper__wishlist-icon {
+  fill: #ef4444;
+  color: #ef4444;
+}
+
+/* =============================================================================
+   ELEMENT: .product-image-wrapper__no-image
+   =============================================================================
+   Fallback placeholder shown when product.image is missing or fails to load.
+   ============================================================================= */
+.product-image-wrapper__no-image {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: var(--color-muted-foreground, #94a3b8);
+}
