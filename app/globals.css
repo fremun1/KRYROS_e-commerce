@@ -1,0 +1,88 @@
+@import "tailwindcss";
+
+:root {
+  --primary: #1FA89A;
+  --primary-hover: #27B9AF;
+  --gold: #FFC107;
+  --danger: #B91C1C;
+  --sidebar-width: 260px;
+  --bg: #F8FAFC;
+  --card: #FFFFFF;
+  --surface: #F1F5F9;
+  --border: #E2E8F0;
+  --option: #CBD5E1;
+  --text-main: #0F172A;
+  --text-secondary: #334155;
+  --text-muted: #64748B;
+  --text-light: #94A3B8;
+  --glow: rgba(31,168,154,0.08);
+  --border-soft: rgba(15,23,42,0.06);
+}
+
+.dark {
+  --bg: #050816;
+  --card: #0D1523;
+  --surface: #101826;
+  --border: #1E293B;
+  --option: #2B2F39;
+  --text-main: #FFFFFF;
+  --text-secondary: #94A3B8;
+  --text-muted: #8E9AAF;
+  --text-light: #A9B4C7;
+  --glow: rgba(31,168,154,0.15);
+  --border-soft: rgba(255,255,255,0.06);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background-color: var(--bg);
+  color: var(--text-main);
+  transition: background-color 0.3s ease, color 0.3s ease;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--surface); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+
+.card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+.surface { background: var(--surface); }
+.text-main { color: var(--text-main); }
+.text-secondary { color: var(--text-secondary); }
+.text-muted-custom { color: var(--text-muted); }
+.text-primary-brand { color: var(--primary); }
+.bg-card { background: var(--card); }
+.bg-surface { background: var(--surface); }
+.card, .surface, button, input, select, textarea {
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+.badge-completed { background: rgba(31,168,154,0.15); color: #1FA89A; }
+.badge-processing { background: rgba(59,130,246,0.15); color: #3b82f6; }
+.badge-pending { background: rgba(255,193,7,0.15); color: #FFC107; }
+.badge-cancelled { background: rgba(185,28,28,0.15); color: #B91C1C; }
+.badge-shipped { background: rgba(139,92,246,0.15); color: #8b5cf6; }
+.badge-delivered { background: rgba(31,168,154,0.15); color: #1FA89A; }
+
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes spin { to { transform: rotate(360deg); } }
+.animate-fadeInUp { animation: fadeInUp 0.3s ease forwards; }
+
+.recharts-cartesian-grid-horizontal line,
+.recharts-cartesian-grid-vertical line { stroke: var(--border) !important; }
+.recharts-text { fill: var(--text-muted) !important; }
+
+/* ── reCAPTCHA v3 badge ────────────────────────────────────────────────────────
+   Google ToS allows hiding the badge widget when the required privacy/terms
+   text is shown elsewhere on the site (it appears on the /login page).
+   Without this, the badge floats on every page after login. */
+.grecaptcha-badge {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
