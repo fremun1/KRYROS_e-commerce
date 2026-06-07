@@ -356,10 +356,10 @@ export default function ShopPage() {
 
       {/* Category cards */}
       {categories.length > 0 && (
-        <div className="flex gap-3 overflow-x-auto no-scrollbar px-4 pb-4">
+        <div className="flex gap-3 overflow-x-auto no-scrollbar scroll-smooth snap-x snap-mandatory px-4 pb-4">
           <button
             onClick={() => setSelectedCat("All")}
-            className={`flex-shrink-0 relative w-36 h-36 rounded-2xl overflow-hidden transition-all bg-gradient-to-br from-teal-600 to-teal-800 flex items-center justify-center ${selectedCat === "All" ? "ring-2 ring-teal-500 ring-offset-2" : ""}`}
+            className={`flex-shrink-0 snap-start relative w-36 h-36 rounded-2xl overflow-hidden transition-all bg-gradient-to-br from-teal-600 to-teal-800 flex items-center justify-center ${selectedCat === "All" ? "ring-2 ring-teal-500 ring-offset-2" : ""}`}
           >
             <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(10,20,30,0.92) 0%, rgba(10,20,30,0.55) 55%, rgba(10,20,30,0.15) 100%)" }} />
             <div className="absolute bottom-0 left-0 right-0 p-2.5">
@@ -377,7 +377,7 @@ export default function ShopPage() {
               <button
                 key={cat.id}
                 onClick={() => setSelectedCat(cat.name)}
-                className={`flex-shrink-0 relative w-36 h-36 rounded-2xl overflow-hidden transition-all ${active ? "ring-2 ring-teal-500 ring-offset-2" : ""}`}
+                className={`flex-shrink-0 snap-start relative w-36 h-36 rounded-2xl overflow-hidden transition-all ${active ? "ring-2 ring-teal-500 ring-offset-2" : ""}`}
               >
                 {cat.image ? (
                   <img src={cat.image} alt={cat.name} className="w-full h-full object-cover" />
