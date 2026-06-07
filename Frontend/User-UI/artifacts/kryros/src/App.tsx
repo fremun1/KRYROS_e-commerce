@@ -79,7 +79,7 @@ function WhatsAppFloatingButton() {
         </span>
       )}
       <div
-        className="w-8 h-8 rounded-full flex items-center justify-center shadow-lg transition-transform duration-200"
+        className="w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-transform duration-200"
         style={{
           background: "linear-gradient(135deg, var(--kryros-primary-hover) 0%, var(--kryros-primary) 100%)",
           transform: hovered ? "scale(1.1)" : "scale(1)",
