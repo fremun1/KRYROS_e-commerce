@@ -100,6 +100,12 @@ export const getOrder = (id: string) =>
 export const updateOrder = (id: string, data: Record<string, unknown>) =>
   api.put(`/api/orders/${id}`, data);
 
+// Correct endpoint for status updates (admin only)
+export const updateOrderStatus = (
+  id: string,
+  data: { status?: string; paymentStatus?: string; trackingNumber?: string; notes?: string }
+) => api.put(`/api/orders/${id}/status`, data);
+
 // ── Products ──────────────────────────────────────────────
 export const getProducts = (params?: Record<string, unknown>) =>
   api.get("/api/products", { params });
