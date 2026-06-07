@@ -86,12 +86,10 @@ export default function BrandsSection() {
   return (
     <section className="py-5 md:py-6 border-t border-border">
       <div className="px-4 md:px-6 max-w-7xl mx-auto">
-        <h2 className="text-base md:text-xl font-black text-foreground mb-4">Top Brands</h2>
-
         {/* Auto-scrolling horizontal carousel */}
         <div
           ref={scrollRef}
-          className="flex items-center gap-2.5 overflow-x-auto scroll-smooth pb-2"
+          className="flex items-center gap-2.5 overflow-x-auto no-scrollbar scroll-smooth pb-2"
           style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
         >
           {brands.map((brand, i) => (
