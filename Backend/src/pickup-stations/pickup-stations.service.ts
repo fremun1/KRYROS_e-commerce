@@ -20,6 +20,7 @@ export class PickupStationsService {
         email: dto.email || null,
         openingHours: dto.openingHours || null,
         description: dto.description || null,
+        image: dto.image || null,
         isActive: dto.isActive ?? true,
       },
     });
@@ -55,6 +56,7 @@ export class PickupStationsService {
     if (dto.email !== undefined) updateData.email = dto.email || null;
     if (dto.openingHours !== undefined) updateData.openingHours = dto.openingHours || null;
     if (dto.description !== undefined) updateData.description = dto.description || null;
+    if (dto.image !== undefined) updateData.image = dto.image || null;
     if (dto.isActive !== undefined) updateData.isActive = dto.isActive;
     return this.prisma.pickupStation.update({ where: { id }, data: updateData });
   }
