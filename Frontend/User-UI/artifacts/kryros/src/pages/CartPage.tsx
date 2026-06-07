@@ -1,16 +1,28 @@
 import { Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
-import { Minus, Plus, Trash2, ShoppingBag, ArrowRight, ChevronLeft } from "lucide-react";
+import { Minus, Plus, Trash2, ShoppingBag, ArrowRight, ChevronLeft, Info } from "lucide-react";
 import { toast } from "sonner";
 import { useCartStore } from "@/store/cartStore";
 import { useCurrencyStore } from "@/store/currencyStore";
+
+// Free shipping: 50 qualifying items, each individually worth >= $100 USD
+const FREE_SHIPPING_TARGET = 50;
+const QUALIFYING_PRICE_USD = 100;
 
 export default function CartPage() {
   const { items, removeFromCart, updateQty, clearCart } = useCartStore();
   const format = useCurrencyStore((s) => s.format);
   const cartCount = items.reduce((t, i) => t + i.qty, 0);
   const subtotal = items.reduce((t, i) => t + i.price * i.qty, 0);
-  const shipping = subtotal >= 100 ? 0 : 9.99;
+
+  // Qualifying items: only those whose UNIT price is >= $100 USD
+  // item.price is stored in USD (the currencyStore converts for display only)
+  const qualifyingCount = items
+    .filter((i) => i.price >= QUALIFYING_PRICE_USD)
+    .reduce((t, i) => t + i.qty, 0);
+  const shippingUnlocked = qualifyingCount >= FREE_SHIPPING_TARGET;
+  const itemsRemaining = FREE_SHIPPING_TARGET - qualifyingCount;
+  const shipping = shippingUnlocked ? 0 : 9.99;
   const total = subtotal + shipping;
 
   const TopBar = () => (
@@ -110,12 +122,32 @@ export default function CartPage() {
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Shipping</span>
-                <span className={`font-semibold ${shipping === 0 ? "text-green-600" : "text-foreground"}`}>
-                  {shipping === 0 ? "Free" : format(shipping)}
+                <span className={`font-semibold ${shippingUnlocked ? "text-green-600" : "text-foreground"}`}>
+                  {shippingUnlocked ? "Free" : format(shipping)}
                 </span>
               </div>
-              {shipping > 0 && (
-                <p className="text-xs text-primary">Add {format(100 - subtotal)} more for free shipping</p>
+
+              {/* Free shipping progress */}
+              {shippingUnlocked ? (
+                <p className="text-xs text-green-600 font-semibold">🎉 Free shipping unlocked!</p>
+              ) : (
+                <div className="bg-muted/50 rounded-xl p-3 space-y-1.5">
+                  <p className="text-xs text-foreground font-medium">
+                    You have <span className="text-primary font-bold">{qualifyingCount}</span> qualifying item{qualifyingCount !== 1 ? "s" : ""}.
+                    Add <span className="text-primary font-bold">{itemsRemaining}</span> more for free shipping.
+                  </p>
+                  {/* Progress bar */}
+                  <div className="w-full bg-border rounded-full h-1.5 overflow-hidden">
+                    <div
+                      className="h-full bg-primary rounded-full transition-all duration-500"
+                      style={{ width: `${Math.min(100, (qualifyingCount / FREE_SHIPPING_TARGET) * 100)}%` }}
+                    />
+                  </div>
+                  <p className="text-[10px] text-muted-foreground flex items-center gap-1">
+                    <Info className="w-3 h-3 flex-shrink-0" />
+                    Only items worth {format(QUALIFYING_PRICE_USD)}+ count toward free shipping.
+                  </p>
+                </div>
               )}
             </div>
             <div className="border-t border-border pt-3 mb-5">
