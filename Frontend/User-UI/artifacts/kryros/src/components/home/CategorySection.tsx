@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link } from "wouter";
 import { fetchHomepageCategories } from "@/lib/api";
 import type { ApiCategory } from "@/lib/api";
@@ -18,16 +18,68 @@ const BADGES = ["LIMITED", "NEW ARRIVAL", "HOT DEALS", "TRENDING", "EXCLUSIVE", 
 
 export default function CategorySection() {
   const [categories, setCategories] = useState<ApiCategory[]>([]);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const dirRef = useRef<1 | -1>(1);
+  const animRef = useRef<number>(0);
+  const pausedRef = useRef(false);
+  const lastTimeRef = useRef(0);
 
   useEffect(() => {
     fetchHomepageCategories().then(setCategories);
   }, []);
 
+  // Auto-scroll left ↔ right
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el || categories.length === 0) return;
+
+    const SPEED = 0.35; // px per ms
+
+    const tick = (time: number) => {
+      if (pausedRef.current) {
+        animRef.current = requestAnimationFrame(tick);
+        return;
+      }
+      if (lastTimeRef.current === 0) lastTimeRef.current = time;
+      const delta = Math.min(time - lastTimeRef.current, 50);
+      lastTimeRef.current = time;
+
+      const maxScroll = el.scrollWidth - el.clientWidth;
+      if (maxScroll > 0) {
+        if (el.scrollLeft >= maxScroll - 1) dirRef.current = -1;
+        if (el.scrollLeft <= 1) dirRef.current = 1;
+        el.scrollLeft += dirRef.current * SPEED * delta;
+      }
+      animRef.current = requestAnimationFrame(tick);
+    };
+
+    animRef.current = requestAnimationFrame(tick);
+
+    const pause = () => { pausedRef.current = true; };
+    const resume = () => { pausedRef.current = false; lastTimeRef.current = 0; };
+
+    el.addEventListener("mouseenter", pause);
+    el.addEventListener("mouseleave", resume);
+    el.addEventListener("touchstart", pause, { passive: true });
+    el.addEventListener("touchend", resume);
+
+    return () => {
+      cancelAnimationFrame(animRef.current);
+      el.removeEventListener("mouseenter", pause);
+      el.removeEventListener("mouseleave", resume);
+      el.removeEventListener("touchstart", pause);
+      el.removeEventListener("touchend", resume);
+    };
+  }, [categories]);
+
   if (categories.length === 0) return null;
 
   return (
     <section className="py-4 bg-background">
-      <div className="flex gap-3 overflow-x-auto no-scrollbar px-3 md:px-6">
+      <div
+        ref={scrollRef}
+        className="flex gap-3 overflow-x-auto no-scrollbar px-3 md:px-6"
+      >
         {categories.map((cat, idx) => {
           const grad = GRAD_PRESETS[idx % GRAD_PRESETS.length];
           const badge = BADGES[idx % BADGES.length];
