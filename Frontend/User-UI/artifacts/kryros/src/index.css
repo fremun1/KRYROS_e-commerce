@@ -9,13 +9,13 @@
   /* =================================================
      GLOBAL BRAND COLORS (HEX for reference)
   ================================================= */
-  --kryros-primary: #1FA89A;
-  --kryros-primary-hover: #27B9AF;
+  --kryros-primary: #27B9AF;
+  --kryros-primary-hover: #3BCEC4;
   --kryros-gold: #FFC107;
   --kryros-danger: #B91C1C;
 
   /* RGB versions for opacity use */
-  --kryros-primary-rgb: 31, 168, 154;
+  --kryros-primary-rgb: 39, 185, 175;
   --kryros-dark-bg-rgb: 5, 8, 22;
 }
 
@@ -72,8 +72,8 @@
   --color-sidebar-ring: hsl(var(--sidebar-ring));
 
   /* KRYROS CUSTOM THEME TOKENS */
-  --color-kryros-primary: #1FA89A;
-  --color-kryros-primary-hover: #27B9AF;
+  --color-kryros-primary: #27B9AF;
+  --color-kryros-primary-hover: #3BCEC4;
   --color-kryros-gold: #FFC107;
   --color-kryros-danger: #B91C1C;
 
@@ -96,7 +96,7 @@
   --card-border: 214 32% 91%;     /* #E2E8F0 */
   --border: 214 32% 91%;          /* #E2E8F0 */
   --input: 214 32% 91%;           /* #E2E8F0 */
-  --primary: 174 55% 39%;         /* #1FA89A */
+  --primary: 176 65% 44%;         /* #27B9AF */
   --primary-foreground: 0 0% 100%;
   --secondary: 210 40% 96%;       /* #F1F5F9 */
   --secondary-foreground: 222 47% 11%;
@@ -106,24 +106,24 @@
   --accent-foreground: 222 47% 11%;
   --destructive: 0 74% 42%;       /* #B91C1C */
   --destructive-foreground: 0 0% 100%;
-  --ring: 174 55% 39%;
+  --ring: 176 65% 44%;
   --popover: 0 0% 100%;
   --popover-foreground: 222 47% 11%;
   --popover-border: 214 32% 91%;
   --sidebar: 210 40% 98%;
   --sidebar-foreground: 222 47% 11%;
   --sidebar-border: 214 32% 91%;
-  --sidebar-primary: 174 55% 39%;
+  --sidebar-primary: 176 65% 44%;
   --sidebar-primary-foreground: 0 0% 100%;
   --sidebar-accent: 210 40% 96%;
   --sidebar-accent-foreground: 222 47% 11%;
-  --sidebar-ring: 174 55% 39%;
+  --sidebar-ring: 176 65% 44%;
   --radius: 0.75rem;
-  --chart-1: 174 55% 39%;
-  --chart-2: 174 55% 39%;
-  --chart-3: 174 55% 39%;
-  --chart-4: 174 55% 39%;
-  --chart-5: 174 55% 39%;
+  --chart-1: 176 65% 44%;
+  --chart-2: 176 65% 44%;
+  --chart-3: 176 65% 44%;
+  --chart-4: 176 65% 44%;
+  --chart-5: 176 65% 44%;
 
   --app-font-sans: 'Inter', sans-serif;
   --app-font-serif: Georgia, serif;
@@ -138,7 +138,7 @@
   --card-border: 215 32% 17%;     /* #1E293B */
   --border: 215 32% 17%;          /* #1E293B */
   --input: 215 32% 17%;
-  --primary: 174 55% 39%;         /* #1FA89A */
+  --primary: 176 65% 44%;         /* #27B9AF */
   --primary-foreground: 0 0% 100%;
   --secondary: 217 41% 11%;       /* #101826 */
   --secondary-foreground: 0 0% 100%;
@@ -148,18 +148,18 @@
   --accent-foreground: 0 0% 100%;
   --destructive: 0 74% 42%;       /* #B91C1C */
   --destructive-foreground: 0 0% 100%;
-  --ring: 174 55% 39%;
+  --ring: 176 65% 44%;
   --popover: 217 46% 9%;
   --popover-foreground: 0 0% 100%;
   --popover-border: 215 32% 17%;
   --sidebar: 217 41% 11%;
   --sidebar-foreground: 0 0% 100%;
   --sidebar-border: 215 32% 17%;
-  --sidebar-primary: 174 55% 39%;
+  --sidebar-primary: 176 65% 44%;
   --sidebar-primary-foreground: 0 0% 100%;
   --sidebar-accent: 215 32% 17%;
   --sidebar-accent-foreground: 0 0% 100%;
-  --sidebar-ring: 174 55% 39%;
+  --sidebar-ring: 176 65% 44%;
 }
 
 @layer base {
