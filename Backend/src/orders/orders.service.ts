@@ -528,12 +528,21 @@ export class OrdersService {
       return updatedOrder;
     });
 
-    // Send push notification only when order status changes (not just payment)
-    if (order.userId && status) {
+    // Send notification to ALL customers (including guests) when status changes
+    if (status) {
       this.notificationsService.sendOrderStatusNotification(order.id, status)
         .catch(e => console.warn('Status notification failed:', e?.message));
     }
 
     return order;
+  }
+
+  async bulkUpdateStatus(ids: string[], status: string) {
+    const results = await Promise.allSettled(
+      ids.map(id => this.updateStatus(id, status)),
+    );
+    const succeeded = results.filter(r => r.status === 'fulfilled').length;
+    const failed = results.filter(r => r.status === 'rejected').length;
+    return { succeeded, failed, total: ids.length };
   }
 }
