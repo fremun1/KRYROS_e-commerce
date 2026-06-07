@@ -1,5 +1,6 @@
-import { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Link, useLocation } from "wouter";
+import { toast } from "sonner";
 import { useCartStore } from "@/store/cartStore";
 import { useAuthStore } from "@/store/authStore";
 import { useCurrencyStore } from "@/store/currencyStore";
@@ -27,8 +28,8 @@ import {
   Search,
 } from "lucide-react";
 
-// ── Country dial codes ─────────────────────────────────────────────────────────
-const COUNTRIES = [
+// ── Country dial codes for phone picker (static — these are for phone prefix only) ───
+const PHONE_DIAL_COUNTRIES = [
   { name: "Zambia", code: "ZM", dial: "+260" },
   { name: "Zimbabwe", code: "ZW", dial: "+263" },
   { name: "South Africa", code: "ZA", dial: "+27" },
@@ -59,7 +60,17 @@ const COUNTRIES = [
   { name: "UAE", code: "AE", dial: "+971" },
 ];
 
-const SHIPPING_OPTIONS = [
+// ── Shipping options icon map (used when rendering API-fetched methods) ──────
+const SHIPPING_ICON_MAP: Record<string, React.ElementType> = {
+  standard: Truck,
+  express: Zap,
+  priority: Clock,
+  free: Truck,
+  pickup: MapPin,
+};
+
+// Fallback if API returns nothing
+const FALLBACK_SHIPPING_OPTIONS = [
   { id: "standard", label: "Standard Delivery", detail: "5–10 business days", price: 0, icon: Truck },
   { id: "express", label: "Express Delivery", detail: "2–3 business days", price: 15, icon: Zap },
   { id: "priority", label: "Priority Delivery", detail: "Next business day", price: 30, icon: Clock },
@@ -179,6 +190,65 @@ export default function CheckoutPage() {
 
   const [step, setStep] = useState(1);
 
+  // ── Dynamic countries from admin panel ──────────────────────────────────────
+  type ApiCountry = { id: string; name: string; code: string; isActive: boolean; shippingEnabled: boolean; };
+  const [apiCountries, setApiCountries] = useState<ApiCountry[]>([]);
+  const [countriesLoading, setCountriesLoading] = useState(true);
+
+  useEffect(() => {
+    fetch(`${API_BASE}/api/countries`)
+      .then((r) => r.json())
+      .then((data: any) => {
+        const raw: any[] = Array.isArray(data) ? data : (data?.data ?? []);
+        const mapped: ApiCountry[] = raw.map((c: any) => ({
+          id: String(c.id),
+          name: c.name,
+          code: c.code ?? "",
+          isActive: c.isActive !== false,
+          shippingEnabled: c.shippingEnabled !== false,
+        }));
+        setApiCountries(mapped);
+        // Auto-select the default country if user hasn't picked one yet
+        const defaultCountry = mapped.find((c) => c.isActive && c.shippingEnabled);
+        if (defaultCountry) setCountry(defaultCountry.name);
+      })
+      .catch(() => {
+        // Fallback: keep Zambia as the selected country
+      })
+      .finally(() => setCountriesLoading(false));
+  }, []);
+
+  // ── Dynamic shipping methods from admin panel ────────────────────────────────
+  type ShippingOption = { id: string; label: string; detail: string; price: number; icon: React.ElementType; };
+  const [shippingOptions, setShippingOptions] = useState<ShippingOption[]>(FALLBACK_SHIPPING_OPTIONS);
+
+  useEffect(() => {
+    fetch(`${API_BASE}/api/shipping-methods`)
+      .then((r) => r.json())
+      .then((data: any) => {
+        const raw: any[] = Array.isArray(data) ? data : (data?.data ?? []);
+        const active = raw.filter((m: any) => m.isActive !== false);
+        if (active.length === 0) return;
+        const mapped: ShippingOption[] = active.map((m: any) => {
+          const nameKey = (m.name ?? "").toLowerCase().replace(/\s+/g, "");
+          const icon =
+            SHIPPING_ICON_MAP[nameKey] ??
+            Object.entries(SHIPPING_ICON_MAP).find(([k]) => nameKey.includes(k))?.[1] ??
+            Truck;
+          return {
+            id: m.id ?? m.name,
+            label: m.name,
+            detail: m.estimatedDays ? `${m.estimatedDays}` : "",
+            price: Number(m.fee ?? 0),
+            icon,
+          };
+        });
+        setShippingOptions(mapped);
+        setShippingId(mapped[0].id);
+      })
+      .catch(() => {}); // Keep fallback on error
+  }, []);
+
   // ── Dynamic payment config from admin panel ─────────────────────────────
   const [bankProviders, setBankProviders] = useState<
     { name: string; config?: { accountName?: string; accountNumber?: string } }[]
@@ -256,7 +326,7 @@ export default function CheckoutPage() {
   const [lastName, setLastName] = useState(authUser?.lastName ?? "");
   const [email, setEmail] = useState(authUser?.email ?? "");
   const [phone, setPhone] = useState("");
-  const [phoneCountry, setPhoneCountry] = useState(COUNTRIES[0]);
+  const [phoneCountry, setPhoneCountry] = useState(PHONE_DIAL_COUNTRIES[0]);
   const [showCountryPicker, setShowCountryPicker] = useState(false);
   const [countrySearch, setCountrySearch] = useState("");
 
@@ -267,7 +337,7 @@ export default function CheckoutPage() {
   const [zipCode, setZipCode] = useState("");
 
   const [shippingId, setShippingId] = useState("standard");
-  const shippingPrice = SHIPPING_OPTIONS.find((s) => s.id === shippingId)?.price ?? 0;
+  const shippingPrice = shippingOptions.find((s) => s.id === shippingId)?.price ?? 0;
 
   const SUBTOTAL = cartItems.reduce((s, i) => s + i.price * i.qty, 0);
   const DISCOUNT = 0;
@@ -385,6 +455,7 @@ export default function CheckoutPage() {
           ? data.message.join(", ")
           : data.message || "Failed to place order.";
         setOrderError(msg);
+        toast.error(msg);
         setIsSubmitting(false);
         return;
       }
@@ -451,6 +522,7 @@ export default function CheckoutPage() {
           ? data.message.join(", ")
           : data.message || "Failed to place order.";
         setOrderError(msg);
+        toast.error(msg);
         setIsSubmitting(false);
         return;
       }
@@ -468,6 +540,7 @@ export default function CheckoutPage() {
         setWaMessage(msg);
         setOrdered(true);
         clearCart();
+        toast.success("Order placed! Redirecting to WhatsApp…");
         // Register phone number for SMS marketing (silent, non-blocking)
         registerPhoneForSms(phone, `${firstName} ${lastName}`);
         // Send receipt via SMS + email
@@ -478,6 +551,7 @@ export default function CheckoutPage() {
       } else {
         setOrdered(true);
         clearCart();
+        toast.success("Order placed successfully!");
         // Register phone number for SMS marketing (silent, non-blocking)
         registerPhoneForSms(phone, `${firstName} ${lastName}`);
         // Send receipt via SMS + email
@@ -728,7 +802,7 @@ export default function CheckoutPage() {
                       </div>
                     </div>
                     <div className="overflow-y-auto max-h-64 divide-y divide-border/50">
-                      {COUNTRIES.filter((c) =>
+                      {PHONE_DIAL_COUNTRIES.filter((c) =>
                         c.name.toLowerCase().includes(countrySearch.toLowerCase()) ||
                         c.dial.includes(countrySearch)
                       ).map((c) => (
@@ -749,7 +823,17 @@ export default function CheckoutPage() {
             </div>
 
             <button
-              onClick={() => setStep(2)}
+              onClick={() => {
+                if (!firstName.trim() || !lastName.trim()) {
+                  toast.error("Please enter your first and last name.");
+                  return;
+                }
+                if (!email.trim() && !phone.trim()) {
+                  toast.error("Please provide at least an email or phone number.");
+                  return;
+                }
+                setStep(2);
+              }}
               disabled={!firstName || !lastName || (!email.trim() && !phone.trim())}
               className="w-full py-3 rounded-2xl bg-[var(--kryros-primary-hover)] text-white text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
@@ -770,19 +854,28 @@ export default function CheckoutPage() {
                   Country
                 </label>
                 <div className="relative">
-                  <select
-                    value={country}
-                    onChange={(e) => setCountry(e.target.value)}
-                    className="w-full px-4 py-3.5 pr-8 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary appearance-none transition-all"
-                  >
-                    <option value="Zambia">Zambia</option>
-                    <option value="Zimbabwe" disabled>
-                      Zimbabwe (Coming soon)
-                    </option>
-                    <option value="Malawi" disabled>
-                      Malawi (Coming soon)
-                    </option>
-                  </select>
+                  {countriesLoading ? (
+                    <div className="w-full px-4 py-3.5 rounded-xl border border-border bg-background text-sm text-muted-foreground animate-pulse">
+                      Loading countries…
+                    </div>
+                  ) : (
+                    <select
+                      value={country}
+                      onChange={(e) => setCountry(e.target.value)}
+                      className="w-full px-4 py-3.5 pr-8 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary appearance-none transition-all"
+                    >
+                      <option value="">Select country…</option>
+                      {apiCountries.map((c) => (
+                        <option
+                          key={c.id}
+                          value={c.name}
+                          disabled={!c.isActive || !c.shippingEnabled}
+                        >
+                          {c.name}{(!c.isActive || !c.shippingEnabled) ? " (Coming soon)" : ""}
+                        </option>
+                      ))}
+                    </select>
+                  )}
                   <ChevronDown className="w-3 h-3 text-muted-foreground absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                 </div>
               </div>
@@ -842,7 +935,12 @@ export default function CheckoutPage() {
             </div>
 
             <button
-              onClick={() => setStep(3)}
+              onClick={() => {
+                if (!country) { toast.error("Please select a country."); return; }
+                if (!city.trim()) { toast.error("Please enter your city."); return; }
+                if (!addressLine.trim()) { toast.error("Please enter your street address."); return; }
+                setStep(3);
+              }}
               disabled={!country || !city || (!addressLine && (!state || !zipCode))}
               className="w-full py-3 rounded-2xl bg-[var(--kryros-primary-hover)] text-white text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
@@ -869,7 +967,7 @@ export default function CheckoutPage() {
               </h2>
 
               <div className="space-y-3">
-                {SHIPPING_OPTIONS.map((option) => {
+                {shippingOptions.map((option) => {
                   const Icon = option.icon;
                   const isSelected = shippingId === option.id;
                   return (
