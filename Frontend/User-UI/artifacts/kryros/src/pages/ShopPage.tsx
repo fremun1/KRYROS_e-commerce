@@ -234,18 +234,22 @@ export default function ShopPage() {
           {/* Brand Promotional Banner inside panel */}
           {panelHero && (
             <div
-              className="mx-3 mt-3 rounded-2xl overflow-hidden flex-shrink-0"
-              style={
-                panelHero.hasImage
-                  ? { backgroundImage: `url(${panelHero.imageUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' }
-                  : { background: panelHero.bg }
-              }
+              className="mx-3 mt-3 rounded-2xl overflow-hidden flex-shrink-0 relative"
+              style={!panelHero.hasImage ? { background: panelHero.bg } : undefined}
             >
-              <div className="flex items-center min-h-[110px] relative overflow-hidden p-4">
+              {/* Full image — natural aspect ratio, no cropping */}
+              {panelHero.hasImage && (
+                <img
+                  src={panelHero.imageUrl}
+                  alt={panelHero.brand}
+                  className="w-full h-auto block"
+                />
+              )}
+              <div className={`${panelHero.hasImage ? 'absolute inset-0' : 'min-h-[110px]'} flex items-end p-4 relative`}>
                 {panelHero.hasImage && (
-                  <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.2) 100%)' }} />
+                  <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.1) 60%, transparent 100%)' }} />
                 )}
-                <div className="flex-1 z-10">
+                <div className="flex-1 z-10 relative">
                   {panelHero.pre && (
                     <p className="text-[10px] font-bold uppercase tracking-widest mb-1"
                       style={{ color: panelHero.hasImage ? 'rgba(255,255,255,0.7)' : '#6b7280' }}>
