@@ -7,6 +7,7 @@ import { Modal, ConfirmDialog, FormField, ModalFooter } from '@/components/admin
 import { useTheme } from '@/contexts/theme-context';
 import { MapPin } from 'lucide-react';
 import toast from 'react-hot-toast';
+import CloudinaryUpload from '@/components/ui/file-upload';
 import {
   getShippingZones, createShippingZone, updateShippingZone, deleteShippingZone,
   getShippingMethods, createShippingMethod, updateShippingMethod, deleteShippingMethod,
@@ -21,13 +22,13 @@ type Zone = { id:string; name:string; region:string; countries:string; method:st
 type ShippingMethod = { id:string; name:string; description:string; fee:string; minThreshold:string; estimatedDays:string; sortOrder:string; status:string };
 type StateRow = { id:string; name:string; code:string; countryId:string; countryName:string; status:string; cities:number };
 type CityRow = { id:string; name:string; stateId:string; stateName:string; status:string };
-type PickupStation = { id:string; name:string; address:string; city:string; state:string; country:string; phone:string; email:string; openingHours:string; description:string; latitude:string; longitude:string; status:string };
+type PickupStation = { id:string; name:string; address:string; city:string; state:string; country:string; phone:string; email:string; openingHours:string; description:string; latitude:string; longitude:string; status:string; image:string };
 
 const EMPTY_ZONE = { name:'', region:'', countries:'', method:'Standard', rate:'0', minOrder:'0', days:'', status:'Active' };
 const EMPTY_METHOD = { name:'', description:'', fee:'0', minThreshold:'0', estimatedDays:'', sortOrder:'0', status:'Active' };
 const EMPTY_STATE = { name:'', code:'', countryId:'', countryName:'', status:'Active', cities:0 };
 const EMPTY_CITY = { name:'', stateId:'', stateName:'', status:'Active' };
-const EMPTY_PICKUP = { name:'', address:'', city:'', state:'', country:'Zambia', phone:'', email:'', openingHours:'', description:'', latitude:'', longitude:'', status:'Active' };
+const EMPTY_PICKUP = { name:'', address:'', city:'', state:'', country:'Zambia', phone:'', email:'', openingHours:'', description:'', latitude:'', longitude:'', status:'Active', image:'' };
 
 const METHODS_LIST = ['Standard','Express','International','Free','Pickup'];
 
@@ -316,6 +317,7 @@ function ShippingContent() {
         openingHours:pickupForm.openingHours||undefined, description:pickupForm.description||undefined,
         latitude:pickupForm.latitude?Number(pickupForm.latitude):undefined,
         longitude:pickupForm.longitude?Number(pickupForm.longitude):undefined,
+        image:pickupForm.image||undefined,
         isActive:pickupForm.status==='Active',
       });
       const id=(res as any)?.data?.id||String(Date.now());
@@ -336,6 +338,7 @@ function ShippingContent() {
         openingHours:pickupForm.openingHours||undefined, description:pickupForm.description||undefined,
         latitude:pickupForm.latitude?Number(pickupForm.latitude):undefined,
         longitude:pickupForm.longitude?Number(pickupForm.longitude):undefined,
+        image:pickupForm.image||undefined,
         isActive:pickupForm.status==='Active',
       });
       setPickups(d=>d.map(p=>p.id===editPickup.id?{...p,...pickupForm}:p));
@@ -565,7 +568,7 @@ function ShippingContent() {
       {/* ── PICKUP STATIONS ── */}
       {tab==='pickups' && (
         <>
-          <DataTable columns={pickupColumns} data={pickups as unknown as Record<string,unknown>[]} searchPlaceholder="Search pickup stations..." onEdit={(row)=>{const p=row as unknown as PickupStation;setPickupForm({name:p.name,address:p.address,city:p.city,state:p.state,country:p.country,phone:p.phone,email:p.email,openingHours:p.openingHours,description:p.description,latitude:p.latitude,longitude:p.longitude,status:p.status});setEditPickup(p);}} onDelete={(row)=>setDeletePickup(row as unknown as PickupStation)}/>
+          <DataTable columns={pickupColumns} data={pickups as unknown as Record<string,unknown>[]} searchPlaceholder="Search pickup stations..." onEdit={(row)=>{const p=row as unknown as PickupStation;setPickupForm({name:p.name,address:p.address,city:p.city,state:p.state,country:p.country,phone:p.phone,email:p.email,openingHours:p.openingHours,description:p.description,latitude:p.latitude,longitude:p.longitude,status:p.status,image:p.image||''});setEditPickup(p);}} onDelete={(row)=>setDeletePickup(row as unknown as PickupStation)}/>
           <Modal open={addPickupOpen} onClose={()=>setAddPickupOpen(false)} title="Add Pickup Station">
             <FormField label="Station Name *" value={pickupForm.name} onChange={pfp('name')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. Lusaka Central Pickup"/>
             <FormField label="Full Address *" value={pickupForm.address} onChange={pfp('address')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 12 Cairo Road, Lusaka"/>
@@ -578,6 +581,21 @@ function ShippingContent() {
             <FormField label="Description / Landmark" value={pickupForm.description} onChange={pfp('description')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. Near Manda Hill Mall"/>
             <FormField label="Latitude (GPS)" value={pickupForm.latitude} onChange={pfp('latitude')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. -15.4166"/>
             <FormField label="Longitude (GPS)" value={pickupForm.longitude} onChange={pfp('longitude')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 28.2833"/>
+            <div>
+              <label style={{display:'block',fontSize:'11px',fontWeight:700,color:textMuted,marginBottom:'6px',textTransform:'uppercase',letterSpacing:'0.05em'}}>Station Image</label>
+              <CloudinaryUpload
+                value={pickupForm.image}
+                onChange={(url)=>pfp('image')(url)}
+                folder="kryros/pickup-stations"
+                accept="image/*"
+                showUrlInput={true}
+                isDark={isDark}
+                border={border}
+                surface={surface}
+                textMuted={textMuted}
+                textMain={textMain}
+              />
+            </div>
             <FormField label="Status" value={pickupForm.status} onChange={pfp('status')} options={['Active','Inactive']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}/>
             <ModalFooter onClose={()=>setAddPickupOpen(false)} onSubmit={handleAddPickup} loading={loadingPickup} submitLabel="Add Station" isDark={isDark} border={border} textMain={textMain}/>
           </Modal>
