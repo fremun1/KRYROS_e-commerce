@@ -284,49 +284,78 @@ export default function ShopPage() {
 
           {/* Brand Promotional Banner inside panel */}
           {panelHero && (
-            <div
-              className="mx-3 mt-3 rounded-2xl overflow-hidden flex-shrink-0 relative"
-              style={!panelHero.hasImage ? { background: panelHero.bg } : undefined}
-            >
-              {/* Full image — natural aspect ratio, no cropping */}
-              {panelHero.hasImage && (
-                <img
-                  src={panelHero.imageUrl}
-                  alt={panelHero.brand}
-                  className="w-full h-[220px] object-cover block"
-                />
-              )}
-              <div className={`${panelHero.hasImage ? 'absolute inset-0' : 'min-h-[110px]'} flex items-end p-4 relative`}>
-                {panelHero.hasImage && (
-                  <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.1) 60%, transparent 100%)' }} />
-                )}
-                <div className="flex-1 z-10 relative">
+            <div className="mx-3 mt-3 mb-1 rounded-2xl overflow-hidden flex-shrink-0">
+              {panelHero.hasImage ? (
+                /* Image banner — fixed compact height, text overlaid cleanly */
+                <div className="relative h-[130px]">
+                  <img
+                    src={panelHero.imageUrl}
+                    alt={panelHero.brand}
+                    className="absolute inset-0 w-full h-full object-cover"
+                  />
+                  {/* Gradient overlay */}
+                  <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.18) 55%, transparent 100%)' }} />
+                  {/* Text on top */}
+                  <div className="absolute inset-0 flex flex-col justify-end p-3 z-10">
+                    {panelHero.pre && (
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-white/70 mb-0.5">
+                        {panelHero.pre}
+                      </p>
+                    )}
+                    <h2 className="text-base font-black leading-tight text-white">
+                      {panelHero.brand}
+                    </h2>
+                    {panelHero.sub && (
+                      <p className="text-[10px] text-white/80 leading-snug mt-0.5 line-clamp-1">
+                        {panelHero.sub}
+                      </p>
+                    )}
+                    {panelHero.ctaLink && (
+                      <div className="mt-2">
+                        <Link href={panelHero.ctaLink}>
+                          <button className="inline-flex items-center gap-1 bg-white text-teal-700 text-[11px] font-bold px-3 py-1.5 rounded-full hover:opacity-90 transition-opacity">
+                            {panelHero.ctaText || `Shop ${activeBrandPanel}`}
+                            <ChevronRight className="w-3 h-3" />
+                          </button>
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                /* Color-only banner (no image) */
+                <div
+                  className="flex flex-col justify-center px-4 py-3 min-h-[72px]"
+                  style={{ background: panelHero.bg }}
+                >
                   {panelHero.pre && (
-                    <p className="text-[10px] font-bold uppercase tracking-widest mb-1"
-                      style={{ color: panelHero.hasImage ? 'rgba(255,255,255,0.7)' : '#6b7280' }}>
+                    <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5"
+                      style={{ color: '#9ca3af' }}>
                       {panelHero.pre}
                     </p>
                   )}
-                  <h2 className="text-xl font-black leading-tight mb-1"
-                    style={{ color: panelHero.hasImage ? '#ffffff' : panelHero.brandColor }}>
+                  <h2 className="text-base font-black leading-tight"
+                    style={{ color: panelHero.brandColor }}>
                     {panelHero.brand}
                   </h2>
                   {panelHero.sub && (
-                    <p className="text-[11px] mb-3 leading-relaxed"
-                      style={{ color: panelHero.hasImage ? 'rgba(255,255,255,0.8)' : '#6b7280' }}>
+                    <p className="text-[11px] mt-0.5 leading-relaxed line-clamp-1"
+                      style={{ color: '#6b7280' }}>
                       {panelHero.sub}
                     </p>
                   )}
                   {panelHero.ctaLink && (
-                    <Link href={panelHero.ctaLink}>
-                      <button className="flex items-center gap-1.5 bg-white text-teal-700 text-xs font-bold px-4 py-2 rounded-full hover:opacity-90 transition-opacity">
-                        {panelHero.ctaText || `Shop ${activeBrandPanel}`}
-                        <ChevronRight className="w-3.5 h-3.5" />
-                      </button>
-                    </Link>
+                    <div className="mt-2">
+                      <Link href={panelHero.ctaLink}>
+                        <button className="inline-flex items-center gap-1 bg-foreground text-background text-[11px] font-bold px-3 py-1.5 rounded-full hover:opacity-90 transition-opacity">
+                          {panelHero.ctaText || `Shop ${activeBrandPanel}`}
+                          <ChevronRight className="w-3 h-3" />
+                        </button>
+                      </Link>
+                    </div>
                   )}
                 </div>
-              </div>
+              )}
             </div>
           )}
 
