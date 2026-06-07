@@ -242,7 +242,7 @@ export default function ShopPage() {
                 <img
                   src={panelHero.imageUrl}
                   alt={panelHero.brand}
-                  className="w-full h-auto block"
+                  className="w-full h-[220px] object-cover block"
                 />
               )}
               <div className={`${panelHero.hasImage ? 'absolute inset-0' : 'min-h-[110px]'} flex items-end p-4 relative`}>
