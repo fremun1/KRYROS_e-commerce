@@ -15,6 +15,7 @@ type Product = {
   category: string; brand: string; price: string; salePrice: string;
   stock: number; weight: string; sold: number; status: string;
   featured: boolean;
+  isFlashSale: boolean; flashSalePrice: string; flashSaleEnd: string;
   showGuaranteeBadge: boolean; showReturnsBadge: boolean;
   tags: string; metaTitle: string; metaDescription: string; imageUrl: string; specifications: string;
   images: string[];
@@ -32,6 +33,7 @@ const EMPTY_FORM = {
   name: '', slug: '', sku: '', description: '', category: 'Electronics', brand: 'Apple',
   price: '', salePrice: '', stock: '0', weight: '', status: 'Active',
   featured: 'No',
+  isFlashSale: 'No', flashSalePrice: '', flashSaleEnd: '',
   showGuaranteeBadge: 'No', showReturnsBadge: 'No',
   tags: '', metaTitle: '', metaDescription: '', imageUrl: '', specifications: '',
 };
@@ -69,6 +71,9 @@ function ProductsContent() {
         sold: p._count?.orderItems ?? 0,
         status: p.isActive !== false ? 'Active' : 'Inactive',
         featured: !!p.isFeatured,
+        isFlashSale: !!p.isFlashSale,
+        flashSalePrice: p.flashSalePrice != null ? String(Number(p.flashSalePrice)) : '',
+        flashSaleEnd: p.flashSaleEnd ? new Date(p.flashSaleEnd).toISOString().slice(0, 16) : '',
         showGuaranteeBadge: !!p.showGuaranteeBadge,
         showReturnsBadge: !!p.showReturnsBadge,
         tags: Array.isArray(p.tags) ? p.tags.join(', ') : (p.tags || ''),
@@ -112,6 +117,9 @@ function ProductsContent() {
       category: r.category, brand: r.brand || 'Apple', price: r.price, salePrice: r.salePrice || '',
       stock: String(r.stock), weight: r.weight || '', status: r.status,
       featured: boolToStr(r.featured),
+      isFlashSale: boolToStr(r.isFlashSale),
+      flashSalePrice: r.flashSalePrice || '',
+      flashSaleEnd: r.flashSaleEnd || '',
       showGuaranteeBadge: boolToStr(r.showGuaranteeBadge),
       showReturnsBadge: boolToStr(r.showReturnsBadge),
       tags: r.tags || '', metaTitle: r.metaTitle || '', metaDescription: r.metaDescription || '',
@@ -160,6 +168,9 @@ function ProductsContent() {
       stockCurrent: Number(form.stock),
       isActive: form.status !== 'Inactive',
       isFeatured: strToBool(form.featured),
+      isFlashSale: strToBool(form.isFlashSale),
+      flashSalePrice: strToBool(form.isFlashSale) && form.flashSalePrice ? Number(form.flashSalePrice) : null,
+      flashSaleEnd: strToBool(form.isFlashSale) && form.flashSaleEnd ? form.flashSaleEnd : null,
       hasFiveYearGuarantee: strToBool(form.showGuaranteeBadge),
       hasFreeReturns: strToBool(form.showReturnsBadge),
       categorySlug: toSlug(form.category),
@@ -341,6 +352,15 @@ function ProductsContent() {
       {sectionLabel('Visibility & Status')}
       <FormField label="Status" value={form.status} onChange={fp('status')} options={STATUSES} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
       <FormField label="Featured on Homepage" value={form.featured} onChange={fp('featured')} options={BOOL_OPTS} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+
+      {sectionLabel('Flash Sale')}
+      <FormField label="Enable Flash Sale" value={form.isFlashSale} onChange={fp('isFlashSale')} options={BOOL_OPTS} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+      {strToBool(form.isFlashSale) && (
+        <>
+          <FormField label="Flash Sale Price" value={form.flashSalePrice} onChange={fp('flashSalePrice')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Discounted price during flash sale" />
+          <FormField label="Flash Sale End Date & Time" value={form.flashSaleEnd} onChange={fp('flashSaleEnd')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} type="datetime-local" />
+        </>
+      )}
 
 
       {sectionLabel('Trust & Guarantee Badges')}
