@@ -82,8 +82,8 @@ export default function RegisterPage() {
       setValidationError("Please enter your first and last name.");
       return;
     }
-    if (!form.email.trim()) {
-      setValidationError("Please enter your email address.");
+    if (!form.email.trim() && !form.phone.trim()) {
+      setValidationError("Please provide at least an email address or phone number.");
       return;
     }
     if (form.password.length < 8) {
@@ -183,25 +183,39 @@ export default function RegisterPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-foreground mb-1.5">Email Address</label>
+              <label className="block text-xs font-semibold text-foreground mb-1.5">
+                Email Address
+                <span className="text-muted-foreground font-normal ml-1 text-[10px]">(for email notifications — optional if phone provided)</span>
+              </label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="Enter your email"
-                  required autoComplete="email"
+                <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })}
+                  placeholder="Enter your email for registration"
+                  autoComplete="email"
                   className="w-full pl-10 pr-4 py-3 bg-background border border-border rounded-xl text-sm text-foreground outline-none focus:ring-2 focus:ring-primary/30 placeholder:text-muted-foreground/50"
                   data-testid="input-email" />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-foreground mb-1.5">Phone Number <span className="text-muted-foreground font-normal">(optional)</span></label>
+              <label className="block text-xs font-semibold text-foreground mb-1.5">
+                Phone Number
+                <span className="text-muted-foreground font-normal ml-1 text-[10px]">(for SMS notifications — optional if email provided)</span>
+              </label>
               <div className="relative">
                 <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <input type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="+260 977 000 000"
+                <input type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                  placeholder="Enter your phone number for registration"
                   autoComplete="tel"
                   className="w-full pl-10 pr-4 py-3 bg-background border border-border rounded-xl text-sm text-foreground outline-none focus:ring-2 focus:ring-primary/30 placeholder:text-muted-foreground/50" />
               </div>
             </div>
+
+            {!form.email.trim() && !form.phone.trim() && (
+              <p className="text-[11px] text-amber-500 font-medium flex items-center gap-1.5">
+                <span>⚠</span> At least one of email or phone number is required for order notifications.
+              </p>
+            )}
 
             <div>
               <label className="block text-xs font-semibold text-foreground mb-1.5">Password</label>
