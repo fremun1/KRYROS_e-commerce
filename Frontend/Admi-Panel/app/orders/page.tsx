@@ -7,7 +7,7 @@ import {
   CheckCircle, RefreshCw, User, ArrowRight, Mail,
   Phone, ShoppingBag, Clock, AlertCircle, Ban,
 } from 'lucide-react';
-import { getOrders, getOrder, updateOrderStatus } from '@/lib/api';
+import { getOrders, getOrder, updateOrderStatus, bulkUpdateOrderStatus } from '@/lib/api';
 import toast from 'react-hot-toast';
 
 // ─── Types ────────────────────────────────────────────────
@@ -172,6 +172,8 @@ function OrdersContent() {
   const [detailLoading, setDetailLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const [tracking, setTracking]         = useState('');
+  const [selectedIds, setSelectedIds]   = useState<Set<string>>(new Set());
+  const [bulkLoading, setBulkLoading]   = useState(false);
 
   // Load order list
   const loadOrders = useCallback(() => {
@@ -278,6 +280,23 @@ function OrdersContent() {
     }
   }, [detail, tracking, loadOrders, openDetail]);
 
+  // Bulk status update
+  const doBulkAction = useCallback(async (status: string) => {
+    if (!selectedIds.size) return;
+    setBulkLoading(true);
+    try {
+      const res: any = await (bulkUpdateOrderStatus as any)([...selectedIds], status);
+      const { succeeded, failed } = res.data;
+      toast.success(`Updated ${succeeded} order${succeeded !== 1 ? 's' : ''}${failed ? `, ${failed} failed` : ''}`);
+      setSelectedIds(new Set());
+      loadOrders();
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Bulk update failed');
+    } finally {
+      setBulkLoading(false);
+    }
+  }, [selectedIds, loadOrders]);
+
   // Filtered + searched list
   const activeDef = TABS.find(t => t.key === tab) || TABS[0];
   const shown = useMemo(() => {
@@ -320,6 +339,49 @@ function OrdersContent() {
             <RefreshCw size={13} /> Refresh
           </button>
         </div>
+
+        {/* ── Bulk action toolbar (appears when rows are selected) ── */}
+        {selectedIds.size > 0 && (
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: '0.75rem',
+            padding: '0.65rem 1rem', marginBottom: '0.75rem',
+            background: dark ? '#0F2542' : '#EFF6FF',
+            border: `1px solid ${dark ? '#1D4ED8' : '#BFDBFE'}`,
+            borderRadius: '10px', flexWrap: 'wrap' as const,
+          }}>
+            <span style={{ fontSize: '0.82rem', fontWeight: 600, color: dark ? '#93C5FD' : '#1D4ED8', flex: 1 }}>
+              {selectedIds.size} order{selectedIds.size !== 1 ? 's' : ''} selected
+            </span>
+            {[
+              { label: 'Confirm',     status: 'CONFIRMED',       color: '#3B82F6' },
+              { label: 'Processing',  status: 'PROCESSING',      color: '#8B5CF6' },
+              { label: 'Shipped',     status: 'SHIPPED',         color: '#0EA5E9' },
+              { label: 'In Transit',  status: 'IN_TRANSIT',      color: '#F59E0B' },
+              { label: 'Delivered',   status: 'DELIVERED',       color: '#10B981' },
+              { label: 'Cancel',      status: 'CANCELLED',       color: '#EF4444' },
+            ].map(({ label, status, color }) => (
+              <button
+                key={status}
+                disabled={bulkLoading}
+                onClick={() => doBulkAction(status)}
+                style={{
+                  padding: '0.35rem 0.85rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 600,
+                  border: `1px solid ${color}40`, background: `${color}15`, color,
+                  cursor: bulkLoading ? 'not-allowed' : 'pointer', transition: 'all 0.15s', fontFamily: 'inherit',
+                  opacity: bulkLoading ? 0.6 : 1,
+                }}
+              >{label}</button>
+            ))}
+            <button
+              onClick={() => setSelectedIds(new Set())}
+              style={{
+                padding: '0.35rem 0.75rem', borderRadius: '6px', fontSize: '0.75rem',
+                border: `1px solid ${T.border}`, background: 'transparent', color: T.muted,
+                cursor: 'pointer', fontFamily: 'inherit',
+              }}
+            >Clear</button>
+          </div>
+        )}
 
         {/* ── Search + Tabs + Table card ── */}
         <div style={{ background: T.card, borderRadius: '12px', border: `1px solid ${T.border}` }}>
@@ -383,6 +445,17 @@ function OrdersContent() {
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.81rem' }}>
                 <thead>
                   <tr style={{ background: T.surface }}>
+                    <th style={{ padding: '0.6rem 0.5rem 0.6rem 1rem', width: '40px' }}>
+                      <input
+                        type="checkbox"
+                        checked={shown.length > 0 && shown.every(o => selectedIds.has(o.id))}
+                        onChange={e => {
+                          if (e.target.checked) setSelectedIds(new Set(shown.map(o => o.id)));
+                          else setSelectedIds(new Set());
+                        }}
+                        style={{ cursor: 'pointer', accentColor: '#3B82F6', width: '14px', height: '14px' }}
+                      />
+                    </th>
                     {['Order #', 'Customer', 'Date', 'Items', 'Payment', 'Total', 'Pay Status', 'Order Status', ''].map(h => (
                       <th key={h} style={{ padding: '0.6rem 1rem', textAlign: 'left' as const, color: T.muted, fontWeight: 600, fontSize: '0.68rem', textTransform: 'uppercase' as const, letterSpacing: '0.05em', whiteSpace: 'nowrap' as const }}>{h}</th>
                     ))}
@@ -408,6 +481,19 @@ function OrdersContent() {
                         onMouseEnter={e => (e.currentTarget.style.background = T.hover)}
                         onMouseLeave={e => (e.currentTarget.style.background = i % 2 === 0 ? 'transparent' : (dark ? 'rgba(255,255,255,0.012)' : 'rgba(0,0,0,0.01)'))}
                       >
+                        <td style={{ padding: '0.5rem 0.5rem 0.5rem 1rem' }} onClick={e => e.stopPropagation()}>
+                          <input
+                            type="checkbox"
+                            checked={selectedIds.has(o.id)}
+                            onChange={e => {
+                              const next = new Set(selectedIds);
+                              if (e.target.checked) next.add(o.id);
+                              else next.delete(o.id);
+                              setSelectedIds(next);
+                            }}
+                            style={{ cursor: 'pointer', accentColor: '#3B82F6', width: '14px', height: '14px' }}
+                          />
+                        </td>
                         <td style={{ padding: '0.75rem 1rem', fontWeight: 700, color: T.text, fontFamily: 'monospace', fontSize: '0.77rem' }}>
                           #{o.orderNumber}
                         </td>
