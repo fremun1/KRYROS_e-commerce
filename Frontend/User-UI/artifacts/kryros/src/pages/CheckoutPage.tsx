@@ -24,7 +24,40 @@ import {
   X,
   Upload,
   ChevronDown,
+  Search,
 } from "lucide-react";
+
+// ── Country dial codes ─────────────────────────────────────────────────────────
+const COUNTRIES = [
+  { name: "Zambia", code: "ZM", dial: "+260", flag: "🇿🇲" },
+  { name: "Zimbabwe", code: "ZW", dial: "+263", flag: "🇿🇼" },
+  { name: "South Africa", code: "ZA", dial: "+27", flag: "🇿🇦" },
+  { name: "Kenya", code: "KE", dial: "+254", flag: "🇰🇪" },
+  { name: "Nigeria", code: "NG", dial: "+234", flag: "🇳🇬" },
+  { name: "Ghana", code: "GH", dial: "+233", flag: "🇬🇭" },
+  { name: "Tanzania", code: "TZ", dial: "+255", flag: "🇹🇿" },
+  { name: "Uganda", code: "UG", dial: "+256", flag: "🇺🇬" },
+  { name: "Malawi", code: "MW", dial: "+265", flag: "🇲🇼" },
+  { name: "Mozambique", code: "MZ", dial: "+258", flag: "🇲🇿" },
+  { name: "Botswana", code: "BW", dial: "+267", flag: "🇧🇼" },
+  { name: "Namibia", code: "NA", dial: "+264", flag: "🇳🇦" },
+  { name: "Rwanda", code: "RW", dial: "+250", flag: "🇷🇼" },
+  { name: "Ethiopia", code: "ET", dial: "+251", flag: "🇪🇹" },
+  { name: "DR Congo", code: "CD", dial: "+243", flag: "🇨🇩" },
+  { name: "Cameroon", code: "CM", dial: "+237", flag: "🇨🇲" },
+  { name: "Senegal", code: "SN", dial: "+221", flag: "🇸🇳" },
+  { name: "Ivory Coast", code: "CI", dial: "+225", flag: "🇨🇮" },
+  { name: "Angola", code: "AO", dial: "+244", flag: "🇦🇴" },
+  { name: "United Kingdom", code: "GB", dial: "+44", flag: "🇬🇧" },
+  { name: "United States", code: "US", dial: "+1", flag: "🇺🇸" },
+  { name: "Canada", code: "CA", dial: "+1", flag: "🇨🇦" },
+  { name: "Germany", code: "DE", dial: "+49", flag: "🇩🇪" },
+  { name: "France", code: "FR", dial: "+33", flag: "🇫🇷" },
+  { name: "China", code: "CN", dial: "+86", flag: "🇨🇳" },
+  { name: "India", code: "IN", dial: "+91", flag: "🇮🇳" },
+  { name: "Australia", code: "AU", dial: "+61", flag: "🇦🇺" },
+  { name: "UAE", code: "AE", dial: "+971", flag: "🇦🇪" },
+];
 
 const SHIPPING_OPTIONS = [
   { id: "standard", label: "Standard Delivery", detail: "5–10 business days", price: 0, icon: Truck },
@@ -207,6 +240,9 @@ export default function CheckoutPage() {
   const [lastName, setLastName] = useState(authUser?.lastName ?? "");
   const [email, setEmail] = useState(authUser?.email ?? "");
   const [phone, setPhone] = useState("");
+  const [phoneCountry, setPhoneCountry] = useState(COUNTRIES[0]);
+  const [showCountryPicker, setShowCountryPicker] = useState(false);
+  const [countrySearch, setCountrySearch] = useState("");
 
   const [country, setCountry] = useState("Zambia");
   const [state, setState] = useState("");
@@ -563,70 +599,132 @@ export default function CheckoutPage() {
               </div>
 
               <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <label className="flex items-center gap-1 text-[11px] font-semibold text-muted-foreground">
-                    <User className="w-3 h-3" />
+                <div className="space-y-2">
+                  <label className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
+                    <User className="w-3.5 h-3.5" />
                     First name
                   </label>
                   <input
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
                     placeholder="John"
-                    className="w-full px-3 py-2 rounded-xl border border-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                    className="w-full px-4 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all"
                   />
                 </div>
-                <div className="space-y-1.5">
-                  <label className="flex items-center gap-1 text-[11px] font-semibold text-muted-foreground">
-                    <User className="w-3 h-3" />
+                <div className="space-y-2">
+                  <label className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
+                    <User className="w-3.5 h-3.5" />
                     Last name
                   </label>
                   <input
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
                     placeholder="Doe"
-                    className="w-full px-3 py-2 rounded-xl border border-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                    className="w-full px-4 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all"
                   />
                 </div>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="flex items-center gap-1 text-[11px] font-semibold text-muted-foreground">
-                  <Mail className="w-3 h-3" />
+              <div className="space-y-2">
+                <label className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
+                  <Mail className="w-3.5 h-3.5" />
                   Email address
+                  <span className="text-[10px] text-muted-foreground font-normal ml-1">(optional if phone provided)</span>
                 </label>
                 <input
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  type="email"
                   placeholder="you@example.com"
-                  className="w-full px-3 py-2 rounded-xl border border-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                  className="w-full px-4 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all"
                 />
               </div>
 
-              <div className="space-y-1.5">
-                <label className="flex items-center gap-1 text-[11px] font-semibold text-muted-foreground">
-                  <Phone className="w-3 h-3" />
+              <div className="space-y-2">
+                <label className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
+                  <Phone className="w-3.5 h-3.5" />
                   Mobile number
+                  <span className="text-[10px] text-muted-foreground font-normal ml-1">(optional if email provided)</span>
                 </label>
                 <div className="flex gap-2">
-                  <div className="min-w-[90px] flex items-center justify-between px-3 py-2 rounded-xl border border-border bg-muted/40 text-[11px] text-muted-foreground">
-                    <span className="flex items-center gap-1">
-                      <span className="text-xs">🇿🇲</span>
-                      <span>+260</span>
-                    </span>
-                  </div>
+                  {/* Country picker button */}
+                  <button
+                    type="button"
+                    onClick={() => { setShowCountryPicker(true); setCountrySearch(""); }}
+                    className="flex items-center gap-1.5 px-3 py-3 rounded-xl border border-border bg-muted/40 hover:bg-muted transition-colors text-sm font-medium whitespace-nowrap min-w-[90px]"
+                  >
+                    <span className="text-base leading-none">{phoneCountry.flag}</span>
+                    <span className="text-xs text-foreground">{phoneCountry.dial}</span>
+                    <ChevronDown className="w-3 h-3 text-muted-foreground" />
+                  </button>
                   <input
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="97 000 0000"
-                    className="w-full px-3 py-2 rounded-xl border border-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                    type="tel"
+                    className="w-full px-4 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all"
                   />
                 </div>
               </div>
+
+              {/* Validation hint */}
+              {!email.trim() && !phone.trim() && (
+                <p className="text-[11px] text-amber-500 font-medium flex items-center gap-1">
+                  <span>⚠</span> Please provide at least an email or phone number for order notifications.
+                </p>
+              )}
+
+              {/* Country picker modal */}
+              {showCountryPicker && (
+                <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center" onClick={() => setShowCountryPicker(false)}>
+                  <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+                  <div
+                    className="relative w-full max-w-sm bg-card border border-border rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div className="flex items-center justify-between px-4 pt-4 pb-3 border-b border-border">
+                      <h3 className="text-sm font-bold text-foreground">Select Country</h3>
+                      <button onClick={() => setShowCountryPicker(false)} className="p-1.5 rounded-full hover:bg-muted transition-colors">
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <div className="px-4 py-3 border-b border-border">
+                      <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-muted/60 border border-border">
+                        <Search className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                        <input
+                          autoFocus
+                          value={countrySearch}
+                          onChange={(e) => setCountrySearch(e.target.value)}
+                          placeholder="Search country..."
+                          className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+                        />
+                      </div>
+                    </div>
+                    <div className="overflow-y-auto max-h-64 divide-y divide-border/50">
+                      {COUNTRIES.filter((c) =>
+                        c.name.toLowerCase().includes(countrySearch.toLowerCase()) ||
+                        c.dial.includes(countrySearch)
+                      ).map((c) => (
+                        <button
+                          key={c.code}
+                          onClick={() => { setPhoneCountry(c); setShowCountryPicker(false); }}
+                          className={`w-full flex items-center gap-3 px-4 py-3 text-sm hover:bg-muted/60 transition-colors ${phoneCountry.code === c.code ? "bg-primary/5 text-primary font-semibold" : "text-foreground"}`}
+                        >
+                          <span className="text-xl leading-none">{c.flag}</span>
+                          <span className="flex-1 text-left">{c.name}</span>
+                          <span className="text-xs text-muted-foreground font-mono">{c.dial}</span>
+                          {phoneCountry.code === c.code && <Check className="w-3.5 h-3.5 text-primary" />}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             <button
               onClick={() => setStep(2)}
-              disabled={!email || !phone || !firstName || !lastName}
+              disabled={!firstName || !lastName || (!email.trim() && !phone.trim())}
               className="w-full py-3 rounded-2xl bg-[var(--kryros-primary-hover)] text-white text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Continue to Address
