@@ -310,7 +310,75 @@ export class NotificationsController {
   @ApiOperation({ summary: 'Send email blast to contacts (Admin only) — max 5/min' })
   async sendEmailBlast(@Body() body: { subject: string; body: string; emailIds?: string[] }) {
     return this.notificationsService.sendEmailBlast(body.subject, body.body, body.emailIds);
+  
+  // ─── Public Payment Receipt ───────────────────────────────────────────────
+  @Post('receipt')
+  @Throttle({ default: { ttl: 60000, limit: 5 } })
+  @ApiOperation({ summary: 'Send payment receipt via SMS and/or email (public, max 5/min)' })
+  async sendPaymentReceipt(@Body() body: {
+    phone?: string;
+    email?: string;
+    orderRef: string;
+    amount: string;
+    currency: string;
+    customerName?: string;
+    paymentMethod?: string;
+    status?: string;
+  }) {
+    const status = body.status || 'completed';
+    const statusEmoji = status === 'failed' ? '❌' : '✅';
+    const statusLabel = status === 'failed' ? 'FAILED' : 'SUCCESSFUL';
+    const customerName = body.customerName || 'Customer';
+    const paymentMethod = body.paymentMethod || 'Payment';
+
+    let smsSent = false;
+    let emailSent = false;
+
+    // SMS receipt
+    if (body.phone?.trim()) {
+      try {
+        const smsText =
+          `${statusEmoji} KRYROS Payment ${statusLabel}\n` +
+          `Ref: ${body.orderRef}\n` +
+          `Amount: ${body.currency} ${body.amount}\n` +
+          `Method: ${paymentMethod}\n` +
+          `Thank you, ${customerName}! Shop again at KRYROS.`;
+        await this.notificationsService.sendSMS(body.phone.trim(), smsText);
+        smsSent = true;
+      } catch { smsSent = false; }
+    }
+
+    // Email receipt
+    if (body.email?.trim()) {
+      try {
+        const subject = `${statusEmoji} KRYROS Payment ${statusLabel} — ${body.orderRef}`;
+        const html = `
+          <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:480px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08)">
+            <div style="background:#10b981;padding:32px 24px;text-align:center">
+              <div style="width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:28px">${status === 'failed' ? '✗' : '✓'}</div>
+              <h2 style="color:#fff;margin:0;font-size:20px;font-weight:700">Payment ${statusLabel}</h2>
+            </div>
+            <div style="padding:24px">
+              <p style="color:#374151;font-size:14px;margin-bottom:20px">Hi <strong>${customerName}</strong>, your payment details:</p>
+              <table style="width:100%;border-collapse:collapse">
+                <tr style="border-bottom:1px solid #f0f0f0"><td style="padding:12px 0;color:#6b7280;font-size:13px">Order Ref</td><td style="padding:12px 0;font-weight:600;color:#111;font-size:13px;text-align:right">${body.orderRef}</td></tr>
+                <tr style="border-bottom:1px solid #f0f0f0"><td style="padding:12px 0;color:#6b7280;font-size:13px">Amount</td><td style="padding:12px 0;font-weight:700;color:#10b981;font-size:15px;text-align:right">${body.currency} ${body.amount}</td></tr>
+                <tr style="border-bottom:1px solid #f0f0f0"><td style="padding:12px 0;color:#6b7280;font-size:13px">Payment Method</td><td style="padding:12px 0;font-weight:600;color:#111;font-size:13px;text-align:right">${paymentMethod}</td></tr>
+                <tr><td style="padding:12px 0;color:#6b7280;font-size:13px">Status</td><td style="padding:12px 0;font-weight:600;font-size:13px;text-align:right;color:${status === 'failed' ? '#ef4444' : '#10b981'}">${statusLabel}</td></tr>
+              </table>
+            </div>
+            <div style="padding:16px 24px;text-align:center;background:#f9fafb;font-size:11px;color:#9ca3af">Powered by <strong style="color:#10b981">KRYROS</strong> &bull; Secure &bull; Encrypted &bull; Safe</div>
+          </div>`;
+        const plain = `KRYROS Payment ${statusLabel} | Ref: ${body.orderRef} | Amount: ${body.currency} ${body.amount} | Method: ${paymentMethod}`;
+        await this.mailerService.sendMail(body.email.trim(), subject, plain, html);
+        emailSent = true;
+      } catch { emailSent = false; }
+    }
+
+    return { success: smsSent || emailSent, smsSent, emailSent };
   }
+
+}
 
 
 }
