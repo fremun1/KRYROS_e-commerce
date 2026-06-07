@@ -825,7 +825,7 @@ function CMSContent() {
   const defaultBbForm = { slug: '', tagline: '', description: '', bgColor: '#1FA89A', accentColor: '#FFFFFF', buttonText: 'Shop Brand', buttonLink: '', imageUrl: '' };
   const [bbForm, setBbForm] = useState<Omit<BrandBanner,'id'>>(defaultBbForm);
   // ── Announcement Bar (Header) ────────────────────────────────────────────────
-  const [announcementBar, setAnnouncementBar] = useState({ announcementEnabled: false, announcementText: '', announcementCta: '', announcementCtaLink: '' });
+  const [announcementBar, setAnnouncementBar] = useState({ announcementEnabled: false, announcementText: '', announcementCta: '', announcementCtaLink: '', announcementBgColor: '', announcementTextColor: '' });
   const [announcementBarOpen, setAnnouncementBarOpen] = useState(false);
   const [announcementBarSaving, setAnnouncementBarSaving] = useState(false);
 
@@ -1552,6 +1552,33 @@ function CMSContent() {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
           <FormField label="CTA Text (e.g. Learn More)" value={announcementBar.announcementCta} onChange={(v) => setAnnouncementBar(b => ({ ...b, announcementCta: v }))} placeholder="Learn More" isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
           <FormField label="CTA Link" value={announcementBar.announcementCtaLink} onChange={(v) => setAnnouncementBar(b => ({ ...b, announcementCtaLink: v }))} placeholder="/track" isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+        </div>
+        {/* ── Color Pickers ── */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '14px' }}>
+          <div>
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: textMain, marginBottom: '6px' }}>Background Color</label>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <input type="color" value={announcementBar.announcementBgColor || '#27B9AF'} onChange={(e) => setAnnouncementBar(b => ({ ...b, announcementBgColor: e.target.value }))} style={{ width: '40px', height: '36px', border: `1px solid ${border}`, borderRadius: '6px', cursor: 'pointer', padding: '2px', flexShrink: 0 }} />
+              <input type="text" value={announcementBar.announcementBgColor} onChange={(e) => setAnnouncementBar(b => ({ ...b, announcementBgColor: e.target.value }))} placeholder="#27B9AF" style={{ flex: 1, padding: '8px 10px', borderRadius: '6px', border: `1px solid ${border}`, background: surface, color: textMain, fontSize: '12px', outline: 'none' }} />
+            </div>
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: textMain, marginBottom: '6px' }}>Text Color</label>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <input type="color" value={announcementBar.announcementTextColor || '#FFFFFF'} onChange={(e) => setAnnouncementBar(b => ({ ...b, announcementTextColor: e.target.value }))} style={{ width: '40px', height: '36px', border: `1px solid ${border}`, borderRadius: '6px', cursor: 'pointer', padding: '2px', flexShrink: 0 }} />
+              <input type="text" value={announcementBar.announcementTextColor} onChange={(e) => setAnnouncementBar(b => ({ ...b, announcementTextColor: e.target.value }))} placeholder="#FFFFFF" style={{ flex: 1, padding: '8px 10px', borderRadius: '6px', border: `1px solid ${border}`, background: surface, color: textMain, fontSize: '12px', outline: 'none' }} />
+            </div>
+          </div>
+        </div>
+        {/* ── Live Preview ── */}
+        <div style={{ marginTop: '14px' }}>
+          <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: textMuted, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Live Preview</label>
+          <div style={{ borderRadius: '6px', overflow: 'hidden', border: `1px solid ${border}` }}>
+            <div style={{ backgroundColor: announcementBar.announcementBgColor || '#27B9AF', color: announcementBar.announcementTextColor || '#FFFFFF', padding: '7px 14px', fontSize: '11px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span>{announcementBar.announcementText || 'Your announcement text appears here'}</span>
+              {announcementBar.announcementCta && <span style={{ fontWeight: 600, opacity: 0.9 }}>{announcementBar.announcementCta} ›</span>}
+            </div>
+          </div>
         </div>
         <ModalFooter onClose={() => setAnnouncementBarOpen(false)} onSubmit={async () => { setAnnouncementBarSaving(true); try { await upsertCmsSiteConfig('header', announcementBar); toast.success('Announcement Bar saved'); setAnnouncementBarOpen(false); } catch { toast.error('Save failed'); } setAnnouncementBarSaving(false); }} loading={announcementBarSaving} submitLabel="Save" isDark={isDark} border={border} textMain={textMain} />
       </Modal>
