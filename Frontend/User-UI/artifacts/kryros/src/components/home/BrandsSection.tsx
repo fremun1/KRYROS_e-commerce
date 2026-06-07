@@ -38,7 +38,7 @@ export default function BrandsSection() {
     const el = scrollRef.current;
     if (!el || brands.length === 0) return;
 
-    const SPEED = 0.06; // px per ms — slow, gentle scroll
+    const SPEED = 0.03; // px per ms — very slow, gentle drift
 
     const tick = (time: number) => {
       if (pausedRef.current) {
