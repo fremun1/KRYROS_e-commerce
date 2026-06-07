@@ -1006,6 +1006,7 @@ model PickupStation {
   email        String?
   openingHours String?
   description  String?
+  image        String?
   isActive     Boolean  @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -1170,7 +1171,7 @@ enum SymbolPosition {
 }
 
 
-// ─── Checkout Payment Configuration (admin-configurable) ──────────────────
+// â”€â”€â”€ Checkout Payment Configuration (admin-configurable) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 model CheckoutMethod {
   id          String              @id @default(uuid())
   name        String
@@ -1214,7 +1215,7 @@ model CheckoutNetwork {
   @@map("checkout_networks")
 }
 
-// ─── SMS Contacts ─────────────────────────────────────────────────────────────
+// â”€â”€â”€ SMS Contacts â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 model SmsContact {
   id        String   @id @default(uuid())
   name      String?
