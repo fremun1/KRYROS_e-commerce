@@ -407,7 +407,7 @@ export default function ShopPage() {
 
       {/* Category cards */}
       {categories.length > 0 && (
-        <div ref={catScrollRef} className="flex gap-3 overflow-x-auto no-scrollbar scroll-smooth px-4 pb-4">
+        <div ref={catScrollRef} className="flex gap-3 overflow-x-auto no-scrollbar px-4 pb-4">
           <button
             onClick={() => setSelectedCat("All")}
             className={`flex-shrink-0 snap-start relative w-36 h-36 rounded-2xl overflow-hidden transition-all bg-gradient-to-br from-teal-600 to-teal-800 flex items-center justify-center ${selectedCat === "All" ? "ring-2 ring-teal-500 ring-offset-2" : ""}`}
