@@ -112,7 +112,7 @@ export default function ProductPage() {
   const images = product.additionalImages ? [product.image, ...product.additionalImages] : [product.image];
 
   return (
-    <div className="min-h-screen bg-background pb-32">
+    <div className="min-h-screen bg-background pb-[140px]">
       {/* Header */}
       <div className="sticky top-0 z-30 bg-background/80 backdrop-blur-xl border-b border-border px-4 py-3 flex items-center justify-between">
         <button onClick={() => window.history.back()} className="p-2 -ml-2 hover:bg-muted rounded-full transition-colors">
@@ -308,8 +308,8 @@ export default function ProductPage() {
         )}
       </div>
 
-      {/* Sticky bottom CTA — sits above mobile nav (z-50) */}
-      <div className="fixed bottom-[57px] left-0 right-0 bg-background/95 backdrop-blur-xl border-t border-border px-4 py-3 z-40">
+      {/* Sticky bottom CTA — fixed at bottom-0; nav (z-50) slides over it on scroll */}
+      <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-xl border-t border-border px-4 py-3 z-40">
         <div className="flex gap-3 max-w-lg mx-auto">
           {storeStatus?.isStoreClosed ? (
             <button disabled
