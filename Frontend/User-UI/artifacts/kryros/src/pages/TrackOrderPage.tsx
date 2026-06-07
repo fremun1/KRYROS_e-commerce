@@ -7,30 +7,31 @@ import { fetchOrders, type ApiOrder } from "@/lib/api";
 import AccountLayout from "@/components/layout/AccountLayout";
 
 const statusColors: Record<string, string> = {
-  "In Transit": "bg-primary/10 text-primary border-primary/20",
-  "IN_TRANSIT": "bg-primary/10 text-primary border-primary/20",
-  "Out for Delivery": "bg-orange-500/10 text-orange-600 border-orange-500/20",
-  "OUT_FOR_DELIVERY": "bg-orange-500/10 text-orange-600 border-orange-500/20",
-  "Delivered": "bg-green-500/10 text-green-600 border-green-500/20",
-  "DELIVERED": "bg-green-500/10 text-green-600 border-green-500/20",
-  "Cancelled": "bg-red-500/10 text-red-600 border-red-500/20",
-  "CANCELLED": "bg-red-500/10 text-red-600 border-red-500/20",
-  "Pending": "bg-yellow-500/10 text-yellow-600 border-yellow-500/20",
-  "PENDING": "bg-yellow-500/10 text-yellow-600 border-yellow-500/20",
-  "Processing": "bg-blue-500/10 text-blue-600 border-blue-500/20",
-  "PROCESSING": "bg-blue-500/10 text-blue-600 border-blue-500/20",
+  "Pending":          "bg-yellow-500/10 text-yellow-600 border-yellow-500/20",
+  "Processing":       "bg-blue-500/10 text-blue-600 border-blue-500/20",
+  "Confirmed":        "bg-indigo-500/10 text-indigo-600 border-indigo-500/20",
+  "Shipped":          "bg-sky-500/10 text-sky-600 border-sky-500/20",
+  "In Transit":       "bg-primary/10 text-primary border-primary/20",
+  "Delivered":        "bg-green-500/10 text-green-600 border-green-500/20",
+  "Collected":        "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
+  "Cancelled":        "bg-red-500/10 text-red-600 border-red-500/20",
+  "Refunded":         "bg-orange-500/10 text-orange-600 border-orange-500/20",
+  "Returned":         "bg-pink-500/10 text-pink-600 border-pink-500/20",
 };
 
-const filterTabs = ["All Orders", "In Transit", "Out for Delivery", "Delivered", "Cancelled"];
+const filterTabs = ["All Orders", "Confirmed", "Shipped", "In Transit", "Delivered", "Collected", "Cancelled"];
 
 const STATUS_MAP: Record<string, string> = {
-  PENDING: "Pending",
+  PENDING:    "Pending",
   PROCESSING: "Processing",
-  SHIPPED: "In Transit",
+  CONFIRMED:  "Confirmed",
+  SHIPPED:    "Shipped",
   IN_TRANSIT: "In Transit",
-  OUT_FOR_DELIVERY: "Out for Delivery",
-  DELIVERED: "Delivered",
-  CANCELLED: "Cancelled",
+  DELIVERED:  "Delivered",
+  COLLECTED:  "Collected",
+  CANCELLED:  "Cancelled",
+  REFUNDED:   "Refunded",
+  RETURNED:   "Returned",
 };
 
 function normalizeStatus(s: string): string {
@@ -40,21 +41,23 @@ function normalizeStatus(s: string): string {
 function getTimeline(status: string) {
   const norm = normalizeStatus(status);
   const steps = [
-    { label: "Order Confirmed", threshold: ["Pending", "Processing", "In Transit", "Out for Delivery", "Delivered"] },
-    { label: "Shipped", threshold: ["In Transit", "Out for Delivery", "Delivered"] },
-    { label: "In Transit", threshold: ["In Transit", "Out for Delivery", "Delivered"] },
-    { label: "Delivered", threshold: ["Delivered"] },
+    { label: "Pending",    threshold: ["Pending","Processing","Confirmed","Shipped","In Transit","Delivered","Collected"] },
+    { label: "Confirmed",  threshold: ["Confirmed","Shipped","In Transit","Delivered","Collected"] },
+    { label: "Shipped",    threshold: ["Shipped","In Transit","Delivered","Collected"] },
+    { label: "In Transit", threshold: ["In Transit","Delivered","Collected"] },
+    { label: "Delivered",  threshold: ["Delivered","Collected"] },
+    { label: "Collected",  threshold: ["Collected"] },
   ];
   const activeIdx =
-    norm === "Delivered" ? 3 :
-    norm === "Out for Delivery" ? 3 :
-    norm === "In Transit" ? 2 :
-    norm === "Processing" ? 1 :
-    0;
+    norm === "Collected"  ? 5 :
+    norm === "Delivered"  ? 4 :
+    norm === "In Transit" ? 3 :
+    norm === "Shipped"    ? 2 :
+    norm === "Confirmed"  ? 1 : 0;
   return steps.map((step, i) => ({
     label: step.label,
     done: step.threshold.includes(norm),
-    active: i === activeIdx && norm !== "Delivered",
+    active: i === activeIdx && norm !== "Collected" && norm !== "Cancelled",
   }));
 }
 
@@ -93,10 +96,12 @@ function normalizeOrder(o: ApiOrder): OrderRow {
 }
 
 const STATUS_FILTER_MAP: Record<string, string[]> = {
+  "Confirmed":  ["Confirmed"],
+  "Shipped":    ["Shipped"],
   "In Transit": ["In Transit"],
-  "Out for Delivery": ["Out for Delivery"],
-  "Delivered": ["Delivered"],
-  "Cancelled": ["Cancelled"],
+  "Delivered":  ["Delivered"],
+  "Collected":  ["Collected"],
+  "Cancelled":  ["Cancelled"],
 };
 
 export default function TrackOrderPage() {
