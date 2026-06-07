@@ -1,17 +1,21 @@
 import { useState, useEffect } from "react";
 import { Search, MapPin, Clock, Navigation, Package, ChevronRight, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
-import { fetchShippingZones, type ApiShippingZone } from "@/lib/api";
+import { API_BASE } from "@/lib/api";
 import AccountLayout from "@/components/layout/AccountLayout";
 
 interface Station {
   id: string;
   name: string;
   address: string;
+  city: string;
   hours: string;
-  distance: string;
-  recommended: boolean;
+  phone: string;
+  description: string;
+  latitude: number | null;
+  longitude: number | null;
   image: string;
+  isActive: boolean;
 }
 
 const benefits = [
@@ -21,16 +25,20 @@ const benefits = [
   { icon: Clock, title: "Flexible Hours", desc: "Extended hours to fit your busy schedule." },
 ];
 
-function normalizeZone(z: ApiShippingZone, i: number): Station {
-  const addressParts = [z.address, z.city, z.country].filter(Boolean);
+function normalizeStation(s: any, i: number): Station {
+  const addressParts = [s.address, s.city, s.state, s.country].filter(Boolean);
   return {
-    id: z.id,
-    name: z.name,
+    id: s.id,
+    name: s.name,
     address: addressParts.join(", ") || "",
-    hours: z.operatingHours || "",
-    distance: "",
-    recommended: z.isRecommended ?? i === 0,
-    image: z.image || "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=200&q=80",
+    city: s.city || "",
+    hours: s.openingHours || "",
+    phone: s.phone || "",
+    description: s.description || "",
+    latitude: s.latitude ?? null,
+    longitude: s.longitude ?? null,
+    image: s.image || "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=200&q=80",
+    isActive: s.isActive !== false,
   };
 }
 
@@ -43,13 +51,15 @@ export default function PickupStationsPage() {
     let cancelled = false;
     (async () => {
       try {
-        let data = await fetchShippingZones("PICKUP");
-        if (data.length === 0) data = await fetchShippingZones();
+        const res = await fetch(`${API_BASE}/api/pickup-stations?active=true`);
+        if (!res.ok) throw new Error("Failed to fetch");
+        const data = await res.json();
+        const list = Array.isArray(data) ? data : (data?.data ?? []);
         if (!cancelled) {
-          setStations(data.filter((z) => z.isActive !== false).map(normalizeZone));
+          setStations(list.filter((s: any) => s.isActive !== false).map(normalizeStation));
         }
       } catch {
-        // leave stations as empty
+        // leave stations empty
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -166,31 +176,29 @@ export default function PickupStationsPage() {
                 <img src={station.image} alt={station.name} className="w-full h-full object-cover" />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-1.5 mb-0.5">
-                  <p className="font-bold text-foreground text-xs truncate">{station.name}</p>
-                  {station.recommended && (
-                    <span className="text-[8px] font-bold px-1.5 py-0.5 bg-primary/10 text-primary border border-primary/20 rounded-full flex-shrink-0">Recommended</span>
-                  )}
-                </div>
+                <p className="font-bold text-foreground text-xs truncate mb-0.5">{station.name}</p>
                 <div className="flex items-start gap-1 mb-0.5">
                   <MapPin className="w-2.5 h-2.5 text-muted-foreground mt-0.5 flex-shrink-0" />
                   <p className="text-[9px] text-muted-foreground leading-snug">{station.address}</p>
                 </div>
-                <div className="flex items-center gap-1">
-                  <Clock className="w-2.5 h-2.5 text-green-500 flex-shrink-0" />
-                  <p className="text-[9px] text-green-600">{station.hours}</p>
-                </div>
-              </div>
-              <div className="flex flex-col items-end gap-2 flex-shrink-0">
-                {station.distance && (
-                  <div className="flex items-center gap-1">
-                    <span className="text-xs font-bold text-muted-foreground">{station.distance}</span>
-                    <Navigation className="w-3 h-3 text-muted-foreground" />
+                {station.hours && (
+                  <div className="flex items-center gap-1 mb-0.5">
+                    <Clock className="w-2.5 h-2.5 text-green-500 flex-shrink-0" />
+                    <p className="text-[9px] text-green-600">{station.hours}</p>
                   </div>
                 )}
-                <button className="px-2.5 py-1 bg-green-500/10 text-green-600 border border-green-500/20 rounded-lg text-[9px] font-bold">
-                  Open Now
-                </button>
+                {station.phone && (
+                  <p className="text-[9px] text-muted-foreground">📞 {station.phone}</p>
+                )}
+                {station.description && (
+                  <p className="text-[9px] text-muted-foreground italic truncate">{station.description}</p>
+                )}
+              </div>
+              <div className="flex flex-col items-end gap-2 flex-shrink-0">
+                <span className="px-2.5 py-1 bg-green-500/10 text-green-600 border border-green-500/20 rounded-lg text-[9px] font-bold">
+                  Active
+                </span>
+                <ChevronRight className="w-3 h-3 text-muted-foreground" />
               </div>
             </motion.div>
           ))}
