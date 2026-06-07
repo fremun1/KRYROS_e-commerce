@@ -29,34 +29,34 @@ import {
 
 // ── Country dial codes ─────────────────────────────────────────────────────────
 const COUNTRIES = [
-  { name: "Zambia", code: "ZM", dial: "+260", flag: "🇿🇲" },
-  { name: "Zimbabwe", code: "ZW", dial: "+263", flag: "🇿🇼" },
-  { name: "South Africa", code: "ZA", dial: "+27", flag: "🇿🇦" },
-  { name: "Kenya", code: "KE", dial: "+254", flag: "🇰🇪" },
-  { name: "Nigeria", code: "NG", dial: "+234", flag: "🇳🇬" },
-  { name: "Ghana", code: "GH", dial: "+233", flag: "🇬🇭" },
-  { name: "Tanzania", code: "TZ", dial: "+255", flag: "🇹🇿" },
-  { name: "Uganda", code: "UG", dial: "+256", flag: "🇺🇬" },
-  { name: "Malawi", code: "MW", dial: "+265", flag: "🇲🇼" },
-  { name: "Mozambique", code: "MZ", dial: "+258", flag: "🇲🇿" },
-  { name: "Botswana", code: "BW", dial: "+267", flag: "🇧🇼" },
-  { name: "Namibia", code: "NA", dial: "+264", flag: "🇳🇦" },
-  { name: "Rwanda", code: "RW", dial: "+250", flag: "🇷🇼" },
-  { name: "Ethiopia", code: "ET", dial: "+251", flag: "🇪🇹" },
-  { name: "DR Congo", code: "CD", dial: "+243", flag: "🇨🇩" },
-  { name: "Cameroon", code: "CM", dial: "+237", flag: "🇨🇲" },
-  { name: "Senegal", code: "SN", dial: "+221", flag: "🇸🇳" },
-  { name: "Ivory Coast", code: "CI", dial: "+225", flag: "🇨🇮" },
-  { name: "Angola", code: "AO", dial: "+244", flag: "🇦🇴" },
-  { name: "United Kingdom", code: "GB", dial: "+44", flag: "🇬🇧" },
-  { name: "United States", code: "US", dial: "+1", flag: "🇺🇸" },
-  { name: "Canada", code: "CA", dial: "+1", flag: "🇨🇦" },
-  { name: "Germany", code: "DE", dial: "+49", flag: "🇩🇪" },
-  { name: "France", code: "FR", dial: "+33", flag: "🇫🇷" },
-  { name: "China", code: "CN", dial: "+86", flag: "🇨🇳" },
-  { name: "India", code: "IN", dial: "+91", flag: "🇮🇳" },
-  { name: "Australia", code: "AU", dial: "+61", flag: "🇦🇺" },
-  { name: "UAE", code: "AE", dial: "+971", flag: "🇦🇪" },
+  { name: "Zambia", code: "ZM", dial: "+260" },
+  { name: "Zimbabwe", code: "ZW", dial: "+263" },
+  { name: "South Africa", code: "ZA", dial: "+27" },
+  { name: "Kenya", code: "KE", dial: "+254" },
+  { name: "Nigeria", code: "NG", dial: "+234" },
+  { name: "Ghana", code: "GH", dial: "+233" },
+  { name: "Tanzania", code: "TZ", dial: "+255" },
+  { name: "Uganda", code: "UG", dial: "+256" },
+  { name: "Malawi", code: "MW", dial: "+265" },
+  { name: "Mozambique", code: "MZ", dial: "+258" },
+  { name: "Botswana", code: "BW", dial: "+267" },
+  { name: "Namibia", code: "NA", dial: "+264" },
+  { name: "Rwanda", code: "RW", dial: "+250" },
+  { name: "Ethiopia", code: "ET", dial: "+251" },
+  { name: "DR Congo", code: "CD", dial: "+243" },
+  { name: "Cameroon", code: "CM", dial: "+237" },
+  { name: "Senegal", code: "SN", dial: "+221" },
+  { name: "Ivory Coast", code: "CI", dial: "+225" },
+  { name: "Angola", code: "AO", dial: "+244" },
+  { name: "United Kingdom", code: "GB", dial: "+44" },
+  { name: "United States", code: "US", dial: "+1" },
+  { name: "Canada", code: "CA", dial: "+1" },
+  { name: "Germany", code: "DE", dial: "+49" },
+  { name: "France", code: "FR", dial: "+33" },
+  { name: "China", code: "CN", dial: "+86" },
+  { name: "India", code: "IN", dial: "+91" },
+  { name: "Australia", code: "AU", dial: "+61" },
+  { name: "UAE", code: "AE", dial: "+971" },
 ];
 
 const SHIPPING_OPTIONS = [
@@ -599,7 +599,7 @@ export default function CheckoutPage() {
       </div>
 
       {/* Main content */}
-      <div className="flex-1 overflow-y-auto px-4 pb-6 space-y-6">
+      <div className="flex-1 overflow-y-auto px-4 pb-6 space-y-3">
         {/* Contact info */}
         {step === 1 && (
           <div className="space-y-4">
@@ -625,7 +625,7 @@ export default function CheckoutPage() {
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
                     placeholder="John"
-                    className="w-full px-4 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all"
+                    className="w-full px-4 py-3.5 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all"
                   />
                 </div>
                 <div className="space-y-2">
@@ -637,7 +637,7 @@ export default function CheckoutPage() {
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
                     placeholder="Doe"
-                    className="w-full px-4 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all"
+                    className="w-full px-4 py-3.5 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all"
                   />
                 </div>
               </div>
@@ -664,22 +664,32 @@ export default function CheckoutPage() {
                   <span className="text-[10px] text-muted-foreground font-normal ml-1">(optional if email provided)</span>
                 </label>
                 <div className="flex gap-2">
-                  {/* Country picker button */}
-                  <button
-                    type="button"
-                    onClick={() => { setShowCountryPicker(true); setCountrySearch(""); }}
-                    className="flex items-center gap-1.5 px-3 py-3 rounded-xl border border-border bg-muted/40 hover:bg-muted transition-colors text-sm font-medium whitespace-nowrap min-w-[90px]"
-                  >
-                    <span className="text-base leading-none">{phoneCountry.flag}</span>
-                    <span className="text-xs text-foreground">{phoneCountry.dial}</span>
-                    <ChevronDown className="w-3 h-3 text-muted-foreground" />
-                  </button>
+                  {/* Country code — editable + dropdown trigger */}
+                  <div className="flex items-center rounded-xl border border-border bg-muted/40 overflow-hidden min-w-[115px]">
+                    <input
+                      value={phoneCountry.dial}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setPhoneCountry((prev) => ({ ...prev, dial: val }));
+                      }}
+                      placeholder="+260"
+                      type="tel"
+                      className="w-full px-3 py-3.5 bg-transparent text-sm font-semibold text-foreground outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => { setShowCountryPicker(true); setCountrySearch(""); }}
+                      className="px-2 py-3.5 hover:bg-muted transition-colors border-l border-border flex-shrink-0"
+                    >
+                      <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+                    </button>
+                  </div>
                   <input
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="97 000 0000"
                     type="tel"
-                    className="w-full px-4 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all"
+                    className="w-full px-4 py-3.5 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all"
                   />
                 </div>
               </div>
@@ -727,7 +737,6 @@ export default function CheckoutPage() {
                           onClick={() => { setPhoneCountry(c); setShowCountryPicker(false); }}
                           className={`w-full flex items-center gap-3 px-4 py-3 text-sm hover:bg-muted/60 transition-colors ${phoneCountry.code === c.code ? "bg-primary/5 text-primary font-semibold" : "text-foreground"}`}
                         >
-                          <span className="text-xl leading-none">{c.flag}</span>
                           <span className="flex-1 text-left">{c.name}</span>
                           <span className="text-xs text-muted-foreground font-mono">{c.dial}</span>
                           {phoneCountry.code === c.code && <Check className="w-3.5 h-3.5 text-primary" />}
@@ -764,7 +773,7 @@ export default function CheckoutPage() {
                   <select
                     value={country}
                     onChange={(e) => setCountry(e.target.value)}
-                    className="w-full px-3 py-2 pr-8 rounded-xl border border-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary appearance-none"
+                    className="w-full px-4 py-3 pr-8 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary appearance-none transition-all"
                   >
                     <option value="Zambia">Zambia</option>
                     <option value="Zimbabwe" disabled>
@@ -788,7 +797,7 @@ export default function CheckoutPage() {
                     value={state}
                     onChange={(e) => setState(e.target.value)}
                     placeholder="Lusaka Province"
-                    className="w-full px-3 py-2 rounded-xl border border-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                    className="w-full px-4 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all"
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -800,7 +809,7 @@ export default function CheckoutPage() {
                     value={city}
                     onChange={(e) => setCity(e.target.value)}
                     placeholder="Lusaka"
-                    className="w-full px-3 py-2 rounded-xl border border-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                    className="w-full px-4 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all"
                   />
                 </div>
               </div>
