@@ -105,6 +105,27 @@ export default function CheckoutPage() {
     }).catch(() => {}); // silent — never block the checkout flow
   };
 
+  // Fire payment receipt via SMS and/or email after successful order
+  const sendReceiptAfterOrder = (orderRef: string, amountFormatted: string, method: string) => {
+    const customerPhone = phone.trim();
+    const customerEmail = email.trim();
+    if (!customerPhone && !customerEmail) return;
+    fetch(`${API_BASE}/api/notifications/receipt`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        phone: customerPhone || undefined,
+        email: customerEmail || undefined,
+        orderRef,
+        amount: amountFormatted,
+        currency: selectedCurrency.symbol || selectedCurrency.code,
+        customerName: `${firstName} ${lastName}`.trim() || 'Customer',
+        paymentMethod: method,
+        status: 'completed',
+      }),
+    }).catch(() => {}); // silent — never block the UI
+  };
+
 
   const selectedCurrency = useCurrencyStore((s) => s.selected);
   const allCurrencies = useCurrencyStore((s) => s.currencies);
@@ -266,6 +287,8 @@ export default function CheckoutPage() {
           setOrdered(true);
       // Register phone number for SMS marketing (silent, non-blocking)
       registerPhoneForSms(phone, `${firstName} ${lastName}`);
+          // Send receipt via SMS + email
+          sendReceiptAfterOrder(orderNum, total.toFixed(2), `Mobile Money (${mmProvider})`);
           setMmPhase("idle");
         } else if (status === "FAILED") {
           clearInterval(pollRef.current!);
@@ -373,7 +396,8 @@ export default function CheckoutPage() {
         clearCart();
         // Register phone number for SMS marketing (silent, non-blocking)
         registerPhoneForSms(phone, `${firstName} ${lastName}`);
-        
+        // Send receipt via SMS + email
+        sendReceiptAfterOrder(orderNum, total.toFixed(2), "WhatsApp Payment");
         // Auto-redirect to WhatsApp for better UX
         const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(msg)}`;
         window.open(url, "_blank");
@@ -382,6 +406,8 @@ export default function CheckoutPage() {
         clearCart();
         // Register phone number for SMS marketing (silent, non-blocking)
         registerPhoneForSms(phone, `${firstName} ${lastName}`);
+        // Send receipt via SMS + email
+        sendReceiptAfterOrder(orderNum, total.toFixed(2), openMethod === "bank" ? "Bank Transfer" : "Card Payment");
       }
     } catch {
       setOrderError("Network error. Please check your connection and try again.");
