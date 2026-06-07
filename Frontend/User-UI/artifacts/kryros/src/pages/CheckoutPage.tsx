@@ -206,7 +206,7 @@ export default function CheckoutPage() {
             .flatMap((p: any) =>
               (p.networks || [])
                 .filter((n: any) => n.isEnabled)
-                .map((n: any) => n.name as string),
+                .map((n: any) => (n.name as string).replace(/\s*Mobile\s*Money\s*/i, "").trim()),
             );
           if (nets.length > 0) setMobileNetworks(nets);
         }
@@ -282,7 +282,7 @@ export default function CheckoutPage() {
   const [cvv, setCvv] = useState("");
   const [cardName, setCardName] = useState("");
   const [saveCard, setSaveCard] = useState(false);
-  const [mmProvider, setMmProvider] = useState("MTN Mobile Money");
+  const [mmProvider, setMmProvider] = useState("MTN");
   const [mmPhone, setMmPhone] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
   const [proofFile, setProofFile] = useState<string | null>(null);
@@ -652,8 +652,8 @@ export default function CheckoutPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   type="email"
-                  placeholder="you@example.com"
-                  className="w-full px-4 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all"
+                  placeholder="Enter your email address"
+                  className="w-full px-4 py-3.5 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all"
                 />
               </div>
 
@@ -687,7 +687,7 @@ export default function CheckoutPage() {
                   <input
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    placeholder="97 000 0000"
+                    placeholder="Enter your phone number"
                     type="tel"
                     className="w-full px-4 py-3.5 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all"
                   />
@@ -773,7 +773,7 @@ export default function CheckoutPage() {
                   <select
                     value={country}
                     onChange={(e) => setCountry(e.target.value)}
-                    className="w-full px-4 py-3 pr-8 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary appearance-none transition-all"
+                    className="w-full px-4 py-3.5 pr-8 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary appearance-none transition-all"
                   >
                     <option value="Zambia">Zambia</option>
                     <option value="Zimbabwe" disabled>
@@ -797,7 +797,7 @@ export default function CheckoutPage() {
                     value={state}
                     onChange={(e) => setState(e.target.value)}
                     placeholder="Lusaka Province"
-                    className="w-full px-4 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all"
+                    className="w-full px-4 py-3.5 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all"
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -809,7 +809,7 @@ export default function CheckoutPage() {
                     value={city}
                     onChange={(e) => setCity(e.target.value)}
                     placeholder="Lusaka"
-                    className="w-full px-4 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all"
+                    className="w-full px-4 py-3.5 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all"
                   />
                 </div>
               </div>
@@ -823,7 +823,7 @@ export default function CheckoutPage() {
                   value={addressLine}
                   onChange={(e) => setAddressLine(e.target.value)}
                   placeholder="Street name, building, house number"
-                  className="w-full px-3 py-2 rounded-xl border border-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                  className="w-full px-4 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all"
                 />
               </div>
 
@@ -836,7 +836,7 @@ export default function CheckoutPage() {
                   value={zipCode}
                   onChange={(e) => setZipCode(e.target.value)}
                   placeholder="10101"
-                  className="w-full px-3 py-2 rounded-xl border border-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                  className="w-full px-4 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all"
                 />
               </div>
             </div>
@@ -876,27 +876,27 @@ export default function CheckoutPage() {
                     <button
                       key={option.id}
                       onClick={() => setShippingId(option.id)}
-                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl border text-left transition-all ${
+                      className={`w-full flex items-center gap-3 px-4 py-4 rounded-2xl border text-left transition-all ${
                         isSelected
                           ? "border-primary bg-primary/5"
                           : "border-border hover:border-primary/40 hover:bg-muted/40"
                       }`}
                     >
                       <div
-                        className={`w-9 h-9 rounded-full flex items-center justify-center ${
+                        className={`w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 ${
                           isSelected ? "bg-primary text-white" : "bg-muted text-foreground"
                         }`}
                       >
-                        <Icon className="w-4 h-4" />
+                        <Icon className="w-5 h-5" />
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center justify-between gap-2">
-                          <p className="text-xs font-semibold text-foreground">{option.label}</p>
-                          <p className="text-xs font-semibold text-foreground">
+                          <p className="text-sm font-semibold text-foreground">{option.label}</p>
+                          <p className="text-sm font-semibold text-foreground">
                             {option.price === 0 ? "Free" : format(option.price)}
                           </p>
                         </div>
-                        <p className="text-[11px] text-muted-foreground mt-0.5">{option.detail}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">{option.detail}</p>
                       </div>
                       <div
                         className={`w-4 h-4 rounded-full border flex items-center justify-center text-[8px] ${
@@ -1100,7 +1100,7 @@ export default function CheckoutPage() {
                       <input
                         value={mmPhone}
                         onChange={(e) => setMmPhone(e.target.value)}
-                        placeholder="+XXX XXXXXXXXX"
+                        placeholder="Enter your mobile money number"
                         type="tel"
                         className="flex-1 text-sm text-foreground outline-none bg-transparent"
                       />
