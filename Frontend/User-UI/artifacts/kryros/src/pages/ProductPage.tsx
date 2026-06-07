@@ -308,17 +308,14 @@ export default function ProductPage() {
         )}
       </div>
 
-      {/* Sticky bottom CTA */}
-      <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-xl border-t border-border px-4 py-3 z-30">
+      {/* Sticky bottom CTA — sits above mobile nav (z-50) */}
+      <div className="fixed bottom-[57px] left-0 right-0 bg-background/95 backdrop-blur-xl border-t border-border px-4 py-3 z-40">
         <div className="flex gap-3 max-w-lg mx-auto">
           {storeStatus?.isStoreClosed ? (
-            <div className="flex-1">
-              <button disabled
-                className="w-full py-3.5 bg-muted text-muted-foreground rounded-2xl font-bold text-sm cursor-not-allowed flex flex-col items-center justify-center gap-0.5">
-                <span className="flex items-center gap-2"><Clock className="w-4 h-4" /> Store Closed</span>
-                <span className="text-[10px] font-medium opacity-70">Purchases disabled while closed</span>
-              </button>
-            </div>
+            <button disabled
+              className="flex-1 py-3.5 bg-muted text-muted-foreground rounded-2xl font-bold text-sm cursor-not-allowed flex items-center justify-center gap-2">
+              <Clock className="w-4 h-4" /> Store Closed
+            </button>
           ) : (
             <>
               <button onClick={handleAddToCart} disabled={product.stock === 0}
