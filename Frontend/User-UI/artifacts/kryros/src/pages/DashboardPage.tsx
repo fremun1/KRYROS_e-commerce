@@ -21,38 +21,52 @@ const footerLinks = [
 
 function getOrderTimeline(status: string) {
   const norm = ({
-    PENDING: "Pending", PROCESSING: "Processing", SHIPPED: "In Transit",
-    IN_TRANSIT: "In Transit", OUT_FOR_DELIVERY: "Out for Delivery",
-    DELIVERED: "Delivered", CANCELLED: "Cancelled",
+    PENDING:    "Pending",
+    PROCESSING: "Processing",
+    CONFIRMED:  "Confirmed",
+    SHIPPED:    "Shipped",
+    IN_TRANSIT: "In Transit",
+    DELIVERED:  "Delivered",
+    COLLECTED:  "Collected",
+    CANCELLED:  "Cancelled",
+    REFUNDED:   "Refunded",
+    RETURNED:   "Returned",
   } as Record<string, string>)[status?.toUpperCase?.()] ?? status ?? "Pending";
 
-  const steps = ["Order Confirmed", "Shipped", "In Transit", "Delivered"];
+  const steps = ["Pending", "Confirmed", "Shipped", "In Transit", "Delivered", "Collected"];
   const activeIdx =
-    norm === "Delivered" ? 3 :
-    norm === "Out for Delivery" ? 3 :
-    norm === "In Transit" ? 2 :
-    norm === "Processing" ? 1 : 0;
+    norm === "Collected"  ? 5 :
+    norm === "Delivered"  ? 4 :
+    norm === "In Transit" ? 3 :
+    norm === "Shipped"    ? 2 :
+    norm === "Confirmed"  ? 1 : 0;
   const doneSet = new Set(
-    norm === "Delivered" ? [0,1,2,3] :
-    norm === "Out for Delivery" ? [0,1,2] :
-    norm === "In Transit" ? [0,1] :
+    norm === "Collected"  ? [0,1,2,3,4,5] :
+    norm === "Delivered"  ? [0,1,2,3,4] :
+    norm === "In Transit" ? [0,1,2,3] :
+    norm === "Shipped"    ? [0,1,2] :
+    norm === "Confirmed"  ? [0,1] :
     norm === "Processing" ? [0] : []
   );
   return steps.map((label, i) => ({
     label,
     done: doneSet.has(i),
-    active: i === activeIdx && norm !== "Delivered" && norm !== "Cancelled",
+    active: i === activeIdx && norm !== "Collected" && norm !== "Cancelled",
     date: "",
   }));
 }
 
 const statusColors: Record<string, string> = {
-  "In Transit": "bg-primary/10 text-primary",
-  "Delivered": "bg-green-500/10 text-green-600",
-  "Out for Delivery": "bg-orange-500/10 text-orange-600",
-  "Cancelled": "bg-red-500/10 text-red-600",
-  "Pending": "bg-yellow-500/10 text-yellow-600",
+  "Pending":    "bg-yellow-500/10 text-yellow-600",
   "Processing": "bg-blue-500/10 text-blue-600",
+  "Confirmed":  "bg-indigo-500/10 text-indigo-600",
+  "Shipped":    "bg-sky-500/10 text-sky-600",
+  "In Transit": "bg-primary/10 text-primary",
+  "Delivered":  "bg-green-500/10 text-green-600",
+  "Collected":  "bg-emerald-500/10 text-emerald-600",
+  "Cancelled":  "bg-red-500/10 text-red-600",
+  "Refunded":   "bg-orange-500/10 text-orange-600",
+  "Returned":   "bg-pink-500/10 text-pink-600",
 };
 
 interface OrderItem {
