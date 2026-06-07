@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Link } from "wouter";
+import { Link, useSearch } from "wouter";
 import {
   Heart, ShoppingCart, Star, ChevronRight, Zap, Headphones, X, ChevronDown,
 } from "lucide-react";
@@ -25,6 +25,7 @@ function toAnchor(name: string) {
 const AUTO_SLIDE_INTERVAL = 3000; // 3 seconds
 
 export default function ShopPage() {
+  const search = useSearch();
   const [selectedCat, setSelectedCat] = useState<string>("All");
   const [selectedBrand, setSelectedBrand] = useState<string>("");
   const [heroDot, setHeroDot] = useState(0);
@@ -49,13 +50,15 @@ export default function ShopPage() {
     ? new URLSearchParams(window.location.search).get("search") || ""
     : "";
 
-  // Read brand query from URL (?brand=...)
+  // Read brand query from URL (?brand=...) — reacts to URL changes without refresh
   useEffect(() => {
-    const brandParam = new URLSearchParams(window.location.search).get("brand");
+    const brandParam = new URLSearchParams(search).get("brand");
     if (brandParam) {
       setActiveBrandPanel(decodeURIComponent(brandParam));
+    } else {
+      setActiveBrandPanel(null);
     }
-  }, []);
+  }, [search]);
 
   useEffect(() => {
     fetchCategories().then((cats) => {
@@ -65,7 +68,7 @@ export default function ShopPage() {
       setBrands(bs);
       if (bs.length > 0) setSelectedBrand(bs[0].name);
     });
-    const searchQ = new URLSearchParams(window.location.search).get("search") || "";
+    const searchQ = new URLSearchParams(search).get("search") || "";
     fetchProducts({ take: 50, search: searchQ || undefined }).then(setAllProducts);
     fetchAllBrandBanners().then((banners) => {
       const bySlug: Record<string, ApiBrandBanner> = {};
@@ -169,8 +172,14 @@ export default function ShopPage() {
 
   const uniqueBrands = Array.from(new Set(allProducts.map((p) => p.brand).filter(Boolean)));
 
+  // Normalize to slug for comparison — sidebar sends brand.slug, p.brand is the display name
+  const toSlug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+
   const brandPanelProducts = activeBrandPanel
-    ? allProducts.filter((p) => p.brand === activeBrandPanel)
+    ? allProducts.filter((p) =>
+        p.brand === activeBrandPanel ||
+        toSlug(p.brand || "") === toSlug(activeBrandPanel)
+      )
     : [];
   const brandPanelFiltered = brandPanelCat === "All"
     ? brandPanelProducts
@@ -187,6 +196,13 @@ export default function ShopPage() {
     setHeroDot(0);
     setActiveBrandPanel(brandName);
   };
+
+  // Resolve the real display name from matched products (URL may have slug like "samsung")
+  const brandDisplayName = brandPanelProducts.length > 0
+    ? brandPanelProducts[0].brand
+    : activeBrandPanel
+      ? activeBrandPanel.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+      : "";
 
   const closeBrandPanel = () => {
     setActiveBrandPanel(null);
@@ -210,7 +226,7 @@ export default function ShopPage() {
                   Shop by Brand
                 </p>
                 <SheetTitle className="text-lg font-black text-foreground leading-tight mt-0.5">
-                  {activeBrandPanel}
+                  {brandDisplayName}
                 </SheetTitle>
                 <p className="text-[11px] text-muted-foreground mt-0.5">
                   {brandPanelProducts.length} product{brandPanelProducts.length !== 1 ? "s" : ""}
@@ -292,7 +308,7 @@ export default function ShopPage() {
                       <div className="mt-2">
                         <Link href={panelHero.ctaLink}>
                           <button className="inline-flex items-center gap-1 bg-white text-teal-700 text-[11px] font-bold px-3 py-1.5 rounded-full hover:opacity-90 transition-opacity">
-                            {panelHero.ctaText || `Shop ${activeBrandPanel}`}
+                            {panelHero.ctaText || `Shop ${brandDisplayName}`}
                             <ChevronRight className="w-3 h-3" />
                           </button>
                         </Link>
@@ -325,7 +341,7 @@ export default function ShopPage() {
                     <div className="mt-2">
                       <Link href={panelHero.ctaLink}>
                         <button className="inline-flex items-center gap-1 bg-foreground text-background text-[11px] font-bold px-3 py-1.5 rounded-full hover:opacity-90 transition-opacity">
-                          {panelHero.ctaText || `Shop ${activeBrandPanel}`}
+                          {panelHero.ctaText || `Shop ${brandDisplayName}`}
                           <ChevronRight className="w-3 h-3" />
                         </button>
                       </Link>
