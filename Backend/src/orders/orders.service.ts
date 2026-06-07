@@ -25,7 +25,7 @@ export class OrdersService {
 
   async findAll(userId?: string, params?: { skip?: number; take?: number; status?: string }) {
     const { skip = 0, take: rawTake = 20, status } = params || {};
-    const take = Math.min(Math.max(1, Number(rawTake) || 20), 100);
+    const take = Math.min(Math.max(1, Number(rawTake) || 20), 500); // Admin can fetch up to 500 orders
     const where: any = userId ? { userId } : {};
     if (status) where.status = status;
 
@@ -490,33 +490,48 @@ export class OrdersService {
     return order;
   }
 
-  async updateStatus(id: string, status: string, paymentStatus?: string) {
+  async updateStatus(id: string, status?: string, paymentStatus?: string, trackingNumber?: string, notes?: string) {
     const existingOrder = await this.findById(id);
     const order = await this.prisma.$transaction(async (tx) => {
-      const data: any = { status: status as any };
-      if (paymentStatus) {
-        data.paymentStatus = paymentStatus as any;
+      const data: any = {};
+
+      if (status) {
+        data.status = status as any;
+        // Auto-set timestamps based on status transitions
+        if (status === 'SHIPPED') data.shippedAt = new Date();
+        if (status === 'DELIVERED') data.deliveredAt = new Date();
+        if (trackingNumber) data.trackingNumber = trackingNumber;
       }
+      if (paymentStatus) data.paymentStatus = paymentStatus as any;
 
       const updatedOrder = await tx.order.update({
         where: { id },
         data,
       });
 
+      // Use the new status for the log, or existing status if only paymentStatus changed
+      const logStatus = (status || existingOrder.status) as any;
+      const autoNotes = [
+        status ? `Status → ${status}` : null,
+        paymentStatus ? `Payment → ${paymentStatus}` : null,
+        trackingNumber ? `Tracking: ${trackingNumber}` : null,
+      ].filter(Boolean).join(' | ');
+
       await tx.orderLog.create({
         data: {
           orderId: id,
-          status: status as any,
-          notes: `Order status updated to ${status}${paymentStatus ? ` (Payment: ${paymentStatus})` : ''}`,
+          status: logStatus,
+          notes: notes || autoNotes || 'Updated',
         },
       });
 
       return updatedOrder;
     });
 
-    // Send Status Update Notification
-    if (order.userId) {
-      await this.notificationsService.sendOrderStatusNotification(order.id, status);
+    // Send push notification only when order status changes (not just payment)
+    if (order.userId && status) {
+      this.notificationsService.sendOrderStatusNotification(order.id, status)
+        .catch(e => console.warn('Status notification failed:', e?.message));
     }
 
     return order;
