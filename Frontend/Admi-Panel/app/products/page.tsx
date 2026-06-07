@@ -198,6 +198,7 @@ function ProductsContent() {
         images: productImages,
         stock: Number(form.stock), sold: 0,
         featured: strToBool(form.featured),
+        isFlashSale: strToBool(form.isFlashSale),
         showGuaranteeBadge: strToBool(form.showGuaranteeBadge),
         showReturnsBadge: strToBool(form.showReturnsBadge),
       };
@@ -222,6 +223,7 @@ function ProductsContent() {
         images: productImages,
         stock: Number(form.stock),
         featured: strToBool(form.featured),
+        isFlashSale: strToBool(form.isFlashSale),
         showGuaranteeBadge: strToBool(form.showGuaranteeBadge),
         showReturnsBadge: strToBool(form.showReturnsBadge),
       } : p));
