@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { API_BASE } from "@/lib/api";
 
 interface CmsBrand {
@@ -9,6 +9,11 @@ interface CmsBrand {
 
 export default function BrandsSection() {
   const [brands, setBrands] = useState<CmsBrand[]>([]);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const dirRef = useRef<1 | -1>(1);
+  const animRef = useRef<number>(0);
+  const pausedRef = useRef(false);
+  const lastTimeRef = useRef(0);
 
   useEffect(() => {
     fetch(`${API_BASE}/api/cms/site-config/trusted-brands`, { cache: "no-store" })
@@ -28,10 +33,53 @@ export default function BrandsSection() {
       .catch(() => {});
   }, []);
 
+  // Auto-scroll left ↔ right
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el || brands.length === 0) return;
+
+    const SPEED = 0.4; // px per ms — smooth, not too fast
+
+    const tick = (time: number) => {
+      if (pausedRef.current) {
+        animRef.current = requestAnimationFrame(tick);
+        return;
+      }
+      if (lastTimeRef.current === 0) lastTimeRef.current = time;
+      const delta = Math.min(time - lastTimeRef.current, 50);
+      lastTimeRef.current = time;
+
+      const maxScroll = el.scrollWidth - el.clientWidth;
+      if (maxScroll > 0) {
+        if (el.scrollLeft >= maxScroll - 1) dirRef.current = -1;
+        if (el.scrollLeft <= 1) dirRef.current = 1;
+        el.scrollLeft += dirRef.current * SPEED * delta;
+      }
+      animRef.current = requestAnimationFrame(tick);
+    };
+
+    animRef.current = requestAnimationFrame(tick);
+
+    const pause = () => { pausedRef.current = true; };
+    const resume = () => { pausedRef.current = false; lastTimeRef.current = 0; };
+
+    el.addEventListener("mouseenter", pause);
+    el.addEventListener("mouseleave", resume);
+    el.addEventListener("touchstart", pause, { passive: true });
+    el.addEventListener("touchend", resume);
+
+    return () => {
+      cancelAnimationFrame(animRef.current);
+      el.removeEventListener("mouseenter", pause);
+      el.removeEventListener("mouseleave", resume);
+      el.removeEventListener("touchstart", pause);
+      el.removeEventListener("touchend", resume);
+    };
+  }, [brands]);
+
   if (brands.length === 0) return null;
 
   const handleBrandClick = (brand: CmsBrand) => {
-    // Navigate to shop page and open that brand panel
     window.location.href = `/shop#brand-${brand.shopSlug}`;
   };
 
@@ -40,8 +88,9 @@ export default function BrandsSection() {
       <div className="px-4 md:px-6 max-w-7xl mx-auto">
         <h2 className="text-base md:text-xl font-black text-foreground mb-4">Top Brands</h2>
 
-        {/* Unified horizontal sliding carousel — mobile & desktop */}
+        {/* Auto-scrolling horizontal carousel */}
         <div
+          ref={scrollRef}
           className="flex items-center gap-2.5 overflow-x-auto scroll-smooth pb-2"
           style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
         >
