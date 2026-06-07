@@ -310,7 +310,8 @@ export class NotificationsController {
   @ApiOperation({ summary: 'Send email blast to contacts (Admin only) — max 5/min' })
   async sendEmailBlast(@Body() body: { subject: string; body: string; emailIds?: string[] }) {
     return this.notificationsService.sendEmailBlast(body.subject, body.body, body.emailIds);
-  
+  }
+
   // ─── Public Payment Receipt ───────────────────────────────────────────────
   @Post('receipt')
   @Throttle({ default: { ttl: 60000, limit: 5 } })
@@ -377,8 +378,5 @@ export class NotificationsController {
 
     return { success: smsSent || emailSent, smsSent, emailSent };
   }
-
-}
-
 
 }
