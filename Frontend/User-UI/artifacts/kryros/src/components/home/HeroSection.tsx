@@ -75,7 +75,7 @@ export default function HeroSection() {
   return (
     <section
       className="relative overflow-hidden"
-      style={{ height: "clamp(280px, 46vw, 500px)" }}
+      style={{ height: "clamp(330px, 56vw, 520px)" }}
     >
       {/* Media layer */}
       <AnimatePresence mode="wait">
