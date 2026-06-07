@@ -54,6 +54,11 @@ export class CreatePickupStationDto {
   @IsOptional()
   description?: string;
 
+  @Transform(({ value }) => value?.trim())
+  @IsString()
+  @IsOptional()
+  image?: string;
+
   @IsBoolean()
   @IsOptional()
   isActive?: boolean;
@@ -114,6 +119,11 @@ export class UpdatePickupStationDto {
   @IsString()
   @IsOptional()
   description?: string;
+
+  @Transform(({ value }) => value?.trim())
+  @IsString()
+  @IsOptional()
+  image?: string;
 
   @IsBoolean()
   @IsOptional()
