@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRoute, Link } from "wouter";
 import { 
   ChevronLeft, 
@@ -26,6 +26,8 @@ import { useWishlistStore } from "@/store/wishlistStore";
 import { useCurrencyStore } from "@/store/currencyStore";
 import UnifiedProductCard from "@/components/UnifiedProductCard";
 
+const SLIDE_INTERVAL = 3500;
+
 export default function ProductPage() {
   const [, params] = useRoute("/product/:slug");
   const id = params?.slug;
@@ -35,6 +37,7 @@ export default function ProductPage() {
   const [loading, setLoading] = useState(true);
   const [qty, setQty] = useState(1);
   const [activeImg, setActiveImg] = useState("");
+  const [activeIndex, setActiveIndex] = useState(0);
   const [openSection, setOpenSection] = useState<string | null>("description");
   const [storeStatus, setStoreStatus] = useState<{
     isStoreClosed: boolean;
@@ -45,6 +48,12 @@ export default function ProductPage() {
     nextOpeningTime?: string;
     nextOpeningDay?: string;
   } | null>(null);
+
+  // Swipe / auto-slide refs
+  const slideRef = useRef<HTMLDivElement>(null);
+  const autoRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const touchStartX = useRef(0);
+  const touchEndX = useRef(0);
 
   const addToCart = useCartStore((s) => s.addToCart);
   const { toggleWishlist, isWishlisted } = useWishlistStore();
@@ -69,6 +78,71 @@ export default function ProductPage() {
     
     window.scrollTo(0, 0);
   }, [id]);
+
+  const images = product
+    ? product.additionalImages
+      ? [product.image, ...product.additionalImages]
+      : [product.image]
+    : [];
+
+  // Auto-slide effect
+  useEffect(() => {
+    if (images.length <= 1) return;
+    autoRef.current = setInterval(() => {
+      setActiveIndex((prev) => {
+        const next = (prev + 1) % images.length;
+        setActiveImg(images[next]);
+        return next;
+      });
+    }, SLIDE_INTERVAL);
+    return () => { if (autoRef.current) clearInterval(autoRef.current); };
+  }, [images.length, product]);
+
+  const goToSlide = (index: number) => {
+    if (autoRef.current) clearInterval(autoRef.current);
+    setActiveIndex(index);
+    setActiveImg(images[index]);
+    // Restart auto-slide after manual interaction
+    if (images.length > 1) {
+      autoRef.current = setInterval(() => {
+        setActiveIndex((prev) => {
+          const next = (prev + 1) % images.length;
+          setActiveImg(images[next]);
+          return next;
+        });
+      }, SLIDE_INTERVAL);
+    }
+  };
+
+  // Swipe handlers
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.targetTouches[0].clientX;
+    if (autoRef.current) clearInterval(autoRef.current);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    touchEndX.current = e.targetTouches[0].clientX;
+  };
+
+  const handleTouchEnd = () => {
+    const diff = touchStartX.current - touchEndX.current;
+    if (Math.abs(diff) > 40) {
+      const dir = diff > 0 ? 1 : -1;
+      const next = (activeIndex + dir + images.length) % images.length;
+      goToSlide(next);
+    } else {
+      // Restart auto-slide if no meaningful swipe
+      if (images.length > 1) {
+        autoRef.current = setInterval(() => {
+          setActiveIndex((prev) => {
+            const n = (prev + 1) % images.length;
+            setActiveImg(images[n]);
+            return n;
+          });
+        }, SLIDE_INTERVAL);
+      }
+    }
+  };
 
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center bg-background">
@@ -109,8 +183,6 @@ export default function ProductPage() {
     window.location.href = "/checkout";
   };
 
-  const images = product.additionalImages ? [product.image, ...product.additionalImages] : [product.image];
-
   return (
     <div className="min-h-screen bg-background pb-[140px]">
       {/* Header */}
@@ -127,21 +199,50 @@ export default function ProductPage() {
         </div>
       </div>
 
-      {/* Image Gallery */}
-      <div className="bg-[#F1F1F1] dark:bg-[#101826] aspect-square relative overflow-hidden">
-        <img src={activeImg} alt={product.name} className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal" />
+      {/* Image Gallery — swipeable + auto-sliding */}
+      <div
+        ref={slideRef}
+        className="bg-[#F1F1F1] dark:bg-[#101826] aspect-square relative overflow-hidden select-none"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
+        <img
+          src={activeImg}
+          alt={product.name}
+          className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal transition-opacity duration-300"
+          draggable={false}
+        />
         {product.discount > 0 && (
           <div className="absolute top-4 left-4 bg-[#B91C1C] text-white font-black px-3 py-1 rounded-xl text-sm shadow-lg z-10">
             -{product.discount}% OFF
           </div>
         )}
+
+        {/* Dot indicators — only if multiple images */}
+        {images.length > 1 && (
+          <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5 z-10">
+            {images.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => goToSlide(i)}
+                className={`rounded-full transition-all ${
+                  activeIndex === i
+                    ? "w-5 h-1.5 bg-white shadow"
+                    : "w-1.5 h-1.5 bg-white/50"
+                }`}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
+      {/* Thumbnail strip — only shown if multiple images */}
       {images.length > 1 && (
         <div className="flex gap-2 overflow-x-auto no-scrollbar px-4 mt-4">
           {images.map((img, i) => (
-            <button key={i} onClick={() => setActiveImg(img)} 
-              className={`flex-shrink-0 w-20 h-20 rounded-2xl border-2 overflow-hidden transition-all bg-[#F1F1F1] dark:bg-[#101826] ${activeImg === img ? "border-primary shadow-md scale-95" : "border-transparent"}`}>
+            <button key={i} onClick={() => goToSlide(i)}
+              className={`flex-shrink-0 w-20 h-20 rounded-2xl border-2 overflow-hidden transition-all bg-[#F1F1F1] dark:bg-[#101826] ${activeIndex === i ? "border-primary shadow-md scale-95" : "border-transparent"}`}>
               <img src={img} alt="" className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal" />
             </button>
           ))}
@@ -221,17 +322,14 @@ export default function ProductPage() {
           </button>
         </div>
 
-        {/* Store Closed Status — Detailed Box */}
+        {/* Store Closed Status */}
         {storeStatus?.isStoreClosed && (
           <div className="bg-secondary/50 border border-border rounded-xl shadow-sm overflow-hidden h-[50px] grid grid-cols-[35px_1fr_60px] items-center">
-            {/* Left: Icon */}
             <div className="flex justify-center border-r border-border h-full items-center">
               <div className="w-6 h-6 rounded-full border border-border flex items-center justify-center">
                 <Clock className="w-3.5 h-3.5 text-muted-foreground" strokeWidth={1.5} />
               </div>
             </div>
-
-            {/* Middle: Status & Hours */}
             <div className="flex flex-col justify-center px-2 min-w-0">
               <span className="text-[8px] font-black text-destructive leading-none mb-0.5 uppercase tracking-tighter whitespace-nowrap">CLOSED NOW</span>
               <div className="flex flex-col whitespace-nowrap overflow-hidden">
@@ -239,8 +337,6 @@ export default function ProductPage() {
                 <span className="text-[7px] font-medium text-muted-foreground leading-none truncate">{storeStatus?.openingTime} - {storeStatus?.closingTime}</span>
               </div>
             </div>
-
-            {/* Right: Next Opening */}
             <div className="flex flex-col items-end justify-center border-l border-border pr-2 h-full">
               <span className="text-[10px] font-black text-primary leading-none mb-0.5 whitespace-nowrap">{storeStatus?.nextOpeningTime}</span>
               <span className="text-[7px] font-bold text-muted-foreground leading-none whitespace-nowrap">{storeStatus?.nextOpeningDay}</span>
@@ -308,7 +404,7 @@ export default function ProductPage() {
         )}
       </div>
 
-      {/* Sticky bottom CTA — fixed at bottom-0; nav (z-50) slides over it on scroll */}
+      {/* Sticky bottom CTA */}
       <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-xl border-t border-border px-4 py-3 z-40">
         <div className="flex gap-3 max-w-lg mx-auto">
           {storeStatus?.isStoreClosed ? (
