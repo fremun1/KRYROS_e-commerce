@@ -670,7 +670,7 @@ export default function PayPage() {
               <input
                 value={receiptPhone}
                 onChange={(e) => setReceiptPhone(e.target.value.replace(/[^0-9+\s-]/g, ""))}
-                placeholder="Phone number (SMS receipt)"
+                placeholder="Enter your phone number for SMS receipt"
                 inputMode="tel"
                 className="flex-1 text-sm text-foreground outline-none bg-transparent placeholder:text-muted-foreground/50 py-0.5"
               />
@@ -680,7 +680,7 @@ export default function PayPage() {
               <input
                 value={receiptEmail}
                 onChange={(e) => setReceiptEmail(e.target.value)}
-                placeholder="Email address (email receipt)"
+                placeholder="Enter your email for receipt notification"
                 inputMode="email"
                 type="email"
                 className="flex-1 text-sm text-foreground outline-none bg-transparent placeholder:text-muted-foreground/50 py-0.5"
@@ -842,7 +842,7 @@ export default function PayPage() {
                       <input
                         value={mmPhone}
                         onChange={(e) => setMmPhone(e.target.value)}
-                        placeholder="+XXX XXXXXXXXX"
+                        placeholder="Enter your mobile money number"
                         type="tel"
                         className="flex-1 text-sm text-foreground outline-none bg-transparent"
                       />
