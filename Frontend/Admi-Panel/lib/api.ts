@@ -106,6 +106,11 @@ export const updateOrderStatus = (
   data: { status?: string; paymentStatus?: string; trackingNumber?: string; notes?: string }
 ) => api.put(`/api/orders/${id}/status`, data);
 
+export const bulkUpdateOrderStatus = (
+  ids: string[],
+  status: string,
+) => api.put('/api/orders/bulk-status', { ids, status });
+
 // ── Products ──────────────────────────────────────────────
 export const getProducts = (params?: Record<string, unknown>) =>
   api.get("/api/products", { params });
