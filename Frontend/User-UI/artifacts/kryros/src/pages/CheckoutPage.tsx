@@ -6,7 +6,7 @@ import { useCurrencyStore } from "@/store/currencyStore";
 import { API_BASE } from "@/lib/api";
 import {
   Check, CreditCard, Smartphone, Building2,
-  Lock, ChevronLeft, ChevronRight, Truck, Zap, Clock, Download,
+  Lock, ChevronLeft, ChevronRight, Truck, Zap, Clock,
   User, Mail, Phone, MapPin, Home, Globe, X, Upload, ChevronDown,
 } from "lucide-react";
 
@@ -17,46 +17,38 @@ const SHIPPING_OPTIONS = [
   { id: "priority", label: "Priority Delivery", detail: "Next business day", price: 30, icon: Clock },
 ];
 
-const MobileMoneyCombinedIcon = () => (
-  <div className="flex items-center gap-1.5 bg-muted/50 px-2 py-1 rounded-md border border-border/50 shadow-sm">
-    <span className="text-[9px] font-black text-yellow-600 tracking-tight">MTN</span>
-    <div className="w-px h-2.5 bg-border/80" />
-    <span className="text-[9px] font-black text-red-600 tracking-tight">Airtel</span>
-    <div className="w-px h-2.5 bg-border/80" />
-    <span className="text-[9px] font-black text-green-600 tracking-tight">Zamtel</span>
-  </div>
-);
-
-function ProviderLogo({ provider }: { provider: string }) {
-  if (provider.toLowerCase().includes("airtel")) return <span className="text-xs font-bold text-red-600 bg-red-50 dark:bg-red-900/30 px-2 py-1 rounded-lg">Airtel</span>;
-  if (provider.toLowerCase().includes("zamtel")) return <span className="text-xs font-bold text-green-600 bg-green-50 dark:bg-green-900/30 px-2 py-1 rounded-lg">Zamtel</span>;
-  return <span className="text-xs font-bold text-yellow-600 bg-yellow-50 dark:bg-yellow-900/30 px-2 py-1 rounded-lg">MTN</span>;
-}
-
 const DEFAULT_CHECKOUT_METHODS = [
   {
-    id: "mobile", label: "Mobile Money", sub: "MTN, Airtel, Zamtel",
-    iconBg: "bg-yellow-50 dark:bg-yellow-900/20",
-    icon: () => <MobileMoneyCombinedIcon />,
+    id: "mobile",
+    label: "Mobile Money",
+    sub: "MTN, Airtel, Zamtel",
+    icon: Smartphone,
+    iconBg: "bg-primary/10",
   },
   {
-    id: "card", label: "Card Payment", sub: "Visa, Mastercard & more",
-    iconBg: "bg-primary/10 dark:bg-primary/10",
-    icon: () => <CreditCard className="w-5 h-5 text-primary" />,
+    id: "card",
+    label: "Card Payment",
+    sub: "Visa, Mastercard & more",
+    icon: CreditCard,
+    iconBg: "bg-blue-50 dark:bg-blue-900/20",
   },
   {
-    id: "bank", label: "Bank Transfer", sub: "Local & International",
-    iconBg: "bg-muted dark:bg-muted",
-    icon: () => <Building2 className="w-5 h-5 text-muted-foreground" />,
+    id: "bank",
+    label: "Bank Transfer",
+    sub: "Local & International",
+    icon: Building2,
+    iconBg: "bg-slate-50 dark:bg-slate-800",
   },
   {
-    id: "whatsapp", label: "WhatsApp Payment", sub: "Pay securely on WhatsApp",
-    iconBg: "bg-green-50 dark:bg-green-900/20",
+    id: "whatsapp",
+    label: "WhatsApp Payment",
+    sub: "Pay securely on WhatsApp",
     icon: () => (
-      <svg viewBox="0 0 24 24" className="w-5 h-5" fill="var(--kryros-primary-hover)">
+      <svg viewBox="0 0 24 24" className="w-5 h-5 text-primary" fill="currentColor">
         <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
       </svg>
     ),
+    iconBg: "bg-primary/10",
   },
 ];
 
@@ -220,6 +212,7 @@ export default function CheckoutPage() {
   const total = SUBTOTAL - DISCOUNT + TAX + shippingPrice;
 
   const [openMethod, setOpenMethod] = useState<string | null>(null);
+  const [showProviderDrop, setShowProviderDrop] = useState(false);
   const [cardNum, setCardNum] = useState("");
   const [expiry, setExpiry] = useState("");
   const [cvv, setCvv] = useState("");
@@ -686,7 +679,7 @@ export default function CheckoutPage() {
         {/* ── STEP 4: PAYMENT ── */}
         {step === 4 && (
           <div className="space-y-4">
-            {/* You are paying summary */}
+            {/* Amount summary — exactly like PayPage step 2 */}
             <div className="space-y-1">
               <div className="flex items-center justify-between">
                 <span className="text-xs text-muted-foreground">You are paying</span>
@@ -705,7 +698,7 @@ export default function CheckoutPage() {
               </div>
             </div>
 
-            {/* Method list */}
+            {/* Method list — identical to PayPage */}
             <div>
               <p className="text-sm font-bold text-foreground mb-3">Choose payment method</p>
               <div className="space-y-2">
@@ -714,256 +707,284 @@ export default function CheckoutPage() {
                   return (
                     <button
                       key={m.id}
-                      onClick={() => !m.comingSoon && setOpenMethod(m.id)}
-                      disabled={m.comingSoon}
-                      className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl border transition-all text-left
-                        ${m.comingSoon ? "border-border opacity-60 cursor-not-allowed bg-card" : "border-border bg-card hover:border-primary/50 hover:bg-primary/[0.02] active:scale-[0.99]"}`}
+                      onClick={() => setOpenMethod(m.id)}
+                      className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl border border-border bg-card hover:border-primary/50 hover:bg-primary/[0.02] active:scale-[0.99] transition-all text-left"
                     >
                       <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${m.iconBg}`}>
                         <Icon />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-bold text-foreground">{m.label}</p>
-                        <p className="text-[11px] text-muted-foreground">{m.sub}</p>
+                        <p className="text-[11px] text-muted-foreground">{m.id === "mobile" ? mobileNetworks.join(", ") : m.sub}</p>
                       </div>
-                      {m.comingSoon ? (
-                        <span className="text-[10px] font-bold text-[#FFC107] bg-[#FFC107]/10 dark:bg-[#FFC107]/10 border border-[#FFC107]/30 px-2 py-0.5 rounded-full flex-shrink-0">
-                          Coming Soon
-                        </span>
-                      ) : (
-                        <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                      )}
+                      <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                     </button>
                   );
                 })}
               </div>
             </div>
 
-            <button onClick={() => setStep(3)} className="w-full text-xs text-muted-foreground text-center hover:text-primary transition-colors">
+            <button onClick={() => setStep(3)} className="w-full text-xs text-muted-foreground text-center hover:text-primary transition-colors py-2">
               ← Back to Shipping
             </button>
           </div>
         )}
-
-        {/* ══════════════════════════════════════════
-            PAYMENT METHOD BOTTOM SHEET
-        ══════════════════════════════════════════ */}
-        {openMethod && step === 4 && (
-          <div className="fixed inset-0 z-50 flex flex-col justify-end">
-            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setOpenMethod(null)} />
-            <div className="relative bg-background rounded-t-3xl shadow-2xl max-h-[92vh] overflow-y-auto">
-              <div className="flex justify-center pt-3 pb-1">
-                <div className="w-10 h-1 rounded-full bg-border" />
-              </div>
-              <div className="px-5 pb-8 space-y-4">
-                {/* Sheet header */}
-                <div className="flex items-center justify-between pt-1 pb-2">
-                  {(() => {
-                    const m = activeCheckoutMethods.find((x) => x.id === openMethod)!;
-                    const Icon = m.icon;
-                    return (
-                      <div className="flex items-center gap-2.5">
-                        <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${m.iconBg}`}>
-                          <Icon />
-                        </div>
-                        <span className="text-base font-black text-foreground">{m.label}</span>
-                      </div>
-                    );
-                  })()}
-                  <button onClick={() => setOpenMethod(null)}
-                    className="w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors">
-                    <X className="w-4 h-4 text-foreground" />
-                  </button>
-                </div>
-
-                {/* ── MOBILE MONEY ── */}
-                {openMethod === "mobile" && (
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-[11px] font-semibold text-muted-foreground mb-1.5">Provider</label>
-                      <div className="flex items-center gap-2 border border-border rounded-2xl px-3.5 py-3 bg-background focus-within:ring-2 focus-within:ring-primary/30">
-                        <ProviderLogo provider={mmProvider} />
-                        <select value={mmProvider} onChange={(e) => setMmProvider(e.target.value)}
-                          className="flex-1 text-sm text-foreground outline-none bg-transparent">
-                          {mobileNetworks.map((net) => (
-                            <option key={net}>{net}</option>
-                          ))}
-                        </select>
-                        <ChevronDown className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-[11px] font-semibold text-muted-foreground mb-1.5">Mobile Money Number</label>
-                      <div className="flex items-center gap-2 border border-border rounded-2xl px-3.5 py-3 bg-background focus-within:ring-2 focus-within:ring-primary/30">
-                        <Smartphone className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                        <input value={mmPhone} onChange={(e) => setMmPhone(e.target.value)}
-                          placeholder="+XXX XXXXXXXXX" type="tel"
-                          className="flex-1 text-sm text-foreground outline-none bg-transparent" />
-                      </div>
-                    </div>
-                    <div className="bg-primary/5 border border-primary/15 rounded-2xl px-4 py-3">
-                      <p className="text-[11px] text-muted-foreground">A payment prompt will be sent to your mobile phone. Please approve it to complete the payment.</p>
-                    </div>
-                    <div className="border-t border-border pt-4 space-y-1.5">
-                      <div className="flex justify-between text-xs"><span className="text-muted-foreground">Subtotal</span><span className="font-semibold text-foreground">{format(SUBTOTAL)}</span></div>
-                      <div className="flex justify-between text-xs"><span className="text-muted-foreground">Shipping</span><span className="font-semibold text-foreground">{shippingPrice === 0 ? "Free" : format(shippingPrice)}</span></div>
-                      <div className="flex justify-between text-xs font-black pt-1 border-t border-border"><span className="text-foreground">Total</span><span className="text-primary">{format(total)}</span></div>
-                    </div>
-                    {orderError && <p className="text-xs text-destructive text-center font-semibold">{orderError}</p>}
-                    <button onClick={handleMobileMoneyPay} disabled={isSubmitting || !mmPhone.trim()}
-                      className="w-full py-4 bg-primary text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-primary/90 active:scale-95 transition-all disabled:opacity-60 disabled:cursor-not-allowed">
-                      {isSubmitting ? <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> : <Smartphone className="w-4 h-4" />}
-                      {isSubmitting ? "Processing…" : `Send Payment Prompt — ${format(total)}`}
-                    </button>
-                    <SecureFooter />
-                  </div>
-                )}
-
-                {/* ── CARD PAYMENT ── */}
-                {openMethod === "card" && (
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-[11px] font-semibold text-muted-foreground mb-1.5">Card Number</label>
-                      <div className="flex items-center gap-2 border border-border rounded-2xl px-3.5 py-3 bg-background focus-within:ring-2 focus-within:ring-primary/30">
-                        <input value={cardNum} onChange={(e) => setCardNum(e.target.value)} placeholder="1234 5678 9012 3456"
-                          className="flex-1 text-sm text-foreground outline-none bg-transparent" />
-                        <CreditCard className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-[11px] font-semibold text-muted-foreground mb-1.5">Expiry Date</label>
-                        <input value={expiry} onChange={(e) => setExpiry(e.target.value)} placeholder="MM / YY"
-                          className="w-full border border-border rounded-2xl px-3.5 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/30 bg-background text-foreground" />
-                      </div>
-                      <div>
-                        <label className="block text-[11px] font-semibold text-muted-foreground mb-1.5">CVV</label>
-                        <input value={cvv} onChange={(e) => setCvv(e.target.value)} placeholder="123" type="password"
-                          className="w-full border border-border rounded-2xl px-3.5 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/30 bg-background text-foreground" />
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-[11px] font-semibold text-muted-foreground mb-1.5">Cardholder Name</label>
-                      <input value={cardName} onChange={(e) => setCardName(e.target.value)} placeholder="John Doe"
-                        className="w-full border border-border rounded-2xl px-3.5 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/30 bg-background text-foreground" />
-                    </div>
-                    <div className="flex items-center justify-between py-1">
-                      <span className="text-xs font-semibold text-foreground">Save card for future payments</span>
-                      <button onClick={() => setSaveCard(!saveCard)}
-                        className={`w-11 h-6 rounded-full transition-colors relative flex-shrink-0 ${saveCard ? "bg-primary" : "bg-muted"}`}>
-                        <div className={`w-4 h-4 rounded-full bg-white shadow absolute top-1 transition-transform ${saveCard ? "translate-x-6" : "translate-x-1"}`} />
-                      </button>
-                    </div>
-                    <div className="border-t border-border pt-4 space-y-1.5">
-                      <div className="flex justify-between text-xs"><span className="text-muted-foreground">Subtotal</span><span className="font-semibold text-foreground">{format(SUBTOTAL)}</span></div>
-                      <div className="flex justify-between text-xs"><span className="text-muted-foreground">Shipping</span><span className="font-semibold text-foreground">{shippingPrice === 0 ? "Free" : format(shippingPrice)}</span></div>
-                      <div className="flex justify-between text-xs font-black pt-1 border-t border-border"><span className="text-foreground">Total</span><span className="text-primary">{format(total)}</span></div>
-                    </div>
-                    {orderError && <p className="text-xs text-destructive text-center font-semibold">{orderError}</p>}
-                    <button onClick={handlePlaceOrder} disabled={isSubmitting}
-                      className="w-full py-4 bg-primary text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-primary/90 active:scale-95 transition-all disabled:opacity-60 disabled:cursor-not-allowed">
-                      {isSubmitting ? <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> : <Lock className="w-4 h-4" />}
-                      {isSubmitting ? "Placing Order…" : `Pay ${format(total)}`}
-                    </button>
-                    <p className="text-[10px] text-center text-muted-foreground">
-                      By placing your order, you agree to our <Link href="/terms"><span className="text-primary underline cursor-pointer">Terms</span></Link>
-                    </p>
-                    <SecureFooter />
-                  </div>
-                )}
-
-                {/* ── BANK TRANSFER ── */}
-                {openMethod === "bank" && (
-                  <div className="space-y-4">
-                    <div className="bg-primary/5 border border-primary/15 rounded-2xl px-4 py-3 flex items-start gap-2">
-                      <Building2 className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-                      <p className="text-[11px] text-muted-foreground">Please transfer the exact amount to the account below and use your payment reference as payment note.</p>
-                    </div>
-                    <div className="space-y-3">
-                      {[
-                        ...( bankProviders.length > 0
-                          ? bankProviders.flatMap((acc) => [
-                              { label: "Bank Name",      val: acc.name },
-                              { label: "Account Name",   val: acc.config?.accountName   || "" },
-                              { label: "Account Number", val: acc.config?.accountNumber || "" },
-                            ])
-                          : [
-                              { label: "Bank Name",      val: "Stanbic Bank Zambia" },
-                              { label: "Account Name",   val: "KRYROS LIMITED"      },
-                              { label: "Account Number", val: "91200012345667"      },
-                            ]
-                        ),
-                        { label: "Reference", val: "#KRY-2024-00012345" },
-                      ].map(({ label, val }) => (
-                        <div key={label} className="flex items-center justify-between py-2 border-b border-border last:border-0">
-                          <div>
-                            <p className="text-[10px] text-muted-foreground">{label}</p>
-                            <p className="text-sm font-bold text-foreground">{val}</p>
-                          </div>
-                          <CopyBtn text={val} />
-                        </div>
-                      ))}
-                    </div>
-                    <div>
-                      <p className="text-[11px] font-semibold text-muted-foreground mb-2">Upload Payment Proof</p>
-                      <button onClick={() => fileRef.current?.click()}
-                        className="w-full h-32 border-2 border-dashed border-border rounded-3xl flex flex-col items-center justify-center gap-2 hover:border-primary/50 hover:bg-primary/5 transition-all">
-                        {proofFile ? (
-                          <div className="flex flex-col items-center gap-1">
-                            <Check className="w-8 h-8 text-primary" />
-                            <p className="text-xs font-bold text-foreground">File Selected</p>
-                          </div>
-                        ) : (
-                          <>
-                            <Upload className="w-8 h-8 text-muted-foreground" />
-                            <p className="text-xs font-bold text-muted-foreground">Tap to upload receipt</p>
-                          </>
-                        )}
-                      </button>
-                      <input type="file" ref={fileRef} className="hidden" onChange={(e) => setProofFile(e.target.files?.[0]?.name || null)} />
-                    </div>
-                    <div className="border-t border-border pt-4 space-y-1.5">
-                      <div className="flex justify-between text-xs font-black"><span className="text-foreground">Total Payable</span><span className="text-primary">{format(total)}</span></div>
-                    </div>
-                    {orderError && <p className="text-xs text-destructive text-center font-semibold">{orderError}</p>}
-                    <button onClick={handlePlaceOrder} disabled={isSubmitting}
-                      className="w-full py-4 bg-primary text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-primary/90 active:scale-95 transition-all disabled:opacity-60 disabled:cursor-not-allowed">
-                      {isSubmitting ? <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> : <Check className="w-4 h-4" />}
-                      {isSubmitting ? "Placing Order…" : "I have made the transfer"}
-                    </button>
-                    <SecureFooter />
-                  </div>
-                )}
-
-                {/* ── WHATSAPP PAYMENT ── */}
-                {openMethod === "whatsapp" && (
-                  <div className="space-y-4">
-                    <div className="bg-green-50 border border-green-100 rounded-3xl p-6 flex flex-col items-center text-center space-y-3">
-                      <div className="w-16 h-16 bg-[var(--kryros-primary-hover)] rounded-full flex items-center justify-center shadow-lg shadow-green-200">
-                        <svg viewBox="0 0 24 24" className="w-8 h-8 text-white" fill="currentColor">
-                          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
-                        </svg>
-                      </div>
-                      <h3 className="text-base font-black text-foreground">WhatsApp Checkout</h3>
-                      <p className="text-sm text-center text-muted-foreground px-4">You will be redirected to WhatsApp to complete your payment securely.</p>
-                    </div>
-                    <div className="border-t border-border pt-4 space-y-1.5">
-                      <div className="flex justify-between text-xs font-black"><span className="text-foreground">Total to Pay</span><span className="text-primary">{format(total)}</span></div>
-                    </div>
-                    {orderError && <p className="text-xs text-destructive text-center font-semibold">{orderError}</p>}
-                    <button onClick={handlePlaceOrder} disabled={isSubmitting}
-                      className="w-full py-4 bg-foreground text-background rounded-2xl font-bold text-sm flex items-center justify-center gap-2 hover:opacity-90 active:scale-95 transition-all disabled:opacity-60 disabled:cursor-not-allowed">
-                      {isSubmitting ? <span className="w-4 h-4 border-2 border-background/40 border-t-background rounded-full animate-spin" /> : <MessageCircle className="w-4 h-4" />}
-                      {isSubmitting ? "Processing…" : "Proceed to WhatsApp"}
-                    </button>
-                    <SecureFooter />
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
+
+    {/* ══════════════════════════════════════════
+        PAYMENT METHOD BOTTOM SHEET
+        Placed OUTSIDE the scroll container — same as PayPage
+    ══════════════════════════════════════════ */}
+    {openMethod && step === 4 && (
+      <div className="fixed inset-0 z-50 flex flex-col justify-end">
+        <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setOpenMethod(null)} />
+        <div className="relative bg-background rounded-t-3xl shadow-2xl max-h-[92vh] overflow-y-auto">
+          <div className="flex justify-center pt-3 pb-1">
+            <div className="w-10 h-1 rounded-full bg-border" />
+          </div>
+          <div className="px-5 pb-8 space-y-4">
+
+            {/* Sheet header */}
+            <div className="flex items-center justify-between pt-1 pb-2">
+              {(() => {
+                const m = activeCheckoutMethods.find((x) => x.id === openMethod);
+                if (!m) return null;
+                const Icon = m.icon;
+                return (
+                  <div className="flex items-center gap-2.5">
+                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${m.iconBg}`}>
+                      <Icon />
+                    </div>
+                    <span className="text-base font-black text-foreground">{m.label}</span>
+                  </div>
+                );
+              })()}
+              <button onClick={() => setOpenMethod(null)}
+                className="w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors">
+                <X className="w-4 h-4 text-foreground" />
+              </button>
+            </div>
+
+            {/* ── MOBILE MONEY — PayPage style with dropdown ── */}
+            {openMethod === "mobile" && (
+              <div className="space-y-4">
+                <div className="relative">
+                  <label className="block text-[11px] font-semibold text-muted-foreground mb-1.5">Provider</label>
+                  <button
+                    type="button"
+                    onClick={() => setShowProviderDrop((v) => !v)}
+                    className="w-full flex items-center gap-2.5 border border-border rounded-2xl px-3.5 py-3 bg-background hover:border-primary/50 transition-colors"
+                  >
+                    <Smartphone className="w-5 h-5 text-primary flex-shrink-0" />
+                    <span className="flex-1 text-sm font-semibold text-foreground text-left">{mmProvider}</span>
+                    <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${showProviderDrop ? "rotate-180" : ""}`} />
+                  </button>
+                  {showProviderDrop && (
+                    <div className="absolute left-0 right-0 top-full mt-1 z-10 border border-border rounded-2xl bg-card shadow-lg overflow-hidden">
+                      {mobileNetworks.map((net) => (
+                        <button
+                          key={net}
+                          type="button"
+                          onClick={() => { setMmProvider(net); setShowProviderDrop(false); }}
+                          className={`w-full flex items-center gap-2.5 px-4 py-3 text-left text-sm hover:bg-muted transition-colors ${mmProvider === net ? "bg-primary/5 font-bold text-primary" : "text-foreground"}`}
+                        >
+                          {net}
+                          {mmProvider === net && <span className="ml-auto text-primary text-xs">✓</span>}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-muted-foreground mb-1.5">Mobile Money Number</label>
+                  <div className="flex items-center gap-2.5 border border-border rounded-2xl px-3.5 py-3 bg-background focus-within:ring-2 focus-within:ring-primary/30">
+                    <Smartphone className="w-5 h-5 text-primary flex-shrink-0" />
+                    <input
+                      value={mmPhone}
+                      onChange={(e) => setMmPhone(e.target.value)}
+                      placeholder="e.g. 0971 234567"
+                      type="tel"
+                      inputMode="tel"
+                      className="flex-1 text-sm font-semibold text-foreground outline-none bg-transparent"
+                    />
+                  </div>
+                </div>
+                <div className="bg-primary/5 border border-primary/15 rounded-2xl px-4 py-3">
+                  <p className="text-[11px] text-muted-foreground">A payment prompt will be sent to your <strong>{mmProvider}</strong> number. Approve it on your phone to complete payment.</p>
+                </div>
+                <div className="border-t border-border pt-4 space-y-1.5">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-muted-foreground">Subtotal</span>
+                    <span className="font-semibold text-foreground">{format(SUBTOTAL)}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-muted-foreground">Shipping</span>
+                    <span className="font-semibold text-foreground">{shippingPrice === 0 ? "Free" : format(shippingPrice)}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm font-black pt-2 border-t border-border">
+                    <span className="text-foreground">Total</span>
+                    <span className="text-primary">{format(total)}</span>
+                  </div>
+                </div>
+                {orderError && <p className="text-xs text-destructive text-center font-semibold">{orderError}</p>}
+                <button
+                  onClick={handleMobileMoneyPay}
+                  disabled={isSubmitting || !mmPhone.trim()}
+                  className="w-full py-4 bg-primary text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-primary/90 active:scale-95 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {isSubmitting
+                    ? <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                    : <Smartphone className="w-4 h-4" />}
+                  {isSubmitting ? "Processing…" : `Send Payment Prompt — ${format(total)}`}
+                </button>
+                <SecureFooter />
+              </div>
+            )}
+
+            {/* ── CARD PAYMENT ── */}
+            {openMethod === "card" && (
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-[11px] font-semibold text-muted-foreground mb-1.5">Card Number</label>
+                  <div className="flex items-center gap-2 border border-border rounded-2xl px-3.5 py-3 bg-background focus-within:ring-2 focus-within:ring-primary/30">
+                    <input value={cardNum} onChange={(e) => setCardNum(e.target.value)}
+                      placeholder="1234 5678 9012 3456" inputMode="numeric"
+                      className="flex-1 text-sm text-foreground outline-none bg-transparent" />
+                    <CreditCard className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-semibold text-muted-foreground mb-1.5">Expiry Date</label>
+                    <input value={expiry} onChange={(e) => setExpiry(e.target.value)} placeholder="MM / YY"
+                      className="w-full border border-border rounded-2xl px-3.5 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/30 bg-background text-foreground" />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-semibold text-muted-foreground mb-1.5">CVV</label>
+                    <input value={cvv} onChange={(e) => setCvv(e.target.value)} placeholder="123" type="password"
+                      className="w-full border border-border rounded-2xl px-3.5 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/30 bg-background text-foreground" />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-muted-foreground mb-1.5">Cardholder Name</label>
+                  <input value={cardName} onChange={(e) => setCardName(e.target.value)} placeholder="John Doe"
+                    className="w-full border border-border rounded-2xl px-3.5 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/30 bg-background text-foreground" />
+                </div>
+                <div className="flex items-center justify-between py-1">
+                  <span className="text-xs font-semibold text-foreground">Save card for future payments</span>
+                  <button onClick={() => setSaveCard(!saveCard)}
+                    className={`w-11 h-6 rounded-full transition-colors relative flex-shrink-0 ${saveCard ? "bg-primary" : "bg-muted"}`}>
+                    <div className={`w-4 h-4 rounded-full bg-white shadow absolute top-1 transition-transform ${saveCard ? "translate-x-6" : "translate-x-1"}`} />
+                  </button>
+                </div>
+                <div className="border-t border-border pt-4 space-y-1.5">
+                  <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Subtotal</span><span className="font-semibold">{format(SUBTOTAL)}</span></div>
+                  <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Shipping</span><span className="font-semibold">{shippingPrice === 0 ? "Free" : format(shippingPrice)}</span></div>
+                  <div className="flex items-center justify-between text-sm font-black pt-2 border-t border-border"><span>Total</span><span className="text-primary">{format(total)}</span></div>
+                </div>
+                {orderError && <p className="text-xs text-destructive text-center font-semibold">{orderError}</p>}
+                <button onClick={handlePlaceOrder} disabled={isSubmitting}
+                  className="w-full py-4 bg-primary text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-primary/90 active:scale-95 transition-all disabled:opacity-60 disabled:cursor-not-allowed">
+                  {isSubmitting ? <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> : <Lock className="w-4 h-4" />}
+                  {isSubmitting ? "Placing Order…" : `Pay ${format(total)}`}
+                </button>
+                <p className="text-[10px] text-center text-muted-foreground">
+                  By placing your order, you agree to our <Link href="/terms"><span className="text-primary underline cursor-pointer">Terms</span></Link>
+                </p>
+                <SecureFooter />
+              </div>
+            )}
+
+            {/* ── BANK TRANSFER ── */}
+            {openMethod === "bank" && (
+              <div className="space-y-4">
+                <div className="bg-primary/5 border border-primary/15 rounded-2xl px-4 py-3 flex items-start gap-2">
+                  <Building2 className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                  <p className="text-[11px] text-muted-foreground">Transfer the exact amount below and use your order number as the payment reference.</p>
+                </div>
+                <div className="space-y-3">
+                  {(bankProviders.length > 0
+                    ? bankProviders.flatMap((acc) => [
+                        { label: "Bank Name",      val: acc.name },
+                        { label: "Account Name",   val: acc.config?.accountName   || "" },
+                        { label: "Account Number", val: acc.config?.accountNumber || "" },
+                      ])
+                    : [
+                        { label: "Bank Name",      val: "Stanbic Bank Zambia" },
+                        { label: "Account Name",   val: "KRYROS LIMITED" },
+                        { label: "Account Number", val: "91200012345667" },
+                      ]
+                  ).map(({ label, val }) => (
+                    <div key={label} className="flex items-center justify-between py-2 border-b border-border last:border-0">
+                      <div>
+                        <p className="text-[10px] text-muted-foreground">{label}</p>
+                        <p className="text-sm font-bold text-foreground">{val}</p>
+                      </div>
+                      <CopyBtn text={val} />
+                    </div>
+                  ))}
+                </div>
+                <div>
+                  <p className="text-[11px] font-semibold text-muted-foreground mb-2">Upload Payment Proof</p>
+                  <button onClick={() => fileRef.current?.click()}
+                    className="w-full h-32 border-2 border-dashed border-border rounded-3xl flex flex-col items-center justify-center gap-2 hover:border-primary/50 hover:bg-primary/5 transition-all">
+                    {proofFile
+                      ? <><Check className="w-8 h-8 text-primary" /><p className="text-xs font-bold text-foreground">File Selected</p></>
+                      : <><Upload className="w-8 h-8 text-muted-foreground" /><p className="text-xs font-bold text-muted-foreground">Tap to upload proof</p></>
+                    }
+                  </button>
+                  <input type="file" ref={fileRef} className="hidden" onChange={(e) => setProofFile(e.target.files?.[0]?.name || null)} />
+                </div>
+                <div className="border-t border-border pt-4 space-y-1.5">
+                  <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Subtotal</span><span className="font-semibold">{format(SUBTOTAL)}</span></div>
+                  <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Shipping</span><span className="font-semibold">{shippingPrice === 0 ? "Free" : format(shippingPrice)}</span></div>
+                  <div className="flex items-center justify-between text-sm font-black pt-2 border-t border-border"><span>Total Payable</span><span className="text-primary">{format(total)}</span></div>
+                </div>
+                {orderError && <p className="text-xs text-destructive text-center font-semibold">{orderError}</p>}
+                <button onClick={handlePlaceOrder} disabled={isSubmitting}
+                  className="w-full py-4 bg-primary text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-primary/90 active:scale-95 transition-all disabled:opacity-60 disabled:cursor-not-allowed">
+                  {isSubmitting ? <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> : <Check className="w-4 h-4" />}
+                  {isSubmitting ? "Placing Order…" : "I Have Made the Transfer"}
+                </button>
+                <SecureFooter />
+              </div>
+            )}
+
+            {/* ── WHATSAPP PAYMENT ── */}
+            {openMethod === "whatsapp" && (
+              <div className="space-y-4">
+                <div className="flex flex-col items-center py-6 gap-3">
+                  <div className="w-16 h-16 rounded-2xl bg-green-50 dark:bg-green-900/20 flex items-center justify-center">
+                    <svg viewBox="0 0 24 24" className="w-9 h-9" fill="currentColor" style={{ color: "var(--kryros-primary-hover)" }}>
+                      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+                    </svg>
+                  </div>
+                  <p className="text-sm text-center text-muted-foreground px-4">
+                    You will be redirected to WhatsApp to complete your payment securely.
+                  </p>
+                </div>
+                <div className="border-t border-border pt-4 space-y-1.5">
+                  <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Subtotal</span><span className="font-semibold">{format(SUBTOTAL)}</span></div>
+                  <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Shipping</span><span className="font-semibold">{shippingPrice === 0 ? "Free" : format(shippingPrice)}</span></div>
+                  <div className="flex items-center justify-between text-sm font-black pt-2 border-t border-border"><span>Total to Pay</span><span className="text-primary">{format(total)}</span></div>
+                </div>
+                {orderError && <p className="text-xs text-destructive text-center font-semibold">{orderError}</p>}
+                <button onClick={handlePlaceOrder} disabled={isSubmitting}
+                  className="w-full py-4 bg-[var(--kryros-primary-hover)] text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 hover:opacity-90 active:scale-95 transition-all disabled:opacity-60 disabled:cursor-not-allowed">
+                  {isSubmitting
+                    ? <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                    : <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" /></svg>
+                  }
+                  {isSubmitting ? "Processing…" : "Continue on WhatsApp"}
+                </button>
+                <SecureFooter />
+              </div>
+            )}
+
+          </div>
+        </div>
+      </div>
+    )}
   );
 }
