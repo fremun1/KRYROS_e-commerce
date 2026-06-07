@@ -27,7 +27,7 @@ export default function SplashScreen({ onDone }: SplashScreenProps) {
         position: "fixed",
         inset: 0,
         zIndex: 9999,
-        background: "#080e0d",
+        background: "hsl(var(--background))",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
@@ -54,7 +54,7 @@ export default function SplashScreen({ onDone }: SplashScreenProps) {
             style={{
               position: "absolute",
               borderRadius: "50%",
-              border: `${i === 1 ? "2px" : "1.5px"} solid rgba(31, 168, 154,${0.5 - i * 0.12})`,
+              border: `${i === 1 ? "2px" : "1.5px"} solid rgba(var(--kryros-primary-rgb),${0.5 - i * 0.12})`,
               width: 54 + i * 26,
               height: 54 + i * 26,
               animation: `kryros-pulse-ring 2s ease-out ${(i - 1) * 0.35}s infinite`,
