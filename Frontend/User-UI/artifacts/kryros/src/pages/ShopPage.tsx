@@ -33,12 +33,8 @@ export default function ShopPage() {
   const [brands, setBrands] = useState<ApiBrand[]>([]);
   const [allProducts, setAllProducts] = useState<Product[]>([]);
 
-  // Category auto-scroll refs
+  // Category scroll ref for smooth snap scrolling
   const catScrollRef = useRef<HTMLDivElement>(null);
-  const catDirRef = useRef<1 | -1>(1);
-  const catAnimRef = useRef<number>(0);
-  const catPausedRef = useRef(false);
-  const catLastTimeRef = useRef(0);
 
   // Brand panel state
   const [activeBrandPanel, setActiveBrandPanel] = useState<string | null>(null);
@@ -90,50 +86,6 @@ export default function ShopPage() {
   useEffect(() => {
     setBrandPanelCat("All");
   }, [activeBrandPanel]);
-
-  // Auto-scroll categories left ↔ right (ping-pong)
-  useEffect(() => {
-    const el = catScrollRef.current;
-    if (!el || categories.length === 0) return;
-
-    const SPEED = 0.03; // px per ms — very slow, gentle drift
-
-    const tick = (time: number) => {
-      if (catPausedRef.current) {
-        catAnimRef.current = requestAnimationFrame(tick);
-        return;
-      }
-      if (catLastTimeRef.current === 0) catLastTimeRef.current = time;
-      const delta = Math.min(time - catLastTimeRef.current, 50);
-      catLastTimeRef.current = time;
-
-      const maxScroll = el.scrollWidth - el.clientWidth;
-      if (maxScroll > 0) {
-        if (el.scrollLeft >= maxScroll - 1) catDirRef.current = -1;
-        if (el.scrollLeft <= 1) catDirRef.current = 1;
-        el.scrollLeft += catDirRef.current * SPEED * delta;
-      }
-      catAnimRef.current = requestAnimationFrame(tick);
-    };
-
-    catAnimRef.current = requestAnimationFrame(tick);
-
-    const pause = () => { catPausedRef.current = true; };
-    const resume = () => { catPausedRef.current = false; catLastTimeRef.current = 0; };
-
-    el.addEventListener("mouseenter", pause);
-    el.addEventListener("mouseleave", resume);
-    el.addEventListener("touchstart", pause, { passive: true });
-    el.addEventListener("touchend", resume);
-
-    return () => {
-      cancelAnimationFrame(catAnimRef.current);
-      el.removeEventListener("mouseenter", pause);
-      el.removeEventListener("mouseleave", resume);
-      el.removeEventListener("touchstart", pause);
-      el.removeEventListener("touchend", resume);
-    };
-  }, [categories]);
 
   const brandSlug = selectedBrand ? selectedBrand.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : '';
   const cmsBanner = brandSlug ? brandBanners[brandSlug] : undefined;
@@ -436,7 +388,11 @@ export default function ShopPage() {
 
       {/* Category cards */}
       {categories.length > 0 && (
-        <div ref={catScrollRef} className="flex gap-3 overflow-x-auto no-scrollbar px-4 pb-4">
+        <div
+          ref={catScrollRef}
+          className="flex gap-3 overflow-x-auto px-4 pb-4"
+          style={{ scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch", scrollBehavior: "smooth" }}
+        >
           <button
             onClick={() => setSelectedCat("All")}
             className={`flex-shrink-0 snap-start relative w-36 h-36 rounded-2xl overflow-hidden transition-all bg-gradient-to-br from-teal-600 to-teal-800 flex items-center justify-center ${selectedCat === "All" ? "ring-2 ring-teal-500 ring-offset-2" : ""}`}
