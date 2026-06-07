@@ -96,7 +96,7 @@ export default function ShopPage() {
     const el = catScrollRef.current;
     if (!el || categories.length === 0) return;
 
-    const SPEED = 0.06; // px per ms — slow, gentle scroll
+    const SPEED = 0.03; // px per ms — very slow, gentle drift
 
     const tick = (time: number) => {
       if (catPausedRef.current) {
