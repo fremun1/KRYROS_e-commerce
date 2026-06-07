@@ -420,7 +420,7 @@ export default function CheckoutPage() {
         // Send receipt via SMS + email
         sendReceiptAfterOrder(orderNum, total.toFixed(2), "WhatsApp Payment");
         // Auto-redirect to WhatsApp for better UX
-        const url = `[wa.me](https://wa.me/${whatsappNumber}?text=${encodeURIComponent(msg)})`;
+        const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(msg)}`;
         window.open(url, "_blank");
       } else {
         setOrdered(true);
@@ -442,7 +442,7 @@ export default function CheckoutPage() {
   };
 
   const handleWhatsAppRedirect = () => {
-    const url = `[wa.me](https://wa.me/${whatsappNumber}?text=${encodeURIComponent(waMessage)})`;
+    const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(waMessage)}`;
     window.open(url, "_blank");
   };
 
