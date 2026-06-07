@@ -54,7 +54,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
   const [activeTab, setActiveTab] = useState<"menu" | "categories">("menu");
   const [catSearch, setCatSearch] = useState("");
   const [expandedCat, setExpandedCat] = useState<string | number | null>(null);
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
   const { theme, toggleTheme } = useThemeStore();
 
   const { currencies, selected, setCurrency, fetchCurrencies } = useCurrencyStore();
@@ -398,10 +398,13 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                                       <p className="text-xs text-muted-foreground px-2 py-2">No brands in this category</p>
                                     ) : (
                                       catBrands.map((brand) => (
-                                        <Link
+                                        <button
                                           key={brand.id}
-                                          href={`/shop?brand=${encodeURIComponent(brand.slug || brand.name)}`}
-                                          onClick={onClose}
+                                          className="w-full text-left"
+                                          onClick={() => {
+                                            setLocation(`/shop?brand=${encodeURIComponent(brand.slug || brand.name)}`);
+                                            onClose();
+                                          }}
                                         >
                                           <div className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-muted cursor-pointer group transition-all">
                                             <div className="w-8 h-8 rounded-lg bg-background border border-border flex items-center justify-center flex-shrink-0 overflow-hidden">
@@ -414,7 +417,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                                             <span className="text-sm text-foreground font-medium flex-1 truncate">{brand.name}</span>
                                             <ChevronRight className="w-3 h-3 text-muted-foreground opacity-50 group-hover:opacity-100 flex-shrink-0" />
                                           </div>
-                                        </Link>
+                                        </button>
                                       ))
                                     )}
                                   </div>
