@@ -389,7 +389,7 @@ export class NotificationsService implements OnModuleInit {
       } as any,
     });
 
-    if (!order || !order.userId) return;
+    if (!order) return;
 
     let title = 'Order Update';
     let body = `Your order ${order.orderNumber} status has changed to ${status}.`;
@@ -425,12 +425,14 @@ export class NotificationsService implements OnModuleInit {
         break;
     }
 
-    // ── 1. Push notification (non-blocking) ──────────────────────────────
-    this.sendToUser(order.userId, title, body, {
-      orderId,
-      status,
-      url: `/dashboard/orders/${orderId}`,
-    }).catch(e => this.logger.warn(`Push notification failed for order ${order.orderNumber}: ${e.message}`));
+    // ── 1. Push notification (logged-in users only, non-blocking) ────────
+    if (order.userId) {
+      this.sendToUser(order.userId, title, body, {
+        orderId,
+        status,
+        url: `/dashboard/orders/${orderId}`,
+      }).catch(e => this.logger.warn(`Push notification failed for order ${order.orderNumber}: ${e.message}`));
+    }
 
     // ── 2. Email notification ─────────────────────────────────────────────
     const userEmail = (order as any).user?.email || (order as any).shippingAddress?.email;
@@ -516,6 +518,13 @@ export class NotificationsService implements OnModuleInit {
       if (smsPhone) {
         this.sendSMS(smsPhone, `KRYROS: Order #${order.orderNumber} received! Total: ${total}. We'll confirm shortly.`)
           .catch(e => this.logger.warn(`Order SMS failed for ${order.orderNumber}: ${e.message}`));
+
+        // Auto-register customer phone as an SMS contact for future blasts
+        this.prisma.smsContact.upsert({
+          where: { phone: smsPhone.trim() },
+          update: { name: firstName, isActive: true },
+          create: { phone: smsPhone.trim(), name: firstName, source: 'Checkout' },
+        }).catch(e => this.logger.warn(`Auto-register SMS contact failed: ${e.message}`));
       }
 
     } catch (error) {
