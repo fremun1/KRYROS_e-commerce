@@ -103,4 +103,24 @@ export class OrdersController {
     }
     return this.ordersService.updateStatus(id, status, paymentStatus, trackingNumber, notes);
   }
+
+  @Put('bulk-status')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Bulk update order statuses (Admin/Manager only)' })
+  async bulkUpdateStatus(
+    @Body('ids') ids: string[],
+    @Body('status') status: string,
+  ) {
+    if (!ids || !ids.length) {
+      throw new BadRequestException('At least one order ID is required');
+    }
+    if (!VALID_ORDER_STATUSES.includes(status as OrderStatus)) {
+      throw new BadRequestException(
+        `Invalid status. Must be one of: ${VALID_ORDER_STATUSES.join(', ')}`,
+      );
+    }
+    return this.ordersService.bulkUpdateStatus(ids, status);
+  }
 }
