@@ -89,7 +89,7 @@ export default function BrandsSection() {
         {/* Auto-scrolling horizontal carousel */}
         <div
           ref={scrollRef}
-          className="flex items-center gap-2.5 overflow-x-auto no-scrollbar scroll-smooth pb-2"
+          className="flex items-center gap-2.5 overflow-x-auto no-scrollbar pb-2"
           style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
         >
           {brands.map((brand, i) => (
