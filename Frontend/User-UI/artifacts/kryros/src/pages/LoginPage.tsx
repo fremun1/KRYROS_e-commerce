@@ -119,14 +119,17 @@ export default function LoginPage() {
             )}
 
             <div>
-              <label className="block text-xs font-semibold text-foreground mb-1.5">Email or Phone Number</label>
+              <label className="block text-xs font-semibold text-foreground mb-1.5">
+                Email or Phone Number
+                <span className="text-muted-foreground font-normal ml-1 text-[10px]">(use either to log in)</span>
+              </label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <input
                   type="text"
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
-                  placeholder="Enter your email or phone"
+                  placeholder="Enter your email or phone number"
                   required
                   autoComplete="username"
                   className="w-full pl-10 pr-4 py-3 bg-background border border-border rounded-xl text-sm text-foreground outline-none focus:ring-2 focus:ring-primary/30 placeholder:text-muted-foreground/50"
