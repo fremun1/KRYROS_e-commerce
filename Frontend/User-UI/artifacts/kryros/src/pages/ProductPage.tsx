@@ -312,14 +312,12 @@ export default function ProductPage() {
       <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-xl border-t border-border px-4 py-3 z-30">
         <div className="flex gap-3 max-w-lg mx-auto">
           {storeStatus?.isStoreClosed ? (
-            <div className="flex-1 flex flex-col gap-2">
+            <div className="flex-1">
               <button disabled
-                className="w-full py-3.5 bg-muted text-muted-foreground rounded-2xl font-bold text-sm cursor-not-allowed flex items-center justify-center gap-2">
-                <Clock className="w-4 h-4" /> Store Closed
+                className="w-full py-3.5 bg-muted text-muted-foreground rounded-2xl font-bold text-sm cursor-not-allowed flex flex-col items-center justify-center gap-0.5">
+                <span className="flex items-center gap-2"><Clock className="w-4 h-4" /> Store Closed</span>
+                <span className="text-[10px] font-medium opacity-70">Purchases disabled while closed</span>
               </button>
-              <p className="text-[10px] text-center text-muted-foreground font-medium">
-                Purchases are disabled while the store is closed.
-              </p>
             </div>
           ) : (
             <>
