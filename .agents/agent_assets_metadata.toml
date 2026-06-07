@@ -1,8 +1,0 @@
-uploads = []
-generated = []
-
-[[outputs]]
-id = "gpTGotQPteEdV-UH88BYE"
-uri = "file://SECURITY_DASHBOARD_GUIDE.md"
-type = "text"
-title = "KRYROS Security Dashboard Guide — Copy & Follow"
