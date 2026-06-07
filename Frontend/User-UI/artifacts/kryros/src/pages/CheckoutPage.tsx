@@ -100,6 +100,22 @@ const DEFAULT_CHECKOUT_METHODS = [
   },
 ];
 
+function CopyBtn({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <button
+      onClick={() => {
+        navigator.clipboard?.writeText(text).catch(() => {});
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1500);
+      }}
+      className="text-xs text-primary font-semibold border border-primary/40 px-3 py-1 rounded-lg hover:bg-primary/5 transition-colors flex-shrink-0"
+    >
+      {copied ? "Copied" : "Copy"}
+    </button>
+  );
+}
+
 function SecureFooter() {
   return (
     <div className="flex items-center justify-between pt-4 text-[10px] text-muted-foreground">
@@ -260,6 +276,7 @@ export default function CheckoutPage() {
 
   const [openMethod, setOpenMethod] = useState<string | null>(null);
   const [showProviderDrop, setShowProviderDrop] = useState(false);
+  const [bankRef] = useState(() => "PAY-" + Date.now().toString(36).toUpperCase().slice(-8));
   const [cardNum, setCardNum] = useState("");
   const [expiry, setExpiry] = useState("");
   const [cvv, setCvv] = useState("");
@@ -931,7 +948,6 @@ export default function CheckoutPage() {
               <div className="space-y-2">
                 {activeCheckoutMethods.map((method) => {
                   const Icon = method.icon;
-                  const selected = openMethod === method.id;
                   return (
                     <button
                       key={method.id}
@@ -940,20 +956,16 @@ export default function CheckoutPage() {
                         setOrderError(null);
                         setMmPhase("idle");
                       }}
-                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl border text-left transition-all ${
-                        selected
-                          ? "border-primary bg-primary/5"
-                          : "border-border hover:border-primary/40 hover:bg-muted/40"
-                      }`}
+                      className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl border border-border bg-card hover:border-primary/50 hover:bg-primary/[0.02] active:scale-[0.99] transition-all text-left"
                     >
-                      <div className={`w-9 h-9 rounded-2xl flex items-center justify-center ${method.iconBg}`}>
+                      <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${method.iconBg}`}>
                         <Icon />
                       </div>
-                      <div className="flex-1">
-                        <p className="text-xs font-semibold text-foreground">{method.label}</p>
-                        <p className="text-[11px] text-muted-foreground mt-0.5">{method.sub}</p>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-foreground">{method.label}</p>
+                        <p className="text-[11px] text-muted-foreground">{method.id === "mobile" ? mobileNetworks.join(", ") : method.sub}</p>
                       </div>
-                      <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                      <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                     </button>
                   );
                 })}
@@ -1002,307 +1014,343 @@ export default function CheckoutPage() {
         )}
       </div>
 
-      {/* ══════════════════════════════════════════
-          PAYMENT METHOD BOTTOM SHEET
-          Placed OUTSIDE the scroll container — same as PayPage
-      ══════════════════════════════════════════ */}
+      {/* PAYMENT METHOD PANELS (bottom sheet) — copied from PayPage */}
       {openMethod && step === 4 && (
         <div className="fixed inset-0 z-50 flex flex-col justify-end">
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setOpenMethod(null)} />
+          <div
+            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            onClick={() => setOpenMethod(null)}
+          />
           <div className="relative bg-background rounded-t-3xl shadow-2xl max-h-[92vh] overflow-y-auto">
             <div className="flex justify-center pt-3 pb-1">
               <div className="w-10 h-1 rounded-full bg-border" />
             </div>
+
             <div className="px-5 pb-8 space-y-4">
               {/* Sheet header */}
               <div className="flex items-center justify-between pt-1 pb-2">
-                <div>
-                  <p className="text-xs font-bold text-foreground">Complete your payment</p>
-                  <p className="text-[11px] text-muted-foreground">
-                    Order Total: <span className="font-semibold">{format(total)}</span>
-                  </p>
-                </div>
+                {(() => {
+                  const m = activeCheckoutMethods.find((x) => x.id === openMethod)!;
+                  const Icon = m.icon;
+                  return (
+                    <div className="flex items-center gap-2.5">
+                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${m.iconBg}`}>
+                        <Icon />
+                      </div>
+                      <span className="text-base font-black text-foreground">{m.label}</span>
+                    </div>
+                  );
+                })()}
                 <button
                   onClick={() => setOpenMethod(null)}
-                  className="w-7 h-7 rounded-full border border-border flex items-center justify-center text-muted-foreground hover:bg-muted"
+                  className="w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors"
                 >
-                  <X className="w-3 h-3" />
+                  <X className="w-4 h-4 text-foreground" />
                 </button>
               </div>
 
-              {/* ── MOBILE MONEY ── */}
+              {/* MOBILE MONEY */}
               {openMethod === "mobile" && (
                 <div className="space-y-4">
-                  <div className="space-y-2">
-                    <p className="text-xs font-semibold text-foreground">Choose mobile network</p>
-                    <div className="grid grid-cols-2 gap-2">
-                      {mobileNetworks.map((network) => (
-                        <button
-                          key={network}
-                          onClick={() => setMmProvider(`${network} Mobile Money`)}
-                          className={`flex items-center justify-between px-3 py-2 rounded-2xl border text-xs ${
-                            mmProvider.startsWith(network)
-                              ? "border-primary bg-primary/5 text-foreground"
-                              : "border-border bg-background text-muted-foreground"
-                          }`}
-                        >
-                          <span>{network}</span>
-                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted">Mobile Money</span>
-                        </button>
-                      ))}
+                  <div className="relative">
+                    <label className="block text-[11px] font-semibold text-muted-foreground mb-1.5">Provider</label>
+                    <button
+                      type="button"
+                      onClick={() => setShowProviderDrop((v) => !v)}
+                      className="w-full flex items-center gap-2.5 border border-border rounded-2xl px-3.5 py-3 bg-background hover:border-primary/50 transition-colors"
+                    >
+                      <Smartphone className="w-5 h-5 text-primary flex-shrink-0" />
+                      <span className="flex-1 text-sm font-semibold text-foreground text-left">{mmProvider}</span>
+                      <ChevronDown className={`w-4 h-4 text-muted-foreground flex-shrink-0 transition-transform ${showProviderDrop ? "rotate-180" : ""}`} />
+                    </button>
+                    {showProviderDrop && (
+                      <div className="absolute left-0 right-0 top-full mt-1 z-20 bg-background border border-border rounded-2xl shadow-xl overflow-hidden">
+                        {mobileNetworks.map((name) => (
+                          <button
+                            key={name}
+                            type="button"
+                            onClick={() => { setMmProvider(name); setShowProviderDrop(false); }}
+                            className={`w-full flex items-center px-4 py-3.5 text-left hover:bg-muted transition-colors border-b border-border last:border-0 ${mmProvider === name ? "bg-primary/5" : ""}`}
+                          >
+                            <span className={`text-sm font-semibold flex-1 ${mmProvider === name ? "text-primary" : "text-foreground"}`}>{name}</span>
+                            {mmProvider === name && (
+                              <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+                                <Check className="w-3 h-3 text-white" />
+                              </div>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-semibold text-muted-foreground mb-1.5">Mobile Money Number</label>
+                    <div className="flex items-center gap-2 border border-border rounded-2xl px-3.5 py-3 bg-background focus-within:ring-2 focus-within:ring-primary/30">
+                      <Smartphone className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                      <input
+                        value={mmPhone}
+                        onChange={(e) => setMmPhone(e.target.value)}
+                        placeholder="+XXX XXXXXXXXX"
+                        type="tel"
+                        className="flex-1 text-sm text-foreground outline-none bg-transparent"
+                      />
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <label className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
-                      <Phone className="w-3.5 h-3.5" />
-                      Mobile Money number
-                      <span className="text-muted-foreground font-normal text-[10px]">(number to be charged)</span>
-                    </label>
-                    <input
-                      value={mmPhone}
-                      onChange={(e) => setMmPhone(e.target.value)}
-                      placeholder="Enter your phone number for payment"
-                      type="tel"
-                      className="w-full px-4 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all"
-                    />
-                    <p className="text-[10px] text-muted-foreground">
-                      We&apos;ll send a payment prompt to this number. Approve it to complete your order.
+                  <div className="bg-primary/5 border border-primary/15 rounded-2xl px-4 py-3">
+                    <p className="text-[11px] text-muted-foreground">
+                      A payment prompt will be sent to your mobile phone. Please approve it to complete the payment.
                     </p>
                   </div>
 
-                  <div className="border border-amber-200 dark:border-amber-900/40 rounded-2xl bg-amber-50/80 dark:bg-amber-900/10 p-3 flex items-start gap-2">
-                    <Clock className="w-3 h-3 text-amber-600 mt-0.5" />
-                    <p className="text-[10px] text-amber-700 dark:text-amber-200">
-                      Make sure your phone is turned on and has network signal. The payment prompt may take up to 2
-                      minutes.
-                    </p>
+                  {orderError && (
+                    <div className="flex items-start gap-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-2xl px-4 py-3">
+                      <X className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
+                      <p className="text-[12px] text-red-600 dark:text-red-400">{orderError}</p>
+                    </div>
+                  )}
+
+                  <div className="border-t border-border pt-4 mt-2 space-y-1.5">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground">Amount</span>
+                      <span className="font-semibold text-foreground">{format(SUBTOTAL)}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground">Shipping</span>
+                      <span className="font-semibold text-foreground">{shippingPrice === 0 ? "Free" : format(shippingPrice)}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground">Fee</span>
+                      <span className="font-semibold text-foreground">{format(TAX)}</span>
+                    </div>
                   </div>
 
                   <button
-                    disabled={isSubmitting || !mmPhone.trim()}
                     onClick={handleMobileMoneyPay}
-                    className="w-full py-3 rounded-2xl bg-[var(--kryros-primary-hover)] text-white text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={isSubmitting || !mmPhone.trim()}
+                    className="w-full py-4 bg-primary text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-primary/90 active:scale-95 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                   >
-                    {isSubmitting && (
-                      <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                    {isSubmitting ? (
+                      <>
+                        <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                        {mmPhase === "initializing" ? "Sending prompt…" : "Processing…"}
+                      </>
+                    ) : (
+                      <><Smartphone className="w-4 h-4" /> Pay {format(total)}</>
                     )}
-                    {isSubmitting ? "Initializing payment…" : "Pay with Mobile Money"}
                   </button>
                   <SecureFooter />
                 </div>
               )}
 
-              {/* ── CARD PAYMENT ── */}
-              {openMethod === "card" && (
-                <div className="space-y-4">
-                  <div className="space-y-1.5">
-                    <label className="flex items-center gap-1 text-[11px] font-semibold text-muted-foreground">
-                      <CreditCard className="w-3 h-3" />
-                      Card number
-                    </label>
-                    <input
-                      value={cardNum}
-                      onChange={(e) => setCardNum(e.target.value)}
-                      placeholder="1234 5678 9012 3456"
-                      className="w-full px-3 py-2 rounded-xl border border-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1.5">
-                      <label className="flex items-center gap-1 text-[11px] font-semibold text-muted-foreground">
-                        <Clock className="w-3 h-3" />
-                        Expiry date
-                      </label>
-                      <input
-                        value={expiry}
-                        onChange={(e) => setExpiry(e.target.value)}
-                        placeholder="MM / YY"
-                        className="w-full px-3 py-2 rounded-xl border border-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="flex items-center gap-1 text-[11px] font-semibold text-muted-foreground">
-                        <Lock className="w-3 h-3" />
-                        CVV
-                      </label>
-                      <input
-                        value={cvv}
-                        onChange={(e) => setCvv(e.target.value)}
-                        placeholder="123"
-                        className="w-full px-3 py-2 rounded-xl border border-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label className="flex items-center gap-1 text-[11px] font-semibold text-muted-foreground">
-                      <User className="w-3 h-3" />
-                      Name on card
-                    </label>
-                    <input
-                      value={cardName}
-                      onChange={(e) => setCardName(e.target.value)}
-                      placeholder="As shown on card"
-                      className="w-full px-3 py-2 rounded-xl border border-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary"
-                    />
-                  </div>
-
-                  <label className="flex items-center gap-2 text-[11px] text-muted-foreground">
-                    <input
-                      type="checkbox"
-                      checked={saveCard}
-                      onChange={(e) => setSaveCard(e.target.checked)}
-                      className="w-3 h-3 rounded border-border"
-                    />
-                    <span>Save this card securely for faster checkout next time.</span>
-                  </label>
-
-                  <button
-                    disabled={isSubmitting}
-                    onClick={handlePlaceOrder}
-                    className="w-full py-3 rounded-2xl bg-[var(--kryros-primary-hover)] text-white text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isSubmitting && (
-                      <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-                    )}
-                    {isSubmitting ? "Processing payment…" : "Pay with Card"}
-                  </button>
-                  <SecureFooter />
-                </div>
-              )}
-
-              {/* ── BANK TRANSFER ── */}
+              {/* BANK TRANSFER */}
               {openMethod === "bank" && (
                 <div className="space-y-4">
-                  <div className="space-y-2">
-                    <p className="text-xs font-semibold text-foreground">Select bank account</p>
-                    <div className="space-y-2">
-                      {(bankProviders.length > 0 ? bankProviders : [{ name: "Kryros Primary Account" }]).map(
-                        (provider, idx) => (
-                          <div
-                            key={idx}
-                            className="border border-border rounded-2xl p-3 text-[11px] space-y-1.5 bg-muted/40"
-                          >
-                            <div className="flex items-center justify-between">
-                              <span className="font-semibold text-foreground">{provider.name}</span>
-                              <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium text-[10px]">
-                                Recommended
-                              </span>
-                            </div>
-                            {provider.config?.accountName && (
-                              <p className="flex items-center justify-between">
-                                <span className="text-muted-foreground">Account name</span>
-                                <span className="font-semibold text-foreground">{provider.config.accountName}</span>
-                              </p>
-                            )}
-                            {provider.config?.accountNumber && (
-                              <p className="flex items-center justify-between">
-                                <span className="text-muted-foreground">Account number</span>
-                                <span className="font-semibold text-foreground">{provider.config.accountNumber}</span>
-                              </p>
-                            )}
-                            <p className="flex items-center justify-between">
-                              <span className="text-muted-foreground">Amount</span>
-                              <span className="font-semibold text-foreground">{format(total)}</span>
-                            </p>
-                          </div>
-                        ),
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label className="flex items-center gap-1 text-[11px] font-semibold text-muted-foreground">
-                      <Upload className="w-3 h-3" />
-                      Upload proof of payment (optional)
-                    </label>
-                    <input
-                      ref={fileRef}
-                      type="file"
-                      accept="image/*,application/pdf"
-                      className="hidden"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) {
-                          setProofFile(file.name);
-                        } else {
-                          setProofFile(null);
-                        }
-                      }}
-                    />
-                    <button
-                      onClick={() => fileRef.current?.click()}
-                      className="w-full flex items-center justify-between px-3 py-2 rounded-xl border border-dashed border-border bg-background text-xs text-muted-foreground hover:border-primary/40"
-                    >
-                      <span>{proofFile || "Choose file or take a photo"}</span>
-                      <Upload className="w-3 h-3" />
-                    </button>
-                    <p className="text-[10px] text-muted-foreground">
-                      Uploading a receipt or screenshot helps us verify your payment faster.
+                  <div className="bg-primary/5 border border-primary/15 rounded-2xl px-4 py-3 flex items-start gap-2">
+                    <Building2 className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                    <p className="text-[11px] text-muted-foreground">
+                      Please transfer the exact amount to the account below and use your payment reference as payment note.
                     </p>
                   </div>
-
+                  <div className="space-y-3">
+                    {[
+                      ...(bankProviders.length > 0
+                        ? bankProviders.flatMap((acc) => [
+                            { label: "Bank Name",      val: acc.name },
+                            { label: "Account Name",   val: acc.config?.accountName   || "" },
+                            { label: "Account Number", val: acc.config?.accountNumber || "" },
+                          ])
+                        : [
+                            { label: "Bank Name",      val: "Stanbic Bank Zambia" },
+                            { label: "Account Name",   val: "KRYROS LIMITED"       },
+                            { label: "Account Number", val: "91200012345667"       },
+                          ]
+                      ),
+                      { label: "Reference", val: bankRef },
+                    ].map(({ label, val }) => (
+                      <div key={label} className="flex items-center justify-between py-2 border-b border-border last:border-0">
+                        <div>
+                          <p className="text-[10px] text-muted-foreground">{label}</p>
+                          <p className="text-sm font-bold text-foreground">{val}</p>
+                        </div>
+                        <CopyBtn text={val} />
+                      </div>
+                    ))}
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-semibold text-muted-foreground mb-2">Upload Payment Proof (Optional)</p>
+                    <label
+                      className="flex flex-col items-center justify-center border-2 border-dashed border-border rounded-2xl py-6 cursor-pointer hover:border-primary/40 hover:bg-primary/[0.02] transition-colors"
+                      onClick={() => fileRef.current?.click()}
+                    >
+                      <Upload className="w-6 h-6 text-muted-foreground mb-2" />
+                      <p className="text-xs font-semibold text-foreground">{proofFile ?? "Choose File or Drag & Drop"}</p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">PNG, JPG, PDF up to 10MB</p>
+                      <input
+                        ref={fileRef}
+                        type="file"
+                        className="hidden"
+                        accept=".png,.jpg,.jpeg,.pdf"
+                        onChange={(e) => setProofFile(e.target.files?.[0]?.name ?? null)}
+                      />
+                    </label>
+                  </div>
+                  <div className="border-t border-border pt-4 mt-2 space-y-1.5">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground">Amount</span>
+                      <span className="font-semibold text-foreground">{format(SUBTOTAL)}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground">Shipping</span>
+                      <span className="font-semibold text-foreground">{shippingPrice === 0 ? "Free" : format(shippingPrice)}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground">Fee</span>
+                      <span className="font-semibold text-foreground">{format(TAX)}</span>
+                    </div>
+                  </div>
                   <button
-                    disabled={isSubmitting}
                     onClick={handlePlaceOrder}
-                    className="w-full py-3 rounded-2xl bg-[var(--kryros-primary-hover)] text-white text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={isSubmitting}
+                    className="w-full py-4 bg-primary text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-primary/90 active:scale-95 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                   >
-                    {isSubmitting && (
-                      <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                    {isSubmitting ? (
+                      <>
+                        <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                        Placing Order…
+                      </>
+                    ) : (
+                      <><Check className="w-4 h-4" /> I Have Made the Transfer</>
                     )}
-                    {isSubmitting ? "Placing Order…" : "I Have Made the Transfer"}
                   </button>
                   <SecureFooter />
                 </div>
               )}
 
-              {/* ── WHATSAPP PAYMENT ── */}
+              {/* WHATSAPP */}
               {openMethod === "whatsapp" && (
                 <div className="space-y-4">
                   <div className="flex flex-col items-center py-6 gap-3">
                     <div className="w-16 h-16 rounded-2xl bg-green-50 dark:bg-green-900/20 flex items-center justify-center">
-                      <svg
-                        viewBox="0 0 24 24"
-                        className="w-9 h-9"
-                        fill="currentColor"
-                        style={{ color: "var(--kryros-primary-hover)" }}
-                      >
-                        <path d="M.057 24l1.687-6.163a11.867 11.867 0 01-1.587-5.945C.17 5.3 5.186.286 11.49.286c3.17 0 6.146 1.237 8.388 3.48a11.79 11.79 0 013.482 8.401c-.003 6.308-5.17 11.42-11.49 11.42a11.9 11.9 0 01-5.946-1.606L.057 24zm6.597-3.807c1.766 1.05 3.066 1.693 4.947 1.693 5.448 0 9.886-4.434 9.889-9.877.003-5.462-4.415-9.89-9.881-9.894-5.452 0-9.884 4.432-9.884 9.884a9.84 9.84 0 001.774 5.576l-.999 3.648 3.154-.93z" />
-                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.788-1.653-2.086-.173-.298-.018-.459.13-.608.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.372-.025-.52-.075-.149-.669-1.612-.916-2.208-.242-.58-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.262.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.718 2.006-1.413.248-.695.248-1.291.173-1.413-.074-.123-.272-.198-.57-.347" />
+                      <svg viewBox="0 0 24 24" className="w-9 h-9" fill="currentColor">
+                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
                       </svg>
                     </div>
                     <p className="text-sm text-center text-muted-foreground px-4">
                       You will be redirected to WhatsApp to complete your payment securely.
                     </p>
                   </div>
-                  <div className="border-t border-border pt-4 space-y-1.5">
+                  <div className="border-t border-border pt-4 mt-2 space-y-1.5">
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-muted-foreground">Subtotal</span>
-                      <span className="font-semibold">{format(SUBTOTAL)}</span>
+                      <span className="text-muted-foreground">Amount</span>
+                      <span className="font-semibold text-foreground">{format(SUBTOTAL)}</span>
                     </div>
                     <div className="flex items-center justify-between text-xs">
                       <span className="text-muted-foreground">Shipping</span>
-                      <span className="font-semibold">
-                        {shippingPrice === 0 ? "Free" : format(shippingPrice)}
-                      </span>
+                      <span className="font-semibold text-foreground">{shippingPrice === 0 ? "Free" : format(shippingPrice)}</span>
                     </div>
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-muted-foreground">Total</span>
-                      <span className="font-semibold">{format(total)}</span>
+                      <span className="text-muted-foreground">Fee</span>
+                      <span className="font-semibold text-foreground">{format(TAX)}</span>
                     </div>
                   </div>
-
                   <button
-                    disabled={isSubmitting}
                     onClick={handlePlaceOrder}
-                    className="w-full py-3 rounded-2xl bg-[var(--kryros-primary-hover)] text-white text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={isSubmitting}
+                    className="w-full py-4 bg-[var(--kryros-primary-hover)] text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-[#1ebe5d] active:scale-95 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                   >
-                    {isSubmitting && (
-                      <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                    {isSubmitting ? (
+                      <>
+                        <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                        Preparing WhatsApp…
+                      </>
+                    ) : (
+                      <>
+                        <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor">
+                          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+                        </svg>
+                        Continue on WhatsApp
+                      </>
                     )}
-                    {isSubmitting ? "Preparing WhatsApp…" : "Pay via WhatsApp"}
+                  </button>
+                  <SecureFooter />
+                </div>
+              )}
+
+              {/* CARD PAYMENT */}
+              {openMethod === "card" && (
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-[11px] font-semibold text-muted-foreground mb-1.5">Card Number</label>
+                    <div className="flex items-center gap-2 border border-border rounded-2xl px-3.5 py-3 bg-background focus-within:ring-2 focus-within:ring-primary/30">
+                      <input
+                        value={cardNum}
+                        onChange={(e) => setCardNum(e.target.value)}
+                        placeholder="1234 5678 9012 3456"
+                        inputMode="numeric"
+                        className="flex-1 text-sm text-foreground outline-none bg-transparent"
+                      />
+                      <CreditCard className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[11px] font-semibold text-muted-foreground mb-1.5">Expiry Date</label>
+                      <input
+                        value={expiry}
+                        onChange={(e) => setExpiry(e.target.value)}
+                        placeholder="MM / YY"
+                        className="w-full border border-border rounded-2xl px-3.5 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/30 bg-background text-foreground"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-muted-foreground mb-1.5">CVV</label>
+                      <input
+                        value={cvv}
+                        onChange={(e) => setCvv(e.target.value)}
+                        placeholder="123"
+                        type="password"
+                        className="w-full border border-border rounded-2xl px-3.5 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/30 bg-background text-foreground"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-semibold text-muted-foreground mb-1.5">Cardholder Name</label>
+                    <input
+                      value={cardName}
+                      onChange={(e) => setCardName(e.target.value)}
+                      placeholder="John Doe"
+                      className="w-full border border-border rounded-2xl px-3.5 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/30 bg-background text-foreground"
+                    />
+                  </div>
+                  <div className="border-t border-border pt-4 mt-2 space-y-1.5">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground">Amount</span>
+                      <span className="font-semibold text-foreground">{format(SUBTOTAL)}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground">Shipping</span>
+                      <span className="font-semibold text-foreground">{shippingPrice === 0 ? "Free" : format(shippingPrice)}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground">Fee</span>
+                      <span className="font-semibold text-foreground">{format(TAX)}</span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={handlePlaceOrder}
+                    disabled={isSubmitting}
+                    className="w-full py-4 bg-primary text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-primary/90 active:scale-95 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                        Processing payment…
+                      </>
+                    ) : (
+                      <><Lock className="w-4 h-4" /> Pay {format(total)}</>
+                    )}
                   </button>
                   <SecureFooter />
                 </div>
