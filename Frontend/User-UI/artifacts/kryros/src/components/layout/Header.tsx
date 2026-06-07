@@ -30,6 +30,8 @@ type HeaderConfig = {
   announcementText?: string;
   announcementCta?: string;
   announcementCtaLink?: string;
+  announcementBgColor?: string;
+  announcementTextColor?: string;
   navLinks?: typeof DEFAULT_NAV;
 };
 
@@ -82,7 +84,13 @@ export default function Header() {
       <div ref={headerRef} className="fixed top-0 left-0 right-0 z-40">
         {/* Announcement bar — always visible, dismissible with X */}
         {headerCfg?.announcementEnabled && headerCfg?.announcementText && !announceHidden && (
-          <div className="bg-background text-foreground text-[10px] md:text-xs border-b border-border">
+          <div
+            className="bg-background text-foreground text-[10px] md:text-xs border-b border-border"
+            style={{
+              ...(headerCfg?.announcementBgColor ? { backgroundColor: headerCfg.announcementBgColor } : {}),
+              ...(headerCfg?.announcementTextColor ? { color: headerCfg.announcementTextColor } : {}),
+            }}
+          >
             <div className="flex items-center justify-between px-4 md:px-6 py-1.5 md:py-2">
               <span>
                 {headerCfg?.announcementText}
