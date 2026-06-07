@@ -22,6 +22,8 @@ function toAnchor(name: string) {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 }
 
+const AUTO_SLIDE_INTERVAL = 3000; // 3 seconds
+
 export default function ShopPage() {
   const [selectedCat, setSelectedCat] = useState<string>("All");
   const [selectedBrand, setSelectedBrand] = useState<string>("");
@@ -33,8 +35,10 @@ export default function ShopPage() {
   const [brands, setBrands] = useState<ApiBrand[]>([]);
   const [allProducts, setAllProducts] = useState<Product[]>([]);
 
-  // Category scroll ref for smooth snap scrolling
+  // Category auto-slide
   const catScrollRef = useRef<HTMLDivElement>(null);
+  const catAutoRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [catIndex, setCatIndex] = useState(0);
 
   // Brand panel state
   const [activeBrandPanel, setActiveBrandPanel] = useState<string | null>(null);
@@ -44,6 +48,14 @@ export default function ShopPage() {
   const searchParam = typeof window !== "undefined"
     ? new URLSearchParams(window.location.search).get("search") || ""
     : "";
+
+  // Read brand query from URL (?brand=...)
+  useEffect(() => {
+    const brandParam = new URLSearchParams(window.location.search).get("brand");
+    if (brandParam) {
+      setActiveBrandPanel(decodeURIComponent(brandParam));
+    }
+  }, []);
 
   useEffect(() => {
     fetchCategories().then((cats) => {
@@ -82,6 +94,32 @@ export default function ShopPage() {
       .catch(() => {});
   }, []);
 
+  // Category auto-slide effect
+  useEffect(() => {
+    const totalItems = categories.length + 1; // +1 for "All"
+    if (totalItems <= 1) return;
+
+    catAutoRef.current = setInterval(() => {
+      setCatIndex((prev) => {
+        const next = (prev + 1) % totalItems;
+        if (catScrollRef.current) {
+          const itemWidth = 144 + 12; // w-36 (144px) + gap-3 (12px)
+          catScrollRef.current.scrollTo({ left: next * itemWidth, behavior: "smooth" });
+        }
+        return next;
+      });
+    }, AUTO_SLIDE_INTERVAL);
+
+    return () => {
+      if (catAutoRef.current) clearInterval(catAutoRef.current);
+    };
+  }, [categories]);
+
+  // Pause auto-slide on user touch
+  const handleCatTouchStart = () => {
+    if (catAutoRef.current) clearInterval(catAutoRef.current);
+  };
+
   // Reset panel category filter when brand changes
   useEffect(() => {
     setBrandPanelCat("All");
@@ -91,8 +129,6 @@ export default function ShopPage() {
   const cmsBanner = brandSlug ? brandBanners[brandSlug] : undefined;
   const hero = cmsBanner && (cmsBanner.tagline || cmsBanner.description || cmsBanner.bgColor || cmsBanner.imageUrl) ? { pre: cmsBanner.tagline || '', brand: cmsBanner.brandName ? cmsBanner.brandName + '.' : '', sub: cmsBanner.description || '', bg: cmsBanner.bgColor || '#f5f5f5', brandColor: cmsBanner.bgGradient || 'var(--kryros-primary)', ctaText: cmsBanner.ctaText, ctaLink: cmsBanner.ctaLink, imageUrl: cmsBanner.imageUrl || '' } : null;
 
-  // Brand panel promotional banner — purely dynamic, no fallback
-  // Slugs stored in CMS may have a leading "/" (e.g. "/samsung") — normalise before matching
   const panelSlug = activeBrandPanel
     ? activeBrandPanel.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
     : '';
@@ -104,7 +140,6 @@ export default function ShopPage() {
          )
       )
     : undefined;
-  // Only build panelHero when real CMS data exists — no hardcoded defaults
   const panelHero = panelCmsBanner
     ? {
         pre: panelCmsBanner.tagline || '',
@@ -123,7 +158,6 @@ export default function ShopPage() {
     ? allProducts
     : allProducts.filter((p) => p.category === selectedCat || p.categoryId === selectedCat);
 
-  // Client-side search filter for search results
   const searchResults = searchParam
     ? allProducts.filter((p) =>
         p.name?.toLowerCase().includes(searchParam.toLowerCase()) ||
@@ -135,7 +169,6 @@ export default function ShopPage() {
 
   const uniqueBrands = Array.from(new Set(allProducts.map((p) => p.brand).filter(Boolean)));
 
-  // Brand panel: products for active brand, optionally filtered by category
   const brandPanelProducts = activeBrandPanel
     ? allProducts.filter((p) => p.brand === activeBrandPanel)
     : [];
@@ -143,7 +176,6 @@ export default function ShopPage() {
     ? brandPanelProducts
     : brandPanelProducts.filter((p) => p.category === brandPanelCat || p.categoryId === brandPanelCat);
 
-  // Categories that exist for the active brand (for filtering inside panel)
   const brandCategories = activeBrandPanel
     ? categories.filter((cat) =>
         brandPanelProducts.some((p) => p.category === cat.name || p.categoryId === cat.id)
@@ -185,7 +217,6 @@ export default function ShopPage() {
                 </p>
               </div>
               <div className="flex items-center gap-2">
-                {/* View All button resets to full shop */}
                 <button
                   onClick={closeBrandPanel}
                   className="flex items-center gap-1 text-xs font-bold text-teal-600 bg-teal-50 dark:bg-teal-950/40 px-3 py-1.5 rounded-full border border-teal-200 dark:border-teal-800"
@@ -201,7 +232,6 @@ export default function ShopPage() {
               </div>
             </div>
 
-            {/* Category filter inside panel */}
             {brandCategories.length > 0 && (
               <div className="flex gap-2 overflow-x-auto no-scrollbar pt-3 pb-1">
                 <button
@@ -234,20 +264,16 @@ export default function ShopPage() {
             )}
           </SheetHeader>
 
-          {/* Brand Promotional Banner inside panel */}
           {panelHero && (
             <div className="mx-3 mt-3 mb-1 rounded-2xl overflow-hidden flex-shrink-0">
               {panelHero.hasImage ? (
-                /* Image banner — fixed compact height, text overlaid cleanly */
                 <div className="relative h-[130px]">
                   <img
                     src={panelHero.imageUrl}
                     alt={panelHero.brand}
                     className="absolute inset-0 w-full h-full object-cover"
                   />
-                  {/* Gradient overlay */}
                   <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.18) 55%, transparent 100%)' }} />
-                  {/* Text on top */}
                   <div className="absolute inset-0 flex flex-col justify-end p-3 z-10">
                     {panelHero.pre && (
                       <p className="text-[10px] font-bold uppercase tracking-widest text-white/70 mb-0.5">
@@ -275,7 +301,6 @@ export default function ShopPage() {
                   </div>
                 </div>
               ) : (
-                /* Color-only banner (no image) */
                 <div
                   className="flex flex-col justify-center px-4 py-3 min-h-[72px]"
                   style={{ background: panelHero.bg }}
@@ -359,7 +384,6 @@ export default function ShopPage() {
       {/* ── Normal Shop (hidden when search active) ── */}
       {!searchParam && (
       <>
-      {/* ── General Shop Hero Banner (CMS-managed, only shown when configured) ── */}
       {shopHeroBanner && (
       <div className="mx-4 mt-4 mb-4 rounded-2xl overflow-hidden" style={shopHeroBanner.imageUrl ? { backgroundImage: `url(${shopHeroBanner.imageUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' } : { background: shopHeroBanner.bgColor || "linear-gradient(135deg, var(--kryros-primary) 0%, #0a7c72 100%)" }}>
         <div className="flex items-center min-h-[120px] relative overflow-hidden p-4">
@@ -386,15 +410,16 @@ export default function ShopPage() {
         <p className="text-[11px] text-muted-foreground mt-0.5">Browse our full collection by category</p>
       </div>
 
-      {/* Category cards */}
+      {/* Category cards — auto-sliding */}
       {categories.length > 0 && (
         <div
           ref={catScrollRef}
-          className="flex gap-3 overflow-x-auto px-4 pb-4"
+          onTouchStart={handleCatTouchStart}
+          className="flex gap-3 overflow-x-auto no-scrollbar px-4 pb-4"
           style={{ scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch", scrollBehavior: "smooth" }}
         >
           <button
-            onClick={() => setSelectedCat("All")}
+            onClick={() => { setSelectedCat("All"); setCatIndex(0); }}
             className={`flex-shrink-0 snap-start relative w-36 h-36 rounded-2xl overflow-hidden transition-all bg-gradient-to-br from-teal-600 to-teal-800 flex items-center justify-center ${selectedCat === "All" ? "ring-2 ring-teal-500 ring-offset-2" : ""}`}
           >
             <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(10,20,30,0.92) 0%, rgba(10,20,30,0.55) 55%, rgba(10,20,30,0.15) 100%)" }} />
@@ -407,12 +432,12 @@ export default function ShopPage() {
             </div>
           </button>
 
-          {categories.map((cat) => {
+          {categories.map((cat, idx) => {
             const active = selectedCat === cat.name || selectedCat === cat.id;
             return (
               <button
                 key={cat.id}
-                onClick={() => setSelectedCat(cat.name)}
+                onClick={() => { setSelectedCat(cat.name); setCatIndex(idx + 1); }}
                 className={`flex-shrink-0 snap-start relative w-36 h-36 rounded-2xl overflow-hidden transition-all ${active ? "ring-2 ring-teal-500 ring-offset-2" : ""}`}
               >
                 {cat.image ? (
@@ -431,6 +456,25 @@ export default function ShopPage() {
               </button>
             );
           })}
+        </div>
+      )}
+
+      {/* Category dot indicators */}
+      {categories.length > 0 && (
+        <div className="flex justify-center gap-1.5 pb-3 -mt-1">
+          {[0, ...categories.map((_, i) => i + 1)].map((i) => (
+            <button
+              key={i}
+              onClick={() => {
+                setCatIndex(i);
+                if (catScrollRef.current) {
+                  const itemWidth = 144 + 12;
+                  catScrollRef.current.scrollTo({ left: i * itemWidth, behavior: "smooth" });
+                }
+              }}
+              className={`rounded-full transition-all ${catIndex === i ? "w-4 h-1.5 bg-teal-600" : "w-1.5 h-1.5 bg-gray-300 dark:bg-gray-600"}`}
+            />
+          ))}
         </div>
       )}
 
@@ -462,7 +506,7 @@ export default function ShopPage() {
 
       <div className="mx-4 mb-4 border-t border-border" />
 
-      {/* Shop by Brand — tap a brand to open its panel */}
+      {/* Shop by Brand */}
       {uniqueBrands.length > 0 && (
         <div className="px-4 mb-5">
           <p className="text-sm font-bold text-foreground mb-2.5">Shop by Brand</p>
@@ -507,7 +551,6 @@ export default function ShopPage() {
         )
       )}
 
-      {/* Members Banner — only shown when configured in admin panel */}
       {membersBanner && (
       <div className="mx-4 mb-5 rounded-2xl overflow-hidden" style={membersBanner.imageUrl ? { backgroundImage: `url(${membersBanner.imageUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' } : { background: "linear-gradient(135deg, var(--kryros-primary) 0%, #0f766e 100%)" }}>
         <div className="flex items-center p-4 gap-3">
