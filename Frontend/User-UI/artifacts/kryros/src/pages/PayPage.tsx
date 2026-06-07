@@ -342,6 +342,10 @@ export default function PayPage() {
   const [orderId, setOrderId] = useState<string | null>(null);
   const [receipt, setReceipt] = useState<ReceiptData | null>(null);
 
+  // Receipt contact fields
+  const [receiptPhone, setReceiptPhone] = useState("");
+  const [receiptEmail, setReceiptEmail] = useState("");
+
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const token = useAuthStore((s) => s.token);
 
@@ -373,6 +377,27 @@ export default function PayPage() {
     } as ReceiptData;
   }, [mmProvider, fee, total, currency, payRef]);
 
+  // Fire receipt via SMS and/or email (fire-and-forget)
+  const sendReceiptNotification = useCallback((receiptData: ReceiptData) => {
+    const phone = receiptPhone.trim();
+    const email = receiptEmail.trim();
+    if (!phone && !email) return;
+    fetch(`${API_BASE}/api/notifications/receipt`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        phone: phone || undefined,
+        email: email || undefined,
+        orderRef: receiptData.reference,
+        amount: receiptData.amount.toFixed(2),
+        currency: receiptData.currency,
+        customerName: "Customer",
+        paymentMethod: receiptData.operatorName || "Direct Payment",
+        status: "completed",
+      }),
+    }).catch(() => {}); // silent — never block the UI
+  }, [receiptPhone, receiptEmail]);
+
   const startPolling = useCallback((oid: string) => {
     stopPolling();
     pollRef.current = setInterval(async () => {
@@ -385,8 +410,10 @@ export default function PayPage() {
         const status = data?.status as string | undefined;
         if (status === "PAID") {
           stopPolling();
+          const r = buildReceipt({ orderId: oid, reference: data?.reference || data?.paymentReference });
           setPayStatus("paid");
-          setReceipt(buildReceipt({ orderId: oid, reference: data?.reference || data?.paymentReference }));
+          setReceipt(r);
+          sendReceiptNotification(r);
         } else if (status === "FAILED") {
           stopPolling();
           setPayStatus("failed");
@@ -397,7 +424,7 @@ export default function PayPage() {
         // keep polling
       }
     }, 5000);
-  }, [token, stopPolling, buildReceipt]);
+  }, [token, stopPolling, buildReceipt, sendReceiptNotification]);
 
   const handleMobileMoneyPay = async () => {
     if (!mmPhone || mmPhone.trim().length < 9) {
@@ -632,6 +659,33 @@ export default function PayPage() {
               placeholder="Reference (optional)"
               className="flex-1 text-sm font-semibold text-foreground outline-none bg-transparent placeholder:text-muted-foreground/50 py-1"
             />
+          </div>
+
+          {/* Receipt contact */}
+          <div className="border border-border rounded-2xl px-4 py-4 bg-background space-y-3">
+            <p className="text-sm font-bold text-foreground">Receipt Contact <span className="text-muted-foreground font-normal text-xs">(optional)</span></p>
+            <p className="text-[11px] text-muted-foreground -mt-1">Get your receipt sent automatically after payment.</p>
+            <div className="flex items-center gap-3 border border-border rounded-xl px-3.5 py-2.5 focus-within:border-primary/60 transition-colors bg-background">
+              <svg viewBox="0 0 24 24" className="w-4 h-4 text-muted-foreground/50 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+              <input
+                value={receiptPhone}
+                onChange={(e) => setReceiptPhone(e.target.value.replace(/[^0-9+\s-]/g, ""))}
+                placeholder="Phone number (SMS receipt)"
+                inputMode="tel"
+                className="flex-1 text-sm text-foreground outline-none bg-transparent placeholder:text-muted-foreground/50 py-0.5"
+              />
+            </div>
+            <div className="flex items-center gap-3 border border-border rounded-xl px-3.5 py-2.5 focus-within:border-primary/60 transition-colors bg-background">
+              <svg viewBox="0 0 24 24" className="w-4 h-4 text-muted-foreground/50 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/></svg>
+              <input
+                value={receiptEmail}
+                onChange={(e) => setReceiptEmail(e.target.value)}
+                placeholder="Email address (email receipt)"
+                inputMode="email"
+                type="email"
+                className="flex-1 text-sm text-foreground outline-none bg-transparent placeholder:text-muted-foreground/50 py-0.5"
+              />
+            </div>
           </div>
 
           {/* Payment Summary */}
