@@ -83,9 +83,14 @@ export class OrdersController {
   @ApiOperation({ summary: 'Update order status (Admin/Manager only)' })
   updateStatus(
     @Param('id') id: string,
-    @Body('status') status: string,
+    @Body('status') status?: string,
     @Body('paymentStatus') paymentStatus?: string,
+    @Body('trackingNumber') trackingNumber?: string,
+    @Body('notes') notes?: string,
   ) {
+    if (!status && !paymentStatus) {
+      throw new BadRequestException('At least one of status or paymentStatus is required');
+    }
     if (status && !VALID_ORDER_STATUSES.includes(status as OrderStatus)) {
       throw new BadRequestException(
         `Invalid status. Must be one of: ${VALID_ORDER_STATUSES.join(', ')}`,
@@ -96,6 +101,6 @@ export class OrdersController {
         `Invalid paymentStatus. Must be one of: ${VALID_PAYMENT_STATUSES.join(', ')}`,
       );
     }
-    return this.ordersService.updateStatus(id, status, paymentStatus);
+    return this.ordersService.updateStatus(id, status, paymentStatus, trackingNumber, notes);
   }
 }
