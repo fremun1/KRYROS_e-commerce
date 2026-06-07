@@ -19,6 +19,7 @@ export interface Product {
   description: string;
   image: string;
   images: string[];
+  additionalImages?: string[];
   badge?: string;
   isNew?: boolean;
   isTrending?: boolean;
@@ -188,6 +189,7 @@ function normalizeProduct(p: any): Product {
     })(),
     image: mainImage,
     images: imageList,
+    additionalImages: imageList.length > 1 ? imageList.slice(1) : undefined,
     badge: discount > 0 ? `-${discount}%` : undefined,
     isNew: !!(p.isNew),
     isTrending: !!(p.isTrending),
