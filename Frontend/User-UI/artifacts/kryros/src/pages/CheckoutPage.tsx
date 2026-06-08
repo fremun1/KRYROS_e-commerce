@@ -524,7 +524,7 @@ export default function CheckoutPage() {
       </div>
 
       {/* Progress steps — 4 equal segments, always full width */}
-      <div className="px-4 pb-4">
+      <div className="px-0 pb-4">
         <div className="flex justify-between text-[11px] font-semibold text-muted-foreground mb-2">
           <span className={step >= 1 ? "text-primary" : ""}>Contact</span>
           <span className={step >= 2 ? "text-primary" : ""}>Address</span>
@@ -540,7 +540,7 @@ export default function CheckoutPage() {
       </div>
 
       {/* Main content */}
-      <div className="flex-1 overflow-y-auto px-4 pb-6 space-y-3 lg:overflow-visible lg:flex lg:flex-row lg:gap-8 lg:px-8 lg:space-y-0 lg:pb-8 lg:items-start">
+      <div className="flex-1 overflow-y-auto pb-6 space-y-3 lg:overflow-visible lg:flex lg:flex-row lg:gap-8 lg:px-8 lg:space-y-0 lg:pb-8 lg:items-start">
 
         <div className="space-y-3 lg:flex-1 lg:overflow-y-auto lg:pb-4">
         {/* ── STEP 1: Contact ── */}
