@@ -489,7 +489,7 @@ export default function CheckoutPage() {
   const hasPaymentError = !!orderError || mmPhase === "failed_init" || mmPhase === "timed_out";
 
   return (
-    <div className="max-w-lg mx-auto bg-background min-h-screen flex flex-col lg:max-w-6xl">
+    <div className="w-full bg-background min-h-screen flex flex-col">
       {/* Header */}
       <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-xl border-b border-border">
         <div className="flex items-center justify-between px-4 py-3.5 max-w-6xl mx-auto">
