@@ -75,7 +75,7 @@ export default function PickupStationsPage() {
 
   return (
     <AccountLayout>
-    <div className="max-w-2xl mx-auto">
+    <div className="max-w-5xl mx-auto">
       {/* Header */}
       <div className="flex items-start justify-between mb-5">
         <div>
@@ -110,7 +110,7 @@ export default function PickupStationsPage() {
       </div>
 
       {/* Map - Lusaka, Zambia (Leaflet via srcdoc, no X-Frame-Options block) */}
-      <div className="rounded-2xl overflow-hidden mb-5 border border-border" style={{ height: 220 }}>
+      <div className="rounded-2xl overflow-hidden mb-5 border border-border" style={{ height: 220 }} className="md:!h-80">
         <iframe
           title="KRYROS Pickup Stations Map"
           srcDoc={`<!DOCTYPE html>
@@ -163,7 +163,7 @@ export default function PickupStationsPage() {
           </p>
         </div>
       ) : (
-        <div className="space-y-3 mb-5">
+        <div className="space-y-3 mb-5 md:grid md:grid-cols-2 md:gap-3 md:space-y-0">
           {filtered.map((station, i) => (
             <motion.div
               key={station.id}
@@ -219,7 +219,7 @@ export default function PickupStationsPage() {
 
       {/* Why Choose Pickup */}
       <h2 className="text-sm font-bold text-foreground mb-3">Why Choose Pickup?</h2>
-      <div className="grid grid-cols-4 gap-2">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
         {benefits.map(({ icon: Icon, title, desc }) => (
           <div key={title} className="flex flex-col items-center text-center p-2 bg-card border border-border rounded-xl">
             <Icon className="w-4 h-4 text-primary mb-1.5" />
