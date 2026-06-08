@@ -261,4 +261,14 @@ function ShippingContent() {
             <FormField label="Free Shipping Above (K)" value={methodForm.minThreshold} onChange={mfp('minThreshold')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
             <FormField label="Estimated Delivery Days" value={methodForm.estimatedDays} onChange={mfp('estimatedDays')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
             <FormField label="Sort Order" value={methodForm.sortOrder} onChange={mfp('sortOrder')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-            <FormField label="Status" value={methodForm.status} onChange={mfp('status')} options={['Active', 'Inactive']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surf
+            <FormField label="Status" value={methodForm.status} onChange={mfp('status')} options={['Active', 'Inactive']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <ModalFooter onClose={() => setEditMethod(null)} onSubmit={handleEditMethod} loading={loadingMethod} submitLabel="Save Changes" isDark={isDark} border={border} textMain={textMain} />
+          </Modal>
+          <ConfirmDialog open={!!deleteMethod} onClose={() => setDeleteMethod(null)} onConfirm={handleDeleteMethod} loading={loadingMethod} title="Delete Method" message={`Delete "${deleteMethod?.name}" permanently?`} />
+        </>
+      )}
+    </div>
+  );
+}
+
+export default function ShippingPage() { return <AdminShell><ShippingContent /></AdminShell>; }
