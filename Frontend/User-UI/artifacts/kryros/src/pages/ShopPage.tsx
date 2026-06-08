@@ -106,7 +106,9 @@ export default function ShopPage() {
       setCatIndex((prev) => {
         const next = (prev + 1) % totalItems;
         if (catScrollRef.current) {
-          const itemWidth = 144 + 12; // w-36 (144px) + gap-3 (12px)
+          // Dynamic: read actual card width so auto-slide works on all breakpoints
+          const firstCard = catScrollRef.current?.children[0] as HTMLElement | undefined;
+          const itemWidth = firstCard ? firstCard.offsetWidth + 12 : 156;
           catScrollRef.current.scrollTo({ left: next * itemWidth, behavior: "smooth" });
         }
         return next;
@@ -283,7 +285,7 @@ export default function ShopPage() {
           {panelHero && (
             <div className="mx-3 mt-3 mb-1 rounded-2xl overflow-hidden flex-shrink-0">
               {panelHero.hasImage ? (
-                <div className="relative h-[130px]">
+                <div className="relative h-[160px] sm:h-[190px] md:h-[220px]">
                   <img
                     src={panelHero.imageUrl}
                     alt={panelHero.brand}
@@ -402,7 +404,10 @@ export default function ShopPage() {
       <>
       {shopHeroBanner && (
       <div className="mx-4 mt-4 mb-4 rounded-2xl overflow-hidden" style={shopHeroBanner.imageUrl ? { backgroundImage: `url(${shopHeroBanner.imageUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' } : { background: shopHeroBanner.bgColor || "linear-gradient(135deg, var(--kryros-primary) 0%, #0a7c72 100%)" }}>
-        <div className="flex items-center min-h-[120px] relative overflow-hidden p-4 lg:min-h-[200px] lg:p-10">
+        <div className="flex items-center min-h-[180px] relative overflow-hidden p-4 sm:min-h-[210px] lg:min-h-[260px] lg:p-10">
+          {shopHeroBanner.imageUrl && (
+            <div className="absolute inset-0 z-0" style={{ background: 'linear-gradient(135deg, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.38) 60%, transparent 100%)' }} />
+          )}
           <div className="flex-1 z-10">
             <p className="text-[10px] font-bold uppercase tracking-widest mb-1 text-white/70">KRYROS Store</p>
             {shopHeroBanner.tagline && <h2 className="text-xl font-black leading-tight mb-1 text-white lg:text-4xl lg:mb-3">{shopHeroBanner.tagline}</h2>}
@@ -484,7 +489,8 @@ export default function ShopPage() {
               onClick={() => {
                 setCatIndex(i);
                 if (catScrollRef.current) {
-                  const itemWidth = 144 + 12;
+                  const firstCard = catScrollRef.current?.children[0] as HTMLElement | undefined;
+                  const itemWidth = firstCard ? firstCard.offsetWidth + 12 : 156;
                   catScrollRef.current.scrollTo({ left: i * itemWidth, behavior: "smooth" });
                 }
               }}
@@ -499,11 +505,14 @@ export default function ShopPage() {
       {/* Hero banner for selected brand */}
       {hero && (
         <div className="mx-4 mb-5 rounded-2xl overflow-hidden" style={cmsBanner?.imageUrl ? { backgroundImage: `url(${cmsBanner.imageUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' } : { background: hero.bg }}>
-          <div className="flex items-center min-h-[140px] relative overflow-hidden p-4 lg:min-h-[240px] lg:p-10">
+          <div className="flex items-center min-h-[200px] relative overflow-hidden p-4 sm:min-h-[220px] lg:min-h-[300px] lg:p-10">
+            {cmsBanner?.imageUrl && (
+              <div className="absolute inset-0 z-0" style={{ background: 'linear-gradient(135deg, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.38) 60%, transparent 100%)' }} />
+            )}
             <div className="flex-1 z-10">
-              <p className="text-xs text-gray-600 font-medium lg:text-sm">{hero.pre}</p>
-              <h2 className="text-2xl font-black leading-tight mb-1 lg:text-5xl lg:mb-2" style={{ color: hero.brandColor }}>{hero.brand}</h2>
-              <p className="text-[11px] text-gray-600 mb-3 leading-relaxed whitespace-pre-line lg:text-sm lg:mb-5">{hero.sub}</p>
+              <p className={`text-xs font-medium lg:text-sm ${cmsBanner?.imageUrl ? 'text-white/70' : 'text-gray-600'}`}>{hero.pre}</p>
+              <h2 className="text-2xl font-black leading-tight mb-1 lg:text-5xl lg:mb-2" style={{ color: cmsBanner?.imageUrl ? '#fff' : hero.brandColor }}>{hero.brand}</h2>
+              <p className={`text-[11px] mb-3 leading-relaxed whitespace-pre-line lg:text-sm lg:mb-5 ${cmsBanner?.imageUrl ? 'text-white/75' : 'text-gray-600'}`}>{hero.sub}</p>
               <button
                 onClick={() => openBrandPanel(selectedBrand)}
                 className="flex items-center gap-1.5 bg-foreground text-background text-xs font-bold px-4 py-2 rounded-full hover:opacity-90 transition-opacity lg:px-6 lg:py-3 lg:text-sm"
