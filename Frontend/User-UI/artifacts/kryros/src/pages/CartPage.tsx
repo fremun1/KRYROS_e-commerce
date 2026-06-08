@@ -44,7 +44,7 @@ export default function CartPage() {
     return (
       <div className="min-h-screen bg-background">
         <TopBar />
-      <div className="max-w-7xl mx-auto px-4 md:px-6 py-20 text-center">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 py-20 text-center lg:px-8">
         <div className="w-24 h-24 rounded-full bg-muted flex items-center justify-center mx-auto mb-6">
           <ShoppingBag className="w-12 h-12 text-muted-foreground" />
         </div>
@@ -63,9 +63,11 @@ export default function CartPage() {
   return (
     <div className="min-h-screen bg-background">
       <TopBar />
-    <div className="max-w-7xl mx-auto px-4 md:px-6 py-6 pb-24 md:pb-10">
+    {/* lg: extra top padding + wider horizontal padding */}
+    <div className="max-w-7xl mx-auto px-4 md:px-6 py-6 pb-24 md:pb-10 lg:py-10 lg:px-8">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl md:text-3xl font-black text-foreground">
+        {/* lg: larger heading */}
+        <h1 className="text-2xl md:text-3xl font-black text-foreground lg:text-4xl">
           Cart <span className="text-muted-foreground text-lg font-medium">({cartCount})</span>
         </h1>
         <button onClick={() => { clearCart(); toast.success("Cart cleared"); }} className="text-sm text-destructive hover:underline">
@@ -73,7 +75,8 @@ export default function CartPage() {
         </button>
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-6">
+      {/* lg: wider gap between columns */}
+      <div className="grid lg:grid-cols-3 gap-6 lg:gap-8">
         {/* Items */}
         <div className="lg:col-span-2 space-y-3">
           <AnimatePresence>
@@ -84,24 +87,29 @@ export default function CartPage() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, x: -20 }}
-                className="bg-card border border-border rounded-2xl p-4 flex items-center gap-4"
+                {/* lg: more padding + gap inside each card */}
+                className="bg-card border border-border rounded-2xl p-4 flex items-center gap-4 lg:p-5 lg:gap-5"
               >
-                <img src={item.image} alt={item.name} className="w-20 h-20 object-cover rounded-xl bg-muted flex-shrink-0" />
+                {/* lg: larger product image */}
+                <img src={item.image} alt={item.name} className="w-20 h-20 object-cover rounded-xl bg-muted flex-shrink-0 md:w-24 md:h-24 lg:w-28 lg:h-28" />
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-foreground text-sm leading-snug mb-1">{item.name}</h3>
-                  <p className="text-lg font-black text-foreground">{format(item.price * item.qty)}</p>
-                  <p className="text-xs text-muted-foreground">{format(item.price)} each</p>
+                  {/* lg: larger product name */}
+                  <h3 className="font-semibold text-foreground text-sm leading-snug mb-1 lg:text-base">{item.name}</h3>
+                  {/* lg: larger price */}
+                  <p className="text-lg font-black text-foreground lg:text-xl">{format(item.price * item.qty)}</p>
+                  <p className="text-xs text-muted-foreground lg:text-sm">{format(item.price)} each</p>
                 </div>
                 <div className="flex flex-col items-end gap-3">
                   <button onClick={() => { removeFromCart(item.id); toast.success("Removed from cart"); }} className="text-muted-foreground hover:text-destructive transition-colors">
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="w-4 h-4 lg:w-5 lg:h-5" />
                   </button>
+                  {/* lg: slightly larger qty control */}
                   <div className="flex items-center border border-border rounded-xl overflow-hidden">
-                    <button onClick={() => { if (item.qty <= 1) { removeFromCart(item.id); } else updateQty(item.id, item.qty - 1); }} className="w-8 h-8 flex items-center justify-center hover:bg-muted transition-colors">
+                    <button onClick={() => { if (item.qty <= 1) { removeFromCart(item.id); } else updateQty(item.id, item.qty - 1); }} className="w-8 h-8 flex items-center justify-center hover:bg-muted transition-colors lg:w-9 lg:h-9">
                       <Minus className="w-3 h-3" />
                     </button>
-                    <span className="w-8 text-center text-sm font-semibold">{item.qty}</span>
-                    <button onClick={() => updateQty(item.id, item.qty + 1)} className="w-8 h-8 flex items-center justify-center hover:bg-muted transition-colors">
+                    <span className="w-8 text-center text-sm font-semibold lg:w-10">{item.qty}</span>
+                    <button onClick={() => updateQty(item.id, item.qty + 1)} className="w-8 h-8 flex items-center justify-center hover:bg-muted transition-colors lg:w-9 lg:h-9">
                       <Plus className="w-3 h-3" />
                     </button>
                   </div>
@@ -113,14 +121,15 @@ export default function CartPage() {
 
         {/* Order summary */}
         <div className="lg:col-span-1">
-          <div className="bg-card border border-border rounded-2xl p-5 sticky top-24">
-            <h2 className="text-lg font-bold text-foreground mb-4">Order Summary</h2>
+          {/* lg: more padding inside summary card */}
+          <div className="bg-card border border-border rounded-2xl p-5 sticky top-24 lg:p-6">
+            <h2 className="text-lg font-bold text-foreground mb-4 lg:text-xl">Order Summary</h2>
             <div className="space-y-3 mb-4">
-              <div className="flex justify-between text-sm">
+              <div className="flex justify-between text-sm lg:text-base">
                 <span className="text-muted-foreground">Subtotal ({cartCount} items)</span>
                 <span className="font-semibold text-foreground">{format(subtotal)}</span>
               </div>
-              <div className="flex justify-between text-sm">
+              <div className="flex justify-between text-sm lg:text-base">
                 <span className="text-muted-foreground">Shipping</span>
                 <span className={`font-semibold ${shippingUnlocked ? "text-green-600" : "text-foreground"}`}>
                   {shippingUnlocked ? "Free" : format(shipping)}
@@ -152,8 +161,8 @@ export default function CartPage() {
             </div>
             <div className="border-t border-border pt-3 mb-5">
               <div className="flex justify-between">
-                <span className="font-bold text-foreground">Total</span>
-                <span className="font-black text-xl text-foreground">{format(total)}</span>
+                <span className="font-bold text-foreground lg:text-lg">Total</span>
+                <span className="font-black text-xl text-foreground lg:text-2xl">{format(total)}</span>
               </div>
             </div>
 
@@ -166,7 +175,8 @@ export default function CartPage() {
             </div>
 
             <Link href="/checkout">
-              <button className="w-full py-3.5 bg-primary text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-primary/90 transition-all active:scale-95">
+              {/* lg: slightly taller checkout button */}
+              <button className="w-full py-3.5 bg-primary text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-primary/90 transition-all active:scale-95 lg:py-4 lg:text-base">
                 Proceed to Checkout
                 <ArrowRight className="w-4 h-4" />
               </button>
