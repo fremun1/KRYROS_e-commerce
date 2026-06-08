@@ -111,7 +111,7 @@ export default function WishlistPage() {
 
   return (
     <AccountLayout>
-      <div className="max-w-2xl">
+      <div className="max-w-7xl">
         <div className="mb-6">
           <h1 className="text-2xl font-black text-foreground">My Wishlist</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
@@ -122,7 +122,7 @@ export default function WishlistPage() {
         </div>
 
         {showSkeleton ? (
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2">
             {[1, 2, 3, 4].map((i) => (
               <div key={i} className="rounded-2xl bg-muted animate-pulse h-64" />
             ))}
@@ -143,13 +143,13 @@ export default function WishlistPage() {
             </Link>
           </div>
         ) : loading ? (
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2">
             {(activeIds.length > 0 ? activeIds : [1, 2]).map((id) => (
               <div key={id} className="rounded-2xl bg-muted animate-pulse h-64" />
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2">
             {products.map((product) => (
               <UnifiedProductCard
                 key={product.id}
