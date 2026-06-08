@@ -121,7 +121,7 @@ export default function Header() {
           <button
             data-testid="header-menu-btn"
             onClick={() => setSidebarOpen(true)}
-            className="p-1.5 md:p-2 rounded-xl hover:bg-muted transition-colors flex-shrink-0"
+            className="p-1.5 md:p-2 rounded-xl hover:bg-muted transition-colors flex-shrink-0 md:hidden"
           >
             <Menu className="w-5 h-5" />
           </button>
