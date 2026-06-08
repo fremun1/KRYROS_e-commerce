@@ -82,7 +82,7 @@ export default function CategoryPromoBanners() {
             <div
               key={i}
               className="flex-shrink-0 rounded-2xl animate-pulse bg-muted"
-              style={{ width: "min(86vw, 360px)", height: 165 }}
+              style={{ width: "min(88vw, 380px)", height: 200 }}
             />
           ))}
         </div>
@@ -104,8 +104,8 @@ export default function CategoryPromoBanners() {
               className="relative flex-shrink-0 overflow-hidden cursor-pointer group hover:shadow-xl transition-shadow duration-300"
               style={{
                 borderRadius: 14,
-                width: "min(86vw, 360px)",
-                height: 165,
+                width: "min(88vw, 380px)",
+                height: 200,
                 scrollSnapAlign: "start",
                 // Use gradient as base — image overlays on top
                 background: b.gradient,
