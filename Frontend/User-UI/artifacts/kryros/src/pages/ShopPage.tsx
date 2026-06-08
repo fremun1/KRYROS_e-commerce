@@ -210,8 +210,7 @@ export default function ShopPage() {
   };
 
   return (
-    <div className="pb-24 md:pb-10">
-      <div className="max-w-7xl mx-auto">
+    <div className="pb-24 md:pb-10 max-w-7xl mx-auto">
 
       {/* ── Brand Panel (Bottom Sheet) ── */}
       <Sheet open={!!activeBrandPanel} onOpenChange={(open) => { if (!open) closeBrandPanel(); }}>
@@ -597,7 +596,6 @@ export default function ShopPage() {
       </>
       )}
     </div>
-      </div>{/* end max-w-7xl */}
     </div>
   );
 }
