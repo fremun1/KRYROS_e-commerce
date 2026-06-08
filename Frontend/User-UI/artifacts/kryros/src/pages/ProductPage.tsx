@@ -184,7 +184,7 @@ export default function ProductPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-[140px]">
+    <div className="min-h-screen bg-background pb-[140px] md:pb-10">
       {/* Header */}
       <div className="sticky top-0 z-30 bg-background/80 backdrop-blur-xl border-b border-border px-4 py-3 flex items-center justify-between">
         <button onClick={() => window.history.back()} className="p-2 -ml-2 hover:bg-muted rounded-full transition-colors">
@@ -199,7 +199,10 @@ export default function ProductPage() {
         </div>
       </div>
 
-      {/* Image Gallery — swipeable + auto-sliding */}
+      {/* Desktop: two-column layout wrapper */}
+      <div className="md:max-w-7xl md:mx-auto md:px-6 md:py-8 md:grid md:grid-cols-2 md:gap-12 md:items-start">
+
+      {/* LEFT COL: Image Gallery — swipeable + auto-sliding */}
       <div
         ref={slideRef}
         className="bg-[#F1F1F1] dark:bg-[#101826] aspect-square relative overflow-hidden select-none"
@@ -249,7 +252,8 @@ export default function ProductPage() {
         </div>
       )}
 
-      <div className="px-4 mt-4 space-y-4">
+      {/* RIGHT COL on desktop */}
+      <div className="px-4 mt-4 md:px-0 md:mt-0 space-y-4">
         {/* Title + stock */}
         <div className="flex items-start justify-between gap-2">
           <h1 className="text-xl font-black text-foreground leading-snug flex-1">{product.name}</h1>
@@ -395,7 +399,7 @@ export default function ProductPage() {
               <h2 className="text-sm font-bold text-foreground">You May Also Like</h2>
               <Link href="/shop"><span className="text-xs text-primary font-semibold">View all</span></Link>
             </div>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
               {related.map((p) => (
                 <UnifiedProductCard key={p.id} product={p} className="w-full" />
               ))}
@@ -404,9 +408,11 @@ export default function ProductPage() {
         )}
       </div>
 
+      </div>{/* end two-col wrapper */}
+
       {/* Sticky bottom CTA */}
-      <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-xl border-t border-border px-4 py-3 z-40">
-        <div className="flex gap-3 max-w-lg mx-auto">
+      <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-xl border-t border-border px-4 py-3 z-40 md:relative md:bottom-auto md:left-auto md:right-auto md:bg-transparent md:border-0 md:backdrop-blur-none md:p-0 md:mt-4">
+        <div className="flex gap-3 max-w-lg mx-auto md:max-w-none">
           {storeStatus?.isStoreClosed ? (
             <button disabled
               className="flex-1 py-3.5 bg-muted text-muted-foreground rounded-2xl font-bold text-sm cursor-not-allowed flex items-center justify-center gap-2">
