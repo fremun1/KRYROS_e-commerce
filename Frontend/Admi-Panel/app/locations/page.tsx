@@ -393,4 +393,224 @@ function LocationsContent() {
     { key: 'address', label: 'Address', render: (v) => <span style={{ color: textMuted, fontSize: '12px' }}>{String(v).slice(0, 40)}</span> },
     { key: 'city',    label: 'City', render: (v) => <span style={{ color: textMuted, fontSize: '12px' }}>{String(v)}</span> },
     { key: 'phone',   label: 'Phone', render: (v) => <span style={{ color: textMuted, fontSize: '12px' }}>{String(v) || '—'}</span> },
-{
+    { key: 'openingHours', label: 'Hours', render: (v) => <span style={{ color: textMuted, fontSize: '12px' }}>{String(v) || '—'}</span> },
+    {
+      key: 'status', label: 'Status', render: (v, row) => {
+        const p = row as unknown as PickupStation;
+        return (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 600, background: v === 'Active' ? 'rgba(31,168,154,0.12)' : 'rgba(100,116,139,0.1)', color: v === 'Active' ? '#1FA89A' : '#8E9AAF' }}>{String(v)}</span>
+            <button onClick={() => handleTogglePickup(p)} style={{ fontSize: '11px', padding: '3px 8px', borderRadius: '6px', border: '1px solid rgba(99,102,241,0.3)', background: 'rgba(99,102,241,0.08)', color: '#818cf8', cursor: 'pointer', fontWeight: 600 }}>
+              {v === 'Active' ? 'Deactivate' : 'Activate'}
+            </button>
+          </div>
+        );
+      }
+    },
+  ];
+
+  const tabStyle = (active: boolean) => ({
+    padding: '8px 18px', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: 'pointer',
+    background: active ? '#1FA89A' : 'transparent', color: active ? '#fff' : textMuted, border: 'none',
+  });
+
+  const ADD_LABELS   = { countries: 'Add Country', states: 'Add State', cities: 'Add City', pickups: 'Add Pickup Station' };
+  const ADD_HANDLERS = {
+    countries: () => { setAddCForm({ ...EMPTY_CFORM }); setAddCountryOpen(true); },
+    states:    () => { setStateForm({ ...EMPTY_STATE }); setAddStateOpen(true); },
+    cities:    () => { setCityForm({ ...EMPTY_CITY }); setAddCityOpen(true); },
+    pickups:   () => { setPickupForm({ ...EMPTY_PICKUP }); setAddPickupOpen(true); },
+  };
+
+  const selStyle = { width: '100%', background: surface, border: `1px solid ${border}`, borderRadius: '9px', color: textMain, fontSize: '13.5px', outline: 'none', padding: '10px 14px', cursor: 'pointer' };
+
+  return (
+    <div>
+      <PageHeader
+        title="Locations"
+        subtitle="Manage countries, states, cities and pickup stations"
+        icon={MapPin}
+        onAdd={ADD_HANDLERS[tab]}
+        addLabel={ADD_LABELS[tab]}
+      />
+
+      {/* Tabs */}
+      <div style={{ display: 'flex', gap: '6px', marginBottom: '20px', flexWrap: 'wrap' }}>
+        {([
+          { key: 'countries', label: 'Countries',          count: countries.length },
+          { key: 'states',    label: 'States / Provinces', count: states.length },
+          { key: 'cities',    label: 'Cities',             count: cities.length },
+          { key: 'pickups',   label: 'Pickup Stations',    count: pickups.length },
+        ] as { key: Tab; label: string; count: number }[]).map(t => (
+          <button key={t.key} style={tabStyle(tab === t.key)} onClick={() => setTab(t.key)}>
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {/* ── COUNTRIES ── */}
+      {tab === 'countries' && (
+        <>
+          <DataTable
+            columns={countryColumns}
+            data={countries as unknown as Record<string, unknown>[]}
+            searchPlaceholder="Search countries..."
+            onEdit={(row) => {
+              const r = row as unknown as Country;
+              setCForm({ rate: String(r.rate), status: r.status, symbolPosition: r.symbolPosition || 'BEFORE', autoRate: String(r.autoRate), flag: r.flag || '', isDefault: String(r.isDefault), shippingEnabled: String(r.shippingEnabled !== false) });
+              setEditCountry(r);
+            }}
+          />
+          {/* Edit Country Modal */}
+          <Modal open={!!editCountry} onClose={() => setEditCountry(null)} title={`Edit Country: ${editCountry?.name ?? ''}`}>
+            <FormField label="Exchange Rate (vs USD)" value={cForm.rate} onChange={cfp('rate')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 27.5" />
+            <FormField label="Symbol Position" value={cForm.symbolPosition} onChange={cfp('symbolPosition')} options={['BEFORE', 'AFTER']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="Flag Emoji" value={cForm.flag} onChange={cfp('flag')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 🇿🇲" />
+            <FormField label="Auto Update Rate" value={cForm.autoRate} onChange={cfp('autoRate')} options={['true', 'false']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="Shipping Enabled" value={cForm.shippingEnabled} onChange={cfp('shippingEnabled')} options={['true', 'false']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="Set as Default Country" value={cForm.isDefault} onChange={cfp('isDefault')} options={['false', 'true']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="Status" value={cForm.status} onChange={cfp('status')} options={['Active', 'Inactive']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <ModalFooter onClose={() => setEditCountry(null)} onSubmit={handleSaveCountry} loading={loadingCountry} submitLabel="Save Changes" isDark={isDark} border={border} textMain={textMain} />
+          </Modal>
+          {/* Add Country Modal */}
+          <Modal open={addCountryOpen} onClose={() => setAddCountryOpen(false)} title="Add New Country">
+            <FormField label="Country Name *" value={addCForm.name} onChange={acfp('name')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. Zambia" />
+            <FormField label="Country Code * (2-letter)" value={addCForm.code} onChange={acfp('code')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. ZM" />
+            <FormField label="Currency Code * (3-letter)" value={addCForm.currency} onChange={acfp('currency')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. ZMW" />
+            <FormField label="Currency Symbol" value={addCForm.symbol} onChange={acfp('symbol')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. ZK" />
+            <FormField label="Exchange Rate (vs USD)" value={addCForm.rate} onChange={acfp('rate')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 27.5" />
+            <FormField label="Symbol Position" value={addCForm.symbolPosition} onChange={acfp('symbolPosition')} options={['BEFORE', 'AFTER']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="Flag Emoji" value={addCForm.flag} onChange={acfp('flag')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 🇿🇲" />
+            <FormField label="Auto Update Rate" value={addCForm.autoRate} onChange={acfp('autoRate')} options={['true', 'false']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="Shipping Enabled" value={addCForm.shippingEnabled} onChange={acfp('shippingEnabled')} options={['true', 'false']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="Status" value={addCForm.status} onChange={acfp('status')} options={['Active', 'Inactive']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <ModalFooter onClose={() => setAddCountryOpen(false)} onSubmit={handleAddCountry} loading={loadingCountry} submitLabel="Add Country" isDark={isDark} border={border} textMain={textMain} />
+          </Modal>
+        </>
+      )}
+
+      {/* ── STATES ── */}
+      {tab === 'states' && (
+        <>
+          <DataTable
+            columns={stateColumns}
+            data={states as unknown as Record<string, unknown>[]}
+            searchPlaceholder="Search states..."
+            onEdit={(row) => { const s = row as unknown as StateRow; setStateForm({ name: s.name, code: s.code, countryId: s.countryId, countryName: s.countryName, status: s.status, cities: s.cities }); setEditState(s); }}
+            onDelete={(row) => setDeleteState(row as unknown as StateRow)}
+          />
+          <Modal open={addStateOpen} onClose={() => setAddStateOpen(false)} title="Add State / Province">
+            <FormField label="State / Province Name *" value={stateForm.name} onChange={sfp('name')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. Lusaka Province" />
+            <FormField label="State Code" value={stateForm.code} onChange={sfp('code')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. LP" />
+            <div style={{ marginBottom: '14px' }}>
+              <div style={{ fontSize: '12px', fontWeight: 600, color: textMuted, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Country *</div>
+              <select value={stateForm.countryId} onChange={e => { const c = countriesList.find(x => x.id === e.target.value); sfp('countryId')(e.target.value); if (c) sfp('countryName')(c.name); }} style={selStyle}>
+                <option value="">Select country...</option>
+                {countriesList.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+            </div>
+            <FormField label="Status" value={stateForm.status} onChange={sfp('status')} options={['Active', 'Inactive']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <ModalFooter onClose={() => setAddStateOpen(false)} onSubmit={handleAddState} loading={loadingState} submitLabel="Add State" isDark={isDark} border={border} textMain={textMain} />
+          </Modal>
+          <Modal open={!!editState} onClose={() => setEditState(null)} title={`Edit State: ${editState?.name ?? ''}`}>
+            <FormField label="State / Province Name *" value={stateForm.name} onChange={sfp('name')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="State Code" value={stateForm.code} onChange={sfp('code')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="Status" value={stateForm.status} onChange={sfp('status')} options={['Active', 'Inactive']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <ModalFooter onClose={() => setEditState(null)} onSubmit={handleEditState} loading={loadingState} submitLabel="Save Changes" isDark={isDark} border={border} textMain={textMain} />
+          </Modal>
+          <ConfirmDialog open={!!deleteState_row} onClose={() => setDeleteState(null)} onConfirm={handleDeleteState} loading={loadingState} title="Delete State" message={`Delete "${deleteState_row?.name}" and all its cities?`} />
+        </>
+      )}
+
+      {/* ── CITIES ── */}
+      {tab === 'cities' && (
+        <>
+          <DataTable
+            columns={cityColumns}
+            data={cities as unknown as Record<string, unknown>[]}
+            searchPlaceholder="Search cities..."
+            onEdit={(row) => { const c = row as unknown as CityRow; setCityForm({ name: c.name, stateId: c.stateId, stateName: c.stateName, status: c.status }); setEditCity(c); }}
+            onDelete={(row) => setDeleteCity(row as unknown as CityRow)}
+          />
+          <Modal open={addCityOpen} onClose={() => setAddCityOpen(false)} title="Add City">
+            <FormField label="City Name *" value={cityForm.name} onChange={cyfp('name')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. Lusaka" />
+            <div style={{ marginBottom: '14px' }}>
+              <div style={{ fontSize: '12px', fontWeight: 600, color: textMuted, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>State / Province *</div>
+              <select value={cityForm.stateId} onChange={e => { const s = statesList.find(x => x.id === e.target.value); cyfp('stateId')(e.target.value); if (s) cyfp('stateName')(s.name); }} style={selStyle}>
+                <option value="">Select state...</option>
+                {statesList.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+              </select>
+            </div>
+            <FormField label="Status" value={cityForm.status} onChange={cyfp('status')} options={['Active', 'Inactive']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <ModalFooter onClose={() => setAddCityOpen(false)} onSubmit={handleAddCity} loading={loadingCity} submitLabel="Add City" isDark={isDark} border={border} textMain={textMain} />
+          </Modal>
+          <Modal open={!!editCity} onClose={() => setEditCity(null)} title={`Edit City: ${editCity?.name ?? ''}`}>
+            <FormField label="City Name *" value={cityForm.name} onChange={cyfp('name')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="Status" value={cityForm.status} onChange={cyfp('status')} options={['Active', 'Inactive']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <ModalFooter onClose={() => setEditCity(null)} onSubmit={handleEditCity} loading={loadingCity} submitLabel="Save Changes" isDark={isDark} border={border} textMain={textMain} />
+          </Modal>
+          <ConfirmDialog open={!!deleteCity_row} onClose={() => setDeleteCity(null)} onConfirm={handleDeleteCity} loading={loadingCity} title="Delete City" message={`Delete "${deleteCity_row?.name}" permanently?`} />
+        </>
+      )}
+
+      {/* ── PICKUP STATIONS ── */}
+      {tab === 'pickups' && (
+        <>
+          <DataTable
+            columns={pickupColumns}
+            data={pickups as unknown as Record<string, unknown>[]}
+            searchPlaceholder="Search pickup stations..."
+            onEdit={(row) => {
+              const p = row as unknown as PickupStation;
+              setPickupForm({ name: p.name, address: p.address, city: p.city, state: p.state, country: p.country, phone: p.phone, email: p.email, openingHours: p.openingHours, description: p.description, latitude: p.latitude, longitude: p.longitude, status: p.status, image: p.image || '' });
+              setEditPickup(p);
+            }}
+            onDelete={(row) => setDeletePickup(row as unknown as PickupStation)}
+          />
+
+          {/* Add Pickup Modal */}
+          <Modal open={addPickupOpen} onClose={() => setAddPickupOpen(false)} title="Add Pickup Station">
+            <FormField label="Station Name *" value={pickupForm.name} onChange={pfp('name')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. Lusaka Central Pickup" />
+            <FormField label="Full Address *" value={pickupForm.address} onChange={pfp('address')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 12 Cairo Road, Lusaka" />
+            <FormField label="City *" value={pickupForm.city} onChange={pfp('city')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. Lusaka" />
+            <FormField label="State / Province" value={pickupForm.state} onChange={pfp('state')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. Lusaka Province" />
+            <FormField label="Country" value={pickupForm.country} onChange={pfp('country')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Zambia" />
+            <FormField label="Phone Number" value={pickupForm.phone} onChange={pfp('phone')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="+260..." />
+            <FormField label="Email Address" value={pickupForm.email} onChange={pfp('email')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="pickup@example.com" />
+            <FormField label="Opening Hours" value={pickupForm.openingHours} onChange={pfp('openingHours')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. Mon–Fri 8am–6pm" />
+            <FormField label="Description / Landmark" value={pickupForm.description} onChange={pfp('description')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. Near Manda Hill Mall" />
+            <FormField label="Latitude (GPS)" value={pickupForm.latitude} onChange={pfp('latitude')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. -15.4166" />
+            <FormField label="Longitude (GPS)" value={pickupForm.longitude} onChange={pfp('longitude')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 28.2833" />
+            <div>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: textMuted, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Station Image</label>
+              <CloudinaryUpload value={pickupForm.image} onChange={(url) => pfp('image')(url)} folder="kryros/pickup-stations" accept="image/*" showUrlInput={true} isDark={isDark} border={border} surface={surface} textMuted={textMuted} textMain={textMain} />
+            </div>
+            <FormField label="Status" value={pickupForm.status} onChange={pfp('status')} options={['Active', 'Inactive']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <ModalFooter onClose={() => setAddPickupOpen(false)} onSubmit={handleAddPickup} loading={loadingPickup} submitLabel="Add Station" isDark={isDark} border={border} textMain={textMain} />
+          </Modal>
+
+          {/* Edit Pickup Modal */}
+          <Modal open={!!editPickup} onClose={() => setEditPickup(null)} title={`Edit: ${editPickup?.name ?? ''}`}>
+            <FormField label="Station Name *" value={pickupForm.name} onChange={pfp('name')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="Full Address *" value={pickupForm.address} onChange={pfp('address')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="City *" value={pickupForm.city} onChange={pfp('city')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="State / Province" value={pickupForm.state} onChange={pfp('state')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="Country" value={pickupForm.country} onChange={pfp('country')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="Phone Number" value={pickupForm.phone} onChange={pfp('phone')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="Email Address" value={pickupForm.email} onChange={pfp('email')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="Opening Hours" value={pickupForm.openingHours} onChange={pfp('openingHours')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="Description / Landmark" value={pickupForm.description} onChange={pfp('description')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="Latitude (GPS)" value={pickupForm.latitude} onChange={pfp('latitude')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="Longitude (GPS)" value={pickupForm.longitude} onChange={pfp('longitude')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="Status" value={pickupForm.status} onChange={pfp('status')} options={['Active', 'Inactive']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <ModalFooter onClose={() => setEditPickup(null)} onSubmit={handleEditPickup} loading={loadingPickup} submitLabel="Save Changes" isDark={isDark} border={border} textMain={textMain} />
+          </Modal>
+
+          <ConfirmDialog open={!!deletePickup} onClose={() => setDeletePickup(null)} onConfirm={handleDeletePickup} loading={loadingPickup} title="Delete Pickup Station" message={`Delete "${deletePickup?.name}" permanently?`} />
+        </>
+      )}
+    </div>
+  );
+}
+
+export default function LocationsPage() { return <AdminShell><LocationsContent /></AdminShell>; }
