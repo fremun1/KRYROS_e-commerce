@@ -87,7 +87,6 @@ export default function CartPage() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, x: -20 }}
-                {/* lg: more padding + gap inside each card */}
                 className="bg-card border border-border rounded-2xl p-4 flex items-center gap-4 lg:p-5 lg:gap-5"
               >
                 {/* lg: larger product image */}
