@@ -489,7 +489,7 @@ export default function CheckoutPage() {
   const hasPaymentError = !!orderError || mmPhase === "failed_init" || mmPhase === "timed_out";
 
   return (
-    <div className="w-full bg-background flex flex-col">
+    <div className="w-full bg-background h-screen flex flex-col overflow-hidden">
       {/* Header */}
       <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-xl border-b border-border">
         <div className="flex items-center justify-between px-4 py-3.5 max-w-6xl mx-auto">
@@ -540,7 +540,7 @@ export default function CheckoutPage() {
       </div>
 
       {/* Main content */}
-      <div className="pb-6 space-y-3 lg:flex lg:flex-row lg:gap-8 lg:px-8 lg:space-y-0 lg:pb-8 lg:items-start">
+      <div className="flex-1 overflow-y-auto space-y-3 pb-2 lg:flex lg:flex-row lg:gap-8 lg:px-8 lg:space-y-0 lg:pb-8 lg:items-start">
 
         <div className="space-y-3 lg:flex-1 lg:overflow-y-auto lg:pb-4">
         {/* ── STEP 1: Contact ── */}
@@ -619,9 +619,7 @@ export default function CheckoutPage() {
               )}
             </div>
 
-            <button onClick={goToStep2} className="w-full py-3 rounded-2xl bg-[var(--kryros-primary-hover)] text-white text-sm font-semibold flex items-center justify-center gap-2">
-              Continue to Address <ChevronRight className="w-4 h-4" />
-            </button>
+
           </div>
         )}
 
@@ -681,10 +679,7 @@ export default function CheckoutPage() {
               </div>
             </div>
 
-            <button onClick={goToStep3} className="w-full py-3 rounded-2xl bg-[var(--kryros-primary-hover)] text-white text-sm font-semibold flex items-center justify-center gap-2">
-              Continue to Shipping <ChevronRight className="w-4 h-4" />
-            </button>
-            <button onClick={() => setStep(1)} className="w-full text-xs text-muted-foreground text-center hover:text-primary transition-colors py-2">← Back to Contact</button>
+
           </div>
         )}
 
@@ -719,10 +714,7 @@ export default function CheckoutPage() {
                 })}
               </div>
             </div>
-            <button onClick={() => setStep(4)} className="w-full py-3 rounded-2xl bg-[var(--kryros-primary-hover)] text-white text-sm font-semibold flex items-center justify-center gap-2">
-              Continue to Payment <ChevronRight className="w-4 h-4" />
-            </button>
-            <button onClick={() => setStep(2)} className="w-full text-xs text-muted-foreground text-center hover:text-primary transition-colors py-2">← Back to Address</button>
+
           </div>
         )}
 
@@ -782,7 +774,7 @@ export default function CheckoutPage() {
               <p className="text-[10px] text-muted-foreground">All payments are processed securely. By completing your purchase, you agree to our Terms of Service.</p>
             </div>
 
-            <button onClick={() => setStep(3)} className="w-full text-xs text-muted-foreground text-center hover:text-primary transition-colors py-2">← Back to Shipping</button>
+
           </div>
         )}
         </div>{/* end steps left-col */}
@@ -798,6 +790,34 @@ export default function CheckoutPage() {
             <p className="text-[10px] text-muted-foreground">All payments are processed securely. By completing your purchase, you agree to our Terms of Service.</p>
           </div>
         </div>
+      </div>
+
+      {/* ── Sticky Bottom Action Bar (mobile) ── */}
+      <div className="lg:hidden bg-background border-t border-border/30 shrink-0">
+        {step === 1 && (
+          <button onClick={goToStep2} className="w-full py-3.5 bg-[var(--kryros-primary-hover)] text-white text-sm font-semibold flex items-center justify-center gap-2">
+            Continue to Address <ChevronRight className="w-4 h-4" />
+          </button>
+        )}
+        {step === 2 && (
+          <>
+            <button onClick={goToStep3} className="w-full py-3.5 bg-[var(--kryros-primary-hover)] text-white text-sm font-semibold flex items-center justify-center gap-2">
+              Continue to Shipping <ChevronRight className="w-4 h-4" />
+            </button>
+            <button onClick={() => setStep(1)} className="w-full text-[11px] text-muted-foreground text-center hover:text-primary transition-colors py-2">← Back to Contact</button>
+          </>
+        )}
+        {step === 3 && (
+          <>
+            <button onClick={() => setStep(4)} className="w-full py-3.5 bg-[var(--kryros-primary-hover)] text-white text-sm font-semibold flex items-center justify-center gap-2">
+              Continue to Payment <ChevronRight className="w-4 h-4" />
+            </button>
+            <button onClick={() => setStep(2)} className="w-full text-[11px] text-muted-foreground text-center hover:text-primary transition-colors py-2">← Back to Address</button>
+          </>
+        )}
+        {step === 4 && (
+          <button onClick={() => setStep(3)} className="w-full text-[11px] text-muted-foreground text-center hover:text-primary transition-colors py-2.5">← Back to Shipping</button>
+        )}
       </div>
 
       {/* ── PAYMENT METHOD PANELS (bottom sheet) ── */}
