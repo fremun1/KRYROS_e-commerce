@@ -74,7 +74,7 @@ export default function HeroSection() {
 
   return (
     <section
-      className="relative overflow-hidden"
+      className="relative overflow-hidden lg:![height:620px]"
       style={{ height: "clamp(330px, 56vw, 520px)" }}
     >
       {/* Media layer */}
@@ -146,18 +146,18 @@ export default function HeroSection() {
           className="absolute inset-0 flex items-center"
           style={{ zIndex: 2 }}
         >
-          <div className="px-6 md:px-14 max-w-[58%] md:max-w-[50%]">
+          <div className="px-6 md:px-14 lg:px-20 max-w-[58%] md:max-w-[50%] lg:max-w-[45%]">
             {banner.badge && (
-              <p className="text-[10px] md:text-xs font-bold uppercase tracking-widest mb-2 md:mb-3"
+              <p className="text-[10px] md:text-xs lg:text-sm font-bold uppercase tracking-widest mb-2 md:mb-3 lg:mb-4"
                 style={{ color: "var(--kryros-primary)" }}>
                 {banner.badge}
               </p>
             )}
-            <h1 className="text-[22px] md:text-[46px] font-black text-white leading-[1.05] drop-shadow-md">
+            <h1 className="text-[22px] md:text-[46px] lg:text-[58px] font-black text-white leading-[1.05] drop-shadow-md">
               {banner.title}
             </h1>
             {banner.subtitle && (
-              <h2 className="text-[18px] md:text-[36px] font-black leading-[1.05] mb-2 md:mb-4 drop-shadow-md"
+              <h2 className="text-[18px] md:text-[36px] lg:text-[46px] font-black leading-[1.05] mb-2 md:mb-4 lg:mb-5 drop-shadow-md"
                 style={{ color: "var(--kryros-primary)" }}>
                 {banner.subtitle}
               </h2>
@@ -165,10 +165,10 @@ export default function HeroSection() {
             {banner.link && (
               <Link href={banner.link}>
                 <button
-                  className="inline-flex items-center gap-2 px-5 md:px-7 py-2 md:py-3 rounded-lg font-semibold text-xs md:text-sm text-white hover:opacity-90 active:scale-95 transition-all shadow-lg mt-3 md:mt-5"
+                  className="inline-flex items-center gap-2 px-5 md:px-7 lg:px-9 py-2 md:py-3 lg:py-4 rounded-lg font-semibold text-xs md:text-sm lg:text-base text-white hover:opacity-90 active:scale-95 transition-all shadow-lg mt-3 md:mt-5 lg:mt-6"
                   style={{ background: "var(--kryros-primary)" }}>
                   {banner.linkText || "Shop Now"}
-                  <ArrowRight className="w-3.5 h-3.5" />
+                  <ArrowRight className="w-3.5 h-3.5 lg:w-5 lg:h-5" />
                 </button>
               </Link>
             )}
