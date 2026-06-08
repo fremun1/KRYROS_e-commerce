@@ -211,6 +211,7 @@ export default function ShopPage() {
 
   return (
     <div className="pb-24 md:pb-10">
+      <div className="max-w-7xl mx-auto">
 
       {/* ── Brand Panel (Bottom Sheet) ── */}
       <Sheet open={!!activeBrandPanel} onOpenChange={(open) => { if (!open) closeBrandPanel(); }}>
@@ -355,7 +356,7 @@ export default function ShopPage() {
           {/* Panel Product Grid (scrollable) */}
           <div className="flex-1 overflow-y-auto px-3 pt-3 pb-8">
             {brandPanelFiltered.length > 0 ? (
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
                 {brandPanelFiltered.map((p) => (
                   <UnifiedProductCard key={p.id} product={p} />
                 ))}
@@ -385,7 +386,7 @@ export default function ShopPage() {
             <a href="/shop" className="text-xs text-primary font-semibold hover:underline">Clear ✕</a>
           </div>
           {searchResults.length > 0 ? (
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2">
               {searchResults.map((p) => <UnifiedProductCard key={p.id} product={p} />)}
             </div>
           ) : (
@@ -431,7 +432,7 @@ export default function ShopPage() {
         <div
           ref={catScrollRef}
           onTouchStart={handleCatTouchStart}
-          className="flex gap-3 overflow-x-auto no-scrollbar px-4 pb-4"
+          className="flex gap-3 overflow-x-auto no-scrollbar md:flex-wrap md:overflow-visible px-4 pb-4"
           style={{ scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch", scrollBehavior: "smooth" }}
         >
           <button
@@ -557,7 +558,7 @@ export default function ShopPage() {
             </h2>
             <span className="text-xs text-muted-foreground">{filteredProducts.length} items</span>
           </div>
-          <div className="grid grid-cols-2 gap-2 pb-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 pb-4">
             {filteredProducts.map((p) => <UnifiedProductCard key={p.id} product={p} />)}
           </div>
         </div>
@@ -595,6 +596,8 @@ export default function ShopPage() {
       )}
       </>
       )}
+    </div>
+      </div>{/* end max-w-7xl */}
     </div>
   );
 }
