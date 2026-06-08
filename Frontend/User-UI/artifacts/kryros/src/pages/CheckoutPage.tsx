@@ -491,11 +491,36 @@ export default function CheckoutPage() {
   return (
     <div className="max-w-lg mx-auto bg-background min-h-screen flex flex-col lg:max-w-6xl">
       {/* Header */}
-      <div className="sticky top-0 z-20 flex items-center justify-between px-4 pt-5 pb-3 bg-background/90 backdrop-blur">
-        <button onClick={() => navigate("/cart")} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground">
-          <ChevronLeft className="w-4 h-4" /> Back to Cart
-        </button>
-        <span className="text-[11px] font-semibold text-muted-foreground">Secure Checkout</span>
+      <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-xl border-b border-border">
+        <div className="flex items-center justify-between px-4 py-3.5 max-w-6xl mx-auto">
+
+          {/* Left: back button + KRYROS brand */}
+          <div className="flex items-center gap-2.5">
+            <button
+              onClick={() => navigate("/cart")}
+              className="p-1.5 -ml-1.5 hover:bg-muted rounded-full transition-colors"
+              aria-label="Back to cart"
+            >
+              <ChevronLeft className="w-5 h-5 text-foreground" />
+            </button>
+            <span className="text-lg font-black tracking-tight select-none leading-none">
+              <span className="text-foreground">KRY</span><span className="text-primary">ROS</span>
+            </span>
+          </div>
+
+          {/* Center: green trust badge */}
+          <div className="w-9 h-9 bg-[#4CAF50] rounded-xl flex items-center justify-center shadow-md flex-shrink-0">
+            <Check className="w-5 h-5 text-white" strokeWidth={3} />
+          </div>
+
+          {/* Right: Continue Shopping */}
+          <Link href="/shop">
+            <span className="text-sm font-semibold text-primary hover:text-primary/80 transition-colors cursor-pointer whitespace-nowrap">
+              Continue Shopping
+            </span>
+          </Link>
+
+        </div>
       </div>
 
       {/* Progress steps */}
