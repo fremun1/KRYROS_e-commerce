@@ -104,7 +104,7 @@ export default function FlashSaleSection() {
 
       <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2 items-stretch">
         {/* Countdown Timer Card — compact, matches product card height */}
-        <div className="flex-shrink-0 w-[calc(50vw-16px)] md:w-[160px] bg-white dark:bg-[#0D1523] border-2 border-primary/30 dark:border-primary/40 rounded-2xl flex flex-col items-center justify-evenly py-3 px-3 shadow-sm">
+        <div className="flex-shrink-0 w-[calc(50vw-16px)] md:w-[180px] lg:w-[200px] bg-white dark:bg-[#0D1523] border-2 border-primary/30 dark:border-primary/40 rounded-2xl flex flex-col items-center justify-evenly py-3 px-3 shadow-sm">
           {/* Lightning Icon */}
           <Zap className="w-5 h-5 fill-yellow-400 text-yellow-400" />
 
@@ -182,7 +182,7 @@ export default function FlashSaleSection() {
           <UnifiedProductCard
             key={p.id}
             product={p}
-            className="flex-shrink-0 w-[calc(50vw-16px)] md:w-[140px]"
+            className="flex-shrink-0 w-[calc(50vw-16px)] md:w-[180px] lg:w-[200px]"
           />
         ))}
       </div>
