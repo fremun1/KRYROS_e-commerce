@@ -110,7 +110,7 @@ export default function PickupStationsPage() {
       </div>
 
       {/* Map - Lusaka, Zambia (Leaflet via srcdoc, no X-Frame-Options block) */}
-      <div className="rounded-2xl overflow-hidden mb-5 border border-border" style={{ height: 220 }} className="md:!h-80">
+      <div className="rounded-2xl overflow-hidden mb-5 border border-border md:h-80" style={{ height: 220 }}>
         <iframe
           title="KRYROS Pickup Stations Map"
           srcDoc={`<!DOCTYPE html>
