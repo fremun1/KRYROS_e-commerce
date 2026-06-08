@@ -208,7 +208,7 @@ export default function TrackOrderPage() {
 
             {/* All Orders */}
             <h2 className="text-sm font-bold text-foreground mb-3">All Orders</h2>
-            <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2 mb-4">
+            <div className="flex gap-2 overflow-x-auto no-scrollbar md:flex-wrap md:overflow-visible pb-2 mb-4">
               {filterTabs.map((tab) => (
                 <button
                   key={tab}
@@ -237,7 +237,7 @@ export default function TrackOrderPage() {
                 </p>
               </div>
             ) : (
-              <div className="space-y-3 mb-5">
+              <div className="space-y-3 mb-5 md:grid md:grid-cols-2 md:gap-3 md:space-y-0">
                 {filtered.map((order, i) => (
                   <motion.div
                     key={order.id}
