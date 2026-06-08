@@ -91,7 +91,8 @@ export default function Header() {
               ...(headerCfg?.announcementTextColor ? { color: headerCfg.announcementTextColor } : {}),
             }}
           >
-            <div className="flex items-center justify-between px-4 md:px-6 py-1.5 md:py-2">
+            {/* lg: max-width centering added — mobile px-4 untouched */}
+            <div className="flex items-center justify-between px-4 md:px-6 py-1.5 md:py-2 lg:max-w-screen-xl lg:mx-auto lg:px-8">
               <span>
                 {headerCfg?.announcementText}
               </span>
@@ -114,9 +115,8 @@ export default function Header() {
         )}
 
         <header className="bg-background/95 backdrop-blur-xl border-b border-border shadow-sm">
-          {/* Main header row */}
-        {/* Main header row */}
-        <div className="flex items-center gap-2 px-3 md:px-6 h-[52px] md:h-[68px]">
+          {/* Main header row — lg: max-width centered so content doesn't stretch on ultrawide */}
+        <div className="flex items-center gap-2 px-3 md:px-6 h-[52px] md:h-[68px] lg:max-w-screen-xl lg:mx-auto lg:px-8">
           {/* Hamburger */}
           <button
             data-testid="header-menu-btn"
@@ -134,8 +134,8 @@ export default function Header() {
           </Link>
 
           {/* Desktop: Category dropdown + Search bar */}
-          <div className="hidden md:flex flex-1 items-center gap-2 mx-4">
-            <button className="flex items-center gap-2 px-3 py-2.5 bg-primary text-white rounded-xl text-sm font-medium flex-shrink-0 hover:bg-primary/90 transition-colors">
+          <div className="hidden md:flex flex-1 items-center gap-2 mx-4 lg:mx-6">
+            <button className="flex items-center gap-2 px-3 py-2.5 bg-primary text-white rounded-xl text-sm font-medium flex-shrink-0 hover:bg-primary/90 transition-colors lg:px-4">
               <Menu className="w-4 h-4" />
               All Categories
               <ChevronDown className="w-4 h-4" />
@@ -149,8 +149,8 @@ export default function Header() {
           {/* Spacer mobile */}
           <div className="flex-1 md:hidden" />
 
-          {/* Desktop: Right icons */}
-          <div className="hidden md:flex items-center gap-0.5">
+          {/* Desktop: Right icons — lg: slightly more gap */}
+          <div className="hidden md:flex items-center gap-0.5 lg:gap-1">
             {/* Currency selector */}
             <div className="relative">
               <button
@@ -306,8 +306,8 @@ export default function Header() {
           />
         </div>
 
-        {/* Desktop: Sub nav */}
-        <div className="hidden md:flex items-center gap-1 px-6 py-1.5 border-t border-border/50 bg-muted/30">
+        {/* Desktop: Sub nav — lg: extra px so nav links sit inside max-width area */}
+        <div className="hidden md:flex items-center gap-1 px-6 py-1.5 border-t border-border/50 bg-muted/30 lg:px-8 xl:px-14">
           {desktopNav.map(({ label, href }) => {
             const isActive = location === href || (href !== "/" && location.startsWith(href));
             return (
