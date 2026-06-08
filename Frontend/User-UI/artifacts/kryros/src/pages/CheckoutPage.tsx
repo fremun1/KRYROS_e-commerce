@@ -523,7 +523,7 @@ export default function CheckoutPage() {
         </div>
       </div>
 
-      {/* Progress steps */}
+      {/* Progress steps — 4 equal segments, always full width */}
       <div className="px-4 pb-4">
         <div className="flex justify-between text-[11px] font-semibold text-muted-foreground mb-2">
           <span className={step >= 1 ? "text-primary" : ""}>Contact</span>
@@ -531,8 +531,11 @@ export default function CheckoutPage() {
           <span className={step >= 3 ? "text-primary" : ""}>Shipping</span>
           <span className={step >= 4 ? "text-primary" : ""}>Payment</span>
         </div>
-        <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-          <div className="h-full rounded-full bg-gradient-to-r from-primary to-[var(--kryros-primary-hover)] transition-all" style={{ width: `${(step / 4) * 100}%` }} />
+        <div className="flex gap-1.5">
+          <div className={`flex-1 h-1.5 rounded-full transition-all duration-300 ${step >= 1 ? "bg-primary" : "bg-border"}`} />
+          <div className={`flex-1 h-1.5 rounded-full transition-all duration-300 ${step >= 2 ? "bg-primary" : "bg-border"}`} />
+          <div className={`flex-1 h-1.5 rounded-full transition-all duration-300 ${step >= 3 ? "bg-primary" : "bg-border"}`} />
+          <div className={`flex-1 h-1.5 rounded-full transition-all duration-300 ${step >= 4 ? "bg-primary" : "bg-border"}`} />
         </div>
       </div>
 
