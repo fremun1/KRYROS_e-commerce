@@ -200,12 +200,12 @@ export default function ProductPage() {
       </div>
 
       {/* Desktop: two-column layout wrapper */}
-      <div className="md:max-w-7xl md:mx-auto md:px-6 md:py-8 md:grid md:grid-cols-2 md:gap-12 md:items-start">
+      <div className="md:max-w-7xl md:mx-auto md:px-6 md:py-8 lg:px-12 lg:py-12 md:grid md:grid-cols-2 md:gap-12 lg:gap-16 md:items-start">
 
       {/* LEFT COL: Image Gallery — swipeable + auto-sliding */}
       <div
         ref={slideRef}
-        className="bg-[#F1F1F1] dark:bg-[#101826] aspect-square relative overflow-hidden select-none"
+        className="bg-[#F1F1F1] dark:bg-[#101826] aspect-square relative overflow-hidden select-none lg:rounded-2xl"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
@@ -256,7 +256,7 @@ export default function ProductPage() {
       <div className="px-4 mt-4 md:px-0 md:mt-0 space-y-4">
         {/* Title + stock */}
         <div className="flex items-start justify-between gap-2">
-          <h1 className="text-xl font-black text-foreground leading-snug flex-1">{product.name}</h1>
+          <h1 className="text-xl lg:text-2xl font-black text-foreground leading-snug flex-1">{product.name}</h1>
           <span className={`flex-shrink-0 text-[11px] font-bold px-2.5 py-1 rounded-xl ${product.stock > 0 ? "bg-green-500/10 border border-green-500/20 text-green-600 dark:text-green-400" : "bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400"}`}>
             {product.stock > 0 ? "In Stock" : "Out of Stock"}
           </span>
@@ -289,7 +289,7 @@ export default function ProductPage() {
         {/* Price */}
         <div>
           <div className="flex items-center gap-2.5 flex-wrap">
-            <span className="text-3xl font-black text-foreground dark:text-white">
+            <span className="text-3xl lg:text-4xl font-black text-foreground dark:text-white">
               {format(product.price)}
             </span>
             {product.oldPrice > product.price && (
@@ -421,11 +421,11 @@ export default function ProductPage() {
           ) : (
             <>
               <button onClick={handleAddToCart} disabled={product.stock === 0}
-                className="flex-1 flex items-center justify-center gap-2 py-3.5 bg-primary text-white rounded-2xl font-bold text-sm hover:bg-primary/90 transition-all active:scale-95 disabled:opacity-50">
+                className="flex-1 flex items-center justify-center gap-2 py-3.5 lg:py-4 bg-primary text-white rounded-2xl font-bold text-sm lg:text-base hover:bg-primary/90 transition-all active:scale-95 disabled:opacity-50">
                 <ShoppingCart className="w-4 h-4" /> Add to Cart
               </button>
               <button onClick={handleBuyNow} disabled={product.stock === 0}
-                className="flex-1 flex items-center justify-center gap-2 py-3.5 bg-foreground text-background rounded-2xl font-bold text-sm hover:opacity-90 transition-all active:scale-95 disabled:opacity-50">
+                className="flex-1 flex items-center justify-center gap-2 py-3.5 lg:py-4 bg-foreground text-background rounded-2xl font-bold text-sm lg:text-base hover:opacity-90 transition-all active:scale-95 disabled:opacity-50">
                 <Zap className="w-4 h-4" /> {product.allowCredit ? "Get Now" : "Buy Now"}
               </button>
             </>
