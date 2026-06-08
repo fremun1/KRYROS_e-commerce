@@ -73,12 +73,12 @@ export default function FeaturedProductsSection() {
       </div>
 
       {/* Product cards — horizontal scroll, unified style */}
-      <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+      <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1 md:grid md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 md:overflow-visible">
         {products.map((p) => (
           <UnifiedProductCard
             key={p.id}
             product={p}
-            className="flex-shrink-0 w-[calc(50vw-16px)]"
+            className="flex-shrink-0 w-[calc(50vw-16px)] md:w-full"
             badge={TAB_BADGE[activeTab]}
           />
         ))}
