@@ -127,30 +127,30 @@ export default function UnifiedProductCard({
             toggleWishlist(product.id);
             toast.success(wishlisted ? "Removed from wishlist" : "Added to wishlist", { description: product.name });
           }}
-          className="absolute top-3 right-3 w-7 h-7 rounded-full bg-white/90 dark:bg-[#2B2F39]/80 backdrop-blur-sm flex items-center justify-center z-10 shadow-sm border border-transparent dark:border-white/10"
+          className="absolute top-3 right-3 w-7 h-7 md:w-8 md:h-8 rounded-full bg-white/90 dark:bg-[#2B2F39]/80 backdrop-blur-sm flex items-center justify-center z-10 shadow-sm border border-transparent dark:border-white/10"
         >
-          <Heart className={`w-3.5 h-3.5 transition-colors ${wishlisted ? "fill-red-500 text-red-500" : "text-muted-foreground dark:text-[#A9B4C7]"}`} />
+          <Heart className={`w-3.5 h-3.5 md:w-4 md:h-4 transition-colors ${wishlisted ? "fill-red-500 text-red-500" : "text-muted-foreground dark:text-[#A9B4C7]"}`} />
         </button>
       </div>
 
       {/* ── Info: Reduced padding to shorten height ── */}
-      <div className="p-2 flex flex-col flex-1">
+      <div className="p-2 md:p-3 flex flex-col flex-1">
 
         {/* Name */}
-        <h3 className="text-[11px] font-semibold text-foreground leading-tight line-clamp-1 mb-0.5">
+        <h3 className="text-[11px] md:text-xs font-semibold md:font-bold text-foreground leading-tight line-clamp-1 mb-0.5">
           {product.name}
         </h3>
 
         {/* Specs */}
         {specs && (
-          <p className="text-[9px] text-muted-foreground truncate mb-0.5">{specs}</p>
+          <p className="text-[9px] md:text-[11px] text-muted-foreground truncate mb-0.5">{specs}</p>
         )}
 
         {/* Price + old price */}
         <div className="flex items-center flex-wrap gap-x-1 mb-0.5">
-          <span className="text-[13px] font-bold text-foreground dark:text-white">{format(product.price)}</span>
+          <span className="text-[13px] md:text-[15px] font-bold text-foreground dark:text-white">{format(product.price)}</span>
           {product.oldPrice > product.price && (
-            <span className="text-[9px] text-muted-foreground dark:text-[#A9B4C7] line-through">{format(product.oldPrice)}</span>
+            <span className="text-[9px] md:text-xs text-muted-foreground dark:text-[#A9B4C7] line-through">{format(product.oldPrice)}</span>
           )}
         </div>
 
@@ -159,11 +159,11 @@ export default function UnifiedProductCard({
           {/* 1. Stock badge — always first for non-wholesale */}
           {!product.isWholesaleOnly && (
             inStock ? (
-              <span className="text-[10px] font-medium text-primary bg-primary/10 px-1.5 py-0.5 rounded-full whitespace-nowrap flex-shrink-0">
+              <span className="text-[10px] md:text-xs font-medium text-primary bg-primary/10 px-1.5 md:px-2 py-0.5 rounded-full whitespace-nowrap flex-shrink-0">
                 In Stock
               </span>
             ) : (
-              <span className="text-[10px] font-medium text-destructive bg-destructive/10 px-1.5 py-0.5 rounded-full whitespace-nowrap flex-shrink-0">
+              <span className="text-[10px] md:text-xs font-medium text-destructive bg-destructive/10 px-1.5 md:px-2 py-0.5 rounded-full whitespace-nowrap flex-shrink-0">
                 Out of Stock
               </span>
             )
@@ -191,7 +191,7 @@ export default function UnifiedProductCard({
 
           {/* 3. Credit text */}
           {product.allowCredit && inStock && !isStoreClosed && (
-            <span className="text-[10px] text-primary font-bold whitespace-nowrap truncate">
+            <span className="text-[10px] md:text-xs text-primary font-bold whitespace-nowrap truncate">
               {monthlyText}
             </span>
           )}
@@ -250,13 +250,13 @@ export default function UnifiedProductCard({
                 toast.success("Added to cart", { description: product.name });
               }}
               disabled={!inStock}
-              className={`w-8 h-7 flex items-center justify-center border rounded-lg flex-shrink-0 transition-colors ${
+              className={`w-8 h-7 md:w-9 md:h-8 flex items-center justify-center border rounded-lg flex-shrink-0 transition-colors ${
                 inStock
                   ? "border-primary text-primary hover:bg-primary/10 cursor-pointer"
                   : "border-border text-muted-foreground opacity-40 cursor-not-allowed"
               }`}
             >
-              <ShoppingCart className="w-3.5 h-3.5" />
+              <ShoppingCart className="w-3.5 h-3.5 md:w-4 md:h-4" />
             </button>
             <button
               onClick={(e) => {
@@ -264,13 +264,13 @@ export default function UnifiedProductCard({
                 window.location.href = `/product/${product.id}`;
               }}
               disabled={!inStock}
-              className={`flex-1 h-7 rounded-lg text-[10px] font-bold flex items-center justify-center gap-1 transition-colors ${
+              className={`flex-1 h-7 md:h-8 rounded-lg text-[10px] md:text-xs font-bold flex items-center justify-center gap-1 transition-colors ${
                 inStock
                   ? "bg-primary text-white hover:bg-primary/90 cursor-pointer"
                   : "bg-muted text-muted-foreground cursor-not-allowed"
               }`}
             >
-              <Zap className="w-3 h-3" />
+              <Zap className="w-3 h-3 md:w-3.5 md:h-3.5" />
               {product.allowCredit ? "Get Now" : "Buy Now"}
             </button>
           </div>
