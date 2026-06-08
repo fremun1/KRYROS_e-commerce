@@ -60,9 +60,9 @@ export default function PromoBanners() {
     return (
       <section className="py-4 md:py-6">
         <div className="px-3 md:px-6 max-w-7xl mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
+          <div className="grid grid-cols-2 gap-3 md:gap-4">
             {[1, 2].map((i) => (
-              <div key={i} className="rounded-2xl animate-pulse bg-muted" style={{ height: 150 }} />
+              <div key={i} className="rounded-2xl animate-pulse bg-muted h-[190px] md:h-[220px] lg:h-[250px]" />
             ))}
           </div>
         </div>
@@ -75,9 +75,9 @@ export default function PromoBanners() {
   return (
     <section className="py-4 md:py-6">
       <div className="px-3 md:px-6 max-w-7xl mx-auto">
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
+        <div className="grid grid-cols-2 gap-3 md:gap-4">
           {banners.map((b) => (
-            <div key={b.id} className="relative rounded-2xl overflow-hidden" style={{ height: 150 }}>
+            <div key={b.id} className="relative rounded-2xl overflow-hidden h-[190px] md:h-[220px] lg:h-[250px]">
               <img src={b.image} alt={b.title} className="absolute inset-0 w-full h-full object-cover" fetchPriority="high" decoding="async" />
               <div
                 className="absolute inset-0"
