@@ -202,6 +202,9 @@ export default function ProductPage() {
       {/* Desktop: two-column layout wrapper */}
       <div className="md:max-w-7xl md:mx-auto md:px-6 md:py-8 lg:px-12 lg:py-12 md:grid md:grid-cols-2 md:gap-12 lg:gap-16 md:items-start">
 
+      {/* LEFT COLUMN: image + thumbnails stay together in col 1 on desktop */}
+      <div>
+
       {/* LEFT COL: Image Gallery — swipeable + auto-sliding */}
       <div
         ref={slideRef}
@@ -251,6 +254,8 @@ export default function ProductPage() {
           ))}
         </div>
       )}
+
+      </div>{/* end left column wrapper */}
 
       {/* RIGHT COL on desktop */}
       <div className="px-4 mt-4 md:px-0 md:mt-0 space-y-4">
