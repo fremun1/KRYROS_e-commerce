@@ -436,7 +436,7 @@ export default function ShopPage() {
         >
           <button
             onClick={() => { setSelectedCat("All"); setCatIndex(0); }}
-            className={`flex-shrink-0 snap-start relative w-36 h-36 rounded-2xl overflow-hidden transition-all bg-gradient-to-br from-teal-600 to-teal-800 flex items-center justify-center lg:w-44 lg:h-44 lg:rounded-3xl ${selectedCat === "All" ? "ring-2 ring-teal-500 ring-offset-2" : ""}`}
+            className={`flex-shrink-0 snap-start relative w-36 h-36 rounded-2xl overflow-hidden transition-all bg-gradient-to-br from-teal-600 to-teal-800 flex items-center justify-center md:w-44 md:h-44 lg:w-52 lg:h-52 lg:rounded-3xl ${selectedCat === "All" ? "ring-2 ring-teal-500 ring-offset-2" : ""}`}
           >
             <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(10,20,30,0.92) 0%, rgba(10,20,30,0.55) 55%, rgba(10,20,30,0.15) 100%)" }} />
             <div className="absolute bottom-0 left-0 right-0 p-2.5">
@@ -454,7 +454,7 @@ export default function ShopPage() {
               <button
                 key={cat.id}
                 onClick={() => { setSelectedCat(cat.name); setCatIndex(idx + 1); }}
-                className={`flex-shrink-0 snap-start relative w-36 h-36 rounded-2xl overflow-hidden transition-all lg:w-44 lg:h-44 lg:rounded-3xl ${active ? "ring-2 ring-teal-500 ring-offset-2" : ""}`}
+                className={`flex-shrink-0 snap-start relative w-36 h-36 rounded-2xl overflow-hidden transition-all md:w-44 md:h-44 lg:w-52 lg:h-52 lg:rounded-3xl ${active ? "ring-2 ring-teal-500 ring-offset-2" : ""}`}
               >
                 {cat.image ? (
                   <img src={cat.image} alt={cat.name} className="w-full h-full object-cover" />
