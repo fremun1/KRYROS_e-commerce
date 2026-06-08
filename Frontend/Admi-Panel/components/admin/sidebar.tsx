@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard, Users, ShoppingCart, Tag, Award, Star, Package,
-  Truck, CreditCard, Wallet, Globe, MapPin, Wrench, FileText,
+  Truck, CreditCard, Wallet, MapPin, DollarSign, Wrench, FileText,
   Layout, Bell, BarChart3, Settings, X, ShieldCheck,
   LogOut, User, ChevronUp,
 } from "lucide-react";
@@ -12,24 +12,25 @@ import { useTheme } from "@/contexts/theme-context";
 import { useAuth } from "@/contexts/auth-context";
 
 const navItems = [
-  { label: "Dashboard",             icon: LayoutDashboard, href: "/dashboard"            },
-  { label: "Users & Roles",          icon: Users,           href: "/users"                },
-  { label: "Orders",                 icon: ShoppingCart,    href: "/orders"               },
-  { label: "Categories",             icon: Tag,             href: "/categories"           },
-  { label: "Brands",                 icon: Award,           href: "/brands"               },
-  { label: "Reviews",                icon: Star,            href: "/reviews"              },
-  { label: "Products",               icon: Package,         href: "/products"             },
-  { label: "Wholesale",              icon: Truck,           href: "/wholesale"            },
-  { label: "Credit System",          icon: CreditCard,      href: "/credit-system"        },
-  { label: "Wallet & Payments",      icon: Wallet,          href: "/wallet-payments"      },
-  { label: "Countries / Currencies", icon: Globe,           href: "/countries-currencies" },
-  { label: "Locations & Shipping",   icon: MapPin,          href: "/locations-shipping"   },
-  { label: "Services",               icon: Wrench,          href: "/services"             },
-  { label: "Invoicing",              icon: FileText,        href: "/invoicing"            },
-  { label: "CMS & Pages",            icon: Layout,          href: "/cms-pages"            },
-  { label: "Notifications",          icon: Bell,            href: "/notifications"        },
-  { label: "Reports",                icon: BarChart3,       href: "/reports"              },
-  { label: "Settings",               icon: Settings,        href: "/settings"             },
+  { label: "Dashboard",        icon: LayoutDashboard, href: "/dashboard"      },
+  { label: "Users & Roles",    icon: Users,           href: "/users"          },
+  { label: "Orders",           icon: ShoppingCart,    href: "/orders"         },
+  { label: "Categories",       icon: Tag,             href: "/categories"     },
+  { label: "Brands",           icon: Award,           href: "/brands"         },
+  { label: "Reviews",          icon: Star,            href: "/reviews"        },
+  { label: "Products",         icon: Package,         href: "/products"       },
+  { label: "Wholesale",        icon: Truck,           href: "/wholesale"      },
+  { label: "Credit System",    icon: CreditCard,      href: "/credit-system"  },
+  { label: "Wallet & Payments",icon: Wallet,          href: "/wallet-payments"},
+  { label: "Locations",        icon: MapPin,          href: "/locations"      },
+  { label: "Currencies",       icon: DollarSign,      href: "/currencies"     },
+  { label: "Shipping",         icon: Truck,           href: "/shipping"       },
+  { label: "Services",         icon: Wrench,          href: "/services"       },
+  { label: "Invoicing",        icon: FileText,        href: "/invoicing"      },
+  { label: "CMS & Pages",      icon: Layout,          href: "/cms-pages"      },
+  { label: "Notifications",    icon: Bell,            href: "/notifications"  },
+  { label: "Reports",          icon: BarChart3,       href: "/reports"        },
+  { label: "Settings",         icon: Settings,        href: "/settings"       },
 ];
 
 interface SidebarProps {
@@ -46,11 +47,11 @@ export default function Sidebar({ collapsed, mobileOpen, onMobileClose }: Sideba
   const isDark = theme === "dark";
   const [showUserPopup, setShowUserPopup] = useState(false);
 
-  const bg = isDark ? "#0D1523" : "#FFFFFF";
-  const border = isDark ? "#1E293B" : "#E2E8F0";
+  const bg       = isDark ? "#0D1523" : "#FFFFFF";
+  const border   = isDark ? "#1E293B" : "#E2E8F0";
   const textMain = isDark ? "#FFFFFF" : "#0F172A";
   const textMuted = isDark ? "#8E9AAF" : "#64748B";
-  const surface = isDark ? "#101826" : "#F8FAFC";
+  const surface  = isDark ? "#101826" : "#F8FAFC";
 
   const handleLogout = () => {
     setShowUserPopup(false);
@@ -123,10 +124,9 @@ export default function Sidebar({ collapsed, mobileOpen, onMobileClose }: Sideba
         })}
       </div>
 
-      {/* ── User section at bottom — NOW CLICKABLE ── */}
+      {/* ── User section at bottom ── */}
       {user && (
         <div style={{ position: "relative", flexShrink: 0 }}>
-          {/* User popup menu — appears above the user section */}
           {showUserPopup && !collapsed && (
             <div style={{
               position: "absolute", bottom: "100%", left: 0, right: 0,
@@ -162,7 +162,6 @@ export default function Sidebar({ collapsed, mobileOpen, onMobileClose }: Sideba
             </div>
           )}
 
-          {/* Clickable user row */}
           <div
             onClick={() => setShowUserPopup(v => !v)}
             style={{
