@@ -489,7 +489,7 @@ export default function CheckoutPage() {
   const hasPaymentError = !!orderError || mmPhase === "failed_init" || mmPhase === "timed_out";
 
   return (
-    <div className="max-w-lg mx-auto bg-background min-h-screen flex flex-col">
+    <div className="max-w-lg mx-auto bg-background min-h-screen flex flex-col lg:max-w-6xl">
       {/* Header */}
       <div className="sticky top-0 z-20 flex items-center justify-between px-4 pt-5 pb-3 bg-background/90 backdrop-blur">
         <button onClick={() => navigate("/cart")} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground">
@@ -512,8 +512,9 @@ export default function CheckoutPage() {
       </div>
 
       {/* Main content */}
-      <div className="flex-1 overflow-y-auto px-4 pb-6 space-y-3">
+      <div className="flex-1 overflow-y-auto px-4 pb-6 space-y-3 lg:overflow-visible lg:flex lg:flex-row lg:gap-8 lg:px-8 lg:space-y-0 lg:pb-8 lg:items-start">
 
+        <div className="space-y-3 lg:flex-1 lg:overflow-y-auto lg:pb-4">
         {/* ── STEP 1: Contact ── */}
         {step === 1 && (
           <div className="space-y-4">
@@ -743,7 +744,7 @@ export default function CheckoutPage() {
               )}
             </div>
 
-            <div className="bg-card border border-border rounded-3xl p-4 space-y-3">
+            <div className="bg-card border border-border rounded-3xl p-4 space-y-3 lg:hidden">
               <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Subtotal</span><span className="font-semibold">{format(SUBTOTAL)}</span></div>
               <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Shipping</span><span className="font-semibold">{shippingPrice === 0 ? "Free" : format(shippingPrice)}</span></div>
               <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Estimated tax</span><span className="font-semibold">{format(TAX)}</span></div>
@@ -756,13 +757,26 @@ export default function CheckoutPage() {
             <button onClick={() => setStep(3)} className="w-full text-xs text-muted-foreground text-center hover:text-primary transition-colors py-2">← Back to Shipping</button>
           </div>
         )}
+        </div>{/* end steps left-col */}
+
+        {/* Desktop-only sticky order summary */}
+        <div className="hidden lg:block w-80 flex-shrink-0 sticky top-20">
+          <div className="bg-card border border-border rounded-3xl p-5 space-y-3">
+            <h3 className="text-sm font-bold text-foreground">Order Summary</h3>
+            <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Subtotal</span><span className="font-semibold">{format(SUBTOTAL)}</span></div>
+            <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Shipping</span><span className="font-semibold">{shippingPrice === 0 ? "Free" : format(shippingPrice)}</span></div>
+            <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Estimated tax</span><span className="font-semibold">{format(TAX)}</span></div>
+            <div className="pt-2 border-t border-border flex items-center justify-between text-sm font-black"><span>Total</span><span className="text-primary">{format(total)}</span></div>
+            <p className="text-[10px] text-muted-foreground">All payments are processed securely. By completing your purchase, you agree to our Terms of Service.</p>
+          </div>
+        </div>
       </div>
 
       {/* ── PAYMENT METHOD PANELS (bottom sheet) ── */}
       {openMethod && step === 4 && (
-        <div className="fixed inset-0 z-50 flex flex-col justify-end">
+        <div className="fixed inset-0 z-50 flex flex-col justify-end lg:items-center lg:justify-center lg:p-6">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setOpenMethod(null)} />
-          <div className="relative bg-background rounded-t-3xl shadow-2xl max-h-[92vh] overflow-y-auto">
+          <div className="relative bg-background rounded-t-3xl shadow-2xl max-h-[92vh] overflow-y-auto lg:rounded-3xl lg:max-w-xl lg:w-full">
             <div className="flex justify-center pt-3 pb-1"><div className="w-10 h-1 rounded-full bg-border" /></div>
             <div className="px-5 pb-8 space-y-4">
               {/* Sheet header */}
