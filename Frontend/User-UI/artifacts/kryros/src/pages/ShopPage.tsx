@@ -431,7 +431,7 @@ export default function ShopPage() {
         <div
           ref={catScrollRef}
           onTouchStart={handleCatTouchStart}
-          className="flex gap-3 overflow-x-auto no-scrollbar md:flex-wrap md:overflow-visible px-4 pb-4"
+          className="flex gap-3 overflow-x-auto no-scrollbar px-4 pb-4"
           style={{ scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch", scrollBehavior: "smooth" }}
         >
           <button
