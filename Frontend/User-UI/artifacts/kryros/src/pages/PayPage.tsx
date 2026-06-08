@@ -576,7 +576,7 @@ export default function PayPage() {
   }
 
   return (
-    <div className="max-w-md mx-auto px-4 py-4 pb-8 relative">
+    <div className="max-w-md mx-auto px-4 py-4 pb-8 relative lg:max-w-5xl lg:px-8 lg:py-8">
       {/* TOP BAR */}
       <div className="flex items-center justify-between mb-5">
         <button
@@ -593,7 +593,8 @@ export default function PayPage() {
 
       {/* STEP 1 — Enter Amount */}
       {step === 1 && (
-        <div className="space-y-4">
+        <div className="space-y-4 lg:flex lg:flex-row lg:gap-8 lg:items-start lg:space-y-0">
+          <div className="space-y-4 lg:flex-1">
           <div>
             <h2 className="text-xl font-black text-foreground">Make a Payment</h2>
             <p className="text-xs text-muted-foreground mt-0.5">Send money securely to KRYROS</p>
@@ -688,8 +689,8 @@ export default function PayPage() {
             </div>
           </div>
 
-          {/* Payment Summary */}
-          <div className="border border-border rounded-2xl px-4 py-4 bg-background space-y-2">
+          {/* Payment Summary — mobile only */}
+          <div className="border border-border rounded-2xl px-4 py-4 bg-background space-y-2 lg:hidden">
             <p className="text-sm font-bold text-foreground mb-3">Payment Summary</p>
             <div className="flex justify-between text-xs">
               <span className="text-muted-foreground">Amount</span>
@@ -714,13 +715,23 @@ export default function PayPage() {
             <Lock className="w-4 h-4" /> Continue to Payment
           </button>
           <SecureFooter />
+          </div>{/* end left-col */}
+
+          {/* Desktop sticky payment summary */}
+          <div className="hidden lg:block w-80 flex-shrink-0 sticky top-6 border border-border rounded-2xl px-5 py-5 bg-background space-y-3">
+            <p className="text-sm font-bold text-foreground">Payment Summary</p>
+            <div className="flex justify-between text-xs"><span className="text-muted-foreground">Amount</span><span className="font-semibold text-foreground">{currency} {amount.toFixed(2)}</span></div>
+            <div className="flex justify-between text-xs"><span className="text-muted-foreground">Processing Fee</span><span className="font-semibold text-foreground">{currency} {fee.toFixed(2)}</span></div>
+            <div className="flex justify-between text-sm font-black pt-3 border-t border-border"><span className="text-foreground">Total Payable</span><span className="text-primary">{currency} {total.toFixed(2)}</span></div>
+            <SecureFooter />
+          </div>
         </div>
       )}
 
       {/* STEP 2 — Choose Payment Method */}
       {step === 2 && (
-        <div className="space-y-4">
-          <div className="space-y-1">
+        <div className="space-y-4 lg:flex lg:flex-row-reverse lg:gap-8 lg:items-start lg:space-y-0">
+          <div className="space-y-1 lg:w-80 lg:flex-shrink-0 lg:sticky lg:top-6 lg:border lg:border-border lg:rounded-2xl lg:p-5 lg:bg-background">
             <div className="flex items-center justify-between">
               <span className="text-xs text-muted-foreground">You are sending</span>
               <button onClick={() => setStep(1)} className="text-xs text-primary font-semibold hover:underline">Change</button>
@@ -738,7 +749,7 @@ export default function PayPage() {
             </div>
           </div>
 
-          <div>
+          <div className="lg:flex-1">
             <p className="text-sm font-bold text-foreground mb-3">Choose payment method</p>
             <div className="space-y-2">
               {activeMethods.map((m) => {
@@ -767,12 +778,12 @@ export default function PayPage() {
 
       {/* PAYMENT METHOD PANELS (bottom sheet) */}
       {openMethod && (
-        <div className="fixed inset-0 z-50 flex flex-col justify-end">
+        <div className="fixed inset-0 z-50 flex flex-col justify-end lg:items-center lg:justify-center lg:p-6">
           <div
             className="absolute inset-0 bg-black/40 backdrop-blur-sm"
             onClick={() => setOpenMethod(null)}
           />
-          <div className="relative bg-background rounded-t-3xl shadow-2xl max-h-[92vh] overflow-y-auto">
+          <div className="relative bg-background rounded-t-3xl shadow-2xl max-h-[92vh] overflow-y-auto lg:rounded-3xl lg:max-w-xl lg:w-full">
             <div className="flex justify-center pt-3 pb-1">
               <div className="w-10 h-1 rounded-full bg-border" />
             </div>
