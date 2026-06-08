@@ -39,7 +39,7 @@ export default function WholesalePage() {
   }, []);
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-5 pb-28">
+    <div className="max-w-7xl mx-auto px-4 md:px-8 py-5 pb-28 md:pb-10">
       {/* Header */}
       <div className="flex items-start justify-between mb-5">
         <div>
@@ -106,7 +106,7 @@ export default function WholesalePage() {
             <span className="text-xs text-primary font-semibold cursor-pointer">View All</span>
           </Link>
         </div>
-        <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1 -mx-4 px-4">
+        <div className="flex gap-3 overflow-x-auto no-scrollbar md:flex-wrap md:overflow-visible pb-1 -mx-4 px-4 md:mx-0 md:px-0">
           {loading
             ? Array.from({ length: 5 }).map((_, i) => (
                 <div key={i} className="flex flex-col items-center gap-1.5 flex-shrink-0">
@@ -137,7 +137,7 @@ export default function WholesalePage() {
 
       {/* Feature badges — only shown when admin configures features */}
       {cms?.features && cms.features.length > 0 && (
-      <div className="grid grid-cols-4 gap-2 mb-5">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-5">
         {cms.features.map(({ title, desc }, i) => {
           const Icon = FEATURE_ICONS[i % FEATURE_ICONS.length];
           return (
@@ -160,7 +160,7 @@ export default function WholesalePage() {
           </Link>
         </div>
         {loading ? (
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
             {Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="bg-card border border-border rounded-2xl overflow-hidden animate-pulse">
                 <div className="aspect-square bg-muted" />
@@ -175,7 +175,7 @@ export default function WholesalePage() {
         ) : wholesaleProducts.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-8">No products available yet.</p>
         ) : (
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
             {wholesaleProducts.map((p) => (
               <UnifiedProductCard key={p.id} product={p} className="w-full" />
             ))}
