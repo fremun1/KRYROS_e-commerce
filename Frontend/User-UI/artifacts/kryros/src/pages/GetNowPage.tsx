@@ -87,7 +87,7 @@ export default function GetNowPage() {
 
   return (
     <AccountLayout>
-    <div className="max-w-2xl mx-auto">
+    <div className="max-w-7xl mx-auto">
       {/* Header */}
       <div className="flex items-start justify-between mb-5">
         <div>
@@ -184,10 +184,10 @@ export default function GetNowPage() {
             <span className="text-xs text-primary font-semibold cursor-pointer">View All</span>
           </Link>
         </div>
-        <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1 px-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
           {loading
             ? Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="flex-shrink-0 w-[148px] bg-card border border-border rounded-2xl overflow-hidden animate-pulse">
+                <div key={i} className="bg-card border border-border rounded-2xl overflow-hidden animate-pulse">
                   <div className="aspect-square bg-muted" />
                   <div className="p-2.5 space-y-2">
                     <div className="h-3 bg-muted rounded w-3/4" />
@@ -200,7 +200,7 @@ export default function GetNowPage() {
                 <UnifiedProductCard
                   key={p.id}
                   product={p}
-                  className="flex-shrink-0 w-[calc(50vw-16px)]"
+                  className="w-full"
                 />
               ))}
         </div>
