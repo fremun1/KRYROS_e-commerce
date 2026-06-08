@@ -489,7 +489,7 @@ export default function CheckoutPage() {
   const hasPaymentError = !!orderError || mmPhase === "failed_init" || mmPhase === "timed_out";
 
   return (
-    <div className="w-full bg-background min-h-screen flex flex-col">
+    <div className="w-full bg-background flex flex-col">
       {/* Header */}
       <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-xl border-b border-border">
         <div className="flex items-center justify-between px-4 py-3.5 max-w-6xl mx-auto">
@@ -540,7 +540,7 @@ export default function CheckoutPage() {
       </div>
 
       {/* Main content */}
-      <div className="flex-1 overflow-y-auto pb-6 space-y-3 lg:overflow-visible lg:flex lg:flex-row lg:gap-8 lg:px-8 lg:space-y-0 lg:pb-8 lg:items-start">
+      <div className="pb-6 space-y-3 lg:flex lg:flex-row lg:gap-8 lg:px-8 lg:space-y-0 lg:pb-8 lg:items-start">
 
         <div className="space-y-3 lg:flex-1 lg:overflow-y-auto lg:pb-4">
         {/* ── STEP 1: Contact ── */}
