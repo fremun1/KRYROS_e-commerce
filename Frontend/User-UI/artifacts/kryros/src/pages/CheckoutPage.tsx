@@ -524,8 +524,8 @@ export default function CheckoutPage() {
       </div>
 
       {/* Progress steps — 4 equal segments, always full width */}
-      <div className="px-0 pb-4">
-        <div className="flex justify-between text-[11px] font-semibold text-muted-foreground mb-2">
+      <div className="px-4 pb-3">
+        <div className="flex justify-between text-[11px] font-semibold text-muted-foreground mb-1.5">
           <span className={step >= 1 ? "text-primary" : ""}>Contact</span>
           <span className={step >= 2 ? "text-primary" : ""}>Address</span>
           <span className={step >= 3 ? "text-primary" : ""}>Shipping</span>
@@ -546,7 +546,7 @@ export default function CheckoutPage() {
         {/* ── STEP 1: Contact ── */}
         {step === 1 && (
           <div className="space-y-4">
-            <div className="bg-card border border-border rounded-3xl p-4 space-y-4">
+            <div className="bg-card border border-border rounded-xl p-4 space-y-4">
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-bold text-foreground">Contact information</h2>
                 {authUser
@@ -628,7 +628,7 @@ export default function CheckoutPage() {
         {/* ── STEP 2: Address ── */}
         {step === 2 && (
           <div className="space-y-4">
-            <div className="bg-card border border-border rounded-3xl p-4 space-y-4">
+            <div className="bg-card border border-border rounded-xl p-4 space-y-4">
               <h2 className="text-sm font-bold text-foreground">Shipping address</h2>
 
               {/* Country — dynamic from admin panel */}
@@ -691,7 +691,7 @@ export default function CheckoutPage() {
         {/* ── STEP 3: Shipping ── */}
         {step === 3 && (
           <div className="space-y-4">
-            <div className="bg-card border border-border rounded-3xl p-4 space-y-4">
+            <div className="bg-card border border-border rounded-xl p-4 space-y-4">
               <h2 className="text-sm font-bold text-foreground">
                 Delivery options <span className="text-[11px] text-muted-foreground font-normal">(for {city || "your area"})</span>
               </h2>
@@ -729,7 +729,7 @@ export default function CheckoutPage() {
         {/* ── STEP 4: Payment ── */}
         {step === 4 && (
           <div className="space-y-4">
-            <div className="bg-card border border-border rounded-3xl p-4 space-y-4">
+            <div className="bg-card border border-border rounded-xl p-4 space-y-4">
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-bold text-foreground">How would you like to pay?</h2>
                 <span className="text-[11px] text-muted-foreground">Powered by Kryros Pay</span>
