@@ -17,6 +17,8 @@ const DEFAULT_NAV = [
   { label: "Home", href: "/" },
   { label: "Shop", href: "/shop" },
   { label: "Get Now", href: "/get-now" },
+  { label: "Pay", href: "/pay" },
+  { label: "Track Order", href: "/track" },
   { label: "Wholesale", href: "/wholesale" },
   { label: "Pickup Stations", href: "/pickup-stations" },
   { label: "About Us", href: "/about" },
