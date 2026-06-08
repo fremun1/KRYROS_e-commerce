@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "wouter";
 import {
-  ShoppingBag, Heart, User, Sun, Moon, Globe, Menu, Mic, ChevronDown, LogOut, LayoutDashboard, X,
+  ShoppingBag, Heart, User, Sun, Moon, Globe, Menu, Mic, ChevronDown, LogOut, LayoutDashboard, X, Grid2x2,
 } from "lucide-react";
 import { useCartStore } from "@/store/cartStore";
 import { useWishlistStore } from "@/store/wishlistStore";
@@ -51,6 +51,13 @@ export default function Header() {
   }, []);
 
   useEffect(() => {
+    fetch(`${API_BASE}/api/categories/active`)
+      .then(r => r.ok ? r.json() : [])
+      .then(data => setHeaderCategories(Array.isArray(data) ? data : (data.data ?? [])))
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
     if (!headerRef.current) return;
     const obs = new ResizeObserver(() => setHeaderHeight(headerRef.current?.offsetHeight ?? 52));
     obs.observe(headerRef.current);
@@ -58,7 +65,15 @@ export default function Header() {
     return () => obs.disconnect();
   }, []);
 
-  const desktopNav = (headerCfg?.navLinks || DEFAULT_NAV).filter((l: any) => l.isActive !== false);
+  const rawNav = (headerCfg?.navLinks || DEFAULT_NAV).filter((l: any) => l.isActive !== false);
+  const ensureLinks = [
+    { label: "Pay", href: "/pay" },
+    { label: "Track Order", href: "/track" },
+  ];
+  const desktopNav = [
+    ...rawNav,
+    ...ensureLinks.filter(e => !rawNav.some((n: any) => n.href === e.href)),
+  ];
   const { open: sidebarOpen, setOpen: setSidebarOpen } = useSidebarStore();
   const [location] = useLocation();
   const items = useCartStore((s) => s.items);
@@ -69,6 +84,8 @@ export default function Header() {
   const { currencies, selected, setCurrency } = useCurrencyStore();
   const [currencyOpen, setCurrencyOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [catMenuOpen, setCatMenuOpen] = useState(false);
+  const [headerCategories, setHeaderCategories] = useState<Array<{id: string|number; name: string; slug: string; image?: string}>>([]);
 
   const { user, token, logout } = useAuthStore();
   const isLoggedIn = !!(token && user);
@@ -137,11 +154,47 @@ export default function Header() {
 
           {/* Desktop: Category dropdown + Search bar */}
           <div className="hidden md:flex flex-1 items-center gap-2 mx-4 lg:mx-6">
-            <button className="flex items-center gap-2 px-3 py-2.5 bg-primary text-white rounded-xl text-sm font-medium flex-shrink-0 hover:bg-primary/90 transition-colors lg:px-4">
-              <Menu className="w-4 h-4" />
-              All Categories
-              <ChevronDown className="w-4 h-4" />
-            </button>
+            <div className="relative flex-shrink-0">
+              <button
+                onClick={() => setCatMenuOpen(!catMenuOpen)}
+                className="flex items-center gap-2 px-3 py-2.5 bg-primary text-white rounded-xl text-sm font-medium hover:bg-primary/90 transition-colors lg:px-4"
+              >
+                <Menu className="w-4 h-4" />
+                All Categories
+                <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${catMenuOpen ? "rotate-180" : ""}`} />
+              </button>
+              {catMenuOpen && (
+                <>
+                  <div className="fixed inset-0 z-30" onClick={() => setCatMenuOpen(false)} />
+                  <div className="absolute left-0 top-12 z-40 w-64 bg-card border border-border rounded-2xl shadow-2xl overflow-hidden">
+                    <div className="p-2 max-h-80 overflow-y-auto">
+                      <Link href="/shop" onClick={() => setCatMenuOpen(false)}>
+                        <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-muted transition-colors text-left">
+                          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                            <Grid2x2 className="w-4 h-4 text-primary" />
+                          </div>
+                          <span className="text-sm font-semibold text-foreground">All Products</span>
+                        </button>
+                      </Link>
+                      {headerCategories.map(cat => (
+                        <Link key={cat.id} href={`/shop?category=${encodeURIComponent(cat.slug || String(cat.id))}`} onClick={() => setCatMenuOpen(false)}>
+                          <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-muted transition-colors text-left">
+                            {cat.image ? (
+                              <img src={cat.image} alt={cat.name} className="w-8 h-8 rounded-lg object-cover flex-shrink-0" />
+                            ) : (
+                              <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+                                <ShoppingBag className="w-4 h-4 text-muted-foreground" />
+                              </div>
+                            )}
+                            <span className="text-sm font-medium text-foreground">{cat.name}</span>
+                          </button>
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
             <SearchAutocomplete
               showSearchButton
               placeholder="Search for products, brands and more..."
