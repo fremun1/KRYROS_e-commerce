@@ -30,12 +30,12 @@ export default function RecentlyViewedSection() {
             </Link>
           </div>
         </div>
-        <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+        <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1 md:grid md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 md:overflow-visible">
           {items.map((product) => (
             <UnifiedProductCard
               key={product.id}
               product={product}
-              className="flex-shrink-0 w-[calc(50vw-16px)]"
+              className="flex-shrink-0 w-[calc(50vw-16px)] md:w-full"
             />
           ))}
         </div>
