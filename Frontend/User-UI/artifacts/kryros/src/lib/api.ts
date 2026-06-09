@@ -113,6 +113,17 @@ export interface ApiOrder {
   }[];
 }
 
+export interface ApiShippingMethod {
+  id: string;
+  name: string;
+  description?: string;
+  fee: number | string;
+  minThreshold?: number | string;
+  estimatedDays?: string;
+  isActive: boolean;
+  sortOrder?: number;
+}
+
 export interface ApiShippingZone {
   id: string;
   name: string;
@@ -312,6 +323,16 @@ export async function fetchShippingZones(type?: string): Promise<ApiShippingZone
   const result = await apiFetch<any[]>(`/api/shipping-zones${qs}`);
   if (!Array.isArray(result)) return [];
   return result;
+}
+
+export async function fetchShippingMethods(): Promise<ApiShippingMethod[]> {
+  const result = await apiFetch<ApiShippingMethod[]>("/api/shipping/active");
+  if (!Array.isArray(result)) return [];
+  return result.map((m) => ({
+    ...m,
+    fee: Number(m.fee ?? 0),
+    minThreshold: Number(m.minThreshold ?? 0),
+  }));
 }
 
 export async function fetchHomepageSections(type?: string): Promise<ApiHomepageSection[]> {
