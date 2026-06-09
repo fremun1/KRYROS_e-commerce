@@ -279,21 +279,29 @@ function WholesaleContent() {
       <FormField label="Product Name *" value={iForm.name} onChange={ifp('name')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Product name" />
       <div style={{ marginBottom: '14px' }}>
         <label style={{ display: 'block', fontSize: '11.5px', fontWeight: 600, color: textMuted, marginBottom: '8px', textTransform: 'uppercase' }}>Product Images</label>
-        <CloudinaryUpload
-          value={invImages[0] || ''}
-          onChange={(url) => setInvImages(prev => url ? [...prev, url] : prev)}
-          multiple
-        />
+        
+        {/* Image Previews */}
         {invImages.length > 0 && (
-          <div style={{ display: 'flex', gap: '8px', marginTop: '10px', overflowX: 'auto', paddingBottom: '4px' }}>
-            {invImages.map((url, i) => (
-              <div key={i} style={{ position: 'relative', width: '60px', height: '60px', borderRadius: '8px', overflow: 'hidden', border: `1px solid ${border}`, flexShrink: 0 }}>
-                <img src={url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                <button onClick={() => setInvImages(prev => prev.filter((_, idx) => idx !== i))} style={{ position: 'absolute', top: 2, right: 2, background: 'rgba(0,0,0,0.5)', color: 'white', border: 'none', borderRadius: '4px', width: '18px', height: '18px', fontSize: '12px', cursor: 'pointer' }}>×</button>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))', gap: '8px', marginBottom: '12px' }}>
+            {invImages.map((url, idx) => (
+              <div key={idx} style={{ position: 'relative', aspectRatio: '1/1', borderRadius: '8px', overflow: 'hidden', border: `1px solid ${border}` }}>
+                <img src={url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <button 
+                  onClick={() => setInvImages(prev => prev.filter((_, i) => i !== idx))}
+                  style={{ position: 'absolute', top: '4px', right: '4px', background: 'rgba(0,0,0,0.6)', border: 'none', borderRadius: '50%', width: '18px', height: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                >
+                  <X size={10} color="white" />
+                </button>
               </div>
             ))}
           </div>
         )}
+
+        <CloudinaryUpload
+          multiple
+          onUrlChange={(url) => setInvImages(prev => url ? [...prev, url] : prev)}
+          showUrlInput={false}
+        />
       </div>
       <FormField label="Description" value={iForm.description} onChange={ifp('description')} type="textarea" isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Detailed product description..." />
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>

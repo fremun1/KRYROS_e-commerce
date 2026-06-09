@@ -492,11 +492,28 @@ function CreditContent() {
           <FormField label="Product Name *" value={prodForm.name} onChange={v => setProdForm(f => ({ ...f, name: v }))} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Product name" />
           <div style={{ marginBottom: '14px' }}>
             <label style={{ display: 'block', fontSize: '11.5px', fontWeight: 600, color: textMuted, marginBottom: '8px', textTransform: 'uppercase' }}>Product Images</label>
+            
+            {/* Image Previews */}
+            {prodImages.length > 0 && (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))', gap: '8px', marginBottom: '12px' }}>
+                {prodImages.map((url, idx) => (
+                  <div key={idx} style={{ position: 'relative', aspectRatio: '1/1', borderRadius: '8px', overflow: 'hidden', border: `1px solid ${border}` }}>
+                    <img src={url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <button 
+                      onClick={() => setProdImages(prev => prev.filter((_, i) => i !== idx))}
+                      style={{ position: 'absolute', top: '4px', right: '4px', background: 'rgba(0,0,0,0.6)', border: 'none', borderRadius: '50%', width: '18px', height: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                    >
+                      <X size={10} color="white" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
             <CloudinaryUpload
-              value={prodImages[0] || ''}
-              onChange={(url) => setProdImages(prev => url ? [...prev, url] : prev)}
               multiple
               onUrlChange={(url) => setProdImages(prev => url ? [...prev, url] : prev)}
+              showUrlInput={false}
             />
           </div>
           <FormField label="Description" value={prodForm.description} onChange={v => setProdForm(f => ({ ...f, description: v }))} type="textarea" isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Detailed product description..." />
