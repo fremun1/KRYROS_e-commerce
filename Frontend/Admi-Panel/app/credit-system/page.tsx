@@ -97,7 +97,8 @@ function CreditContent() {
   const [deleteProd, setDeleteProd] = useState<InstProduct|null>(null);
   const [prodForm, setProdForm] = useState({ 
     name:'', sku:'', price:'', status:'Active', 
-    description:'', specifications:'', creditMessage:'', creditMinimum:''
+    description:'', specifications:'', creditMessage:'', creditMinimum:'',
+    stockTotal: '100', stockCurrent: '100'
   });
   const [prodImages, setProdImages] = useState<string[]>([]);
 
@@ -138,6 +139,8 @@ function CreditContent() {
         description: prodForm.description,
         creditMessage: prodForm.creditMessage,
         creditMinimum: Number(prodForm.creditMinimum) || 0,
+        stockTotal: Number(prodForm.stockTotal) || 0,
+        stockCurrent: Number(prodForm.stockCurrent) || 0,
         imageDataUrls: prodImages,
         specifications: prodForm.specifications ? [{ key: 'Specifications', value: prodForm.specifications }] : undefined
       });
@@ -160,6 +163,8 @@ function CreditContent() {
         description: prodForm.description,
         creditMessage: prodForm.creditMessage,
         creditMinimum: Number(prodForm.creditMinimum) || 0,
+        stockTotal: Number(prodForm.stockTotal) || 0,
+        stockCurrent: Number(prodForm.stockCurrent) || 0,
         imageDataUrls: prodImages,
         replaceImages: true,
         specifications: prodForm.specifications ? [{ key: 'Specifications', value: prodForm.specifications }] : undefined
@@ -398,7 +403,8 @@ function CreditContent() {
             setProdForm({
               name: r.name, sku: r.sku, price: String(r.rawPrice || ''), status: r.status,
               description: r.description, specifications: r.specifications,
-              creditMessage: r.creditMessage, creditMinimum: r.creditMinimum
+              creditMessage: r.creditMessage, creditMinimum: r.creditMinimum,
+              stockTotal: String(r.stockTotal || 0), stockCurrent: String(r.stockCurrent || 0)
             });
             setProdImages(r.images || []);
             setEditProd(r);
@@ -469,6 +475,10 @@ function CreditContent() {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
           <FormField label="SKU" value={prodForm.sku} onChange={v => setProdForm(f => ({ ...f, sku: v }))} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. CRD-PRD-001" />
           <FormField label="Price" value={prodForm.price} onChange={v => setProdForm(f => ({ ...f, price: v }))} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 1500" />
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+          <FormField label="Total Stock" value={prodForm.stockTotal} onChange={v => setProdForm(f => ({ ...f, stockTotal: v }))} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 100" />
+          <FormField label="Current Stock" value={prodForm.stockCurrent} onChange={v => setProdForm(f => ({ ...f, stockCurrent: v }))} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 50" />
         </div>
         <FormField label="Credit Message" value={prodForm.creditMessage} onChange={v => setProdForm(f => ({ ...f, creditMessage: v }))} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. Get now, pay later" />
         <FormField label="Credit Minimum Deposit" value={prodForm.creditMinimum} onChange={v => setProdForm(f => ({ ...f, creditMinimum: v }))} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 500" />

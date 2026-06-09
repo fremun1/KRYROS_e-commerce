@@ -291,11 +291,11 @@ export default function ProductPage() {
           </div>
         )}
 
-        {/* Price */}
-        <div>
+        {/* Price & Specialized Info */}
+        <div className="space-y-3">
           <div className="flex items-center gap-2.5 flex-wrap">
             <span className="text-3xl lg:text-4xl font-black text-foreground dark:text-white">
-              {format(product.price)}
+              {product.isWholesaleOnly && product.wholesalePrice ? format(product.wholesalePrice) : format(product.price)}
             </span>
             {product.oldPrice > product.price && (
               <span className="text-base text-muted-foreground dark:text-[#A9B4C7] line-through">
@@ -306,6 +306,40 @@ export default function ProductPage() {
               <span className="text-xs font-bold text-[#B91C1C] bg-[#B91C1C]/10 px-2 py-0.5 rounded-lg">Save {product.discount}%</span>
             )}
           </div>
+
+          {/* Wholesale Details */}
+          {product.isWholesaleOnly && (
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 p-3 rounded-2xl flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center flex-shrink-0 shadow-sm">
+                <Package className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <p className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-wider">Wholesale Exclusive</p>
+                <p className="text-xs font-bold text-foreground">Minimum Order: {product.wholesaleMoq || 1} units</p>
+              </div>
+            </div>
+          )}
+
+          {/* Credit Details */}
+          {product.allowCredit && (
+            <div className="bg-primary/5 border border-primary/10 p-4 rounded-2xl space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center flex-shrink-0 shadow-sm">
+                  <CreditCard className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-black text-primary uppercase tracking-wider">Get Now, Pay Later</p>
+                  <p className="text-xs font-bold text-foreground">{product.creditMessage || "Flexible Installment Plans Available"}</p>
+                </div>
+              </div>
+              {product.creditMinimum > 0 && (
+                <div className="flex items-center justify-between pt-2 border-t border-primary/10">
+                  <span className="text-[11px] text-muted-foreground font-medium">Minimum Deposit Required</span>
+                  <span className="text-sm font-black text-foreground">{format(product.creditMinimum)}</span>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Quantity + Wishlist + Compare */}

@@ -77,7 +77,8 @@ function WholesaleContent() {
   const [deleteInv, setDeleteInv] = useState<WholesaleProduct|null>(null);
   const [iForm, setIForm] = useState({ 
     name:'', sku:'', price:'', moq:'', category:'Electronics', status:'Active',
-    description: '', imageUrl: '', images: [] as string[], specifications: ''
+    description: '', imageUrl: '', images: [] as string[], specifications: '',
+    stockTotal: '100', stockCurrent: '100'
   });
   const [invImages, setInvImages] = useState<string[]>([]);
   const ifp = (k:string) => (v:string) => setIForm(f=>({...f,[k]:v}));
@@ -181,6 +182,8 @@ function WholesaleContent() {
         isActive: iForm.status === 'Active',
         isWholesaleOnly: true,
         description: iForm.description,
+        stockTotal: Number(iForm.stockTotal) || 0,
+        stockCurrent: Number(iForm.stockCurrent) || 0,
         imageDataUrls: invImages,
         specifications: iForm.specifications ? [{ key: 'Specifications', value: iForm.specifications }] : undefined
       });
@@ -203,6 +206,8 @@ function WholesaleContent() {
         categorySlug: iForm.category.toLowerCase().replace(/ /g, '-'),
         isActive: iForm.status === 'Active',
         description: iForm.description,
+        stockTotal: Number(iForm.stockTotal) || 0,
+        stockCurrent: Number(iForm.stockCurrent) || 0,
         imageDataUrls: invImages,
         replaceImages: true,
         specifications: iForm.specifications ? [{ key: 'Specifications', value: iForm.specifications }] : undefined
@@ -298,6 +303,10 @@ function WholesaleContent() {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
         <FormField label="Wholesale Price" value={iForm.price} onChange={ifp('price')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 850" />
         <FormField label="Min Order Qty (MOQ)" value={iForm.moq} onChange={ifp('moq')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 5" />
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+        <FormField label="Total Stock" value={iForm.stockTotal} onChange={ifp('stockTotal')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 100" />
+        <FormField label="Current Stock" value={iForm.stockCurrent} onChange={ifp('stockCurrent')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 50" />
       </div>
       <FormField label="Specifications" value={iForm.specifications} onChange={ifp('specifications')} type="textarea" isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Key: Value (one per line)" />
       <FormField label="Status" value={iForm.status} onChange={ifp('status')} options={['Active','Inactive']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
@@ -440,7 +449,8 @@ function WholesaleContent() {
             setIForm({
               name:r.name, sku:r.sku, price:String(r.rawPrice||''), moq:String(r.rawMoq||''), 
               category:r.category, status:r.status, description:r.description, 
-              imageUrl:r.imageUrl, images:r.images, specifications:r.specifications 
+              imageUrl:r.imageUrl, images:r.images, specifications:r.specifications,
+              stockTotal: String(r.stockTotal || 0), stockCurrent: String(r.stockCurrent || 0)
             }); 
             setInvImages(r.images || []);
             setEditInv(r); 

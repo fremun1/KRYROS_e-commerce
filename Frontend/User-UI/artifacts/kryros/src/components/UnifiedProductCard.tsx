@@ -189,8 +189,8 @@ export default function UnifiedProductCard({
             </div>
           )}
 
-          {/* 3. Credit text */}
-          {product.allowCredit && inStock && !isStoreClosed && (
+          {/* 3. Credit text — show even if out of stock */}
+          {product.allowCredit && !isStoreClosed && (
             <span className="text-[10px] md:text-xs text-primary font-bold whitespace-nowrap truncate">
               {monthlyText}
             </span>
