@@ -330,7 +330,7 @@ function CreditContent() {
         icon={CreditCard}
         onAdd={
           activeTab === 'plans' ? () => { setPlanForm({name:'',months:'3',interest:'0%',minAmount:'',maxAmount:'',status:'Active'}); setAddPlanOpen(true); } : 
-          activeTab === 'products' ? () => { setProdForm({name:'',sku:'',price:'',status:'Active',description:'',specifications:'',creditMessage:'',creditMinimum:''}); setProdImages([]); setAddProdOpen(true); } :
+          activeTab === 'products' ? () => { setProdForm({name:'',sku:'',price:'',status:'Active',description:'',specifications:'',creditMessage:'',creditMinimum:'',stockTotal:'100',stockCurrent:'100'}); setProdImages([]); setAddProdOpen(true); } :
           undefined
         }
         addLabel={activeTab === 'plans' ? "Add Plan" : "Add Product"}

@@ -16,7 +16,9 @@ import {
   MapPin,
   Package,
   Clock,
-  ChevronRight
+  ChevronRight,
+  CreditCard,
+  Info
 } from "lucide-react";
 import { toast } from "sonner";
 import { fetchProductById, fetchRelatedProducts, fetchStoreStatus } from "@/lib/api";
@@ -320,24 +322,40 @@ export default function ProductPage() {
             </div>
           )}
 
-          {/* Credit Details */}
+          {/* Credit Details - Full Financial Breakdown */}
           {product.allowCredit && (
-            <div className="bg-primary/5 border border-primary/10 p-4 rounded-2xl space-y-3">
+            <div className="bg-primary/5 border border-primary/10 p-4 rounded-2xl space-y-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center flex-shrink-0 shadow-sm">
                   <CreditCard className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <p className="text-[10px] font-black text-primary uppercase tracking-wider">Get Now, Pay Later</p>
-                  <p className="text-xs font-bold text-foreground">{product.creditMessage || "Flexible Installment Plans Available"}</p>
+                  <p className="text-[10px] font-black text-primary uppercase tracking-wider">Payment Breakdown</p>
+                  <p className="text-xs font-bold text-foreground">{product.creditMessage || "Get Now, Pay Later"}</p>
                 </div>
               </div>
-              {product.creditMinimum > 0 && (
-                <div className="flex items-center justify-between pt-2 border-t border-primary/10">
-                  <span className="text-[11px] text-muted-foreground font-medium">Minimum Deposit Required</span>
-                  <span className="text-sm font-black text-foreground">{format(product.creditMinimum)}</span>
+              
+              <div className="grid grid-cols-1 gap-2 pt-2 border-t border-primary/10">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] text-muted-foreground font-medium">Total Product Price</span>
+                  <span className="text-sm font-bold text-foreground">{format(product.price)}</span>
                 </div>
-              )}
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] text-muted-foreground font-medium">Initial Deposit Required</span>
+                  <span className="text-sm font-black text-primary">{format(product.creditMinimum || 0)}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] text-muted-foreground font-medium">Monthly Installment (12mo)</span>
+                  <span className="text-sm font-bold text-foreground">{format((product.price - (product.creditMinimum || 0)) / 12)}/mo</span>
+                </div>
+              </div>
+
+              <div className="bg-primary/10 p-2 rounded-xl flex items-start gap-2">
+                <Info className="w-3 h-3 text-primary mt-0.5 flex-shrink-0" />
+                <p className="text-[9px] text-primary/80 leading-tight">
+                  This is an estimate based on a 12-month plan. Actual monthly payments may vary based on your selected credit plan during checkout.
+                </p>
+              </div>
             </div>
           )}
         </div>

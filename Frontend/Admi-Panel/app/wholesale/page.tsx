@@ -424,7 +424,7 @@ function WholesaleContent() {
         onAdd={()=>{
           if (section==='accounts') { setPForm({name:'',contact:'',status:'Active',tier:'Bronze'}); setAddPartnerOpen(true); }
           if (section==='deals') { setDForm({title:'',description:'',discount:'',minOrder:'',validUntil:'',status:'Active'}); setAddDealOpen(true); }
-          if (section==='inventory') { setIForm({name:'',sku:'',price:'',moq:'',category:'Electronics',status:'Active',description:'',imageUrl:'',images:[],specifications:''}); setInvImages([]); setAddInvOpen(true); }
+          if (section==='inventory') { setIForm({name:'',sku:'',price:'',moq:'',category:'Electronics',status:'Active',description:'',imageUrl:'',images:[],specifications:'',stockTotal:'100',stockCurrent:'100'}); setInvImages([]); setAddInvOpen(true); }
         }}
         addLabel={section==='accounts'?'Add Partner':section==='deals'?'Add Deal':'Add Product'}
       />

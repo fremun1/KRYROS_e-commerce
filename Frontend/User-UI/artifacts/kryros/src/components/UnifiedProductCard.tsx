@@ -189,11 +189,18 @@ export default function UnifiedProductCard({
             </div>
           )}
 
-          {/* 3. Credit text — show even if out of stock */}
+          {/* 3. Credit details — Total, Deposit, and Monthly */}
           {product.allowCredit && !isStoreClosed && (
-            <span className="text-[10px] md:text-xs text-primary font-bold whitespace-nowrap truncate">
-              {monthlyText}
-            </span>
+            <div className="flex flex-col gap-0.5 mt-1 bg-primary/5 p-1.5 rounded-lg border border-primary/10">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[9px] text-muted-foreground">Deposit:</span>
+                <span className="text-[10px] font-bold text-primary">{format(product.creditMinimum || 0)}</span>
+              </div>
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[9px] text-muted-foreground">Monthly:</span>
+                <span className="text-[10px] font-black text-foreground">{format((product.price - (product.creditMinimum || 0)) / 12)}/mo</span>
+              </div>
+            </div>
           )}
 
           {/* 4. Wholesale details */}
