@@ -489,64 +489,45 @@ export default function CheckoutPage() {
   const hasPaymentError = !!orderError || mmPhase === "failed_init" || mmPhase === "timed_out";
 
   return (
-    <div className="w-full bg-background h-screen flex flex-col overflow-hidden">
+    <div className="max-w-lg mx-auto bg-background min-h-screen flex flex-col">
       {/* Header */}
-      <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-xl border-b border-border">
-        <div className="flex items-center justify-between px-4 py-3.5 max-w-6xl mx-auto">
-
-          {/* Left: back button + KRYROS brand */}
-          <div className="flex items-center gap-2.5">
-            <button
-              onClick={() => navigate("/cart")}
-              className="p-1.5 -ml-1.5 hover:bg-muted rounded-full transition-colors"
-              aria-label="Back to cart"
-            >
-              <ChevronLeft className="w-5 h-5 text-foreground" />
-            </button>
-            <span className="text-lg font-black tracking-tight select-none leading-none">
-              <span className="text-foreground">KRY</span><span className="text-primary">ROS</span>
-            </span>
-          </div>
-
-          {/* Center: green trust badge */}
-          <div className="w-9 h-9 bg-[#4CAF50] rounded-xl flex items-center justify-center shadow-md flex-shrink-0">
-            <Check className="w-5 h-5 text-white" strokeWidth={3} />
-          </div>
-
-          {/* Right: Continue Shopping */}
-          <Link href="/shop">
-            <span className="text-sm font-semibold text-primary hover:text-primary/80 transition-colors cursor-pointer whitespace-nowrap">
-              Continue Shopping
-            </span>
-          </Link>
-
-        </div>
+      <div className="sticky top-0 z-20 flex items-center justify-between px-4 pt-5 pb-4 bg-background/90 backdrop-blur border-b border-border/40">
+        <button onClick={() => navigate("/cart")} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground">
+          <ChevronLeft className="w-4 h-4" /> Back to Cart
+        </button>
+        <span className="text-[11px] font-semibold text-muted-foreground">Secure Checkout</span>
       </div>
 
-      {/* Progress steps — 4 equal segments, always full width */}
-      <div className="px-4 pb-3">
-        <div className="flex justify-between text-[11px] font-semibold text-muted-foreground mb-1.5">
-          <span className={step >= 1 ? "text-primary" : ""}>Contact</span>
-          <span className={step >= 2 ? "text-primary" : ""}>Address</span>
-          <span className={step >= 3 ? "text-primary" : ""}>Shipping</span>
-          <span className={step >= 4 ? "text-primary" : ""}>Payment</span>
+      {/* Progress steps */}
+      <div className="px-4 pt-4 pb-5">
+        {/* Step labels — each takes equal width so spacing is even */}
+        <div className="grid grid-cols-4 text-[11px] font-semibold text-muted-foreground mb-3">
+          {[["Contact", 1], ["Address", 2], ["Shipping", 3], ["Payment", 4]].map(([label, s]) => (
+            <div key={label as string} className={`flex flex-col items-center gap-1.5 ${step >= (s as number) ? "text-primary" : ""}`}>
+              <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold border-2 transition-all ${step > (s as number) ? "bg-primary border-primary text-white" : step === (s as number) ? "border-primary text-primary bg-primary/10" : "border-border text-muted-foreground"}`}>
+                {step > (s as number) ? <Check className="w-3 h-3" /> : s as number}
+              </div>
+              <span>{label as string}</span>
+            </div>
+          ))}
         </div>
-        <div className="flex gap-1.5">
-          <div className={`flex-1 h-1.5 rounded-full transition-all duration-300 ${step >= 1 ? "bg-primary" : "bg-border"}`} />
-          <div className={`flex-1 h-1.5 rounded-full transition-all duration-300 ${step >= 2 ? "bg-primary" : "bg-border"}`} />
-          <div className={`flex-1 h-1.5 rounded-full transition-all duration-300 ${step >= 3 ? "bg-primary" : "bg-border"}`} />
-          <div className={`flex-1 h-1.5 rounded-full transition-all duration-300 ${step >= 4 ? "bg-primary" : "bg-border"}`} />
+        {/* Progress bar — divided into 4 equal segments */}
+        <div className="flex gap-1">
+          {[1, 2, 3, 4].map((s) => (
+            <div key={s} className="flex-1 h-1 rounded-full bg-muted overflow-hidden">
+              <div className={`h-full rounded-full bg-gradient-to-r from-primary to-[var(--kryros-primary-hover)] transition-all duration-300 ${step >= s ? "w-full" : "w-0"}`} />
+            </div>
+          ))}
         </div>
       </div>
 
       {/* Main content */}
-      <div className="flex-1 overflow-y-auto space-y-3 pb-2 lg:flex lg:flex-row lg:gap-8 lg:px-8 lg:space-y-0 lg:pb-8 lg:items-start">
+      <div className="flex-1 overflow-y-auto px-4 pb-6 space-y-3">
 
-        <div className="space-y-3 lg:flex-1 lg:overflow-y-auto lg:pb-4">
         {/* ── STEP 1: Contact ── */}
         {step === 1 && (
           <div className="space-y-4">
-            <div className="bg-card border border-border rounded-xl p-4 space-y-4">
+            <div className="bg-card border border-border rounded-3xl p-5 space-y-4">
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-bold text-foreground">Contact information</h2>
                 {authUser
@@ -619,14 +600,16 @@ export default function CheckoutPage() {
               )}
             </div>
 
-
+            <button onClick={goToStep2} className="w-full py-3 rounded-2xl bg-[var(--kryros-primary-hover)] text-white text-sm font-semibold flex items-center justify-center gap-2">
+              Continue to Address <ChevronRight className="w-4 h-4" />
+            </button>
           </div>
         )}
 
         {/* ── STEP 2: Address ── */}
         {step === 2 && (
           <div className="space-y-4">
-            <div className="bg-card border border-border rounded-xl p-4 space-y-4">
+            <div className="bg-card border border-border rounded-3xl p-5 space-y-4">
               <h2 className="text-sm font-bold text-foreground">Shipping address</h2>
 
               {/* Country — dynamic from admin panel */}
@@ -679,14 +662,17 @@ export default function CheckoutPage() {
               </div>
             </div>
 
-
+            <button onClick={goToStep3} className="w-full py-3 rounded-2xl bg-[var(--kryros-primary-hover)] text-white text-sm font-semibold flex items-center justify-center gap-2">
+              Continue to Shipping <ChevronRight className="w-4 h-4" />
+            </button>
+            <button onClick={() => setStep(1)} className="w-full text-xs text-muted-foreground text-center hover:text-primary transition-colors py-2">← Back to Contact</button>
           </div>
         )}
 
         {/* ── STEP 3: Shipping ── */}
         {step === 3 && (
           <div className="space-y-4">
-            <div className="bg-card border border-border rounded-xl p-4 space-y-4">
+            <div className="bg-card border border-border rounded-3xl p-4 space-y-4">
               <h2 className="text-sm font-bold text-foreground">
                 Delivery options <span className="text-[11px] text-muted-foreground font-normal">(for {city || "your area"})</span>
               </h2>
@@ -714,14 +700,17 @@ export default function CheckoutPage() {
                 })}
               </div>
             </div>
-
+            <button onClick={() => setStep(4)} className="w-full py-3 rounded-2xl bg-[var(--kryros-primary-hover)] text-white text-sm font-semibold flex items-center justify-center gap-2">
+              Continue to Payment <ChevronRight className="w-4 h-4" />
+            </button>
+            <button onClick={() => setStep(2)} className="w-full text-xs text-muted-foreground text-center hover:text-primary transition-colors py-2">← Back to Address</button>
           </div>
         )}
 
         {/* ── STEP 4: Payment ── */}
         {step === 4 && (
           <div className="space-y-4">
-            <div className="bg-card border border-border rounded-xl p-4 space-y-4">
+            <div className="bg-card border border-border rounded-3xl p-4 space-y-4">
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-bold text-foreground">How would you like to pay?</h2>
                 <span className="text-[11px] text-muted-foreground">Powered by Kryros Pay</span>
@@ -764,7 +753,7 @@ export default function CheckoutPage() {
               )}
             </div>
 
-            <div className="bg-card border border-border rounded-3xl p-4 space-y-3 lg:hidden">
+            <div className="bg-card border border-border rounded-3xl p-4 space-y-3">
               <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Subtotal</span><span className="font-semibold">{format(SUBTOTAL)}</span></div>
               <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Shipping</span><span className="font-semibold">{shippingPrice === 0 ? "Free" : format(shippingPrice)}</span></div>
               <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Estimated tax</span><span className="font-semibold">{format(TAX)}</span></div>
@@ -774,57 +763,16 @@ export default function CheckoutPage() {
               <p className="text-[10px] text-muted-foreground">All payments are processed securely. By completing your purchase, you agree to our Terms of Service.</p>
             </div>
 
-
+            <button onClick={() => setStep(3)} className="w-full text-xs text-muted-foreground text-center hover:text-primary transition-colors py-2">← Back to Shipping</button>
           </div>
-        )}
-        </div>{/* end steps left-col */}
-
-        {/* Desktop-only sticky order summary */}
-        <div className="hidden lg:block w-80 flex-shrink-0 sticky top-20">
-          <div className="bg-card border border-border rounded-3xl p-5 space-y-3">
-            <h3 className="text-sm font-bold text-foreground">Order Summary</h3>
-            <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Subtotal</span><span className="font-semibold">{format(SUBTOTAL)}</span></div>
-            <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Shipping</span><span className="font-semibold">{shippingPrice === 0 ? "Free" : format(shippingPrice)}</span></div>
-            <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Estimated tax</span><span className="font-semibold">{format(TAX)}</span></div>
-            <div className="pt-2 border-t border-border flex items-center justify-between text-sm font-black"><span>Total</span><span className="text-primary">{format(total)}</span></div>
-            <p className="text-[10px] text-muted-foreground">All payments are processed securely. By completing your purchase, you agree to our Terms of Service.</p>
-          </div>
-        </div>
-      </div>
-
-      {/* ── Sticky Bottom Action Bar (mobile) ── */}
-      <div className="lg:hidden bg-background border-t border-border/30 shrink-0">
-        {step === 1 && (
-          <button onClick={goToStep2} className="w-full py-3.5 bg-[var(--kryros-primary-hover)] text-white text-sm font-semibold flex items-center justify-center gap-2">
-            Continue to Address <ChevronRight className="w-4 h-4" />
-          </button>
-        )}
-        {step === 2 && (
-          <>
-            <button onClick={goToStep3} className="w-full py-3.5 bg-[var(--kryros-primary-hover)] text-white text-sm font-semibold flex items-center justify-center gap-2">
-              Continue to Shipping <ChevronRight className="w-4 h-4" />
-            </button>
-            <button onClick={() => setStep(1)} className="w-full text-[11px] text-muted-foreground text-center hover:text-primary transition-colors py-2">← Back to Contact</button>
-          </>
-        )}
-        {step === 3 && (
-          <>
-            <button onClick={() => setStep(4)} className="w-full py-3.5 bg-[var(--kryros-primary-hover)] text-white text-sm font-semibold flex items-center justify-center gap-2">
-              Continue to Payment <ChevronRight className="w-4 h-4" />
-            </button>
-            <button onClick={() => setStep(2)} className="w-full text-[11px] text-muted-foreground text-center hover:text-primary transition-colors py-2">← Back to Address</button>
-          </>
-        )}
-        {step === 4 && (
-          <button onClick={() => setStep(3)} className="w-full text-[11px] text-muted-foreground text-center hover:text-primary transition-colors py-2.5">← Back to Shipping</button>
         )}
       </div>
 
       {/* ── PAYMENT METHOD PANELS (bottom sheet) ── */}
       {openMethod && step === 4 && (
-        <div className="fixed inset-0 z-50 flex flex-col justify-end lg:items-center lg:justify-center lg:p-6">
+        <div className="fixed inset-0 z-50 flex flex-col justify-end">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setOpenMethod(null)} />
-          <div className="relative bg-background rounded-t-3xl shadow-2xl max-h-[92vh] overflow-y-auto lg:rounded-3xl lg:max-w-xl lg:w-full">
+          <div className="relative bg-background rounded-t-3xl shadow-2xl max-h-[92vh] overflow-y-auto">
             <div className="flex justify-center pt-3 pb-1"><div className="w-10 h-1 rounded-full bg-border" /></div>
             <div className="px-5 pb-8 space-y-4">
               {/* Sheet header */}
