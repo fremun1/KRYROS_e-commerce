@@ -238,6 +238,7 @@ export default function CheckoutPage() {
   const [lastName,      setLastName]      = useState(authUser?.lastName ?? "");
   const [email,         setEmail]         = useState(authUser?.email ?? "");
   const [phone,         setPhone]         = useState("");
+  const [orderNotes,    setOrderNotes]    = useState("");
   const [phoneCountry,  setPhoneCountry]  = useState(DIAL_COUNTRIES[0]);
   const [showCountryPicker, setShowCountryPicker] = useState(false);
   const [countrySearch, setCountrySearch] = useState("");
@@ -286,7 +287,7 @@ export default function CheckoutPage() {
     currencyCode: selectedCurrency.code,
     currencySymbol: selectedCurrency.symbol,
     exchangeRate: selectedCurrency.exchangeRate,
-    ...(openMethod === "mobile" && mmProvider ? { notes: `Mobile money provider: ${mmProvider}` } : {}),
+    ...(openMethod === "mobile" && mmProvider ? { notes: `Mobile money provider: ${mmProvider}${orderNotes ? ` | Notes: ${orderNotes}` : ""}` } : orderNotes ? { notes: orderNotes } : {}),
     addressDetails: {
       email, firstName, lastName, phone,
       address: addressLine || `${city}, ${state}, ${country}`,
@@ -569,6 +570,14 @@ export default function CheckoutPage() {
                   </div>
                   <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone number" type="tel" className="w-full px-4 py-3.5 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
+                  <Mail className="w-3.5 h-3.5" />Order notes
+                  <span className="text-[10px] text-muted-foreground font-normal ml-1">(optional)</span>
+                </label>
+                <textarea value={orderNotes} onChange={(e) => setOrderNotes(e.target.value)} placeholder="Any special instructions or notes for your order..." rows={4} className="w-full px-4 py-3.5 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all resize-none" />
               </div>
 
               {/* Country picker modal (for phone dial code) */}
