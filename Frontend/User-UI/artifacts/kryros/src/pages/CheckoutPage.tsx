@@ -3,7 +3,7 @@ import { Link, useLocation } from "wouter";
 import { useCartStore } from "@/store/cartStore";
 import { useAuthStore } from "@/store/authStore";
 import { useCurrencyStore } from "@/store/currencyStore";
-import { API_BASE } from "@/lib/api";
+import { API_BASE, fetchMatchingShippingMethods, ApiShippingMethod } from "@/lib/api";
 import { toast } from "sonner";
 import {
   Check,
@@ -58,13 +58,6 @@ const DIAL_COUNTRIES = [
   { name: "India",        code: "IN", dial: "+91"  },
   { name: "Australia",    code: "AU", dial: "+61"  },
   { name: "UAE",          code: "AE", dial: "+971" },
-];
-
-// ── Shipping options (static for now — can be wired to zones API later) ──────
-const SHIPPING_OPTIONS = [
-  { id: "standard", label: "Standard Delivery", detail: "5–10 business days", price: 0,  icon: Truck },
-  { id: "express",  label: "Express Delivery",  detail: "2–3 business days",  price: 15, icon: Zap   },
-  { id: "priority", label: "Priority Delivery", detail: "Next business day",  price: 30, icon: Clock },
 ];
 
 const DEFAULT_CHECKOUT_METHODS = [
@@ -154,8 +147,12 @@ export default function CheckoutPage() {
   const [zipCode,      setZipCode]     = useState("");
 
   // Shipping & payment
-  const [shippingId, setShippingId] = useState("standard");
-  const shippingPrice = SHIPPING_OPTIONS.find((s) => s.id === shippingId)?.price ?? 0;
+  const [shippingMethods, setShippingMethods] = useState<ApiShippingMethod[]>([]);
+  const [isLoadingShipping, setIsLoadingShipping] = useState(false);
+  const [shippingId, setShippingId] = useState("");
+  const selectedShipping = shippingMethods.find((m) => m.id === shippingId);
+  const shippingPrice = selectedShipping ? Number(selectedShipping.fee) : 0;
+
   const SUBTOTAL = cartItems.reduce((s, i) => s + i.price * i.qty, 0);
   const DISCOUNT = 0;
   const TAX = 0;
@@ -199,6 +196,25 @@ export default function CheckoutPage() {
         setShippingCountries([{ name: 'Zambia', code: 'ZM', shippingEnabled: true, isActive: true }]);
       });
   }, []);
+
+  // ── Dynamic shipping methods ────────────────────────────────────────────────
+  useEffect(() => {
+    if (step === 3 && country) {
+      setIsLoadingShipping(true);
+      fetchMatchingShippingMethods({
+        stateName: state,
+        cityName: city,
+        manual: true,
+      })
+        .then((methods) => {
+          setShippingMethods(methods);
+          if (methods.length > 0 && !shippingId) {
+            setShippingId(methods[0].id);
+          }
+        })
+        .finally(() => setIsLoadingShipping(false));
+    }
+  }, [step, country, state, city]);
 
   // ── Dynamic payment config from admin panel ─────────────────────────────────
   const [bankProviders, setBankProviders]   = useState<{ name: string; config?: { accountName?: string; accountNumber?: string } }[]>([]);
@@ -688,31 +704,43 @@ export default function CheckoutPage() {
                 Delivery options <span className="text-[11px] text-muted-foreground font-normal">(for {city || "your area"})</span>
               </h2>
               <div className="space-y-3">
-                {SHIPPING_OPTIONS.map((option) => {
-                  const Icon = option.icon;
-                  const isSelected = shippingId === option.id;
-                  return (
-                    <button key={option.id} onClick={() => setShippingId(option.id)} className={`w-full flex items-center gap-3 px-4 py-4 rounded-2xl border text-left transition-all ${isSelected ? "border-primary bg-primary/5" : "border-border hover:border-primary/40 hover:bg-muted/40"}`}>
-                      <div className={`w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 ${isSelected ? "bg-primary text-white" : "bg-muted text-foreground"}`}>
-                        <Icon className="w-5 h-5" />
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between gap-2">
-                          <p className="text-sm font-semibold text-foreground">{option.label}</p>
-                          <p className="text-sm font-semibold text-foreground">{option.price === 0 ? "Free" : format(option.price)}</p>
+                {isLoadingShipping ? (
+                  <div className="py-12 flex flex-col items-center justify-center gap-3">
+                    <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+                    <p className="text-xs text-muted-foreground">Finding delivery options...</p>
+                  </div>
+                ) : shippingMethods.length > 0 ? (
+                  shippingMethods.map((option) => {
+                    const isSelected = shippingId === option.id;
+                    return (
+                      <button key={option.id} onClick={() => setShippingId(option.id)} className={`w-full flex items-center gap-3 px-4 py-4 rounded-2xl border text-left transition-all ${isSelected ? "border-primary bg-primary/5" : "border-border hover:border-primary/40 hover:bg-muted/40"}`}>
+                        <div className={`w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 ${isSelected ? "bg-primary text-white" : "bg-muted text-foreground"}`}>
+                          <Truck className="w-5 h-5" />
                         </div>
-                        <p className="text-xs text-muted-foreground mt-0.5">{option.detail}</p>
-                      </div>
-                      <div className={`w-4 h-4 rounded-full border flex items-center justify-center text-[8px] ${isSelected ? "border-primary bg-primary text-white" : "border-border bg-background"}`}>
-                        {isSelected && "✓"}
-                      </div>
-                    </button>
-                  );
-                })}
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="text-sm font-semibold text-foreground">{option.name}</p>
+                            <p className="text-sm font-semibold text-foreground">{Number(option.fee) === 0 ? "Free" : format(Number(option.fee))}</p>
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-0.5">{option.description || (option.estimatedDays ? `Estimated ${option.estimatedDays}` : "")}</p>
+                        </div>
+                        <div className={`w-4 h-4 rounded-full border flex items-center justify-center text-[8px] ${isSelected ? "border-primary bg-primary text-white" : "border-border bg-background"}`}>
+                          {isSelected && "✓"}
+                        </div>
+                      </button>
+                    );
+                  })
+                ) : (
+                  <div className="py-12 px-6 flex flex-col items-center justify-center text-center gap-2 border-2 border-dashed border-border rounded-3xl">
+                    <MapPin className="w-8 h-8 text-muted-foreground/40" />
+                    <p className="text-sm font-bold text-foreground">No shipping available</p>
+                    <p className="text-xs text-muted-foreground">We don't have shipping options for your current location yet.</p>
+                  </div>
+                )}
               </div>
             </div>
             <div className="px-4 py-4 border-t border-border/40 bg-background space-y-2">
-              <button onClick={() => setStep(4)} className="w-full py-4 rounded-2xl bg-[var(--kryros-primary-hover)] text-white text-sm font-bold flex items-center justify-center gap-2">
+              <button onClick={() => setStep(4)} disabled={!shippingId} className="w-full py-4 rounded-2xl bg-[var(--kryros-primary-hover)] text-white text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
                 Continue to Payment <ChevronRight className="w-4 h-4" />
               </button>
               <button onClick={() => setStep(2)} className="w-full text-xs text-muted-foreground text-center hover:text-primary transition-colors py-2">← Back to Address</button>
