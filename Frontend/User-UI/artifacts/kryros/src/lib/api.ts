@@ -29,6 +29,7 @@ export interface Product {
   // Credit / Get Now
   allowCredit?: boolean;
   creditMessage?: string | null;
+  creditMinimum?: number | null;
   // Wholesale
   isWholesaleOnly?: boolean;
   wholesalePrice?: number | null;
@@ -210,6 +211,7 @@ function normalizeProduct(p: any): Product {
     // Credit
     allowCredit: !!(p.allowCredit),
     creditMessage: p.creditMessage ?? null,
+    creditMinimum: p.creditMinimum ? Number(p.creditMinimum) : null,
     // Wholesale
     isWholesaleOnly: !!(p.isWholesaleOnly),
     wholesalePrice: p.wholesalePrice ? Number(p.wholesalePrice) : null,
