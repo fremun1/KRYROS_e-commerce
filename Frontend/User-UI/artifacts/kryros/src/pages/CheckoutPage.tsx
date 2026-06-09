@@ -60,8 +60,6 @@ const DIAL_COUNTRIES = [
   { name: "UAE",          code: "AE", dial: "+971" },
 ];
 
-
-
 const DEFAULT_CHECKOUT_METHODS = [
   { id: "mobile",   label: "Mobile Money",   sub: "MTN, Airtel, Zamtel",       icon: Smartphone, iconBg: "bg-primary/10" },
   { id: "card",     label: "Card Payment",   sub: "Visa, Mastercard & more",   icon: CreditCard, iconBg: "bg-blue-50 dark:bg-blue-900/20" },
@@ -118,7 +116,7 @@ export default function CheckoutPage() {
   const selectedCurrency = useCurrencyStore((s) => s.selected);
   const allCurrencies    = useCurrencyStore((s) => s.currencies);
 
-  // ── State ───────────────────────────────────────────────────────────────────
+  // ── State (Declared first to avoid ReferenceError) ─────────────────────────
   const [step, setStep] = useState(1);
   const [ordered,          setOrdered]          = useState(false);
   const [isSubmitting,     setIsSubmitting]      = useState(false);
@@ -146,6 +144,31 @@ export default function CheckoutPage() {
   const [city,         setCity]        = useState("");
   const [addressLine,  setAddressLine] = useState("");
   const [zipCode,      setZipCode]     = useState("");
+
+  // Shipping & payment
+  const [shippingId, setShippingId] = useState("");
+  const [shippingMethods, setShippingMethods] = useState<ApiShippingMethod[]>([]);
+  const [shippingLoading, setShippingLoading] = useState(false);
+  
+  const selectedShipping = shippingMethods.find((s) => s.id === shippingId);
+  const shippingPrice = selectedShipping ? Number(selectedShipping.fee) : 0;
+  const SUBTOTAL = cartItems.reduce((s, i) => s + i.price * i.qty, 0);
+  const DISCOUNT = 0;
+  const TAX = 0;
+  const total = SUBTOTAL - DISCOUNT + TAX + shippingPrice;
+
+  const [openMethod,       setOpenMethod]       = useState<string | null>(null);
+  const [showProviderDrop, setShowProviderDrop] = useState(false);
+  const [bankRef]   = useState(() => "PAY-" + Date.now().toString(36).toUpperCase().slice(-8));
+  const [cardNum,   setCardNum]   = useState("");
+  const [expiry,    setExpiry]    = useState("");
+  const [cvv,       setCvv]       = useState("");
+  const [cardName,  setCardName]  = useState("");
+  const [saveCard,  setSaveCard]  = useState(false);
+  const [mmProvider, setMmProvider] = useState("MTN");
+  const [mmPhone,   setMmPhone]   = useState("");
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [proofFile, setProofFile] = useState<string | null>(null);
 
   // ── Dynamic countries from admin panel ──────────────────────────────────────
   type ShippingCountry = { id?: string; name: string; code: string; shippingEnabled: boolean; isActive: boolean };
@@ -175,18 +198,6 @@ export default function CheckoutPage() {
   }, []);
 
   // ── Dynamic shipping methods from admin panel ────────────────────────────────
-  const [shippingMethods, setShippingMethods] = useState<ApiShippingMethod[]>([]);
-  const [shippingLoading, setShippingLoading] = useState(false);
-
-  // Shipping & payment
-  const [shippingId, setShippingId] = useState("");
-  const selectedShipping = shippingMethods.find((s) => s.id === shippingId);
-  const shippingPrice = selectedShipping ? Number(selectedShipping.fee) : 0;
-  const SUBTOTAL = cartItems.reduce((s, i) => s + i.price * i.qty, 0);
-  const DISCOUNT = 0;
-  const TAX = 0;
-  const total = SUBTOTAL - DISCOUNT + TAX + shippingPrice;
-
   useEffect(() => {
     if (step !== 3) return;
     setShippingLoading(true);
@@ -277,19 +288,6 @@ export default function CheckoutPage() {
       }),
     }).catch(() => {});
   };
-
-  const [openMethod,       setOpenMethod]       = useState<string | null>(null);
-  const [showProviderDrop, setShowProviderDrop] = useState(false);
-  const [bankRef]   = useState(() => "PAY-" + Date.now().toString(36).toUpperCase().slice(-8));
-  const [cardNum,   setCardNum]   = useState("");
-  const [expiry,    setExpiry]    = useState("");
-  const [cvv,       setCvv]       = useState("");
-  const [cardName,  setCardName]  = useState("");
-  const [saveCard,  setSaveCard]  = useState(false);
-  const [mmProvider, setMmProvider] = useState("MTN");
-  const [mmPhone,   setMmPhone]   = useState("");
-  const fileRef = useRef<HTMLInputElement>(null);
-  const [proofFile, setProofFile] = useState<string | null>(null);
 
   useEffect(() => {
     if (cartItems.length === 0 && !ordered && mmPhase === "idle") navigate("/cart");
@@ -499,7 +497,7 @@ export default function CheckoutPage() {
               <span>Open WhatsApp</span>
             </button>
           )}
-          <Link href="/shop">
+          <Link href="/">
             <button className="w-full py-3 rounded-2xl border border-border bg-background text-sm font-semibold hover:bg-primary/5 transition-colors">Continue Shopping</button>
           </Link>
         </div>
@@ -611,7 +609,7 @@ export default function CheckoutPage() {
               )}
             </div>
 
-            <button onClick={goToStep2} className="w-full py-3 rounded-2xl bg-[var(--kryros-primary-hover)] text-white text-sm font-semibold flex items-center justify-center gap-2">
+            <button onClick={goToStep1} className="w-full py-3 rounded-2xl bg-[var(--kryros-primary-hover)] text-white text-sm font-semibold flex items-center justify-center gap-2">
               Continue to Address <ChevronRight className="w-4 h-4" />
             </button>
           </div>
@@ -800,8 +798,7 @@ export default function CheckoutPage() {
               {/* Sheet header */}
               <div className="flex items-center justify-between pt-1 pb-2">
                 {(() => {
-                  const m = activeCheckoutMethods.find((x) => x.id === openMethod);
-                  if (!m) return null;
+                  const m = activeCheckoutMethods.find((x) => x.id === openMethod)!;
                   const Icon = m.icon;
                   return (
                     <div className="flex items-center gap-2.5">
