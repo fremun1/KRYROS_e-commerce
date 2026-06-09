@@ -528,7 +528,7 @@ export default function CheckoutPage() {
         {/* ── STEP 1: Contact ── */}
         {step === 1 && (
           <div className="flex-1 flex flex-col">
-            <div className="flex-1 overflow-y-auto bg-card border-t border-border px-4 py-5 space-y-4">
+            <div className="flex-1 overflow-y-auto bg-card border-t border-border px-4 py-4 space-y-3">
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-bold text-foreground">Contact information</h2>
                 {authUser
@@ -577,7 +577,7 @@ export default function CheckoutPage() {
                   <Mail className="w-3.5 h-3.5" />Order notes
                   <span className="text-[10px] text-muted-foreground font-normal ml-1">(optional)</span>
                 </label>
-                <textarea value={orderNotes} onChange={(e) => setOrderNotes(e.target.value)} placeholder="Any special instructions or notes for your order..." rows={4} className="w-full px-4 py-3.5 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all resize-none" />
+                <textarea value={orderNotes} onChange={(e) => setOrderNotes(e.target.value)} placeholder="Any special instructions or notes for your order..." rows={2} className="w-full px-4 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all resize-none" />
               </div>
 
               {/* Country picker modal (for phone dial code) */}
