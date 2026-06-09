@@ -609,7 +609,7 @@ export default function CheckoutPage() {
               )}
             </div>
 
-            <button onClick={goToStep1} className="w-full py-3 rounded-2xl bg-[var(--kryros-primary-hover)] text-white text-sm font-semibold flex items-center justify-center gap-2">
+            <button onClick={goToStep2} className="w-full py-3 rounded-2xl bg-[var(--kryros-primary-hover)] text-white text-sm font-semibold flex items-center justify-center gap-2">
               Continue to Address <ChevronRight className="w-4 h-4" />
             </button>
           </div>
