@@ -527,7 +527,7 @@ export default function CheckoutPage() {
         {/* ── STEP 1: Contact ── */}
         {step === 1 && (
           <div className="flex-1 flex flex-col">
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto h-full">
               <div className="bg-card border-y border-border px-4 py-5 space-y-4 min-h-full">
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-bold text-foreground">Contact information</h2>
@@ -613,7 +613,7 @@ export default function CheckoutPage() {
         {/* ── STEP 2: Address ── */}
         {step === 2 && (
           <div className="flex-1 flex flex-col">
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto h-full">
               <div className="bg-card border-y border-border px-4 py-5 space-y-4 min-h-full">
               <h2 className="text-sm font-bold text-foreground">Shipping address</h2>
 
@@ -678,7 +678,7 @@ export default function CheckoutPage() {
         {/* ── STEP 3: Shipping ── */}
         {step === 3 && (
           <div className="flex-1 flex flex-col">
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto h-full">
               <div className="bg-card border-y border-border px-4 py-5 space-y-4 min-h-full">
               <h2 className="text-sm font-bold text-foreground">
                 Delivery options <span className="text-[11px] text-muted-foreground font-normal">(for {city || "your area"})</span>
@@ -720,7 +720,7 @@ export default function CheckoutPage() {
         {/* ── STEP 4: Payment ── */}
         {step === 4 && (
           <div className="flex-1 flex flex-col">
-            <div className="flex-1 overflow-y-auto space-y-0">
+            <div className="flex-1 overflow-y-auto space-y-0 h-full">
               <div className="bg-card border-y border-border px-4 py-5 space-y-4 min-h-full">
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-bold text-foreground">How would you like to pay?</h2>
