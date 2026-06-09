@@ -543,8 +543,8 @@ export default function CheckoutPage() {
 
         {/* ── STEP 1: Contact ── */}
         {step === 1 && (
-          <div className="flex-1 flex flex-col">
-            <div className="flex-1 overflow-y-auto bg-card border-t border-border px-4 py-4 space-y-3">
+          <div className="flex-1 flex flex-col overflow-y-auto">
+            <div className="bg-card border-t border-border px-4 py-4 space-y-3">
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-bold text-foreground">Contact information</h2>
                 {authUser
@@ -593,7 +593,14 @@ export default function CheckoutPage() {
                   <Mail className="w-3.5 h-3.5" />Order notes
                   <span className="text-[10px] text-muted-foreground font-normal ml-1">(optional)</span>
                 </label>
-                <textarea value={orderNotes} onChange={(e) => setOrderNotes(e.target.value)} placeholder="Any special instructions or notes for your order..." rows={2} className="w-full px-4 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all resize-none" />
+                <textarea value={orderNotes} onChange={(e) => setOrderNotes(e.target.value)} placeholder="Any special instructions or notes for your order..." rows={4} className="w-full px-4 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all resize-none" />
+              </div>
+
+              {/* Continue Button — now right under the content */}
+              <div className="pt-2 pb-4">
+                <button onClick={goToStep2} className="w-full py-4 rounded-2xl bg-[var(--kryros-primary-hover)] text-white text-sm font-bold flex items-center justify-center gap-2 shadow-lg active:scale-[0.98] transition-all">
+                  Continue to Address <ChevronRight className="w-4 h-4" />
+                </button>
               </div>
 
               {/* Country picker modal (for phone dial code) */}
@@ -623,12 +630,6 @@ export default function CheckoutPage() {
                   </div>
                 </div>
               )}
-            </div>
-            {/* Button pinned to bottom */}
-            <div className="px-4 py-4 border-t border-border/40 bg-background">
-              <button onClick={goToStep2} className="w-full py-4 rounded-2xl bg-[var(--kryros-primary-hover)] text-white text-sm font-bold flex items-center justify-center gap-2">
-                Continue to Address <ChevronRight className="w-4 h-4" />
-              </button>
             </div>
           </div>
         )}
