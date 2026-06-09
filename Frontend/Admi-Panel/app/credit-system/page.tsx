@@ -7,7 +7,8 @@ import { Modal, ConfirmDialog, FormField, ModalFooter } from '@/components/admin
 import { useTheme } from '@/contexts/theme-context';
 import { CreditCard } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { getCreditAccounts, getCreditPlans, createCreditPlan, updateCreditPlan, deleteCreditPlan } from '@/lib/api';
+import { getCreditAccounts, getCreditPlans, createCreditPlan, updateCreditPlan, deleteCreditPlan, getProducts, createProduct, updateProduct, deleteProduct } from '@/lib/api';
+import CloudinaryUpload from '@/components/ui/file-upload';
 
 // ─── Types ────────────────────────────────────────────────
 type Credit = { id:string; customer:string; phone:string; limit:string; used:string; available:string; due:string; status:string; plan:string; outstanding:string };
@@ -90,7 +91,96 @@ function CreditContent() {
   const [planForm, setPlanForm] = useState({ name:'', months:'3', interest:'0%', minAmount:'', maxAmount:'', status:'Active' });
 
   // Installment Products state
-  const [instProducts] = useState<InstProduct[]>([]);
+  const [instProducts, setInstProducts] = useState<InstProduct[]>([]);
+  const [addProdOpen, setAddProdOpen] = useState(false);
+  const [editProd, setEditProd] = useState<InstProduct|null>(null);
+  const [deleteProd, setDeleteProd] = useState<InstProduct|null>(null);
+  const [prodForm, setProdForm] = useState({ 
+    name:'', sku:'', price:'', status:'Active', 
+    description:'', specifications:'', creditMessage:'', creditMinimum:''
+  });
+  const [prodImages, setProdImages] = useState<string[]>([]);
+
+  const loadCreditProducts = () => {
+    getProducts({ allowCredit: 'true', take: 100 }).then(r => {
+      const raw = Array.isArray(r.data?.data) ? r.data.data : (Array.isArray(r.data) ? r.data : []);
+      setInstProducts(raw.map((p: any) => ({
+        id: p.id,
+        name: p.name,
+        sku: p.sku,
+        price: p.price ? `K${Number(p.price).toLocaleString()}` : '$0',
+        plans: p.allowCredit ? 'Credit Enabled' : 'Disabled',
+        status: p.isActive !== false ? 'Active' : 'Inactive',
+        // Extra for editing
+        description: p.description || '',
+        specifications: p.specifications || '',
+        creditMessage: p.creditMessage || '',
+        creditMinimum: String(p.creditMinimum || ''),
+        images: Array.isArray(p.images) ? p.images.map((img: any) => img?.url || img || '').filter(Boolean) : [],
+        rawPrice: p.price || 0
+      })));
+    });
+  };
+
+  useEffect(() => {
+    if (activeTab === 'products') loadCreditProducts();
+  }, [activeTab]);
+
+  const handleAddProd = async () => {
+    if (!prodForm.name.trim()) { toast.error('Product name required'); return; }
+    try {
+      await createProduct({
+        name: prodForm.name,
+        sku: prodForm.sku,
+        price: Number(prodForm.price) || 0,
+        isActive: prodForm.status === 'Active',
+        allowCredit: true,
+        description: prodForm.description,
+        creditMessage: prodForm.creditMessage,
+        creditMinimum: Number(prodForm.creditMinimum) || 0,
+        imageDataUrls: prodImages,
+        specifications: prodForm.specifications ? [{ key: 'Specifications', value: prodForm.specifications }] : undefined
+      });
+      toast.success('Credit product added');
+      setAddProdOpen(false);
+      loadCreditProducts();
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Failed to add product');
+    }
+  };
+
+  const handleEditProd = async () => {
+    if (!editProd) return;
+    try {
+      await updateProduct(editProd.id, {
+        name: prodForm.name,
+        sku: prodForm.sku,
+        price: Number(prodForm.price) || 0,
+        isActive: prodForm.status === 'Active',
+        description: prodForm.description,
+        creditMessage: prodForm.creditMessage,
+        creditMinimum: Number(prodForm.creditMinimum) || 0,
+        imageDataUrls: prodImages,
+        replaceImages: true,
+        specifications: prodForm.specifications ? [{ key: 'Specifications', value: prodForm.specifications }] : undefined
+      });
+      toast.success('Credit product updated');
+      setEditProd(null);
+      loadCreditProducts();
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Failed to update product');
+    }
+  };
+
+  const handleDeleteProd = async () => {
+    if (!deleteProd) return;
+    try {
+      await deleteProduct(deleteProd.id);
+      toast.success('Product removed');
+      setDeleteProd(null);
+      loadCreditProducts();
+    } catch { toast.error('Failed to delete product'); }
+  };
 
   // ── Handlers ──
   const handleEditCredit = () => {
@@ -233,8 +323,12 @@ function CreditContent() {
         title="Credit System"
         subtitle="Manage installment applications, plans and credit accounts"
         icon={CreditCard}
-        onAdd={activeTab === 'plans' ? () => { setPlanForm({name:'',months:'3',interest:'0%',minAmount:'',maxAmount:'',status:'Active'}); setAddPlanOpen(true); } : undefined}
-        addLabel="Add Plan"
+        onAdd={
+          activeTab === 'plans' ? () => { setPlanForm({name:'',months:'3',interest:'0%',minAmount:'',maxAmount:'',status:'Active'}); setAddPlanOpen(true); } : 
+          activeTab === 'products' ? () => { setProdForm({name:'',sku:'',price:'',status:'Active',description:'',specifications:'',creditMessage:'',creditMinimum:''}); setProdImages([]); setAddProdOpen(true); } :
+          undefined
+        }
+        addLabel={activeTab === 'plans' ? "Add Plan" : "Add Product"}
       />
 
       {/* ── Summary stats ── */}
@@ -299,6 +393,17 @@ function CreditContent() {
           columns={instProdCols}
           data={instProducts as unknown as Record<string,unknown>[]}
           searchPlaceholder="Search installment products..."
+          onEdit={row => {
+            const r = row as any;
+            setProdForm({
+              name: r.name, sku: r.sku, price: String(r.rawPrice || ''), status: r.status,
+              description: r.description, specifications: r.specifications,
+              creditMessage: r.creditMessage, creditMinimum: r.creditMinimum
+            });
+            setProdImages(r.images || []);
+            setEditProd(r);
+          }}
+          onDelete={row => setDeleteProd(row as unknown as InstProduct)}
         />
       )}
 
@@ -347,6 +452,57 @@ function CreditContent() {
         </Modal>
       )}
       <ConfirmDialog open={!!deletePlan} onClose={()=>setDeletePlan(null)} onConfirm={handleDeletePlan} loading={false} title="Delete Plan" message={`Delete "${deletePlan?.name}" permanently?`} />
+
+      {/* ── Modals: Installment Products ── */}
+      <Modal open={addProdOpen} onClose={() => setAddProdOpen(false)} title="Add Credit Product">
+        <FormField label="Product Name *" value={prodForm.name} onChange={v => setProdForm(f => ({ ...f, name: v }))} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Product name" />
+        <div style={{ marginBottom: '14px' }}>
+          <label style={{ display: 'block', fontSize: '11.5px', fontWeight: 600, color: textMuted, marginBottom: '8px', textTransform: 'uppercase' }}>Product Images</label>
+          <CloudinaryUpload
+            value={prodImages[0] || ''}
+            onChange={(url) => setProdImages(prev => url ? [...prev, url] : prev)}
+            multiple
+            onUrlChange={(urls) => setProdImages(urls)}
+          />
+        </div>
+        <FormField label="Description" value={prodForm.description} onChange={v => setProdForm(f => ({ ...f, description: v }))} type="textarea" isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Detailed product description..." />
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+          <FormField label="SKU" value={prodForm.sku} onChange={v => setProdForm(f => ({ ...f, sku: v }))} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. CRD-PRD-001" />
+          <FormField label="Price" value={prodForm.price} onChange={v => setProdForm(f => ({ ...f, price: v }))} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 1500" />
+        </div>
+        <FormField label="Credit Message" value={prodForm.creditMessage} onChange={v => setProdForm(f => ({ ...f, creditMessage: v }))} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. Get now, pay later" />
+        <FormField label="Credit Minimum Deposit" value={prodForm.creditMinimum} onChange={v => setProdForm(f => ({ ...f, creditMinimum: v }))} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 500" />
+        <FormField label="Specifications" value={prodForm.specifications} onChange={v => setProdForm(f => ({ ...f, specifications: v }))} type="textarea" isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Key: Value (one per line)" />
+        <FormField label="Status" value={prodForm.status} onChange={v => setProdForm(f => ({ ...f, status: v }))} options={['Active', 'Inactive']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+        <ModalFooter onClose={() => setAddProdOpen(false)} onSubmit={handleAddProd} loading={false} submitLabel="Add Product" isDark={isDark} border={border} textMain={textMain} />
+      </Modal>
+
+      {editProd && (
+        <Modal open={!!editProd} onClose={() => setEditProd(null)} title={`Edit: ${editProd.name}`}>
+          <FormField label="Product Name *" value={prodForm.name} onChange={v => setProdForm(f => ({ ...f, name: v }))} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Product name" />
+          <div style={{ marginBottom: '14px' }}>
+            <label style={{ display: 'block', fontSize: '11.5px', fontWeight: 600, color: textMuted, marginBottom: '8px', textTransform: 'uppercase' }}>Product Images</label>
+            <CloudinaryUpload
+              value={prodImages[0] || ''}
+              onChange={(url) => setProdImages(prev => url ? [...prev, url] : prev)}
+              multiple
+              onUrlChange={(urls) => setProdImages(urls)}
+            />
+          </div>
+          <FormField label="Description" value={prodForm.description} onChange={v => setProdForm(f => ({ ...f, description: v }))} type="textarea" isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Detailed product description..." />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <FormField label="SKU" value={prodForm.sku} onChange={v => setProdForm(f => ({ ...f, sku: v }))} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. CRD-PRD-001" />
+            <FormField label="Price" value={prodForm.price} onChange={v => setProdForm(f => ({ ...f, price: v }))} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 1500" />
+          </div>
+          <FormField label="Credit Message" value={prodForm.creditMessage} onChange={v => setProdForm(f => ({ ...f, creditMessage: v }))} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. Get now, pay later" />
+          <FormField label="Credit Minimum Deposit" value={prodForm.creditMinimum} onChange={v => setProdForm(f => ({ ...f, creditMinimum: v }))} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 500" />
+          <FormField label="Specifications" value={prodForm.specifications} onChange={v => setProdForm(f => ({ ...f, specifications: v }))} type="textarea" isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Key: Value (one per line)" />
+          <FormField label="Status" value={prodForm.status} onChange={v => setProdForm(f => ({ ...f, status: v }))} options={['Active', 'Inactive']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+          <ModalFooter onClose={() => setEditProd(null)} onSubmit={handleEditProd} loading={false} submitLabel="Save Changes" isDark={isDark} border={border} textMain={textMain} />
+        </Modal>
+      )}
+
+      <ConfirmDialog open={!!deleteProd} onClose={() => setDeleteProd(null)} onConfirm={handleDeleteProd} loading={false} title="Remove Product" message={`Remove "${deleteProd?.name}" from credit products?`} />
 
       {/* ── Modals: Credit Accounts ── */}
       {editCredit && (

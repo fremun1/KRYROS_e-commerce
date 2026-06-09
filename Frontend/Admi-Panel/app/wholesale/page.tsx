@@ -7,7 +7,8 @@ import { Modal, ConfirmDialog, FormField, ModalFooter } from '@/components/admin
 import { useTheme } from '@/contexts/theme-context';
 import { Truck, Users, Star, Package, ChevronRight, ChevronLeft } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { getWholesaleAccounts, updateWholesaleAccountStatus, deleteWholesaleAccount, updateWholesaleAccount, getWholesaleDeals, createWholesaleDeal, updateWholesaleDeal, deleteWholesaleDeal } from '@/lib/api';
+import { getWholesaleAccounts, updateWholesaleAccountStatus, deleteWholesaleAccount, updateWholesaleAccount, getWholesaleDeals, createWholesaleDeal, updateWholesaleDeal, deleteWholesaleDeal, getProducts, createProduct, updateProduct, deleteProduct } from '@/lib/api';
+import CloudinaryUpload from '@/components/ui/file-upload';
 
 // ─── Types ────────────────────────────────────────────────
 type Wholesale = { id:string; name:string; contact:string; phone:string; city:string; tier:string; credit:string; orders:number; totalSpent:string; status:string; joined:string };
@@ -74,8 +75,38 @@ function WholesaleContent() {
   const [addInvOpen, setAddInvOpen] = useState(false);
   const [editInv, setEditInv] = useState<WholesaleProduct|null>(null);
   const [deleteInv, setDeleteInv] = useState<WholesaleProduct|null>(null);
-  const [iForm, setIForm] = useState({ name:'', sku:'', price:'', moq:'', category:'Electronics', status:'Active' });
+  const [iForm, setIForm] = useState({ 
+    name:'', sku:'', price:'', moq:'', category:'Electronics', status:'Active',
+    description: '', imageUrl: '', images: [] as string[], specifications: ''
+  });
+  const [invImages, setInvImages] = useState<string[]>([]);
   const ifp = (k:string) => (v:string) => setIForm(f=>({...f,[k]:v}));
+
+  const loadWholesaleProducts = () => {
+    getProducts({ isWholesaleOnly: 'true', take: 100 }).then(r => {
+      const raw = Array.isArray(r.data?.data) ? r.data.data : (Array.isArray(r.data) ? r.data : []);
+      setInventory(raw.map((p: any) => ({
+        id: p.id,
+        name: p.name,
+        sku: p.sku,
+        price: p.wholesalePrice ? `K${Number(p.wholesalePrice).toLocaleString()}` : (p.price ? `K${Number(p.price).toLocaleString()}` : '$0'),
+        moq: `${p.wholesaleMoq || 1} units`,
+        category: p.category?.name || 'General',
+        status: p.isActive !== false ? 'Active' : 'Inactive',
+        // extra data for editing
+        description: p.description || '',
+        imageUrl: p.images?.[0]?.url || p.images?.[0] || '',
+        images: Array.isArray(p.images) ? p.images.map((img: any) => img?.url || img || '').filter(Boolean) : [],
+        specifications: p.specifications || '',
+        rawPrice: p.wholesalePrice || p.price || 0,
+        rawMoq: p.wholesaleMoq || 1
+      })));
+    });
+  };
+
+  useEffect(() => {
+    if (section === 'inventory') loadWholesaleProducts();
+  }, [section]);
 
   const tierColor = (t:string) => ({
     Platinum:{bg:'rgba(139,92,246,0.12)',color:'#8b5cf6'},
@@ -136,20 +167,58 @@ function WholesaleContent() {
   };
 
   // ── Inventory handlers ──
-  const handleAddInv = () => {
+  const handleAddInv = async () => {
     if (!iForm.name.trim()) { toast.error('Product name required'); return; }
-    const p: WholesaleProduct = { id:`WIP${String(Date.now()).slice(-3)}`, ...iForm };
-    setInventory(d=>[...d,p]); toast.success('Product added'); setAddInvOpen(false);
+    try {
+      await createProduct({
+        name: iForm.name,
+        sku: iForm.sku,
+        wholesalePrice: Number(iForm.price) || 0,
+        wholesaleMoq: Number(iForm.moq) || 1,
+        categorySlug: iForm.category.toLowerCase().replace(/ /g, '-'),
+        isActive: iForm.status === 'Active',
+        isWholesaleOnly: true,
+        description: iForm.description,
+        imageDataUrls: invImages,
+        specifications: iForm.specifications ? [{ key: 'Specifications', value: iForm.specifications }] : undefined
+      });
+      toast.success('Wholesale product added');
+      setAddInvOpen(false);
+      loadWholesaleProducts();
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Failed to add product');
+    }
   };
-  const handleEditInv = () => {
+  const handleEditInv = async () => {
     if (!editInv) return;
-    setInventory(d=>d.map(p=>p.id===editInv.id?{...p,...iForm}:p));
-    toast.success('Product updated'); setEditInv(null);
+    try {
+      await updateProduct(editInv.id, {
+        name: iForm.name,
+        sku: iForm.sku,
+        wholesalePrice: Number(iForm.price) || 0,
+        wholesaleMoq: Number(iForm.moq) || 1,
+        categorySlug: iForm.category.toLowerCase().replace(/ /g, '-'),
+        isActive: iForm.status === 'Active',
+        description: iForm.description,
+        imageDataUrls: invImages,
+        replaceImages: true,
+        specifications: iForm.specifications ? [{ key: 'Specifications', value: iForm.specifications }] : undefined
+      });
+      toast.success('Wholesale product updated');
+      setEditInv(null);
+      loadWholesaleProducts();
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Failed to update product');
+    }
   };
-  const handleDeleteInv = () => {
+  const handleDeleteInv = async () => {
     if (!deleteInv) return;
-    setInventory(d=>d.filter(p=>p.id!==deleteInv.id));
-    toast.success('Product removed'); setDeleteInv(null);
+    try {
+      await deleteProduct(deleteInv.id);
+      toast.success('Product removed');
+      setDeleteInv(null);
+      loadWholesaleProducts();
+    } catch { toast.error('Failed to delete product'); }
   };
 
   // ── Columns ──
@@ -200,10 +269,35 @@ function WholesaleContent() {
   const invForm = (
     <>
       <FormField label="Product Name *" value={iForm.name} onChange={ifp('name')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Product name" />
-      <FormField label="SKU" value={iForm.sku} onChange={ifp('sku')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. WHL-PRD-001" />
-      <FormField label="Wholesale Price" value={iForm.price} onChange={ifp('price')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. $850" />
-      <FormField label="Min Order Qty (MOQ)" value={iForm.moq} onChange={ifp('moq')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 5 units" />
-      <FormField label="Category" value={iForm.category} onChange={ifp('category')} options={['Electronics','Audio','Wearables','Clothing','Sports']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+      <div style={{ marginBottom: '14px' }}>
+        <label style={{ display: 'block', fontSize: '11.5px', fontWeight: 600, color: textMuted, marginBottom: '8px', textTransform: 'uppercase' }}>Product Images</label>
+        <CloudinaryUpload
+          value={invImages[0] || ''}
+          onChange={(url) => setInvImages(prev => url ? [...prev, url] : prev)}
+          multiple
+          onUrlChange={(urls) => setInvImages(urls)}
+        />
+        {invImages.length > 0 && (
+          <div style={{ display: 'flex', gap: '8px', marginTop: '10px', overflowX: 'auto', paddingBottom: '4px' }}>
+            {invImages.map((url, i) => (
+              <div key={i} style={{ position: 'relative', width: '60px', height: '60px', borderRadius: '8px', overflow: 'hidden', border: `1px solid ${border}`, flexShrink: 0 }}>
+                <img src={url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <button onClick={() => setInvImages(prev => prev.filter((_, idx) => idx !== i))} style={{ position: 'absolute', top: 2, right: 2, background: 'rgba(0,0,0,0.5)', color: 'white', border: 'none', borderRadius: '4px', width: '18px', height: '18px', fontSize: '12px', cursor: 'pointer' }}>×</button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+      <FormField label="Description" value={iForm.description} onChange={ifp('description')} type="textarea" isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Detailed product description..." />
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+        <FormField label="SKU" value={iForm.sku} onChange={ifp('sku')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. WHL-PRD-001" />
+        <FormField label="Category" value={iForm.category} onChange={ifp('category')} options={['Electronics','Audio','Wearables','Clothing','Sports']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+        <FormField label="Wholesale Price" value={iForm.price} onChange={ifp('price')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 850" />
+        <FormField label="Min Order Qty (MOQ)" value={iForm.moq} onChange={ifp('moq')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 5" />
+      </div>
+      <FormField label="Specifications" value={iForm.specifications} onChange={ifp('specifications')} type="textarea" isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Key: Value (one per line)" />
       <FormField label="Status" value={iForm.status} onChange={ifp('status')} options={['Active','Inactive']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
     </>
   );
@@ -319,7 +413,7 @@ function WholesaleContent() {
         onAdd={()=>{
           if (section==='accounts') { setPForm({name:'',contact:'',status:'Active',tier:'Bronze'}); setAddPartnerOpen(true); }
           if (section==='deals') { setDForm({title:'',description:'',discount:'',minOrder:'',validUntil:'',status:'Active'}); setAddDealOpen(true); }
-          if (section==='inventory') { setIForm({name:'',sku:'',price:'',moq:'',category:'Electronics',status:'Active'}); setAddInvOpen(true); }
+          if (section==='inventory') { setIForm({name:'',sku:'',price:'',moq:'',category:'Electronics',status:'Active',description:'',imageUrl:'',images:[],specifications:''}); setInvImages([]); setAddInvOpen(true); }
         }}
         addLabel={section==='accounts'?'Add Partner':section==='deals'?'Add Deal':'Add Product'}
       />
@@ -339,7 +433,16 @@ function WholesaleContent() {
       )}
       {section === 'inventory' && (
         <DataTable columns={invCols} data={inventory as unknown as Record<string,unknown>[]} searchPlaceholder="Search wholesale products..."
-          onEdit={row=>{ const r=row as unknown as WholesaleProduct; setIForm({name:r.name,sku:r.sku,price:r.price,moq:r.moq,category:r.category,status:r.status}); setEditInv(r); }}
+          onEdit={row=>{ 
+            const r=row as any; 
+            setIForm({
+              name:r.name, sku:r.sku, price:String(r.rawPrice||''), moq:String(r.rawMoq||''), 
+              category:r.category, status:r.status, description:r.description, 
+              imageUrl:r.imageUrl, images:r.images, specifications:r.specifications 
+            }); 
+            setInvImages(r.images || []);
+            setEditInv(r); 
+          }}
           onDelete={row=>setDeleteInv(row as unknown as WholesaleProduct)}
         />
       )}
