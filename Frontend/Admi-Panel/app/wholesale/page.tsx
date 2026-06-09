@@ -275,7 +275,6 @@ function WholesaleContent() {
           value={invImages[0] || ''}
           onChange={(url) => setInvImages(prev => url ? [...prev, url] : prev)}
           multiple
-          onUrlChange={(urls) => setInvImages(urls)}
         />
         {invImages.length > 0 && (
           <div style={{ display: 'flex', gap: '8px', marginTop: '10px', overflowX: 'auto', paddingBottom: '4px' }}>
