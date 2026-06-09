@@ -527,8 +527,7 @@ export default function CheckoutPage() {
         {/* ── STEP 1: Contact ── */}
         {step === 1 && (
           <div className="flex-1 flex flex-col">
-            <div className="flex-1 overflow-y-auto h-full">
-              <div className="bg-card border-y border-border px-4 py-5 space-y-4 min-h-full">
+            <div className="flex-1 overflow-y-auto bg-card border-t border-border px-4 py-5 space-y-4">
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-bold text-foreground">Contact information</h2>
                 {authUser
@@ -600,7 +599,6 @@ export default function CheckoutPage() {
                 </div>
               )}
             </div>
-            </div>
             {/* Button pinned to bottom */}
             <div className="px-4 py-4 border-t border-border/40 bg-background">
               <button onClick={goToStep2} className="w-full py-4 rounded-2xl bg-[var(--kryros-primary-hover)] text-white text-sm font-bold flex items-center justify-center gap-2">
@@ -613,8 +611,7 @@ export default function CheckoutPage() {
         {/* ── STEP 2: Address ── */}
         {step === 2 && (
           <div className="flex-1 flex flex-col">
-            <div className="flex-1 overflow-y-auto h-full">
-              <div className="bg-card border-y border-border px-4 py-5 space-y-4 min-h-full">
+            <div className="flex-1 overflow-y-auto bg-card border-t border-border px-4 py-5 space-y-4">
               <h2 className="text-sm font-bold text-foreground">Shipping address</h2>
 
               {/* Country — dynamic from admin panel */}
@@ -665,7 +662,6 @@ export default function CheckoutPage() {
                 <input value={zipCode} onChange={(e) => setZipCode(e.target.value)} placeholder="10101" className="w-full px-4 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
               </div>
             </div>
-            </div>
             <div className="px-4 py-4 border-t border-border/40 bg-background space-y-2">
               <button onClick={goToStep3} className="w-full py-4 rounded-2xl bg-[var(--kryros-primary-hover)] text-white text-sm font-bold flex items-center justify-center gap-2">
                 Continue to Shipping <ChevronRight className="w-4 h-4" />
@@ -678,8 +674,7 @@ export default function CheckoutPage() {
         {/* ── STEP 3: Shipping ── */}
         {step === 3 && (
           <div className="flex-1 flex flex-col">
-            <div className="flex-1 overflow-y-auto h-full">
-              <div className="bg-card border-y border-border px-4 py-5 space-y-4 min-h-full">
+            <div className="flex-1 overflow-y-auto bg-card border-t border-border px-4 py-5 space-y-4">
               <h2 className="text-sm font-bold text-foreground">
                 Delivery options <span className="text-[11px] text-muted-foreground font-normal">(for {city || "your area"})</span>
               </h2>
@@ -707,7 +702,6 @@ export default function CheckoutPage() {
                 })}
               </div>
             </div>
-            </div>
             <div className="px-4 py-4 border-t border-border/40 bg-background space-y-2">
               <button onClick={() => setStep(4)} className="w-full py-4 rounded-2xl bg-[var(--kryros-primary-hover)] text-white text-sm font-bold flex items-center justify-center gap-2">
                 Continue to Payment <ChevronRight className="w-4 h-4" />
@@ -720,8 +714,7 @@ export default function CheckoutPage() {
         {/* ── STEP 4: Payment ── */}
         {step === 4 && (
           <div className="flex-1 flex flex-col">
-            <div className="flex-1 overflow-y-auto space-y-0 h-full">
-              <div className="bg-card border-y border-border px-4 py-5 space-y-4 min-h-full">
+            <div className="flex-1 overflow-y-auto bg-card border-t border-border px-4 py-5 space-y-4">
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-bold text-foreground">How would you like to pay?</h2>
                 <span className="text-[11px] text-muted-foreground">Powered by Kryros Pay</span>
@@ -762,17 +755,16 @@ export default function CheckoutPage() {
                   </div>
                 </div>
               )}
-            </div>
 
-            <div className="bg-card border-y border-border px-4 py-4 space-y-3 mt-3">
-              <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Subtotal</span><span className="font-semibold">{format(SUBTOTAL)}</span></div>
-              <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Shipping</span><span className="font-semibold">{shippingPrice === 0 ? "Free" : format(shippingPrice)}</span></div>
-              <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Estimated tax</span><span className="font-semibold">{format(TAX)}</span></div>
-              <div className="pt-2 border-t border-border flex items-center justify-between text-sm font-black">
-                <span>Total</span><span className="text-primary">{format(total)}</span>
+              <div className="border-t border-border pt-4 space-y-3">
+                <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Subtotal</span><span className="font-semibold">{format(SUBTOTAL)}</span></div>
+                <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Shipping</span><span className="font-semibold">{shippingPrice === 0 ? "Free" : format(shippingPrice)}</span></div>
+                <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Estimated tax</span><span className="font-semibold">{format(TAX)}</span></div>
+                <div className="pt-2 border-t border-border flex items-center justify-between text-sm font-black">
+                  <span>Total</span><span className="text-primary">{format(total)}</span>
+                </div>
+                <p className="text-[10px] text-muted-foreground">All payments are processed securely. By completing your purchase, you agree to our Terms of Service.</p>
               </div>
-              <p className="text-[10px] text-muted-foreground">All payments are processed securely. By completing your purchase, you agree to our Terms of Service.</p>
-            </div>
             </div>
             <div className="px-4 py-4 border-t border-border/40 bg-background">
               <button onClick={() => setStep(3)} className="w-full text-xs text-muted-foreground text-center hover:text-primary transition-colors py-2">← Back to Shipping</button>
