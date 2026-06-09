@@ -26,7 +26,7 @@ const DEFAULT_METHODS = [
   {
     id: "mobile",
     label: "Mobile Money",
-    sub: "MTN, Airtel, Zamtel",
+    sub: "",
     icon: Smartphone,
     iconBg: "bg-primary/10",
     comingSoon: false,
@@ -244,13 +244,12 @@ export default function PayPage() {
   const [, navigate] = useLocation();
   const [step, setStep] = useState<1 | 2>(1);
 
-  // ── Read URL query params (from admin payment link generator) ──
+  // ── Read URL query params ──
   const urlParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : new URLSearchParams();
   const urlAmount = urlParams.get("amount") || "";
   const urlCurrency = urlParams.get("currency") || "ZMW";
   const urlNote = urlParams.get("note") || "";
-  const isLinkedPayment = !!urlAmount;
-
+  
   const [rawAmount, setRawAmount] = useState(urlAmount);
   const [currency, setCurrency] = useState(urlCurrency);
   const [showCurrencyDrop, setShowCurrencyDrop] = useState(false);
@@ -274,6 +273,7 @@ export default function PayPage() {
   const whatsappNumber = import.meta.env.VITE_WHATSAPP_NUMBER || "260969597029";
   const [showProviderDrop, setShowProviderDrop] = useState(false);
   const [payRef, setPayRef] = useState(() => "PAY-" + Date.now().toString(36).toUpperCase().slice(-8));
+
   // ── Dynamic payment config (from admin panel) ─────────────────────────
   const [bankProviders, setBankProviders] = useState<{ name:string; config?:{ accountName?:string; accountNumber?:string } }[]>([]);
   const [mobileNetworks, setMobileNetworks] = useState<string[]>([]);
@@ -292,7 +292,7 @@ export default function PayPage() {
           setBankProviders(bankMethod.providers.filter((p: any) => p.isEnabled));
         }
 
-        // Mobile money networks (extracted from providers → networks)
+        // Mobile money networks
         const mobileMethod = arr.find((m: any) => m.type === "mobile_wallet");
         if (mobileMethod?.providers?.length > 0) {
           const nets: string[] = mobileMethod.providers
@@ -306,7 +306,7 @@ export default function PayPage() {
           if (nets.length > 0) setMmProvider(nets[0]);
         }
 
-        // Store enabled method types (in admin-configured order)
+        // Store enabled method types
         const enabledTypes = arr.filter((m: any) => m.isEnabled).map((m: any) => m.type as string);
         setApiMethodTypes(enabledTypes);
         setIsConfigLoaded(true);
@@ -316,7 +316,6 @@ export default function PayPage() {
       });
   }, []);
 
-  // Map API types to DEFAULT_METHODS entries (preserves existing panel logic)
   const TYPE_TO_ID: Record<string, string> = {
     mobile_wallet: "mobile",
     card:          "card",
@@ -332,288 +331,218 @@ export default function PayPage() {
         .filter(Boolean) as typeof DEFAULT_METHODS
     : [];
 
-  const [paymentStatus, setPaymentStatus] = useState<"idle" | "processing" | "success" | "failed">("idle");
+  const [paymentStatus, setPaymentStatus] = useState<"idle" | "processing" | "success" | "error">("idle");
   const [receipt, setReceipt] = useState<ReceiptData | null>(null);
 
-  const handleMobilePay = async () => {
-    if (!mmPhone) return;
+  const handlePay = async () => {
+    if (paymentStatus === "processing") return;
     setPaymentStatus("processing");
-    // Simulate API call for mobile money
-    setTimeout(() => {
-      setReceipt({
-        recipientNumber: "0969597029",
+    
+    try {
+      // Simulate API call for payment
+      await new Promise(r => setTimeout(r, 2000));
+      
+      const newReceipt: ReceiptData = {
+        recipientNumber: "260969597029",
         recipientName: "KRYROS MOBILE TECH LIMITED",
-        operatorName: mmProvider,
-        transactionId: "TX-" + Math.random().toString(36).toUpperCase().slice(-8),
+        operatorName: mmProvider || "Card Payment",
+        transactionId: "TX-" + Math.random().toString(36).toUpperCase().slice(-10),
         dateTime: new Date().toLocaleString(),
         convenienceCharges: fee,
         amount: total,
         currency: currency,
         reference: payRef,
-      });
+      };
+      
+      setReceipt(newReceipt);
       setPaymentStatus("success");
-    }, 2000);
+    } catch (err) {
+      setPaymentStatus("error");
+    }
   };
 
-  if (paymentStatus === "success" && receipt) {
-    return <ReceiptScreen receipt={receipt} onClose={() => setPaymentStatus("idle")} />;
+  if (receipt) {
+    return <ReceiptScreen receipt={receipt} onClose={() => setReceipt(null)} />;
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col max-w-lg mx-auto">
+    <div className="min-h-screen bg-background flex flex-col max-w-lg mx-auto shadow-2xl">
       {/* Header */}
-      <div className="px-4 pt-8 pb-4 flex items-center justify-between">
-        <button onClick={() => navigate("/")} className="p-2 -ml-2 rounded-full hover:bg-muted transition-colors">
-          <ChevronLeft className="w-6 h-6" />
-        </button>
-        <div className="flex items-center gap-1.5 text-muted-foreground">
-          <Lock className="w-3.5 h-3.5" />
-          <span className="text-xs font-semibold">Secure Payment</span>
-        </div>
+      <div className="px-6 pt-8 pb-4 flex items-center justify-between">
+        <Link href="/">
+          <button className="p-2.5 rounded-2xl bg-muted/50 hover:bg-muted transition-colors">
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+        </Link>
+        <h1 className="text-lg font-bold text-foreground">Payment Details</h1>
+        <div className="w-10" />
       </div>
 
-      <div className="flex-1 px-5 py-2 space-y-6 overflow-y-auto">
-        {/* Amount Input Section */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h1 className="text-xl font-black">Enter Amount</h1>
-            <div className="relative">
-              <button
-                onClick={() => setShowCurrencyDrop(!showCurrencyDrop)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-muted/50 border border-border hover:bg-muted transition-all"
-              >
-                <span className="text-sm font-bold">{currencyObj.flag} {currencyObj.code}</span>
-                <ChevronDown className="w-3.5 h-3.5" />
-              </button>
-              {showCurrencyDrop && (
-                <div className="absolute right-0 top-full mt-1 z-20 w-40 bg-background border border-border rounded-2xl shadow-xl overflow-hidden">
-                  {CURRENCIES.map((c) => (
-                    <button
-                      key={c.code}
-                      onClick={() => { setCurrency(c.code); setShowCurrencyDrop(false); }}
-                      className="w-full px-4 py-3 text-left text-sm font-semibold hover:bg-muted flex items-center gap-2 border-b border-border last:border-0"
-                    >
-                      <span>{c.flag}</span>
-                      <span>{c.code}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-
+      <div className="flex-1 px-6 py-4 space-y-6 overflow-y-auto">
+        {/* Amount Input */}
+        <div className="space-y-3">
+          <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Amount to Pay</label>
           <div className="relative group">
-            <div className="absolute left-5 top-1/2 -translate-y-1/2 text-2xl font-black text-muted-foreground group-focus-within:text-primary transition-colors">
-              {currencyObj.code === "ZMW" ? "K" : "$"}
+            <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-2 pr-3 border-r border-border">
+              <button onClick={() => setShowCurrencyDrop(!showCurrencyDrop)} className="flex items-center gap-1.5 hover:opacity-70 transition-opacity">
+                <span className="text-sm font-bold text-foreground">{currencyObj.flag} {currencyObj.code}</span>
+                <ChevronDown className={`w-3 h-3 text-muted-foreground transition-transform ${showCurrencyDrop ? "rotate-180" : ""}`} />
+              </button>
             </div>
             <input
               type="number"
               value={rawAmount}
               onChange={(e) => setRawAmount(e.target.value)}
               placeholder="0.00"
-              className="w-full bg-muted/30 border-2 border-transparent focus:border-primary/20 focus:bg-background rounded-3xl px-12 py-6 text-3xl font-black outline-none transition-all placeholder:text-muted-foreground/30"
-              readOnly={isLinkedPayment}
+              className="w-full pl-32 pr-4 py-5 bg-card border border-border rounded-3xl text-2xl font-bold focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all"
             />
+            {showCurrencyDrop && (
+              <div className="absolute left-0 top-full mt-2 w-48 bg-card border border-border rounded-2xl shadow-xl z-50 py-2 animate-in fade-in zoom-in-95 duration-200">
+                {CURRENCIES.map((c) => (
+                  <button key={c.code} onClick={() => { setCurrency(c.code); setShowCurrencyDrop(false); }} className={`w-full px-4 py-2.5 text-left flex items-center justify-between hover:bg-muted transition-colors ${currency === c.code ? "bg-primary/5 text-primary font-bold" : "text-foreground"}`}>
+                    <span className="text-sm">{c.flag} {c.label}</span>
+                    {currency === c.code && <Check className="w-3.5 h-3.5" />}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
-
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-muted-foreground ml-1">Payment Note (Optional)</label>
-            <input
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              placeholder="What is this payment for?"
-              className="w-full bg-muted/30 border border-border rounded-2xl px-4 py-3.5 text-sm outline-none focus:border-primary/40 transition-all"
-              readOnly={isLinkedPayment}
-            />
-          </div>
+          <AmountSummaryBar amount={amount} fee={fee} currency={currency} />
         </div>
 
-        {/* Payment Methods Section */}
+        {/* Payment Methods */}
         <div className="space-y-4">
-          <h2 className="text-sm font-bold text-muted-foreground px-1">Select Payment Method</h2>
+          <div className="flex items-center justify-between">
+            <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Select Payment Method</label>
+            <span className="text-[10px] text-muted-foreground font-medium">Secured by Kryros Pay</span>
+          </div>
+
           <div className="space-y-3">
             {activeMethods.length > 0 ? (
               activeMethods.map((method) => {
-                const isSelected = openMethod === method.id;
                 const Icon = method.icon;
+                const isSelected = openMethod === method.id;
                 return (
-                  <div key={method.id} className="space-y-3">
+                  <div key={method.id} className="space-y-2">
                     <button
                       onClick={() => setOpenMethod(isSelected ? null : method.id)}
-                      className={`w-full flex items-center gap-4 p-4 rounded-3xl border-2 transition-all ${
-                        isSelected ? "border-primary bg-primary/[0.03]" : "border-border hover:border-primary/20 bg-card"
-                      }`}
+                      className={`w-full flex items-center gap-4 p-4 rounded-3xl border transition-all text-left ${isSelected ? "border-primary bg-primary/5 shadow-lg shadow-primary/5" : "border-border bg-card hover:border-primary/50"}`}
                     >
                       <div className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 ${method.iconBg}`}>
-                        <Icon className="w-6 h-6" />
+                        <Icon className="w-6 h-6 text-primary" />
                       </div>
-                      <div className="flex-1 text-left">
-                        <p className="font-bold text-foreground">{method.label}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {method.id === "mobile" && mobileNetworks.length > 0 ? mobileNetworks.join(", ") : method.sub}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-foreground">{method.label}</p>
+                        <p className="text-[11px] text-muted-foreground truncate">
+                          {method.id === "mobile" ? (mobileNetworks.length > 0 ? mobileNetworks.join(", ") : "Select network") : method.sub}
                         </p>
                       </div>
-                      <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
-                        isSelected ? "border-primary bg-primary" : "border-border"
-                      }`}>
-                        {isSelected && <Check className="w-3.5 h-3.5 text-white" strokeWidth={4} />}
-                      </div>
+                      <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${isSelected ? "rotate-180" : ""}`} />
                     </button>
 
-                    {/* Method Specific Content */}
                     {isSelected && (
-                      <div className="px-1 animate-in slide-in-from-top-2 duration-200">
+                      <div className="p-5 rounded-3xl bg-muted/30 border border-border/50 space-y-5 animate-in slide-in-from-top-2 duration-200">
                         {method.id === "mobile" && (
-                          <div className="bg-card border border-border rounded-3xl p-5 space-y-4 shadow-sm">
-                            <div className="relative">
-                              <label className="text-[11px] font-bold text-muted-foreground uppercase mb-1.5 block ml-1">Network Provider</label>
-                              <button
-                                onClick={() => setShowProviderDrop(!showProviderDrop)}
-                                className="w-full flex items-center justify-between px-4 py-3.5 rounded-2xl bg-muted/30 border border-border hover:bg-muted/50 transition-all"
-                              >
-                                <span className="text-sm font-bold">{mmProvider || "Select Provider"}</span>
-                                <ChevronDown className={`w-4 h-4 transition-transform ${showProviderDrop ? "rotate-180" : ""}`} />
-                              </button>
-                              {showProviderDrop && (
-                                <div className="absolute left-0 right-0 top-full mt-2 z-30 bg-background border border-border rounded-2xl shadow-2xl overflow-hidden">
-                                  {mobileNetworks.map((net) => (
-                                    <button
-                                      key={net}
-                                      onClick={() => { setMmProvider(net); setShowProviderDrop(false); }}
-                                      className="w-full px-4 py-4 text-left text-sm font-bold hover:bg-muted border-b border-border last:border-0 flex items-center justify-between"
-                                    >
-                                      {net}
-                                      {mmProvider === net && <Check className="w-4 h-4 text-primary" />}
-                                    </button>
-                                  ))}
-                                </div>
-                              )}
+                          <div className="space-y-4">
+                            <div className="space-y-2">
+                              <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider ml-1">Network Operator</label>
+                              <div className="grid grid-cols-2 gap-2">
+                                {mobileNetworks.map((net) => (
+                                  <button key={net} onClick={() => setMmProvider(net)} className={`py-3 rounded-2xl border text-xs font-bold transition-all ${mmProvider === net ? "border-primary bg-primary text-white" : "border-border bg-background text-foreground hover:border-primary/40"}`}>
+                                    {net}
+                                  </button>
+                                ))}
+                              </div>
                             </div>
-                            <div className="space-y-1.5">
-                              <label className="text-[11px] font-bold text-muted-foreground uppercase mb-1.5 block ml-1">Phone Number</label>
+                            <div className="space-y-2">
+                              <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider ml-1">Phone Number</label>
                               <div className="relative">
                                 <Smartphone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                                 <input
                                   type="tel"
                                   value={mmPhone}
                                   onChange={(e) => setMmPhone(e.target.value)}
-                                  placeholder="097..."
-                                  className="w-full bg-muted/30 border border-border rounded-2xl px-11 py-3.5 text-sm font-bold outline-none focus:border-primary/40 transition-all"
+                                  placeholder="09XXXXXXXX"
+                                  className="w-full pl-11 pr-4 py-4 rounded-2xl border border-border bg-background text-sm font-semibold focus:ring-4 focus:ring-primary/10 outline-none transition-all"
                                 />
                               </div>
                             </div>
-                            <AmountSummaryBar amount={amount} fee={fee} currency={currency} />
-                            <button
-                              onClick={handleMobilePay}
-                              disabled={!mmPhone || amount <= 0 || paymentStatus === "processing"}
-                              className="w-full py-4 bg-primary text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-primary/90 active:scale-95 transition-all disabled:opacity-50"
-                            >
-                              {paymentStatus === "processing" ? (
-                                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                              ) : (
-                                <>Pay {currency} {total.toFixed(2)}</>
-                              )}
-                            </button>
                           </div>
                         )}
 
                         {method.id === "bank" && (
-                          <div className="bg-card border border-border rounded-3xl p-5 space-y-5 shadow-sm">
-                            <div className="p-3.5 rounded-2xl bg-primary/5 border border-primary/10 flex gap-3">
-                              <AlertCircle className="w-5 h-5 text-primary flex-shrink-0" />
-                              <p className="text-[11px] text-primary/80 leading-relaxed font-medium">
-                                Please transfer the exact amount below to any of the accounts and upload your proof of payment.
-                              </p>
+                          <div className="space-y-4">
+                            <div className="p-4 rounded-2xl bg-blue-50/50 border border-blue-100 space-y-2">
+                              <div className="flex items-center gap-2 text-blue-600">
+                                <AlertCircle className="w-4 h-4" />
+                                <span className="text-[11px] font-bold uppercase tracking-wider">Instructions</span>
+                              </div>
+                              <p className="text-xs text-blue-800 leading-relaxed">Please transfer exactly <span className="font-bold">{currency} {total.toFixed(2)}</span> to any of the accounts below and upload the transfer receipt.</p>
                             </div>
-                            <div className="space-y-3">
-                              {bankProviders.length > 0 ? (
-                                bankProviders.map((acc, idx) => (
-                                  <div key={idx} className="p-4 rounded-2xl bg-muted/30 border border-border space-y-3">
-                                    <div className="flex justify-between items-start">
-                                      <div>
-                                        <p className="text-[10px] font-bold text-muted-foreground uppercase">{acc.name}</p>
-                                        <p className="text-sm font-black mt-0.5">{acc.config?.accountNumber}</p>
-                                        <p className="text-[11px] font-medium text-muted-foreground">{acc.config?.accountName}</p>
-                                      </div>
-                                      <CopyBtn text={acc.config?.accountNumber || ""} />
+                            
+                            {bankProviders.map((bank, i) => (
+                              <div key={i} className="p-4 rounded-2xl bg-background border border-border space-y-3">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-xs font-bold text-foreground">{bank.name}</span>
+                                  <div className="px-2 py-0.5 rounded-md bg-muted text-[9px] font-bold text-muted-foreground uppercase tracking-tighter">Bank Account</div>
+                                </div>
+                                <div className="space-y-1.5">
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-[11px] text-muted-foreground">Account Name</span>
+                                    <span className="text-[11px] font-semibold text-foreground">{bank.config?.accountName}</span>
+                                  </div>
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-[11px] text-muted-foreground">Account Number</span>
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-[11px] font-mono font-bold text-foreground tracking-wider">{bank.config?.accountNumber}</span>
+                                      <CopyBtn text={bank.config?.accountNumber || ""} />
                                     </div>
                                   </div>
-                                ))
-                              ) : (
-                                <div className="p-4 rounded-2xl bg-muted/30 border border-border text-center">
-                                  <p className="text-xs text-muted-foreground font-medium">No bank accounts configured.</p>
                                 </div>
-                              )}
-                              <div className="p-4 rounded-2xl bg-primary/5 border border-primary/20 flex justify-between items-center">
-                                <div>
-                                  <p className="text-[10px] font-bold text-primary uppercase">Payment Reference</p>
-                                  <p className="text-sm font-black text-primary mt-0.5">{payRef}</p>
-                                </div>
-                                <CopyBtn text={payRef} />
                               </div>
-                            </div>
-                            <div
-                              onClick={() => fileRef.current?.click()}
-                              className="border-2 border-dashed border-border rounded-2xl p-6 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-primary/40 hover:bg-primary/[0.02] transition-all"
-                            >
-                              <Upload className="w-6 h-6 text-muted-foreground" />
-                              <p className="text-xs font-bold text-muted-foreground">{proofFile || "Upload Proof of Transfer"}</p>
-                              <input
-                                ref={fileRef}
-                                type="file"
-                                className="hidden"
-                                onChange={(e) => setProofFile(e.target.files?.[0]?.name || null)}
-                              />
-                            </div>
-                            <AmountSummaryBar amount={amount} fee={fee} currency={currency} />
-                            <button
-                              disabled={amount <= 0}
-                              className="w-full py-4 bg-primary text-white rounded-2xl font-bold text-sm hover:bg-primary/90 active:scale-95 transition-all disabled:opacity-50"
-                            >
-                              I've Made the Transfer
+                            ))}
+                            
+                            <button onClick={() => fileRef.current?.click()} className="w-full py-5 border-2 border-dashed border-border rounded-2xl flex flex-col items-center gap-2 hover:border-primary/50 hover:bg-primary/[0.02] transition-all">
+                              <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+                                <Upload className="w-5 h-5 text-muted-foreground" />
+                              </div>
+                              <div className="text-center">
+                                <p className="text-xs font-bold text-foreground">{proofFile ? "File selected" : "Upload Transfer Proof"}</p>
+                                <p className="text-[10px] text-muted-foreground mt-0.5">{proofFile || "PNG, JPG or PDF up to 5MB"}</p>
+                              </div>
                             </button>
+                            <input type="file" ref={fileRef} className="hidden" onChange={(e) => setProofFile(e.target.files?.[0]?.name || null)} />
                           </div>
                         )}
 
                         {method.id === "whatsapp" && (
-                          <div className="bg-card border border-border rounded-3xl p-5 space-y-5 shadow-sm">
-                            <div className="flex flex-col items-center text-center gap-4 py-4">
-                              <div className="w-16 h-16 rounded-3xl bg-green-500/10 flex items-center justify-center">
-                                <svg viewBox="0 0 24 24" className="w-10 h-10 text-green-500" fill="currentColor">
-                                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
-                                </svg>
-                              </div>
-                              <div className="space-y-1">
-                                <p className="font-black text-lg">WhatsApp Pay</p>
-                                <p className="text-xs text-muted-foreground font-medium px-4 leading-relaxed">
-                                  Connect with our support team on WhatsApp to complete your payment securely.
-                                </p>
-                              </div>
+                          <div className="p-4 rounded-2xl bg-green-50/50 border border-green-100 space-y-2 text-center">
+                            <div className="w-12 h-12 rounded-full bg-green-500/10 flex items-center justify-center mx-auto mb-2">
+                              <svg viewBox="0 0 24 24" className="w-6 h-6 text-green-600" fill="currentColor">
+                                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+                              </svg>
                             </div>
-                            <AmountSummaryBar amount={amount} fee={fee} currency={currency} />
-                            <a
-                              href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(`Hello, I want to make a payment of ${currency} ${total.toFixed(2)} (Ref: ${payRef})`)}`}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="w-full"
-                            >
-                              <button
-                                disabled={amount <= 0}
-                                className="w-full py-4 bg-[#25D366] text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-[#22c35e] active:scale-95 transition-all disabled:opacity-50"
-                              >
-                                Continue to WhatsApp
-                              </button>
-                            </a>
+                            <p className="text-xs text-green-800 leading-relaxed">Our team will guide you through the payment process on WhatsApp.</p>
                           </div>
                         )}
+
+                        <button
+                          onClick={handlePay}
+                          disabled={paymentStatus === "processing"}
+                          className="w-full py-4.5 rounded-2xl bg-primary text-white text-sm font-bold shadow-lg shadow-primary/20 active:scale-95 transition-all disabled:opacity-50"
+                        >
+                          {paymentStatus === "processing" ? "Processing..." : `Pay ${currency} ${total.toFixed(2)}`}
+                        </button>
                       </div>
                     )}
                   </div>
                 );
               })
             ) : (
-              <div className="p-8 text-center bg-muted/20 border border-border rounded-3xl">
-                <p className="text-sm text-muted-foreground font-medium">No payment methods currently available.</p>
+              <div className="p-12 text-center text-muted-foreground bg-muted/20 rounded-3xl border-2 border-dashed border-border">
+                <Smartphone className="w-10 h-10 mx-auto mb-3 opacity-20" />
+                <p className="text-sm font-bold">No payment methods enabled</p>
+                <p className="text-xs mt-1">Please check back later or contact support.</p>
               </div>
             )}
           </div>
@@ -621,7 +550,7 @@ export default function PayPage() {
       </div>
 
       {/* Footer */}
-      <div className="px-5 py-6 space-y-4">
+      <div className="p-6 border-t border-border bg-background/80 backdrop-blur-sm">
         <SecureFooter />
       </div>
     </div>
