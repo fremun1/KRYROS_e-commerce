@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Heart, ShoppingCart, Zap, Package, Clock } from "lucide-react";
+import { Heart, ShoppingCart, Zap, Package, Clock, CreditCard } from "lucide-react";
 import { toast } from "sonner";
 import { useCartStore } from "@/store/cartStore";
 import { useWishlistStore } from "@/store/wishlistStore";
@@ -277,8 +277,13 @@ export default function UnifiedProductCard({
                   : "bg-muted text-muted-foreground cursor-not-allowed"
               }`}
             >
-              <Zap className="w-3 h-3 md:w-3.5 md:h-3.5" />
-              {product.allowCredit ? "Get Now" : "Buy Now"}
+              {product.allowCredit ? (
+                <><CreditCard className="w-3 h-3 md:w-3.5 md:h-3.5" /> Apply</>
+              ) : product.isWholesaleOnly ? (
+                <><Package className="w-3 h-3 md:w-3.5 md:h-3.5" /> Bulk</>
+              ) : (
+                <><Zap className="w-3 h-3 md:w-3.5 md:h-3.5" /> Buy</>
+              )}
             </button>
           </div>
         )}

@@ -204,25 +204,41 @@ export default function ProductPage() {
   );
 
   const handleAddToCart = () => {
+    if (product.isWholesaleOnly && qty < (product.wholesaleMoq || 1)) {
+      toast.error(`Minimum order quantity is ${product.wholesaleMoq}`);
+      return;
+    }
     addToCart({
       id: product.id,
       name: product.name,
-      price: product.price,
+      price: product.isWholesaleOnly ? (product.wholesalePrice || product.price) : product.price,
       qty,
       image: product.image
     });
-    toast.success("Added to cart", { description: product.name });
+    toast.success(product.isWholesaleOnly ? "Added to wholesale request" : "Added to cart", { description: product.name });
   };
 
-  const handleBuyNow = () => {
+  const handleAction = () => {
+    if (product.isWholesaleOnly && qty < (product.wholesaleMoq || 1)) {
+      toast.error(`Minimum order quantity is ${product.wholesaleMoq}`);
+      return;
+    }
+    
     addToCart({
       id: product.id,
       name: product.name,
-      price: product.price,
+      price: product.isWholesaleOnly ? (product.wholesalePrice || product.price) : product.price,
       qty,
       image: product.image
     });
-    window.location.href = "/checkout";
+
+    if (product.allowCredit) {
+      window.location.href = "/apply-credit"; // Redirect to a specialized credit application flow
+    } else if (product.isWholesaleOnly) {
+      window.location.href = "/wholesale-checkout"; // Redirect to specialized wholesale checkout
+    } else {
+      window.location.href = "/checkout";
+    }
   };
 
   return (
@@ -517,13 +533,22 @@ export default function ProductPage() {
             </button>
           ) : (
             <>
-              <button onClick={handleAddToCart} disabled={product.stock === 0}
-                className="flex-1 flex items-center justify-center gap-2 py-3.5 lg:py-4 bg-primary text-white rounded-2xl font-bold text-sm lg:text-base hover:bg-primary/90 transition-all active:scale-95 disabled:opacity-50">
-                <ShoppingCart className="w-4 h-4" /> Add to Cart
-              </button>
-              <button onClick={handleBuyNow} disabled={product.stock === 0}
-                className="flex-1 flex items-center justify-center gap-2 py-3.5 lg:py-4 bg-foreground text-background rounded-2xl font-bold text-sm lg:text-base hover:opacity-90 transition-all active:scale-95 disabled:opacity-50">
-                <Zap className="w-4 h-4" /> {product.allowCredit ? "Get Now" : "Buy Now"}
+              {!product.allowCredit && (
+                <button onClick={handleAddToCart} disabled={product.stock === 0}
+                  className="flex-1 flex items-center justify-center gap-2 py-3.5 lg:py-4 bg-primary text-white rounded-2xl font-bold text-sm lg:text-base hover:bg-primary/90 transition-all active:scale-95 disabled:opacity-50">
+                  <ShoppingCart className="w-4 h-4" /> 
+                  {product.isWholesaleOnly ? "Add to Bulk Request" : "Add to Cart"}
+                </button>
+              )}
+              <button onClick={handleAction} disabled={product.stock === 0}
+                className={`flex-1 flex items-center justify-center gap-2 py-3.5 lg:py-4 rounded-2xl font-bold text-sm lg:text-base hover:opacity-90 transition-all active:scale-95 disabled:opacity-50 ${product.allowCredit ? 'bg-primary text-white w-full' : 'bg-foreground text-background'}`}>
+                {product.allowCredit ? (
+                  <><CreditCard className="w-4 h-4" /> Apply for Credit</>
+                ) : product.isWholesaleOnly ? (
+                  <><Package className="w-4 h-4" /> Request Bulk Quote</>
+                ) : (
+                  <><Zap className="w-4 h-4" /> Buy Now</>
+                )}
               </button>
             </>
           )}
