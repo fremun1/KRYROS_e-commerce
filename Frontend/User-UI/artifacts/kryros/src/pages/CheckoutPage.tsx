@@ -118,6 +118,35 @@ export default function CheckoutPage() {
   const selectedCurrency = useCurrencyStore((s) => s.selected);
   const allCurrencies    = useCurrencyStore((s) => s.currencies);
 
+  // ── State ───────────────────────────────────────────────────────────────────
+  const [step, setStep] = useState(1);
+  const [ordered,          setOrdered]          = useState(false);
+  const [isSubmitting,     setIsSubmitting]      = useState(false);
+  const [orderError,       setOrderError]        = useState<string | null>(null);
+  const [placedOrderNumber, setPlacedOrderNumber] = useState<string>("");
+  const [placedOrderId,    setPlacedOrderId]     = useState<string>("");
+  const [mmPhase, setMmPhase] = useState<"idle" | "initializing" | "waiting" | "failed_init" | "timed_out">("idle");
+  const [waMessage,        setWaMessage]         = useState<string>("");
+  const [savedCartItems,   setSavedCartItems]    = useState<typeof cartItems>([]);
+  const pollRef     = useRef<ReturnType<typeof setInterval> | null>(null);
+  const whatsappNumber = import.meta.env.VITE_WHATSAPP_NUMBER || "260969597029";
+
+  // Contact
+  const [firstName,     setFirstName]     = useState(authUser?.firstName ?? "");
+  const [lastName,      setLastName]      = useState(authUser?.lastName ?? "");
+  const [email,         setEmail]         = useState(authUser?.email ?? "");
+  const [phone,         setPhone]         = useState("");
+  const [phoneCountry,  setPhoneCountry]  = useState(DIAL_COUNTRIES[0]);
+  const [showCountryPicker, setShowCountryPicker] = useState(false);
+  const [countrySearch, setCountrySearch] = useState("");
+
+  // Address
+  const [country,      setCountry]     = useState("");
+  const [state,        setState]       = useState("");
+  const [city,         setCity]        = useState("");
+  const [addressLine,  setAddressLine] = useState("");
+  const [zipCode,      setZipCode]     = useState("");
+
   // ── Dynamic countries from admin panel ──────────────────────────────────────
   type ShippingCountry = { id?: string; name: string; code: string; shippingEnabled: boolean; isActive: boolean };
   const [shippingCountries, setShippingCountries] = useState<ShippingCountry[]>([]);
@@ -148,6 +177,15 @@ export default function CheckoutPage() {
   // ── Dynamic shipping methods from admin panel ────────────────────────────────
   const [shippingMethods, setShippingMethods] = useState<ApiShippingMethod[]>([]);
   const [shippingLoading, setShippingLoading] = useState(false);
+
+  // Shipping & payment
+  const [shippingId, setShippingId] = useState("");
+  const selectedShipping = shippingMethods.find((s) => s.id === shippingId);
+  const shippingPrice = selectedShipping ? Number(selectedShipping.fee) : 0;
+  const SUBTOTAL = cartItems.reduce((s, i) => s + i.price * i.qty, 0);
+  const DISCOUNT = 0;
+  const TAX = 0;
+  const total = SUBTOTAL - DISCOUNT + TAX + shippingPrice;
 
   useEffect(() => {
     if (step !== 3) return;
@@ -239,44 +277,6 @@ export default function CheckoutPage() {
       }),
     }).catch(() => {});
   };
-
-  // ── State ───────────────────────────────────────────────────────────────────
-  const [step, setStep] = useState(1);
-  const [ordered,          setOrdered]          = useState(false);
-  const [isSubmitting,     setIsSubmitting]      = useState(false);
-  const [orderError,       setOrderError]        = useState<string | null>(null);
-  const [placedOrderNumber, setPlacedOrderNumber] = useState<string>("");
-  const [placedOrderId,    setPlacedOrderId]     = useState<string>("");
-  const [mmPhase, setMmPhase] = useState<"idle" | "initializing" | "waiting" | "failed_init" | "timed_out">("idle");
-  const [waMessage,        setWaMessage]         = useState<string>("");
-  const [savedCartItems,   setSavedCartItems]    = useState<typeof cartItems>([]);
-  const pollRef     = useRef<ReturnType<typeof setInterval> | null>(null);
-  const whatsappNumber = import.meta.env.VITE_WHATSAPP_NUMBER || "260969597029";
-
-  // Contact
-  const [firstName,     setFirstName]     = useState(authUser?.firstName ?? "");
-  const [lastName,      setLastName]      = useState(authUser?.lastName ?? "");
-  const [email,         setEmail]         = useState(authUser?.email ?? "");
-  const [phone,         setPhone]         = useState("");
-  const [phoneCountry,  setPhoneCountry]  = useState(DIAL_COUNTRIES[0]);
-  const [showCountryPicker, setShowCountryPicker] = useState(false);
-  const [countrySearch, setCountrySearch] = useState("");
-
-  // Address
-  const [country,      setCountry]     = useState("");
-  const [state,        setState]       = useState("");
-  const [city,         setCity]        = useState("");
-  const [addressLine,  setAddressLine] = useState("");
-  const [zipCode,      setZipCode]     = useState("");
-
-  // Shipping & payment
-  const [shippingId, setShippingId] = useState("");
-  const selectedShipping = shippingMethods.find((s) => s.id === shippingId);
-  const shippingPrice = selectedShipping ? Number(selectedShipping.fee) : 0;
-  const SUBTOTAL = cartItems.reduce((s, i) => s + i.price * i.qty, 0);
-  const DISCOUNT = 0;
-  const TAX = 0;
-  const total = SUBTOTAL - DISCOUNT + TAX + shippingPrice;
 
   const [openMethod,       setOpenMethod]       = useState<string | null>(null);
   const [showProviderDrop, setShowProviderDrop] = useState(false);
