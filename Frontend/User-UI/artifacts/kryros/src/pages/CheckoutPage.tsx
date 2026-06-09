@@ -60,9 +60,6 @@ const DIAL_COUNTRIES = [
   { name: "UAE",          code: "AE", dial: "+971" },
 ];
 
-
-
-
 const DEFAULT_CHECKOUT_METHODS = [
   { id: "mobile",   label: "Mobile Money",   sub: "MTN, Airtel, Zamtel",       icon: Smartphone, iconBg: "bg-primary/10" },
   { id: "card",     label: "Card Payment",   sub: "Visa, Mastercard & more",   icon: CreditCard, iconBg: "bg-blue-50 dark:bg-blue-900/20" },
@@ -140,12 +137,16 @@ export default function CheckoutPage() {
         if (defaultCountry && !country) setCountry(defaultCountry.name);
       })
       .catch(() => {
-        // Fallback to Zambia if API fails
-        setShippingCountries([{ name: 'Zambia', code: 'ZM', shippingEnabled: true, isActive: true }]);
+        // Fallback removed to keep it dynamic. If it fails, it remains empty or user can be notified.
+        setShippingCountries([]);
       });
   }, []);
 
   // ── Dynamic shipping methods from admin panel ────────────────────────────────
+  const [shippingMethods,   setShippingMethods]   = useState<ApiShippingMethod[]>([]);
+  const [shippingLoading,   setShippingLoading]   = useState(true);
+  const [shippingId,        setShippingId]        = useState("");
+
   useEffect(() => {
     setShippingLoading(true);
     fetchShippingMethods()
@@ -163,8 +164,9 @@ export default function CheckoutPage() {
 
   // ── Dynamic payment config from admin panel ─────────────────────────────────
   const [bankProviders, setBankProviders]   = useState<{ name: string; config?: { accountName?: string; accountNumber?: string } }[]>([]);
-  const [mobileNetworks, setMobileNetworks] = useState<string[]>(["MTN", "Airtel", "Zamtel", "M-Pesa"]);
+  const [mobileNetworks, setMobileNetworks] = useState<string[]>([]);
   const [apiMethodTypes, setApiMethodTypes] = useState<string[]>([]);
+  const [isConfigLoaded, setIsConfigLoaded] = useState(false);
 
   useEffect(() => {
     fetch(`${API_BASE}/api/payment-config/public`)
@@ -184,26 +186,27 @@ export default function CheckoutPage() {
                 .filter((n: any) => n.isEnabled)
                 .map((n: any) => (n.name as string).replace(/\s*Mobile\s*Money\s*/i, "").trim()),
             );
-          if (nets.length > 0) setMobileNetworks(nets);
+          setMobileNetworks(nets);
+          if (nets.length > 0) setMmProvider(nets[0]);
         }
         const enabledTypes = arr.filter((m: any) => m.isEnabled).map((m: any) => m.type as string);
         setApiMethodTypes(enabledTypes);
+        setIsConfigLoaded(true);
       })
-      .catch(() => {});
+      .catch(() => {
+        setIsConfigLoaded(true);
+      });
   }, []);
 
   const TYPE_TO_ID: Record<string, string> = {
-    mobile_wallet: "mobile", card: "card", bank: "bank", cash: "cod", digital_wallet: "whatsapp",
+    mobile_wallet: "mobile", card: "card", bank: "bank", cash: "cod", digital_wallet: "whatsapp", whatsapp: "whatsapp",
   };
-  const activeCheckoutMethods =
-    apiMethodTypes.length > 0
-      ? (apiMethodTypes.map((t) => DEFAULT_CHECKOUT_METHODS.find((m) => m.id === (TYPE_TO_ID[t] ?? t))).filter(Boolean) as typeof DEFAULT_CHECKOUT_METHODS)
-      : DEFAULT_CHECKOUT_METHODS;
-
-  if (!activeCheckoutMethods.find((m) => m.id === "whatsapp")) {
-    const wa = DEFAULT_CHECKOUT_METHODS.find((m) => m.id === "whatsapp");
-    if (wa) activeCheckoutMethods.push(wa);
-  }
+  
+  const activeCheckoutMethods = isConfigLoaded 
+    ? apiMethodTypes
+        .map((t) => DEFAULT_CHECKOUT_METHODS.find((m) => m.id === (TYPE_TO_ID[t] ?? t)))
+        .filter(Boolean) as typeof DEFAULT_CHECKOUT_METHODS
+    : [];
 
   // ── Helpers: register phone + send receipt ──────────────────────────────────
   const registerPhoneForSms = (customerPhone: string, customerName: string) => {
@@ -263,9 +266,6 @@ export default function CheckoutPage() {
   const [zipCode,      setZipCode]     = useState("");
 
   // Shipping & payment
-  const [shippingMethods,   setShippingMethods]   = useState<ApiShippingMethod[]>([]);
-  const [shippingLoading,   setShippingLoading]   = useState(true);
-  const [shippingId,        setShippingId]        = useState("");
   const shippingPrice = shippingMethods.find((s) => s.id === shippingId) ? Number(shippingMethods.find((s) => s.id === shippingId)!.fee) : 0;
   const SUBTOTAL = cartItems.reduce((s, i) => s + i.price * i.qty, 0);
   const DISCOUNT = 0;
@@ -281,7 +281,7 @@ export default function CheckoutPage() {
   const [cvv,       setCvv]       = useState("");
   const [cardName,  setCardName]  = useState("");
   const [saveCard,  setSaveCard]  = useState(false);
-  const [mmProvider, setMmProvider] = useState("MTN");
+  const [mmProvider, setMmProvider] = useState("");
   const [mmPhone,   setMmPhone]   = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
   const [proofFile, setProofFile] = useState<string | null>(null);
@@ -302,101 +302,103 @@ export default function CheckoutPage() {
     currencyCode: selectedCurrency.code,
     currencySymbol: selectedCurrency.symbol,
     exchangeRate: selectedCurrency.exchangeRate,
-    ...(openMethod === "mobile" && mmProvider ? { notes: `Mobile money provider: ${mmProvider}${orderNotes ? ` | Notes: ${orderNotes}` : ""}` } : orderNotes ? { notes: orderNotes } : {}),
-    addressDetails: {
-      email, firstName, lastName, phone,
-      address: addressLine || `${city}, ${state}, ${country}`,
-      zipCode: zipCode || undefined,
-      countryName: country, stateName: state || undefined, cityName: city || undefined, manual: true,
+    ...(openMethod === "mobile" && mmProvider ? { notes: `Mobile money provider: ${mmProvider}` } : {}),
+    ...(orderNotes ? { orderNotes } : {}),
+    shippingMethodId: shippingId,
+    shippingFee: shippingPrice,
+    customerDetails: {
+      firstName: firstName.trim(),
+      lastName: lastName.trim(),
+      email: email.trim() || undefined,
+      phone: `${phoneCountry.dial}${phone.replace(/^0+/, "").trim()}`,
+      address: addressLine.trim(),
+      city: city.trim(),
+      state: state.trim(),
+      country: country.trim(),
+      zipCode: zipCode.trim() || undefined,
     },
   });
 
-  const startPolling = (orderId: string, orderNum: string) => {
-    const headers: Record<string, string> = { "Content-Type": "application/json" };
-    if (authToken) headers["Authorization"] = `Bearer ${authToken}`;
-    let attempts = 0;
-    const MAX_ATTEMPTS = 36;
-    pollRef.current = setInterval(async () => {
-      attempts++;
-      if (attempts > MAX_ATTEMPTS) {
-        clearInterval(pollRef.current!);
-        setMmPhase("timed_out");
-        return;
-      }
-      try {
-        const r = await fetch(`${API_BASE}/api/payments/status/${orderId}`, { headers });
-        if (!r.ok) return;
-        const d = await r.json().catch(() => null);
-        if (!d) return;
-        const status = d.status ?? d.paymentStatus ?? "";
-        if (status === "PAID") {
-          clearInterval(pollRef.current!);
-          setPlacedOrderNumber(orderNum);
-          clearCart();
-          setOrdered(true);
-          registerPhoneForSms(phone, `${firstName} ${lastName}`);
-          sendReceiptAfterOrder(orderNum, total.toFixed(2), `Mobile Money (${mmProvider})`);
-          setMmPhase("idle");
-        } else if (status === "FAILED") {
-          clearInterval(pollRef.current!);
-          setMmPhase("failed_init");
-        }
-      } catch { /* ignore */ }
-    }, 5000);
-  };
-
   const handleMobileMoneyPay = async () => {
-    if (isSubmitting || !mmPhone.trim()) return;
+    if (!mmPhone.trim()) { toast.error("Please enter your mobile money number"); return; }
     setIsSubmitting(true);
+    setMmPhase("initializing");
     setOrderError(null);
+
     try {
-      const headers: Record<string, string> = { "Content-Type": "application/json" };
-      if (authToken) headers["Authorization"] = `Bearer ${authToken}`;
-      const zmwRate = allCurrencies.find((c) => c.code === "ZMW")?.exchangeRate ?? 18.86;
-      const totalZMW = total * zmwRate;
-      const res = await fetch(`${API_BASE}/api/orders`, { method: "POST", headers, body: JSON.stringify(buildOrderPayload("MOBILE_MONEY", totalZMW)) });
-      const data = await res.json().catch(() => ({}));
+      const payload = buildOrderPayload("mobile_wallet", total);
+      const res = await fetch(`${API_BASE}/api/orders`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(authToken ? { "Authorization": `Bearer ${authToken}` } : {}) },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
       if (!res.ok) {
-        const msg = Array.isArray(data.message) ? data.message.join(", ") : data.message || "Failed to place order.";
+        const msg = data.message || "Failed to initialize mobile money payment.";
         setOrderError(msg);
+        setMmPhase("failed_init");
         toast.error(msg);
         setIsSubmitting(false);
         return;
       }
-      const orderId  = data.id ?? "";
-      const orderNum = data.orderNumber ?? data.id ?? "";
-      setPlacedOrderId(orderId);
+
+      const orderNum = data.orderNumber || data.id;
+      setPlacedOrderNumber(orderNum);
+      setPlacedOrderId(data.id);
       setSavedCartItems([...cartItems]);
-      setMmPhase("initializing");
-      setOpenMethod(null);
-      try {
-        const initRes = await fetch(`${API_BASE}/api/payments/initialize`, { method: "POST", headers, body: JSON.stringify({ orderId, phone: mmPhone, amount: Math.round(totalZMW * 100) / 100 }) });
-        if (!initRes.ok) { setMmPhase("failed_init"); setIsSubmitting(false); return; }
-        setMmPhase("waiting");
-        startPolling(orderId, orderNum);
-      } catch { setMmPhase("failed_init"); }
+      setMmPhase("waiting");
+
+      let attempts = 0;
+      const MAX_ATTEMPTS = 60; // 3 minutes (3s * 60)
+      pollRef.current = setInterval(async () => {
+        attempts++;
+        if (attempts > MAX_ATTEMPTS) {
+          if (pollRef.current) clearInterval(pollRef.current);
+          setMmPhase("timed_out");
+          setIsSubmitting(false);
+          return;
+        }
+        try {
+          const sRes = await fetch(`${API_BASE}/api/orders/${data.id}/status`);
+          const sData = await sRes.json();
+          if (sData.status === "paid" || sData.status === "processing" || sData.status === "completed") {
+            if (pollRef.current) clearInterval(pollRef.current);
+            setOrdered(true);
+            clearCart();
+            registerPhoneForSms(phone, `${firstName} ${lastName}`);
+            sendReceiptAfterOrder(orderNum, total.toFixed(2), `Mobile Money (${mmProvider})`);
+            setIsSubmitting(false);
+          } else if (sData.status === "failed" || sData.status === "cancelled") {
+            if (pollRef.current) clearInterval(pollRef.current);
+            setOrderError("Payment was declined or cancelled.");
+            setMmPhase("failed_init");
+            setIsSubmitting(false);
+          }
+        } catch { /* ignore poll errors */ }
+      }, 3000);
+
     } catch {
-      const msg = "Network error. Please check your connection and try again.";
-      setOrderError(msg);
-      toast.error(msg);
-    } finally { setIsSubmitting(false); }
+      setOrderError("Network error. Please try again.");
+      setMmPhase("failed_init");
+      setIsSubmitting(false);
+    }
   };
 
   const handlePlaceOrder = async () => {
-    if (isSubmitting || cartItems.length === 0) return;
     setIsSubmitting(true);
     setOrderError(null);
     try {
-      const headers: Record<string, string> = { "Content-Type": "application/json" };
-      if (authToken) headers["Authorization"] = `Bearer ${authToken}`;
-      const PAYMENT_METHOD_MAP: Record<string, string> = { card: "CARD", bank: "BANK_TRANSFER", whatsapp: "WHATSAPP", apple: "CARD", google: "CARD", crypto: "CARD" };
-      const backendPaymentMethod = PAYMENT_METHOD_MAP[openMethod ?? "card"] ?? "CARD";
-      const zmwRate  = allCurrencies.find((c) => c.code === "ZMW")?.exchangeRate ?? 18.86;
-      const totalZMW = total * zmwRate;
-      const res = await fetch(`${API_BASE}/api/orders`, { method: "POST", headers, body: JSON.stringify(buildOrderPayload(backendPaymentMethod, totalZMW)) });
-      const data = await res.json().catch(() => ({}));
+      const backendMethod = openMethod === "bank" ? "bank" : openMethod === "whatsapp" ? "digital_wallet" : "card";
+      const payload = buildOrderPayload(backendMethod, total);
+      const res = await fetch(`${API_BASE}/api/orders`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(authToken ? { "Authorization": `Bearer ${authToken}` } : {}) },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
       if (!res.ok) {
-        const msg = Array.isArray(data.message) ? data.message.join(", ") : data.message || "Failed to place order.";
+        const msg = data.message || "Failed to place order. Please try again.";
         setOrderError(msg);
         toast.error(msg);
         setIsSubmitting(false);
@@ -598,7 +600,6 @@ export default function CheckoutPage() {
               {/* Country picker modal (for phone dial code) */}
               {showCountryPicker && (
                 <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center" onClick={() => setShowCountryPicker(false)}>
-                  <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
                   <div className="relative w-full max-w-sm bg-card border border-border rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center justify-between px-4 pt-4 pb-3 border-b border-border">
                       <h3 className="text-sm font-bold text-foreground">Select Country Code</h3>
@@ -779,26 +780,31 @@ export default function CheckoutPage() {
               )}
 
               <div className="space-y-2">
-                {activeCheckoutMethods.map((method) => {
-                  const Icon = method.icon;
-                  return (
-                    <button key={method.id} onClick={() => { setOpenMethod(method.id); setOrderError(null); setMmPhase("idle"); }} className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl border border-border bg-card hover:border-primary/50 hover:bg-primary/[0.02] active:scale-[0.99] transition-all text-left">
-                      <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${method.iconBg}`}><Icon /></div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-bold text-foreground">{method.label}</p>
-                        <p className="text-[11px] text-muted-foreground">{method.id === "mobile" ? mobileNetworks.join(", ") : method.sub}</p>
-                      </div>
-                      <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                    </button>
-                  );
-                })}
+                {activeCheckoutMethods.length > 0 ? (
+                  activeCheckoutMethods.map((method) => {
+                    const Icon = method.icon;
+                    return (
+                      <button key={method.id} onClick={() => { setOpenMethod(method.id); setOrderError(null); setMmPhase("idle"); }} className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl border border-border bg-card hover:border-primary/50 hover:bg-primary/[0.02] active:scale-[0.99] transition-all text-left">
+                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${method.iconBg}`}><Icon /></div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-bold text-foreground">{method.label}</p>
+                          <p className="text-[11px] text-muted-foreground">{method.id === "mobile" ? mobileNetworks.join(", ") : method.sub}</p>
+                        </div>
+                        <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                      </button>
+                    );
+                  })
+                ) : (
+                  <div className="p-4 text-center text-muted-foreground">
+                    <p className="text-sm">No payment methods available.</p>
+                  </div>
+                )}
               </div>
 
               {mmPhase === "waiting" && (
                 <div className="mt-3 p-3 rounded-2xl bg-amber-50 dark:bg-amber-900/15 border border-amber-200 dark:border-amber-900/30 text-[11px] text-amber-700 dark:text-amber-200 flex items-start gap-2">
                   <Clock className="w-3 h-3 mt-0.5" />
                   <div>
-                    <p className="font-semibold mb-0.5">Waiting for your mobile money payment…</p>
                     <p>Check your phone and approve the payment prompt. This can take up to 3 minutes.</p>
                   </div>
                 </div>
@@ -832,6 +838,7 @@ export default function CheckoutPage() {
               <div className="flex items-center justify-between pt-1 pb-2">
                 {(() => {
                   const m = activeCheckoutMethods.find((x) => x.id === openMethod)!;
+                  if (!m) return null;
                   const Icon = m.icon;
                   return (
                     <div className="flex items-center gap-2.5">
@@ -852,7 +859,7 @@ export default function CheckoutPage() {
                     <label className="block text-[11px] font-semibold text-muted-foreground mb-1.5">Provider</label>
                     <button type="button" onClick={() => setShowProviderDrop((v) => !v)} className="w-full flex items-center gap-2.5 border border-border rounded-2xl px-3.5 py-3 bg-background hover:border-primary/50 transition-colors">
                       <Smartphone className="w-5 h-5 text-primary flex-shrink-0" />
-                      <span className="flex-1 text-sm font-semibold text-foreground text-left">{mmProvider}</span>
+                      <span className="flex-1 text-sm font-semibold text-foreground text-left">{mmProvider || "Select Provider"}</span>
                       <ChevronDown className={`w-4 h-4 text-muted-foreground flex-shrink-0 transition-transform ${showProviderDrop ? "rotate-180" : ""}`} />
                     </button>
                     {showProviderDrop && (
@@ -966,7 +973,6 @@ export default function CheckoutPage() {
                   <SecureFooter />
                 </div>
               )}
-
               {/* CARD PAYMENT */}
               {openMethod === "card" && (
                 <div className="space-y-4">
