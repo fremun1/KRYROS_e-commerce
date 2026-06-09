@@ -1,312 +1,419 @@
-import { Switch, Route, Router as WouterRouter, useLocation, Redirect } from "wouter";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Toaster } from "sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { lazy, Suspense, useEffect, useState, useRef } from "react";
+export const API_BASE = import.meta.env.VITE_API_URL
+  ? import.meta.env.VITE_API_URL.replace(/\/api$/, "")
+  : "";
 
-import Header from "@/components/layout/Header";
-import Footer from "@/components/layout/Footer";
-import MobileBottomNav from "@/components/layout/MobileBottomNav";
-
-// ── Route-based code splitting ─────────────────────────────────────────────────
-const HomePage          = lazy(() => import("@/pages/HomePage"));
-const ShopPage          = lazy(() => import("@/pages/ShopPage"));
-const ProductPage       = lazy(() => import("@/pages/ProductPage"));
-const CartPage          = lazy(() => import("@/pages/CartPage"));
-const CheckoutPage      = lazy(() => import("@/pages/CheckoutPage"));
-const GetNowPage        = lazy(() => import("@/pages/GetNowPage"));
-const TrackOrderPage    = lazy(() => import("@/pages/TrackOrderPage"));
-const PickupStationsPage = lazy(() => import("@/pages/PickupStationsPage"));
-const WholesalePage     = lazy(() => import("@/pages/WholesalePage"));
-const DashboardPage     = lazy(() => import("@/pages/DashboardPage"));
-const LoginPage         = lazy(() => import("@/pages/LoginPage"));
-const RegisterPage      = lazy(() => import("@/pages/RegisterPage"));
-const AboutPage         = lazy(() => import("@/pages/AboutPage"));
-const ContactPage       = lazy(() => import("@/pages/ContactPage"));
-const PrivacyPage       = lazy(() => import("@/pages/PrivacyPage"));
-const TermsPage         = lazy(() => import("@/pages/TermsPage"));
-const RefundPage        = lazy(() => import("@/pages/RefundPage"));
-const HelpPage          = lazy(() => import("@/pages/HelpPage"));
-const FaqPage           = lazy(() => import("@/pages/FaqPage"));
-const ReturnsPage       = lazy(() => import("@/pages/ReturnsPage"));
-const ShippingPage      = lazy(() => import("@/pages/ShippingPage"));
-const SecurityPage      = lazy(() => import("@/pages/SecurityPage"));
-const PayPage           = lazy(() => import("@/pages/PayPage"));
-const WishlistPage      = lazy(() => import("@/pages/WishlistPage"));
-const NotFound          = lazy(() => import("@/pages/not-found"));
-
-import SplashScreen from "@/components/SplashScreen";
-import { useAuthStore } from "@/store/authStore";
-import { useCurrencyStore } from "@/store/currencyStore";
-
-// ── QueryClient ────────────────────────────────────────────────────────────────
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 60_000,
-      gcTime: 5 * 60_000,
-      retry: 1,
-      refetchOnWindowFocus: false,
-    },
-  },
-});
-
-const WHATSAPP_NUMBER = import.meta.env.VITE_WHATSAPP_NUMBER || "260969597029";
-
-// ── WhatsApp Floating Button ───────────────────────────────────────────────────
-function WhatsAppFloatingButton() {
-  const [hovered, setHovered] = useState(false);
-  const [location] = useLocation();
-  const hide = ["/login", "/register", "/pay"].includes(location);
-  if (hide) return null;
-
-  const message = encodeURIComponent("Hi KRYROS! I need some help 👋");
-  const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${message}`;
-
-  return (
-    <a
-      href={url}
-      target="_blank"
-      rel="noopener noreferrer"
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      className="fixed bottom-20 right-4 z-50 flex items-center gap-2.5 group"
-      aria-label="Chat on WhatsApp"
-    >
-      {hovered && (
-        <span className="bg-white text-gray-800 text-sm font-medium px-3 py-1.5 rounded-full shadow-lg whitespace-nowrap">
-          Chat on WhatsApp
-        </span>
-      )}
-      <div
-        className="w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-transform duration-200"
-        style={{
-          background: "linear-gradient(135deg, var(--kryros-primary-hover) 0%, var(--kryros-primary) 100%)",
-          transform: hovered ? "scale(1.1)" : "scale(1)",
-        }}
-      >
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="white">
-          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-        </svg>
-      </div>
-    </a>
-  );
+export interface Product {
+  id: string;
+  name: string;
+  brand: string;
+  brandId?: number;
+  category: string;
+  categoryId?: string;
+  price: number;
+  oldPrice: number;
+  discount: number;
+  rating: number;
+  reviewCount: number;
+  stock: number;
+  specs: string;
+  description: string;
+  image: string;
+  images: string[];
+  additionalImages?: string[];
+  badge?: string;
+  isNew?: boolean;
+  isTrending?: boolean;
+  isBestSeller?: boolean;
+  isFeatured?: boolean;
+  isFlashSale?: boolean;
+  // Credit / Get Now
+  allowCredit?: boolean;
+  creditMessage?: string | null;
+  // Wholesale
+  isWholesaleOnly?: boolean;
+  wholesalePrice?: number | null;
+  wholesaleMoq?: number;
 }
 
-// ── Page Transition Loader — shown between route changes ──────────────────────
-// Shows while the next page's data loads in the background.
-// Auto-dismisses after PAGE_TRANSITION_MS so the page reveals with content ready.
-const PAGE_TRANSITION_MS = 1400;
-
-function PageTransitionLoader({ visible }: { visible: boolean }) {
-  return (
-    <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 9998,
-        background: "hsl(var(--background))",
-        backdropFilter: "none",
-        WebkitBackdropFilter: "none",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        transition: "opacity 0.35s ease",
-        opacity: visible ? 1 : 0,
-        pointerEvents: visible ? "auto" : "none",
-      }}
-    >
-      {/* Thin teal progress bar at top */}
-      <div
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          height: 3,
-          background: "linear-gradient(90deg, var(--kryros-primary), var(--kryros-primary-hover))",
-          borderRadius: "0 2px 2px 0",
-          animation: visible ? "ktp-progress 1.3s ease-out forwards" : "none",
-        }}
-      />
-
-      {/* Logo wrap with pulsing rings */}
-      <div style={{ position: "relative", width: 100, height: 100, display: "flex", alignItems: "center", justifyContent: "center" }}>
-        {[1, 2].map((i) => (
-          <div
-            key={i}
-            style={{
-              position: "absolute",
-              borderRadius: "50%",
-              border: `1.5px solid rgba(var(--kryros-primary-rgb),${0.4 - i * 0.12})`,
-              width: 46 + i * 24,
-              height: 46 + i * 24,
-              animation: `ktp-ring 1.6s ease-out ${(i - 1) * 0.3}s infinite`,
-            }}
-          />
-        ))}
-        <img
-          src="/kryros-logo.png"
-          alt="KRYROS"
-          style={{
-            width: 44,
-            height: 44,
-            objectFit: "contain",
-            animation: "ktp-blink 1.4s ease-in-out infinite",
-            zIndex: 1,
-            position: "relative",
-          }}
-        />
-      </div>
-
-      {/* Bouncing dots */}
-      <div style={{ display: "flex", gap: 6, marginTop: 18 }}>
-        {[0, 1, 2].map((i) => (
-          <div
-            key={i}
-            style={{
-              width: 5,
-              height: 5,
-              borderRadius: "50%",
-              background: "var(--kryros-primary)",
-              animation: `ktp-dot 0.85s ease-in-out ${i * 0.16}s infinite`,
-            }}
-          />
-        ))}
-      </div>
-
-      <style>{`
-        @keyframes ktp-progress {
-          0%   { width: 0%; }
-          40%  { width: 60%; }
-          80%  { width: 85%; }
-          100% { width: 100%; }
-        }
-        @keyframes ktp-ring {
-          0%   { transform: scale(0.82); opacity: 0.85; }
-          60%  { opacity: 0.3; }
-          100% { transform: scale(1.22); opacity: 0; }
-        }
-        @keyframes ktp-blink {
-          0%, 100% { opacity: 1; }
-          50%       { opacity: 0.4; }
-        }
-        @keyframes ktp-dot {
-          0%, 100% { transform: translateY(0);    opacity: 0.3; }
-          50%       { transform: translateY(-7px); opacity: 1; }
-        }
-      `}</style>
-    </div>
-  );
+export interface ApiBrand {
+  id: number;
+  name: string;
+  slug?: string;
+  logo?: string;
 }
 
-// ── Lightweight Suspense fallback (JS chunk loading) ──────────────────────────
-function PageLoader() {
-  return (
-    <div style={{ minHeight: "60vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <div style={{
-        width: 32, height: 32,
-        border: "3px solid var(--kryros-light-border)",
-        borderTop: "3px solid var(--kryros-primary)",
-        borderRadius: "50%",
-        animation: "spin 0.7s linear infinite",
-      }} />
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-    </div>
-  );
+export interface ApiCategory {
+  id: string;
+  name: string;
+  slug?: string;
+  image?: string;
+  icon?: string;
+  _count?: { products: number };
 }
 
-// ── AppRoutes — handles both splash and page transitions ──────────────────────
-function AppRoutes() {
-  const { getMe } = useAuthStore();
-  const { fetchCurrencies } = useCurrencyStore();
-  const [location] = useLocation();
-  const prevLocationRef = useRef(location);
-  const [transitioning, setTransitioning] = useState(false);
-  const transitionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+export interface ApiBanner {
+  id: string;
+  title: string;
+  subtitle?: string;
+  image?: string;
+  videoUrl?: string;
+  mediaType?: string;
+  duration?: number;
+  link?: string;
+  linkText?: string;
+  badge?: string;
+  tag?: string;
+  isActive: boolean;
+  position?: number;
+}
 
-  useEffect(() => {
-    getMe();
-    fetchCurrencies();
-  }, []);
+export interface ApiSiteConfig {
+  key: string;
+  value: Record<string, unknown>;
+}
 
-  // Trigger page transition overlay on every route change
-  useEffect(() => {
-    if (location !== prevLocationRef.current) {
-      prevLocationRef.current = location;
+export interface ApiCMSSection {
+  id: string;
+  type: string;
+  title?: string;
+  subtitle?: string;
+  isActive: boolean;
+  order?: number;
+  pageSlug?: string;
+  config?: Record<string, unknown>;
+}
+export interface ApiBrandBanner {
+  id: string;
+  brandSlug: string;
+  brandName: string;
+  tagline?: string;
+  description?: string;
+  bgColor?: string;
+  bgGradient?: string;  // repurposed as brand accent/text color
+  ctaText?: string;
+  ctaLink?: string;
+  isActive?: boolean;
+  imageUrl?: string;
+}
 
-      // Clear any in-flight transition timer
-      if (transitionTimerRef.current) clearTimeout(transitionTimerRef.current);
-
-      // Show the overlay immediately
-      setTransitioning(true);
-
-      // Auto-dismiss after PAGE_TRANSITION_MS — by then the page data is loading
-      transitionTimerRef.current = setTimeout(() => {
-        setTransitioning(false);
-      }, PAGE_TRANSITION_MS);
-    }
-    return () => {
-      if (transitionTimerRef.current) clearTimeout(transitionTimerRef.current);
+export interface ApiOrder {
+  id: string;
+  orderNumber?: string;
+  status: string;
+  createdAt: string;
+  estimatedDelivery?: string;
+  total?: number;
+  items?: {
+    product?: {
+      name?: string;
+      specs?: string;
+      images?: { url: string; isPrimary?: boolean }[] | string[];
     };
-  }, [location]);
-
-  const hideShell = ["/pay", "/checkout", "/dashboard", "/cart"].includes(location);
-
-  return (
-    <>
-      <PageTransitionLoader visible={transitioning} />
-      {!hideShell && <Header />}
-      <Suspense fallback={<PageLoader />}>
-        <Switch>
-          <Route path="/" component={HomePage} />
-          <Route path="/shop" component={ShopPage} />
-          <Route path="/product/:slug" component={ProductPage} />
-          <Route path="/cart" component={CartPage} />
-          <Route path="/checkout" component={CheckoutPage} />
-          <Route path="/get-now" component={GetNowPage} />
-          <Route path="/track-order" component={TrackOrderPage} />
-          <Route path="/track" component={TrackOrderPage} />
-          <Route path="/pickup-stations" component={PickupStationsPage} />
-          <Route path="/wholesale" component={WholesalePage} />
-          <Route path="/dashboard" component={DashboardPage} />
-          <Route path="/login" component={LoginPage} />
-          <Route path="/register" component={RegisterPage} />
-          <Route path="/about" component={AboutPage} />
-          <Route path="/contact" component={ContactPage} />
-          <Route path="/privacy" component={PrivacyPage} />
-          <Route path="/terms" component={TermsPage} />
-          <Route path="/refund" component={RefundPage} />
-          <Route path="/help" component={HelpPage} />
-          <Route path="/faq" component={FaqPage} />
-          <Route path="/returns" component={ReturnsPage} />
-          <Route path="/shipping" component={ShippingPage} />
-          <Route path="/security" component={SecurityPage} />
-          <Route path="/pay" component={PayPage} />
-          <Route path="/wishlist" component={WishlistPage} />
-          <Route component={NotFound} />
-        </Switch>
-      </Suspense>
-      {!hideShell && <Footer />}
-      {!hideShell && <MobileBottomNav />}
-      <WhatsAppFloatingButton />
-    </>
-  );
+    quantity?: number;
+  }[];
 }
 
-// ── Root App ───────────────────────────────────────────────────────────────────
-export default function App() {
-  const [showSplash, setShowSplash] = useState(true);
+export interface ApiShippingMethod {
+  id: string;
+  name: string;
+  description?: string;
+  fee: number | string;
+  minThreshold?: number | string;
+  estimatedDays?: string;
+  isActive: boolean;
+  sortOrder?: number;
+}
 
-  return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        {showSplash && <SplashScreen onDone={() => setShowSplash(false)} />}
-        <WouterRouter>
-          <AppRoutes />
-        </WouterRouter>
-        <Toaster position="top-center" richColors />
-      </TooltipProvider>
-    </QueryClientProvider>
-  );
+export interface ApiShippingZone {
+  id: string;
+  name: string;
+  type?: string;
+  address?: string;
+  city?: string;
+  country?: string;
+  operatingHours?: string;
+  isActive?: boolean;
+  image?: string;
+  isRecommended?: boolean;
+}
+
+export interface ApiHomepageSection {
+  id: string;
+  type: string;
+  title?: string;
+  isActive: boolean;
+  config?: Record<string, unknown>;
+  order?: number;
+}
+
+function normalizeProduct(p: any): Product {
+  const basePrice = Number(p.price || 0);
+  const salePrice = p.salePrice ? Number(p.salePrice) : 0;
+  const flashPrice = p.flashSalePrice ? Number(p.flashSalePrice) : 0;
+  const effectivePrice = flashPrice > 0 ? flashPrice : salePrice > 0 ? salePrice : basePrice;
+  const originalPrice = basePrice > effectivePrice ? basePrice : effectivePrice;
+  const discount =
+    originalPrice > effectivePrice
+      ? Math.round((1 - effectivePrice / originalPrice) * 100)
+      : Number(p.discount || 0);
+
+  const imageList: string[] = (p.images || [])
+    .map((img: any) => (typeof img === "string" ? img : img?.url || ""))
+    .filter(Boolean);
+
+  const mainImage = imageList[0] || p.imageUrl || p.image || "";
+
+  return {
+    id: p.id || "",
+    name: p.name || "",
+    brand: p.brand?.name || p.brandName || "",
+    brandId: p.brand?.id,
+    category: p.category?.name || p.categoryName || "",
+    categoryId: p.category?.id || p.categoryId || "",
+    price: effectivePrice,
+    oldPrice: originalPrice,
+    discount,
+    rating: Number(p.rating || 0),
+    reviewCount: Number(p.reviewCount || p._count?.reviews || 0),
+    stock: p.stockCurrent ?? p.inventory?.stock ?? p.stock ?? 0,
+    description: p.description || '',
+    specs: (() => {
+      // Prefer structured specifications array from backend
+      if (Array.isArray(p.specifications) && p.specifications.length > 0) {
+        return p.specifications
+          .map((s: any) => `${s.key}: ${s.value}`)
+          .join(' · ');
+      }
+      // Try to parse specifications JSON string
+      if (typeof p.specifications === 'string' && p.specifications.trim()) {
+        try {
+          const parsed = JSON.parse(p.specifications);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            return parsed.map((s: any) => `${s.key}: ${s.value}`).join(' · ');
+          }
+        } catch {}
+        // Plain string specs
+        return p.specifications;
+      }
+      // No specs — show nothing (description is only on product detail page)
+      return '';
+    })(),
+    image: mainImage,
+    images: imageList,
+    additionalImages: imageList.length > 1 ? imageList.slice(1) : undefined,
+    badge: discount > 0 ? `-${discount}%` : undefined,
+    isNew: !!(p.isNew),
+    isTrending: !!(p.isTrending),
+    isBestSeller: !!(p.isBestSeller),
+    isFeatured: !!(p.isFeatured),
+    isFlashSale: !!(p.isFlashSale),
+    // Credit
+    allowCredit: !!(p.allowCredit),
+    creditMessage: p.creditMessage ?? null,
+    // Wholesale
+    isWholesaleOnly: !!(p.isWholesaleOnly),
+    wholesalePrice: p.wholesalePrice ? Number(p.wholesalePrice) : null,
+    wholesaleMoq: p.wholesaleMoq ? Number(p.wholesaleMoq) : 1,
+  };
+}
+
+async function apiFetch<T>(path: string, token?: string): Promise<T | null> {
+  try {
+    const url = `${API_BASE}${path}`;
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+    const res = await fetch(url, { headers });
+    if (!res.ok) return null;
+    return (await res.json()) as T;
+  } catch {
+    return null;
+  }
+}
+
+export async function fetchProducts(
+  params: {
+    take?: number;
+    skip?: number;
+    categoryId?: string;
+    categorySlug?: string;
+    search?: string;
+    featured?: boolean;
+    isFlashSale?: boolean;
+    popularity?: "trending" | "bestseller" | "new" | "hot" | "sale";
+    allowCredit?: boolean;
+    isWholesaleOnly?: boolean;
+  } = {}
+): Promise<Product[]> {
+  const qs = new URLSearchParams();
+  if (params.take !== undefined) qs.set("take", String(params.take));
+  if (params.skip !== undefined) qs.set("skip", String(params.skip));
+  if (params.categoryId) qs.set("categoryId", params.categoryId);
+  if (params.categorySlug) qs.set("categorySlug", params.categorySlug);
+  if (params.search) qs.set("search", params.search);
+  if (params.featured !== undefined) qs.set("featured", String(params.featured));
+  if (params.isFlashSale !== undefined) qs.set("isFlashSale", String(params.isFlashSale));
+  if (params.popularity) qs.set("popularity", params.popularity);
+  if (params.allowCredit !== undefined) qs.set("allowCredit", String(params.allowCredit));
+  // Default: exclude wholesale-only products from regular listings unless caller explicitly sets isWholesaleOnly
+  qs.set("isWholesaleOnly", params.isWholesaleOnly !== undefined ? String(params.isWholesaleOnly) : "false");
+
+  const result = await apiFetch<{ data: any[]; meta: any }>(`/api/products?${qs.toString()}`);
+  if (!result?.data) return [];
+  return result.data.map(normalizeProduct);
+}
+
+export async function fetchFlashSaleProducts(): Promise<Product[]> {
+  const result = await apiFetch<any[]>("/api/products/flash-sales");
+  if (!Array.isArray(result)) return [];
+  return result.map(normalizeProduct);
+}
+
+export async function fetchFeaturedProducts(take?: number): Promise<Product[]> {
+  const qs = take ? `?take=${take}` : "";
+  const result = await apiFetch<any[]>(`/api/products/featured${qs}`);
+  if (!Array.isArray(result)) return [];
+  return result.map(normalizeProduct);
+}
+
+export async function fetchProductById(id: string): Promise<Product | null> {
+  const result = await apiFetch<any>(`/api/products/${id}`);
+  if (!result || !result.id) return null;
+  return normalizeProduct(result);
+}
+
+export async function fetchRelatedProducts(id: string | number): Promise<Product[]> {
+  const result = await apiFetch<any[]>(`/api/products/${id}/related`);
+  if (!Array.isArray(result)) return [];
+  return result.map(normalizeProduct);
+}
+
+export async function fetchCategories(): Promise<ApiCategory[]> {
+  const result = await apiFetch<ApiCategory[]>("/api/categories");
+  if (!Array.isArray(result)) return [];
+  return result;
+}
+
+export async function fetchHomepageCategories(): Promise<ApiCategory[]> {
+  const result = await apiFetch<ApiCategory[]>("/api/categories/homepage");
+  if (!Array.isArray(result)) return [];
+  return result;
+}
+
+export async function fetchBrands(): Promise<ApiBrand[]> {
+  const result = await apiFetch<ApiBrand[]>("/api/brands");
+  if (!Array.isArray(result)) return [];
+  return result;
+}
+
+export async function fetchBanners(): Promise<ApiBanner[]> {
+  const result = await apiFetch<ApiBanner[]>("/api/cms/banners");
+  if (!Array.isArray(result)) return [];
+  return result.filter((b) => b.isActive);
+}
+
+export async function fetchOrders(token: string): Promise<ApiOrder[]> {
+  const result = await apiFetch<any>("/api/orders/my-orders", token);
+  if (!result) return [];
+  const list = Array.isArray(result) ? result : result.data ?? result.orders ?? [];
+  return list as ApiOrder[];
+}
+
+export async function fetchShippingZones(type?: string): Promise<ApiShippingZone[]> {
+  const qs = type ? `?type=${type}` : "";
+  const result = await apiFetch<any[]>(`/api/shipping-zones${qs}`);
+  if (!Array.isArray(result)) return [];
+  return result;
+}
+
+export async function fetchShippingMethods(): Promise<ApiShippingMethod[]> {
+  const result = await apiFetch<ApiShippingMethod[]>("/api/shipping/active");
+  if (!Array.isArray(result)) return [];
+  return result.map((m) => ({
+    ...m,
+    fee: Number(m.fee ?? 0),
+    minThreshold: Number(m.minThreshold ?? 0),
+  }));
+}
+
+export async function fetchHomepageSections(type?: string): Promise<ApiHomepageSection[]> {
+  const qs = type ? `?type=${type}` : "";
+  const result = await apiFetch<any[]>(`/api/cms/homepage-sections${qs}`);
+  if (!Array.isArray(result)) return [];
+  return result.filter((s) => s.isActive !== false);
+}
+
+export async function fetchAllBrandBanners(): Promise<ApiBrandBanner[]> {
+  try {
+    const res = await fetch(`${API_BASE}/api/cms/brand-banners`, { cache: "no-store" });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return Array.isArray(data) ? data : [];
+  } catch {
+    return [];
+  }
+}
+
+export async function fetchBrandBannerBySlug(slug: string): Promise<ApiBrandBanner | null> {
+  try {
+    const res = await fetch(`${API_BASE}/api/cms/brand-banners/${slug}`, { cache: "no-store" });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Fetch CMS sections for a non-homepage page.
+ * Calls GET /api/cms/sections?pageSlug={pageSlug}
+ * Auto-seeds from backend defaults on first call (no manual DB seeding needed).
+ */
+export async function fetchPageSections(pageSlug: string): Promise<ApiCMSSection[]> {
+  try {
+    const res = await fetch(`${API_BASE}/api/cms/sections?pageSlug=${encodeURIComponent(pageSlug)}`, { cache: "no-store" });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return Array.isArray(data) ? data.filter((s: ApiCMSSection) => s.isActive !== false) : [];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Fetch a site-config entry by key from the CMS.
+ * Calls GET /api/cms/site-config/{key}
+ * Returns the config value, or null if not found.
+ * Auto-seeds backend defaults on first access.
+ */
+export async function fetchSiteConfig<T = Record<string, unknown>>(key: string): Promise<T | null> {
+  try {
+    const res = await fetch(`${API_BASE}/api/cms/site-config/${encodeURIComponent(key)}`, { cache: "no-store" });
+    if (!res.ok) return null;
+    const data: ApiSiteConfig | null = await res.json();
+    return (data?.value as T) ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Fetch store status settings (open/closed state and message).
+ * Returns { isStoreClosed: boolean, message: string, openingTime: string, closingTime: string }
+ */
+export async function fetchStoreStatus(): Promise<{
+  isStoreClosed: boolean;
+  message: string;
+  openingTime: string;
+  closingTime: string;
+  operatingDays?: string;
+  nextOpeningTime?: string;
+  nextOpeningDay?: string;
+} | null> {
+  try {
+    const res = await fetch(`${API_BASE}/api/settings/store-status`, { cache: "no-store" });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
 }
