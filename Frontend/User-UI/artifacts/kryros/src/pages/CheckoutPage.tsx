@@ -3,7 +3,7 @@ import { Link, useLocation } from "wouter";
 import { useCartStore } from "@/store/cartStore";
 import { useAuthStore } from "@/store/authStore";
 import { useCurrencyStore } from "@/store/currencyStore";
-import { API_BASE, fetchShippingMethods, type ApiShippingMethod } from "@/lib/api";
+import { API_BASE, fetchShippingMethods, fetchMatchingShippingMethods, type ApiShippingMethod } from "@/lib/api";
 import { toast } from "sonner";
 import {
   Check,
@@ -126,6 +126,7 @@ export default function CheckoutPage() {
       .then((data: any) => {
         const raw: any[] = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : [];
         const mapped = raw.map((c: any) => ({
+          id: c.id,
           name: c.name || '',
           code: c.code || '',
           shippingEnabled: c.shippingEnabled !== false,
@@ -147,19 +148,32 @@ export default function CheckoutPage() {
   const [shippingId,        setShippingId]        = useState("");
 
   useEffect(() => {
+    if (step !== 3) return;
+
     setShippingLoading(true);
-    fetchShippingMethods()
+    // Try to find the country ID from shippingCountries
+    const selectedCountryObj = shippingCountries.find(c => c.name === country);
+    
+    fetchMatchingShippingMethods({
+      countryId: (selectedCountryObj as any)?.id,
+      manual: true,
+      stateName: state,
+      cityName: city,
+    })
       .then((methods) => {
         setShippingMethods(methods);
         if (methods.length > 0) {
-          setShippingId(methods[0].id);
+          // Keep current selection if it still exists, otherwise pick first
+          if (!methods.find(m => m.id === shippingId)) {
+            setShippingId(methods[0].id);
+          }
         }
       })
       .catch(() => {
         setShippingMethods([]);
       })
       .finally(() => setShippingLoading(false));
-  }, []);
+  }, [step, country, state, city, shippingCountries]);
 
   // ── Dynamic payment config from admin panel ─────────────────────────────────
   const [bankProviders, setBankProviders]   = useState<{ name: string; config?: { accountName?: string; accountNumber?: string } }[]>([]);

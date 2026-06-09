@@ -335,6 +335,36 @@ export async function fetchShippingMethods(): Promise<ApiShippingMethod[]> {
   }));
 }
 
+export async function fetchMatchingShippingMethods(params: {
+  countryId?: string;
+  stateId?: string;
+  cityId?: string;
+  manual?: boolean;
+  stateName?: string;
+  cityName?: string;
+}): Promise<ApiShippingMethod[]> {
+  const qs = new URLSearchParams();
+  if (params.countryId) qs.set("countryId", params.countryId);
+  if (params.stateId) qs.set("stateId", params.stateId);
+  if (params.cityId) qs.set("cityId", params.cityId);
+  if (params.manual) qs.set("manual", "true");
+  if (params.stateName) qs.set("stateName", params.stateName);
+  if (params.cityName) qs.set("cityName", params.cityName);
+
+  const result = await apiFetch<any[]>(`/api/shipping-zones/matching?${qs.toString()}`);
+  if (!Array.isArray(result)) return [];
+  return result.map((m) => ({
+    id: m.id,
+    name: m.name,
+    description: m.description,
+    fee: Number(m.price ?? 0),
+    minThreshold: Number(m.freeShippingThreshold ?? 0),
+    estimatedDays: m.estimatedDays,
+    isActive: m.status !== false,
+    sortOrder: m.sortOrder ?? 0,
+  }));
+}
+
 export async function fetchHomepageSections(type?: string): Promise<ApiHomepageSection[]> {
   const qs = type ? `?type=${type}` : "";
   const result = await apiFetch<any[]>(`/api/cms/homepage-sections${qs}`);
