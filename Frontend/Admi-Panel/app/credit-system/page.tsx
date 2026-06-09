@@ -462,7 +462,7 @@ function CreditContent() {
             value={prodImages[0] || ''}
             onChange={(url) => setProdImages(prev => url ? [...prev, url] : prev)}
             multiple
-            onUrlChange={(urls) => setProdImages(urls)}
+            onUrlChange={(url) => setProdImages(prev => url ? [...prev, url] : prev)}
           />
         </div>
         <FormField label="Description" value={prodForm.description} onChange={v => setProdForm(f => ({ ...f, description: v }))} type="textarea" isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Detailed product description..." />
@@ -486,7 +486,7 @@ function CreditContent() {
               value={prodImages[0] || ''}
               onChange={(url) => setProdImages(prev => url ? [...prev, url] : prev)}
               multiple
-              onUrlChange={(urls) => setProdImages(urls)}
+              onUrlChange={(url) => setProdImages(prev => url ? [...prev, url] : prev)}
             />
           </div>
           <FormField label="Description" value={prodForm.description} onChange={v => setProdForm(f => ({ ...f, description: v }))} type="textarea" isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Detailed product description..." />
