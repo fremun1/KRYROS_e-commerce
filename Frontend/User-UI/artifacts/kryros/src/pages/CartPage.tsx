@@ -135,7 +135,8 @@ export default function CartPage() {
                 </span>
               </div>
 
-              {/* Free shipping progress */}
+              {/* FREE_SHIPPING_UI: banner hidden. Restore by uncommenting the block below. */}
+              {/*
               {shippingUnlocked ? (
                 <p className="text-xs text-green-600 font-semibold">🎉 Free shipping unlocked!</p>
               ) : (
@@ -144,7 +145,6 @@ export default function CartPage() {
                     You have <span className="text-primary font-bold">{qualifyingCount}</span> qualifying item{qualifyingCount !== 1 ? "s" : ""}.
                     Add <span className="text-primary font-bold">{itemsRemaining}</span> more for free shipping.
                   </p>
-                  {/* Progress bar */}
                   <div className="w-full bg-border rounded-full h-1.5 overflow-hidden">
                     <div
                       className="h-full bg-primary rounded-full transition-all duration-500"
@@ -157,6 +157,7 @@ export default function CartPage() {
                   </p>
                 </div>
               )}
+              */}
             </div>
             <div className="border-t border-border pt-3 mb-5">
               <div className="flex justify-between">
