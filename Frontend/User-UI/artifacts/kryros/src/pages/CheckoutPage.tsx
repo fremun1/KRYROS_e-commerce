@@ -206,7 +206,7 @@ export default function CheckoutPage() {
   const activeCheckoutMethods =
     apiMethodTypes.length > 0
       ? (apiMethodTypes.map((t) => DEFAULT_CHECKOUT_METHODS.find((m) => m.id === (TYPE_TO_ID[t] ?? t))).filter(Boolean) as typeof DEFAULT_CHECKOUT_METHODS)
-      : DEFAULT_CHECKOUT_METHODS;
+      : [...DEFAULT_CHECKOUT_METHODS];
 
   if (!activeCheckoutMethods.find((m) => m.id === "whatsapp")) {
     const wa = DEFAULT_CHECKOUT_METHODS.find((m) => m.id === "whatsapp");
@@ -271,7 +271,8 @@ export default function CheckoutPage() {
 
   // Shipping & payment
   const [shippingId, setShippingId] = useState("");
-  const shippingPrice = shippingMethods.find((s) => s.id === shippingId) ? Number(shippingMethods.find((s) => s.id === shippingId)!.fee) : 0;
+  const selectedShipping = shippingMethods.find((s) => s.id === shippingId);
+  const shippingPrice = selectedShipping ? Number(selectedShipping.fee) : 0;
   const SUBTOTAL = cartItems.reduce((s, i) => s + i.price * i.qty, 0);
   const DISCOUNT = 0;
   const TAX = 0;
@@ -799,7 +800,8 @@ export default function CheckoutPage() {
               {/* Sheet header */}
               <div className="flex items-center justify-between pt-1 pb-2">
                 {(() => {
-                  const m = activeCheckoutMethods.find((x) => x.id === openMethod)!;
+                  const m = activeCheckoutMethods.find((x) => x.id === openMethod);
+                  if (!m) return null;
                   const Icon = m.icon;
                   return (
                     <div className="flex items-center gap-2.5">

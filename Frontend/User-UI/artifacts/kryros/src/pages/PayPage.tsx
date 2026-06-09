@@ -335,7 +335,7 @@ export default function PayPage() {
     ? (apiMethodTypes
         .map((t) => DEFAULT_METHODS.find((m) => m.id === (TYPE_TO_ID[t] ?? t)))
         .filter(Boolean) as typeof DEFAULT_METHODS)
-    : DEFAULT_METHODS;
+    : [...DEFAULT_METHODS];
   const [payError, setPayError] = useState<string | null>(null);
   const [payLoading, setPayLoading] = useState(false);
   const [payStatus, setPayStatus] = useState<"idle" | "sending" | "waiting" | "paid" | "failed">("idle");
@@ -792,7 +792,8 @@ export default function PayPage() {
               {/* Sheet header */}
               <div className="flex items-center justify-between pt-1 pb-2">
                 {(() => {
-                  const m = activeMethods.find((x) => x.id === openMethod)!;
+                  const m = activeMethods.find((x) => x.id === openMethod);
+                  if (!m) return null;
                   const Icon = m.icon;
                   return (
                     <div className="flex items-center gap-2.5">
