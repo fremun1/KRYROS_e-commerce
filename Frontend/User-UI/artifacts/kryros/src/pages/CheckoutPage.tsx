@@ -117,7 +117,7 @@ export default function CheckoutPage() {
   const allCurrencies    = useCurrencyStore((s) => s.currencies);
 
   // ── Dynamic countries from admin panel ──────────────────────────────────────
-  type ShippingCountry = { name: string; code: string; shippingEnabled: boolean; isActive: boolean };
+  type ShippingCountry = { id?: string; name: string; code: string; shippingEnabled: boolean; isActive: boolean };
   const [shippingCountries, setShippingCountries] = useState<ShippingCountry[]>([]);
 
   useEffect(() => {
@@ -152,13 +152,13 @@ export default function CheckoutPage() {
 
     setShippingLoading(true);
     // Try to find the country ID from shippingCountries
-    const selectedCountryObj = shippingCountries.find(c => c.name === country);
+    const selectedCountryObj = shippingCountries?.find(c => c.name === country);
     
     fetchMatchingShippingMethods({
-      countryId: (selectedCountryObj as any)?.id,
+      countryId: selectedCountryObj?.id,
       manual: true,
-      stateName: state,
-      cityName: city,
+      stateName: state || "",
+      cityName: city || "",
     })
       .then((methods) => {
         setShippingMethods(methods);
