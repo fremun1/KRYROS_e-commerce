@@ -522,12 +522,12 @@ export default function CheckoutPage() {
       </div>
 
       {/* Main content */}
-      <div className="flex-1 overflow-y-auto px-4 pb-6 space-y-3">
+      <div className="flex-1 overflow-y-auto pb-6 space-y-3">
 
         {/* ── STEP 1: Contact ── */}
         {step === 1 && (
           <div className="space-y-4">
-            <div className="bg-card border border-border rounded-3xl p-5 space-y-4">
+            <div className="bg-card border-y border-border px-4 py-5 space-y-4">
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-bold text-foreground">Contact information</h2>
                 {authUser
@@ -567,7 +567,7 @@ export default function CheckoutPage() {
                       <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
                     </button>
                   </div>
-                  <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Enter your phone number" type="tel" className="w-full px-4 py-3.5 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
+                  <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone number" type="tel" className="w-full px-4 py-3.5 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
                 </div>
               </div>
 
@@ -600,7 +600,7 @@ export default function CheckoutPage() {
               )}
             </div>
 
-            <button onClick={goToStep2} className="w-full py-3 rounded-2xl bg-[var(--kryros-primary-hover)] text-white text-sm font-semibold flex items-center justify-center gap-2">
+            <button onClick={goToStep2} className="w-full py-3.5 mx-auto rounded-2xl bg-[var(--kryros-primary-hover)] text-white text-sm font-semibold flex items-center justify-center gap-2 px-4">
               Continue to Address <ChevronRight className="w-4 h-4" />
             </button>
           </div>
@@ -609,7 +609,7 @@ export default function CheckoutPage() {
         {/* ── STEP 2: Address ── */}
         {step === 2 && (
           <div className="space-y-4">
-            <div className="bg-card border border-border rounded-3xl p-5 space-y-4">
+            <div className="bg-card border-y border-border px-4 py-5 space-y-4">
               <h2 className="text-sm font-bold text-foreground">Shipping address</h2>
 
               {/* Country — dynamic from admin panel */}
@@ -643,11 +643,11 @@ export default function CheckoutPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <label className="flex items-center gap-1 text-[11px] font-semibold text-muted-foreground"><MapPin className="w-3 h-3" />State / Province</label>
-                  <input value={state} onChange={(e) => setState(e.target.value)} placeholder="Lusaka Province" className="w-full px-4 py-3.5 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
+                  <input value={state} onChange={(e) => setState(e.target.value)} placeholder="State / Province" className="w-full px-4 py-3.5 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
                 </div>
                 <div className="space-y-1.5">
                   <label className="flex items-center gap-1 text-[11px] font-semibold text-muted-foreground"><Home className="w-3 h-3" />City</label>
-                  <input value={city} onChange={(e) => setCity(e.target.value)} placeholder="Lusaka" className="w-full px-4 py-3.5 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
+                  <input value={city} onChange={(e) => setCity(e.target.value)} placeholder="City" className="w-full px-4 py-3.5 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
                 </div>
               </div>
 
@@ -662,7 +662,7 @@ export default function CheckoutPage() {
               </div>
             </div>
 
-            <button onClick={goToStep3} className="w-full py-3 rounded-2xl bg-[var(--kryros-primary-hover)] text-white text-sm font-semibold flex items-center justify-center gap-2">
+            <button onClick={goToStep3} className="w-full py-3.5 px-4 rounded-2xl bg-[var(--kryros-primary-hover)] text-white text-sm font-semibold flex items-center justify-center gap-2">
               Continue to Shipping <ChevronRight className="w-4 h-4" />
             </button>
             <button onClick={() => setStep(1)} className="w-full text-xs text-muted-foreground text-center hover:text-primary transition-colors py-2">← Back to Contact</button>
@@ -672,7 +672,7 @@ export default function CheckoutPage() {
         {/* ── STEP 3: Shipping ── */}
         {step === 3 && (
           <div className="space-y-4">
-            <div className="bg-card border border-border rounded-3xl p-4 space-y-4">
+            <div className="bg-card border-y border-border px-4 py-5 space-y-4">
               <h2 className="text-sm font-bold text-foreground">
                 Delivery options <span className="text-[11px] text-muted-foreground font-normal">(for {city || "your area"})</span>
               </h2>
@@ -700,7 +700,7 @@ export default function CheckoutPage() {
                 })}
               </div>
             </div>
-            <button onClick={() => setStep(4)} className="w-full py-3 rounded-2xl bg-[var(--kryros-primary-hover)] text-white text-sm font-semibold flex items-center justify-center gap-2">
+            <button onClick={() => setStep(4)} className="w-full py-3.5 px-4 rounded-2xl bg-[var(--kryros-primary-hover)] text-white text-sm font-semibold flex items-center justify-center gap-2">
               Continue to Payment <ChevronRight className="w-4 h-4" />
             </button>
             <button onClick={() => setStep(2)} className="w-full text-xs text-muted-foreground text-center hover:text-primary transition-colors py-2">← Back to Address</button>
@@ -710,7 +710,7 @@ export default function CheckoutPage() {
         {/* ── STEP 4: Payment ── */}
         {step === 4 && (
           <div className="space-y-4">
-            <div className="bg-card border border-border rounded-3xl p-4 space-y-4">
+            <div className="bg-card border-y border-border px-4 py-5 space-y-4">
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-bold text-foreground">How would you like to pay?</h2>
                 <span className="text-[11px] text-muted-foreground">Powered by Kryros Pay</span>
@@ -753,7 +753,7 @@ export default function CheckoutPage() {
               )}
             </div>
 
-            <div className="bg-card border border-border rounded-3xl p-4 space-y-3">
+            <div className="bg-card border-y border-border px-4 py-4 space-y-3">
               <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Subtotal</span><span className="font-semibold">{format(SUBTOTAL)}</span></div>
               <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Shipping</span><span className="font-semibold">{shippingPrice === 0 ? "Free" : format(shippingPrice)}</span></div>
               <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Estimated tax</span><span className="font-semibold">{format(TAX)}</span></div>
