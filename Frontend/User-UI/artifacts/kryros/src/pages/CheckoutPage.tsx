@@ -437,8 +437,8 @@ export default function CheckoutPage() {
   if (ordered) {
     const isManual = openMethod === "bank" || openMethod === "whatsapp";
     return (
-      <div className="max-w-lg mx-auto bg-background min-h-screen flex flex-col px-6 pt-12 pb-8">
-        <div className="flex-1 flex flex-col items-center justify-center text-center space-y-6">
+      <div className="max-w-lg mx-auto bg-background flex flex-col" style={{ height: "100dvh" }}>
+        <div className="flex-1 flex flex-col items-center justify-center text-center space-y-6 px-6 pt-12">
           <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-2">
             <Check className="w-10 h-10 text-primary" strokeWidth={3} />
           </div>
@@ -471,7 +471,7 @@ export default function CheckoutPage() {
             )}
           </div>
         </div>
-        <div className="space-y-3">
+        <div className="space-y-3 px-6 pb-8">
           {openMethod === "whatsapp" && (
             <button onClick={handleWhatsAppRedirect} className="w-full py-4 bg-[var(--kryros-primary-hover)] text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 hover:opacity-90 active:scale-95 transition-all">
               <span className="w-5 h-5 rounded-full bg-white/10 flex items-center justify-center text-[10px] font-semibold">WA</span>
@@ -489,7 +489,7 @@ export default function CheckoutPage() {
   const hasPaymentError = !!orderError || mmPhase === "failed_init" || mmPhase === "timed_out";
 
   return (
-    <div className="max-w-lg mx-auto bg-background min-h-screen flex flex-col">
+    <div className="max-w-lg mx-auto bg-background flex flex-col" style={{ height: "100dvh" }}>
       {/* Header */}
       <div className="sticky top-0 z-20 flex items-center justify-between px-4 pt-5 pb-4 bg-background/90 backdrop-blur border-b border-border/40">
         <button onClick={() => navigate("/cart")} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground">
