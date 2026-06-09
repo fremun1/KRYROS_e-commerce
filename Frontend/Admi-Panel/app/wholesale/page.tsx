@@ -5,7 +5,7 @@ import DataTable, { Column } from '@/components/admin/data-table';
 import PageHeader from '@/components/admin/page-header';
 import { Modal, ConfirmDialog, FormField, ModalFooter } from '@/components/admin/modal';
 import { useTheme } from '@/contexts/theme-context';
-import { Truck, Users, Star, Package, ChevronRight, ChevronLeft } from 'lucide-react';
+import { Truck, Users, Star, Package, ChevronRight, ChevronLeft, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getWholesaleAccounts, updateWholesaleAccountStatus, deleteWholesaleAccount, updateWholesaleAccount, getWholesaleDeals, createWholesaleDeal, updateWholesaleDeal, deleteWholesaleDeal, getProducts, createProduct, updateProduct, deleteProduct } from '@/lib/api';
 import CloudinaryUpload from '@/components/ui/file-upload';
