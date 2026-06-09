@@ -116,6 +116,36 @@ export default function CheckoutPage() {
   const selectedCurrency = useCurrencyStore((s) => s.selected);
   const allCurrencies    = useCurrencyStore((s) => s.currencies);
 
+  // ── State ───────────────────────────────────────────────────────────────────
+  const [step, setStep] = useState(1);
+  const [ordered,          setOrdered]          = useState(false);
+  const [isSubmitting,     setIsSubmitting]      = useState(false);
+  const [orderError,       setOrderError]        = useState<string | null>(null);
+  const [placedOrderNumber, setPlacedOrderNumber] = useState<string>("");
+  const [placedOrderId,    setPlacedOrderId]     = useState<string>("");
+  const [mmPhase, setMmPhase] = useState<"idle" | "initializing" | "waiting" | "failed_init" | "timed_out">("idle");
+  const [waMessage,        setWaMessage]         = useState<string>("");
+  const [savedCartItems,   setSavedCartItems]    = useState<typeof cartItems>([]);
+  const pollRef     = useRef<ReturnType<typeof setInterval> | null>(null);
+  const whatsappNumber = import.meta.env.VITE_WHATSAPP_NUMBER || "260969597029";
+
+  // Contact
+  const [firstName,     setFirstName]     = useState(authUser?.firstName ?? "");
+  const [lastName,      setLastName]      = useState(authUser?.lastName ?? "");
+  const [email,         setEmail]         = useState(authUser?.email ?? "");
+  const [phone,         setPhone]         = useState("");
+  const [orderNotes,    setOrderNotes]    = useState("");
+  const [phoneCountry,  setPhoneCountry]  = useState(DIAL_COUNTRIES[0]);
+  const [showCountryPicker, setShowCountryPicker] = useState(false);
+  const [countrySearch, setCountrySearch] = useState("");
+
+  // Address
+  const [country,      setCountry]     = useState("");
+  const [state,        setState]       = useState("");
+  const [city,         setCity]        = useState("");
+  const [addressLine,  setAddressLine] = useState("");
+  const [zipCode,      setZipCode]     = useState("");
+
   // ── Dynamic countries from admin panel ──────────────────────────────────────
   type ShippingCountry = { id?: string; name: string; code: string; shippingEnabled: boolean; isActive: boolean };
   const [shippingCountries, setShippingCountries] = useState<ShippingCountry[]>([]);
@@ -198,13 +228,13 @@ export default function CheckoutPage() {
         if (mobileMethod?.providers?.length > 0) {
           const nets: string[] = mobileMethod.providers
             .filter((p: any) => p.isEnabled)
-            .flatMap((p: any) =>
+            .map((p: any) => 
               (p.networks || [])
                 .filter((n: any) => n.isEnabled)
-                .map((n: any) => (n.name as string).replace(/\s*Mobile\s*Money\s*/i, "").trim()),
-            );
+                .map((n: any) => (n.name as string).replace(/\s*Mobile\s*Money\s*/i, "").trim())
+            ).flat();
           setMobileNetworks(nets);
-          if (nets.length > 0) setMmProvider(nets[0]);
+          if (nets.length > 0 && !mmProvider) setMmProvider(nets[0]);
         }
 
         // Active types
@@ -253,36 +283,6 @@ export default function CheckoutPage() {
       }),
     }).catch(() => {});
   };
-
-  // ── State ───────────────────────────────────────────────────────────────────
-  const [step, setStep] = useState(1);
-  const [ordered,          setOrdered]          = useState(false);
-  const [isSubmitting,     setIsSubmitting]      = useState(false);
-  const [orderError,       setOrderError]        = useState<string | null>(null);
-  const [placedOrderNumber, setPlacedOrderNumber] = useState<string>("");
-  const [placedOrderId,    setPlacedOrderId]     = useState<string>("");
-  const [mmPhase, setMmPhase] = useState<"idle" | "initializing" | "waiting" | "failed_init" | "timed_out">("idle");
-  const [waMessage,        setWaMessage]         = useState<string>("");
-  const [savedCartItems,   setSavedCartItems]    = useState<typeof cartItems>([]);
-  const pollRef     = useRef<ReturnType<typeof setInterval> | null>(null);
-  const whatsappNumber = import.meta.env.VITE_WHATSAPP_NUMBER || "260969597029";
-
-  // Contact
-  const [firstName,     setFirstName]     = useState(authUser?.firstName ?? "");
-  const [lastName,      setLastName]      = useState(authUser?.lastName ?? "");
-  const [email,         setEmail]         = useState(authUser?.email ?? "");
-  const [phone,         setPhone]         = useState("");
-  const [orderNotes,    setOrderNotes]    = useState("");
-  const [phoneCountry,  setPhoneCountry]  = useState(DIAL_COUNTRIES[0]);
-  const [showCountryPicker, setShowCountryPicker] = useState(false);
-  const [countrySearch, setCountrySearch] = useState("");
-
-  // Address
-  const [country,      setCountry]     = useState("");
-  const [state,        setState]       = useState("");
-  const [city,         setCity]        = useState("");
-  const [addressLine,  setAddressLine] = useState("");
-  const [zipCode,      setZipCode]     = useState("");
 
   // Shipping & payment
   const shippingPrice = shippingMethods.find((s) => s.id === shippingId) ? Number(shippingMethods.find((s) => s.id === shippingId)!.fee) : 0;
