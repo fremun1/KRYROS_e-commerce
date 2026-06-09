@@ -6,7 +6,6 @@ import { PaymentConfigService } from './payment-config.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 
 @Controller('payment-config')
-@UseInterceptors(CacheInterceptor)
 export class PaymentConfigController {
   constructor(private readonly svc: PaymentConfigService) {}
 

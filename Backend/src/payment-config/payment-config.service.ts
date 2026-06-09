@@ -47,6 +47,8 @@ export class PaymentConfigService {
 
   // ── CheckoutMethod CRUD ─────────────────────────────────────────────────
   async createMethod(data: { name: string; type: string; icon?: string }) {
+    await this.cacheManager.del('payment-config-methods');
+    await this.cacheManager.del('payment-config-public');
     const last = await this.prisma.checkoutMethod.findFirst({ orderBy: { sortOrder: 'desc' } });
     return this.prisma.checkoutMethod.create({
       data: { ...data, sortOrder: (last?.sortOrder ?? -1) + 1 },
@@ -94,6 +96,8 @@ export class PaymentConfigService {
     description?: string;
     config?: any; // eslint-disable-line @typescript-eslint/no-explicit-any
   }) {
+    await this.cacheManager.del('payment-config-methods');
+    await this.cacheManager.del('payment-config-public');
     const last = await this.prisma.checkoutProvider.findFirst({
       where: { checkoutMethodId: data.paymentMethodId },
       orderBy: { sortOrder: 'desc' },
@@ -144,6 +148,8 @@ export class PaymentConfigService {
   }
 
   async createNetwork(data: { providerId: string; name: string }) {
+    await this.cacheManager.del('payment-config-methods');
+    await this.cacheManager.del('payment-config-public');
     const last = await this.prisma.checkoutNetwork.findFirst({
       where: { providerId: data.providerId },
       orderBy: { sortOrder: 'desc' },
