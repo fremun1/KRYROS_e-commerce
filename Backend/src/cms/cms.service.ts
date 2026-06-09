@@ -209,7 +209,7 @@ export class CMSService {
         config: {
           tag: 'FREE SHIPPING',
           title: 'Free Shipping Nationwide',
-          subtitle: 'On all orders over K500.',
+          subtitle: 'On all orders over $500.',
           cta: 'Shop Now',
           href: '/shop',
           image: 'https://images.unsplash.com/photo-1578575437130-527eed3abbec?w=800&q=80',

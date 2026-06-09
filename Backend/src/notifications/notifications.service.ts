@@ -474,7 +474,7 @@ export class NotificationsService implements OnModuleInit {
 
       const firstName = (order as any).user?.firstName || (order as any).shippingAddress?.firstName || 'Valued Customer';
       const userEmail = (order as any).user?.email || (order as any).shippingAddress?.email;
-      const total = order.totalZMW ? `K${Number(order.totalZMW).toLocaleString()}` : `${order.currencyCode} ${order.total}`;
+      const total = order.totalZMW ? `$${Number(order.totalZMW).toLocaleString()}` : `${order.currencyCode} ${order.total}`;
       const currency = order.currencyCode || 'ZMW';
 
       const address = (order as any).shippingAddress;

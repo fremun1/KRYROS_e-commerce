@@ -45,9 +45,9 @@ function WholesaleContent() {
         phone: w.user?.phone || w.phone || '',
         city: w.city || '',
         tier: w.tierName || (w.discountTier===1?'Bronze':w.discountTier===2?'Silver':w.discountTier===3?'Gold':'Platinum') || 'Bronze',
-        credit: w.creditLimit ? `K${Number(w.creditLimit).toLocaleString()}` : 'K0',
+        credit: w.creditLimit ? `K${Number(w.creditLimit).toLocaleString()}` : '$0',
         orders: w._count?.orders ?? 0,
-        totalSpent: 'K0',
+        totalSpent: '$0',
         status: w.status === 'ACTIVE' || w.status === 'APPROVED' ? 'Active' : w.status === 'PENDING' ? 'Pending' : 'Inactive',
         joined: w.createdAt ? w.createdAt.split('T')[0] : '',
       }));

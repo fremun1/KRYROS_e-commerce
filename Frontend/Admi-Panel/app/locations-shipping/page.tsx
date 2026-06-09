@@ -372,8 +372,8 @@ function ShippingContent() {
     {key:'name',label:'Zone Name',render:(v)=><span style={{fontWeight:600,color:textMain}}>{String(v)}</span>},
     {key:'region',label:'Region',render:(v)=><span style={{color:textMuted,fontSize:'12px'}}>{String(v)||'—'}</span>},
     {key:'method',label:'Method',render:(v)=><span style={{color:textMain,fontSize:'12px'}}>{String(v)||'—'}</span>},
-    {key:'rate',label:'Rate',render:(v)=><span style={{fontWeight:600,color:'#1FA89A'}}>K{String(v)}</span>},
-    {key:'minOrder',label:'Min Order',render:(v)=><span style={{color:textMuted,fontSize:'12px'}}>K{String(v)}</span>},
+    {key:'rate',label:'Rate',render:(v)=><span style={{fontWeight:600,color:'#1FA89A'}}>${String(v)}</span>},
+    {key:'minOrder',label:'Min Order',render:(v)=><span style={{color:textMuted,fontSize:'12px'}}>${String(v)}</span>},
     {key:'days',label:'Est. Days',render:(v)=><span style={{color:textMuted,fontSize:'12px'}}>{String(v)||'—'}</span>},
     {key:'status',label:'Status',render:(v)=><span style={{padding:'3px 10px',borderRadius:'20px',fontSize:'12px',fontWeight:600,background:v==='Active'?'rgba(31,168,154,0.12)':'rgba(100,116,139,0.1)',color:v==='Active'?'#1FA89A':'#8E9AAF'}}>{String(v)}</span>},
   ];
@@ -381,7 +381,7 @@ function ShippingContent() {
   const methodColumns: Column[] = [
     {key:'name',label:'Name',render:(v)=><span style={{fontWeight:600,color:textMain}}>{String(v)}</span>},
     {key:'description',label:'Description',render:(v)=><span style={{color:textMuted,fontSize:'12px'}}>{String(v).slice(0,40)||'—'}</span>},
-    {key:'fee',label:'Fee',render:(v)=><span style={{fontWeight:600,color:'#1FA89A'}}>K{String(v)}</span>},
+    {key:'fee',label:'Fee',render:(v)=><span style={{fontWeight:600,color:'#1FA89A'}}>${String(v)}</span>},
     {key:'minThreshold',label:'Free Ship Above',render:(v)=><span style={{color:textMuted,fontSize:'12px'}}>{Number(v)>0?`K${v}`:'—'}</span>},
     {key:'estimatedDays',label:'Est. Days',render:(v)=><span style={{color:textMuted,fontSize:'12px'}}>{String(v)||'—'}</span>},
     {key:'status',label:'Status',render:(v)=><span style={{padding:'3px 10px',borderRadius:'20px',fontSize:'12px',fontWeight:600,background:v==='Active'?'rgba(31,168,154,0.12)':'rgba(100,116,139,0.1)',color:v==='Active'?'#1FA89A':'#8E9AAF'}}>{String(v)}</span>},
@@ -464,8 +464,8 @@ function ShippingContent() {
             <FormField label="Region / Area" value={zoneForm.region} onChange={zfp('region')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. Central Province"/>
             <FormField label="Countries Covered (comma-separated)" value={zoneForm.countries} onChange={zfp('countries')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. Zambia"/>
             <FormField label="Default Shipping Method" value={zoneForm.method} onChange={zfp('method')} options={METHODS_LIST} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}/>
-            <FormField label="Shipping Rate (K)" value={zoneForm.rate} onChange={zfp('rate')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="0"/>
-            <FormField label="Minimum Order (K)" value={zoneForm.minOrder} onChange={zfp('minOrder')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="0"/>
+            <FormField label="Shipping Rate ($)" value={zoneForm.rate} onChange={zfp('rate')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="0"/>
+            <FormField label="Minimum Order ($)" value={zoneForm.minOrder} onChange={zfp('minOrder')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="0"/>
             <FormField label="Estimated Delivery Days" value={zoneForm.days} onChange={zfp('days')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 2-3 days"/>
             <FormField label="Status" value={zoneForm.status} onChange={zfp('status')} options={['Active','Inactive']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}/>
             <ModalFooter onClose={()=>setAddZoneOpen(false)} onSubmit={handleAddZone} loading={loadingZone} submitLabel="Add Zone" isDark={isDark} border={border} textMain={textMain}/>
@@ -475,8 +475,8 @@ function ShippingContent() {
             <FormField label="Region / Area" value={zoneForm.region} onChange={zfp('region')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}/>
             <FormField label="Countries Covered" value={zoneForm.countries} onChange={zfp('countries')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}/>
             <FormField label="Default Shipping Method" value={zoneForm.method} onChange={zfp('method')} options={METHODS_LIST} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}/>
-            <FormField label="Shipping Rate (K)" value={zoneForm.rate} onChange={zfp('rate')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}/>
-            <FormField label="Minimum Order (K)" value={zoneForm.minOrder} onChange={zfp('minOrder')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}/>
+            <FormField label="Shipping Rate ($)" value={zoneForm.rate} onChange={zfp('rate')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}/>
+            <FormField label="Minimum Order ($)" value={zoneForm.minOrder} onChange={zfp('minOrder')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}/>
             <FormField label="Estimated Delivery Days" value={zoneForm.days} onChange={zfp('days')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}/>
             <FormField label="Status" value={zoneForm.status} onChange={zfp('status')} options={['Active','Inactive']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}/>
             <ModalFooter onClose={()=>setEditZone(null)} onSubmit={handleEditZone} loading={loadingZone} submitLabel="Save Changes" isDark={isDark} border={border} textMain={textMain}/>
@@ -492,8 +492,8 @@ function ShippingContent() {
           <Modal open={addMethodOpen} onClose={()=>setAddMethodOpen(false)} title="Add Shipping Method">
             <FormField label="Method Name *" value={methodForm.name} onChange={mfp('name')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. Standard Delivery"/>
             <FormField label="Description" value={methodForm.description} onChange={mfp('description')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Brief description"/>
-            <FormField label="Fee (K)" value={methodForm.fee} onChange={mfp('fee')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="0"/>
-            <FormField label="Free Shipping Above (K)" value={methodForm.minThreshold} onChange={mfp('minThreshold')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="0 = never free"/>
+            <FormField label="Fee ($)" value={methodForm.fee} onChange={mfp('fee')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="0"/>
+            <FormField label="Free Shipping Above ($)" value={methodForm.minThreshold} onChange={mfp('minThreshold')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="0 = never free"/>
             <FormField label="Estimated Delivery Days" value={methodForm.estimatedDays} onChange={mfp('estimatedDays')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 2-3 business days"/>
             <FormField label="Sort Order" value={methodForm.sortOrder} onChange={mfp('sortOrder')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="0"/>
             <FormField label="Status" value={methodForm.status} onChange={mfp('status')} options={['Active','Inactive']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}/>
@@ -502,8 +502,8 @@ function ShippingContent() {
           <Modal open={!!editMethod} onClose={()=>setEditMethod(null)} title={`Edit: ${editMethod?.name??''}`}>
             <FormField label="Method Name *" value={methodForm.name} onChange={mfp('name')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}/>
             <FormField label="Description" value={methodForm.description} onChange={mfp('description')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}/>
-            <FormField label="Fee (K)" value={methodForm.fee} onChange={mfp('fee')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}/>
-            <FormField label="Free Shipping Above (K)" value={methodForm.minThreshold} onChange={mfp('minThreshold')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}/>
+            <FormField label="Fee ($)" value={methodForm.fee} onChange={mfp('fee')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}/>
+            <FormField label="Free Shipping Above ($)" value={methodForm.minThreshold} onChange={mfp('minThreshold')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}/>
             <FormField label="Estimated Delivery Days" value={methodForm.estimatedDays} onChange={mfp('estimatedDays')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}/>
             <FormField label="Sort Order" value={methodForm.sortOrder} onChange={mfp('sortOrder')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}/>
             <FormField label="Status" value={methodForm.status} onChange={mfp('status')} options={['Active','Inactive']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}/>

@@ -40,7 +40,7 @@ function ServicesContent() {
         id: s.id || '',
         name: s.name || '',
         category: s.category || s.serviceType || 'Repair',
-        price: s.price ? `K${Number(s.price).toLocaleString()}` : 'K0',
+        price: s.price ? `K${Number(s.price).toLocaleString()}` : '$0',
         duration: s.duration || s.estimatedTime || '',
         provider: s.provider || s.providerName || 'Kryros',
         bookings: s._count?.orders ?? s.bookings ?? 0,
