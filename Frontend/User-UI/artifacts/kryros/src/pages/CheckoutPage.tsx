@@ -521,13 +521,14 @@ export default function CheckoutPage() {
         </div>
       </div>
 
-      {/* Main content */}
-      <div className="flex-1 overflow-y-auto pb-6 space-y-3">
+      {/* Main content — fills remaining screen, button pinned to bottom */}
+      <div className="flex-1 flex flex-col min-h-0">
 
         {/* ── STEP 1: Contact ── */}
         {step === 1 && (
-          <div className="space-y-4">
-            <div className="bg-card border-y border-border px-4 py-5 space-y-4">
+          <div className="flex-1 flex flex-col">
+            <div className="flex-1 overflow-y-auto">
+              <div className="bg-card border-y border-border px-4 py-5 space-y-4">
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-bold text-foreground">Contact information</h2>
                 {authUser
@@ -599,17 +600,21 @@ export default function CheckoutPage() {
                 </div>
               )}
             </div>
-
-            <button onClick={goToStep2} className="w-full py-3.5 mx-auto rounded-2xl bg-[var(--kryros-primary-hover)] text-white text-sm font-semibold flex items-center justify-center gap-2 px-4">
-              Continue to Address <ChevronRight className="w-4 h-4" />
-            </button>
+            </div>
+            {/* Button pinned to bottom */}
+            <div className="px-4 py-4 border-t border-border/40 bg-background">
+              <button onClick={goToStep2} className="w-full py-4 rounded-2xl bg-[var(--kryros-primary-hover)] text-white text-sm font-bold flex items-center justify-center gap-2">
+                Continue to Address <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         )}
 
         {/* ── STEP 2: Address ── */}
         {step === 2 && (
-          <div className="space-y-4">
-            <div className="bg-card border-y border-border px-4 py-5 space-y-4">
+          <div className="flex-1 flex flex-col">
+            <div className="flex-1 overflow-y-auto">
+              <div className="bg-card border-y border-border px-4 py-5 space-y-4">
               <h2 className="text-sm font-bold text-foreground">Shipping address</h2>
 
               {/* Country — dynamic from admin panel */}
@@ -632,8 +637,7 @@ export default function CheckoutPage() {
                             <option key={c.code} value={c.name} disabled>{c.name} (Coming soon)</option>
                           )
                         )
-                      : /* Fallback while loading */
-                        <option value="Zambia">Zambia</option>
+                      : <option value="Zambia">Zambia</option>
                     }
                   </select>
                   <ChevronDown className="w-3 h-3 text-muted-foreground absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -661,18 +665,21 @@ export default function CheckoutPage() {
                 <input value={zipCode} onChange={(e) => setZipCode(e.target.value)} placeholder="10101" className="w-full px-4 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
               </div>
             </div>
-
-            <button onClick={goToStep3} className="w-full py-3.5 px-4 rounded-2xl bg-[var(--kryros-primary-hover)] text-white text-sm font-semibold flex items-center justify-center gap-2">
-              Continue to Shipping <ChevronRight className="w-4 h-4" />
-            </button>
-            <button onClick={() => setStep(1)} className="w-full text-xs text-muted-foreground text-center hover:text-primary transition-colors py-2">← Back to Contact</button>
+            </div>
+            <div className="px-4 py-4 border-t border-border/40 bg-background space-y-2">
+              <button onClick={goToStep3} className="w-full py-4 rounded-2xl bg-[var(--kryros-primary-hover)] text-white text-sm font-bold flex items-center justify-center gap-2">
+                Continue to Shipping <ChevronRight className="w-4 h-4" />
+              </button>
+              <button onClick={() => setStep(1)} className="w-full text-xs text-muted-foreground text-center hover:text-primary transition-colors py-2">← Back to Contact</button>
+            </div>
           </div>
         )}
 
         {/* ── STEP 3: Shipping ── */}
         {step === 3 && (
-          <div className="space-y-4">
-            <div className="bg-card border-y border-border px-4 py-5 space-y-4">
+          <div className="flex-1 flex flex-col">
+            <div className="flex-1 overflow-y-auto">
+              <div className="bg-card border-y border-border px-4 py-5 space-y-4">
               <h2 className="text-sm font-bold text-foreground">
                 Delivery options <span className="text-[11px] text-muted-foreground font-normal">(for {city || "your area"})</span>
               </h2>
@@ -700,17 +707,21 @@ export default function CheckoutPage() {
                 })}
               </div>
             </div>
-            <button onClick={() => setStep(4)} className="w-full py-3.5 px-4 rounded-2xl bg-[var(--kryros-primary-hover)] text-white text-sm font-semibold flex items-center justify-center gap-2">
-              Continue to Payment <ChevronRight className="w-4 h-4" />
-            </button>
-            <button onClick={() => setStep(2)} className="w-full text-xs text-muted-foreground text-center hover:text-primary transition-colors py-2">← Back to Address</button>
+            </div>
+            <div className="px-4 py-4 border-t border-border/40 bg-background space-y-2">
+              <button onClick={() => setStep(4)} className="w-full py-4 rounded-2xl bg-[var(--kryros-primary-hover)] text-white text-sm font-bold flex items-center justify-center gap-2">
+                Continue to Payment <ChevronRight className="w-4 h-4" />
+              </button>
+              <button onClick={() => setStep(2)} className="w-full text-xs text-muted-foreground text-center hover:text-primary transition-colors py-2">← Back to Address</button>
+            </div>
           </div>
         )}
 
         {/* ── STEP 4: Payment ── */}
         {step === 4 && (
-          <div className="space-y-4">
-            <div className="bg-card border-y border-border px-4 py-5 space-y-4">
+          <div className="flex-1 flex flex-col">
+            <div className="flex-1 overflow-y-auto space-y-0">
+              <div className="bg-card border-y border-border px-4 py-5 space-y-4">
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-bold text-foreground">How would you like to pay?</h2>
                 <span className="text-[11px] text-muted-foreground">Powered by Kryros Pay</span>
@@ -753,7 +764,7 @@ export default function CheckoutPage() {
               )}
             </div>
 
-            <div className="bg-card border-y border-border px-4 py-4 space-y-3">
+            <div className="bg-card border-y border-border px-4 py-4 space-y-3 mt-3">
               <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Subtotal</span><span className="font-semibold">{format(SUBTOTAL)}</span></div>
               <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Shipping</span><span className="font-semibold">{shippingPrice === 0 ? "Free" : format(shippingPrice)}</span></div>
               <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Estimated tax</span><span className="font-semibold">{format(TAX)}</span></div>
@@ -762,8 +773,10 @@ export default function CheckoutPage() {
               </div>
               <p className="text-[10px] text-muted-foreground">All payments are processed securely. By completing your purchase, you agree to our Terms of Service.</p>
             </div>
-
-            <button onClick={() => setStep(3)} className="w-full text-xs text-muted-foreground text-center hover:text-primary transition-colors py-2">← Back to Shipping</button>
+            </div>
+            <div className="px-4 py-4 border-t border-border/40 bg-background">
+              <button onClick={() => setStep(3)} className="w-full text-xs text-muted-foreground text-center hover:text-primary transition-colors py-2">← Back to Shipping</button>
+            </div>
           </div>
         )}
       </div>
