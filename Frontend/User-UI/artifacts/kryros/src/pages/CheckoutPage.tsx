@@ -3,7 +3,7 @@ import { Link, useLocation } from "wouter";
 import { useCartStore } from "@/store/cartStore";
 import { useAuthStore } from "@/store/authStore";
 import { useCurrencyStore } from "@/store/currencyStore";
-import { API_BASE, fetchMatchingShippingMethods, type ApiShippingMethod } from "@/lib/api";
+import { API_BASE } from "@/lib/api";
 import { toast } from "sonner";
 import {
   Check,
@@ -58,6 +58,13 @@ const DIAL_COUNTRIES = [
   { name: "India",        code: "IN", dial: "+91"  },
   { name: "Australia",    code: "AU", dial: "+61"  },
   { name: "UAE",          code: "AE", dial: "+971" },
+];
+
+// ── Shipping options (static for now — can be wired to zones API later) ──────
+const SHIPPING_OPTIONS = [
+  { id: "standard", label: "Standard Delivery", detail: "5–10 business days", price: 0,  icon: Truck },
+  { id: "express",  label: "Express Delivery",  detail: "2–3 business days",  price: 15, icon: Zap   },
+  { id: "priority", label: "Priority Delivery", detail: "Next business day",  price: 30, icon: Clock },
 ];
 
 const DEFAULT_CHECKOUT_METHODS = [
@@ -134,6 +141,7 @@ export default function CheckoutPage() {
   const [lastName,      setLastName]      = useState(authUser?.lastName ?? "");
   const [email,         setEmail]         = useState(authUser?.email ?? "");
   const [phone,         setPhone]         = useState("");
+  const [orderNotes,    setOrderNotes]    = useState("");
   const [phoneCountry,  setPhoneCountry]  = useState(DIAL_COUNTRIES[0]);
   const [showCountryPicker, setShowCountryPicker] = useState(false);
   const [countrySearch, setCountrySearch] = useState("");
@@ -146,12 +154,8 @@ export default function CheckoutPage() {
   const [zipCode,      setZipCode]     = useState("");
 
   // Shipping & payment
-  const [shippingId, setShippingId] = useState("");
-  const [shippingMethods, setShippingMethods] = useState<ApiShippingMethod[]>([]);
-  const [shippingLoading, setShippingLoading] = useState(false);
-  
-  const selectedShipping = shippingMethods.find((s) => s.id === shippingId);
-  const shippingPrice = selectedShipping ? Number(selectedShipping.fee) : 0;
+  const [shippingId, setShippingId] = useState("standard");
+  const shippingPrice = SHIPPING_OPTIONS.find((s) => s.id === shippingId)?.price ?? 0;
   const SUBTOTAL = cartItems.reduce((s, i) => s + i.price * i.qty, 0);
   const DISCOUNT = 0;
   const TAX = 0;
@@ -171,7 +175,7 @@ export default function CheckoutPage() {
   const [proofFile, setProofFile] = useState<string | null>(null);
 
   // ── Dynamic countries from admin panel ──────────────────────────────────────
-  type ShippingCountry = { id?: string; name: string; code: string; shippingEnabled: boolean; isActive: boolean };
+  type ShippingCountry = { name: string; code: string; shippingEnabled: boolean; isActive: boolean };
   const [shippingCountries, setShippingCountries] = useState<ShippingCountry[]>([]);
 
   useEffect(() => {
@@ -180,7 +184,6 @@ export default function CheckoutPage() {
       .then((data: any) => {
         const raw: any[] = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : [];
         const mapped = raw.map((c: any) => ({
-          id: c.id,
           name: c.name || '',
           code: c.code || '',
           shippingEnabled: c.shippingEnabled !== false,
@@ -196,27 +199,6 @@ export default function CheckoutPage() {
         setShippingCountries([{ name: 'Zambia', code: 'ZM', shippingEnabled: true, isActive: true }]);
       });
   }, []);
-
-  // ── Dynamic shipping methods from admin panel ────────────────────────────────
-  useEffect(() => {
-    if (step !== 3) return;
-    setShippingLoading(true);
-    const selectedCountryObj = shippingCountries.find(c => c.name === country);
-    fetchMatchingShippingMethods({
-      countryId: selectedCountryObj?.id,
-      manual: true,
-      stateName: state,
-      cityName: city,
-    })
-      .then((methods) => {
-        setShippingMethods(methods);
-        if (methods.length > 0 && !methods.find(m => m.id === shippingId)) {
-          setShippingId(methods[0].id);
-        }
-      })
-      .catch(() => setShippingMethods([]))
-      .finally(() => setShippingLoading(false));
-  }, [step, country, state, city, shippingCountries]);
 
   // ── Dynamic payment config from admin panel ─────────────────────────────────
   const [bankProviders, setBankProviders]   = useState<{ name: string; config?: { accountName?: string; accountNumber?: string } }[]>([]);
@@ -305,7 +287,7 @@ export default function CheckoutPage() {
     currencyCode: selectedCurrency.code,
     currencySymbol: selectedCurrency.symbol,
     exchangeRate: selectedCurrency.exchangeRate,
-    ...(openMethod === "mobile" && mmProvider ? { notes: `Mobile money provider: ${mmProvider}` } : {}),
+    ...(openMethod === "mobile" && mmProvider ? { notes: `Mobile money provider: ${mmProvider}${orderNotes ? ` | Notes: ${orderNotes}` : ""}` } : orderNotes ? { notes: orderNotes } : {}),
     addressDetails: {
       email, firstName, lastName, phone,
       address: addressLine || `${city}, ${state}, ${country}`,
@@ -518,25 +500,35 @@ export default function CheckoutPage() {
       </div>
 
       {/* Progress steps */}
-      <div className="px-4 pb-4">
-        <div className="flex justify-between text-[11px] font-semibold text-muted-foreground mb-2">
-          <span className={step >= 1 ? "text-primary" : ""}>Contact</span>
-          <span className={step >= 2 ? "text-primary" : ""}>Address</span>
-          <span className={step >= 3 ? "text-primary" : ""}>Shipping</span>
-          <span className={step >= 4 ? "text-primary" : ""}>Payment</span>
+      <div className="px-4 pt-4 pb-5">
+        {/* Step labels — each takes equal width so spacing is even */}
+        <div className="grid grid-cols-4 text-[11px] font-semibold text-muted-foreground mb-3">
+          {[["Contact", 1], ["Address", 2], ["Shipping", 3], ["Payment", 4]].map(([label, s]) => (
+            <div key={label as string} className={`flex flex-col items-center gap-1.5 ${step >= (s as number) ? "text-primary" : ""}`}>
+              <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold border-2 transition-all ${step > (s as number) ? "bg-primary border-primary text-white" : step === (s as number) ? "border-primary text-primary bg-primary/10" : "border-border text-muted-foreground"}`}>
+                {step > (s as number) ? <Check className="w-3 h-3" /> : s as number}
+              </div>
+              <span>{label as string}</span>
+            </div>
+          ))}
         </div>
-        <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-          <div className="h-full rounded-full bg-gradient-to-r from-primary to-[var(--kryros-primary-hover)] transition-all" style={{ width: `${(step / 4) * 100}%` }} />
+        {/* Progress bar — divided into 4 equal segments */}
+        <div className="flex gap-1">
+          {[1, 2, 3, 4].map((s) => (
+            <div key={s} className="flex-1 h-1 rounded-full bg-muted overflow-hidden">
+              <div className={`h-full rounded-full bg-gradient-to-r from-primary to-[var(--kryros-primary-hover)] transition-all duration-300 ${step >= s ? "w-full" : "w-0"}`} />
+            </div>
+          ))}
         </div>
       </div>
 
-      {/* Main content */}
-      <div className="flex-1 overflow-y-auto px-4 pb-6 space-y-3">
+      {/* Main content — fills remaining screen, button pinned to bottom */}
+      <div className="flex-1 flex flex-col min-h-0">
 
         {/* ── STEP 1: Contact ── */}
         {step === 1 && (
-          <div className="space-y-4">
-            <div className="bg-card border border-border rounded-3xl p-4 space-y-4">
+          <div className="flex-1 flex flex-col">
+            <div className="flex-1 overflow-y-auto bg-card border-t border-border px-4 py-5 space-y-4">
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-bold text-foreground">Contact information</h2>
                 {authUser
@@ -576,8 +568,16 @@ export default function CheckoutPage() {
                       <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
                     </button>
                   </div>
-                  <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Enter your phone number" type="tel" className="w-full px-4 py-3.5 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
+                  <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone number" type="tel" className="w-full px-4 py-3.5 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
+                  <Mail className="w-3.5 h-3.5" />Order notes
+                  <span className="text-[10px] text-muted-foreground font-normal ml-1">(optional)</span>
+                </label>
+                <textarea value={orderNotes} onChange={(e) => setOrderNotes(e.target.value)} placeholder="Any special instructions or notes for your order..." rows={4} className="w-full px-4 py-3.5 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all resize-none" />
               </div>
 
               {/* Country picker modal (for phone dial code) */}
@@ -608,17 +608,19 @@ export default function CheckoutPage() {
                 </div>
               )}
             </div>
-
-            <button onClick={goToStep2} className="w-full py-3 rounded-2xl bg-[var(--kryros-primary-hover)] text-white text-sm font-semibold flex items-center justify-center gap-2">
-              Continue to Address <ChevronRight className="w-4 h-4" />
-            </button>
+            {/* Button pinned to bottom */}
+            <div className="px-4 py-4 border-t border-border/40 bg-background">
+              <button onClick={goToStep2} className="w-full py-4 rounded-2xl bg-[var(--kryros-primary-hover)] text-white text-sm font-bold flex items-center justify-center gap-2">
+                Continue to Address <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         )}
 
         {/* ── STEP 2: Address ── */}
         {step === 2 && (
-          <div className="space-y-4">
-            <div className="bg-card border border-border rounded-3xl p-4 space-y-4">
+          <div className="flex-1 flex flex-col">
+            <div className="flex-1 overflow-y-auto bg-card border-t border-border px-4 py-5 space-y-4">
               <h2 className="text-sm font-bold text-foreground">Shipping address</h2>
 
               {/* Country — dynamic from admin panel */}
@@ -641,8 +643,7 @@ export default function CheckoutPage() {
                             <option key={c.code} value={c.name} disabled>{c.name} (Coming soon)</option>
                           )
                         )
-                      : /* Fallback while loading */
-                        <option value="Zambia">Zambia</option>
+                      : <option value="Zambia">Zambia</option>
                     }
                   </select>
                   <ChevronDown className="w-3 h-3 text-muted-foreground absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -652,11 +653,11 @@ export default function CheckoutPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <label className="flex items-center gap-1 text-[11px] font-semibold text-muted-foreground"><MapPin className="w-3 h-3" />State / Province</label>
-                  <input value={state} onChange={(e) => setState(e.target.value)} placeholder="Lusaka Province" className="w-full px-4 py-3.5 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
+                  <input value={state} onChange={(e) => setState(e.target.value)} placeholder="State / Province" className="w-full px-4 py-3.5 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
                 </div>
                 <div className="space-y-1.5">
                   <label className="flex items-center gap-1 text-[11px] font-semibold text-muted-foreground"><Home className="w-3 h-3" />City</label>
-                  <input value={city} onChange={(e) => setCity(e.target.value)} placeholder="Lusaka" className="w-full px-4 py-3.5 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
+                  <input value={city} onChange={(e) => setCity(e.target.value)} placeholder="City" className="w-full px-4 py-3.5 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
                 </div>
               </div>
 
@@ -670,67 +671,59 @@ export default function CheckoutPage() {
                 <input value={zipCode} onChange={(e) => setZipCode(e.target.value)} placeholder="10101" className="w-full px-4 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
               </div>
             </div>
-
-            <button onClick={goToStep3} className="w-full py-3 rounded-2xl bg-[var(--kryros-primary-hover)] text-white text-sm font-semibold flex items-center justify-center gap-2">
-              Continue to Shipping <ChevronRight className="w-4 h-4" />
-            </button>
-            <button onClick={() => setStep(1)} className="w-full text-xs text-muted-foreground text-center hover:text-primary transition-colors py-2">← Back to Contact</button>
+            <div className="px-4 py-4 border-t border-border/40 bg-background space-y-2">
+              <button onClick={goToStep3} className="w-full py-4 rounded-2xl bg-[var(--kryros-primary-hover)] text-white text-sm font-bold flex items-center justify-center gap-2">
+                Continue to Shipping <ChevronRight className="w-4 h-4" />
+              </button>
+              <button onClick={() => setStep(1)} className="w-full text-xs text-muted-foreground text-center hover:text-primary transition-colors py-2">← Back to Contact</button>
+            </div>
           </div>
         )}
 
         {/* ── STEP 3: Shipping ── */}
         {step === 3 && (
-          <div className="space-y-4">
-            <div className="bg-card border border-border rounded-3xl p-4 space-y-4">
+          <div className="flex-1 flex flex-col">
+            <div className="flex-1 overflow-y-auto bg-card border-t border-border px-4 py-5 space-y-4">
               <h2 className="text-sm font-bold text-foreground">
                 Delivery options <span className="text-[11px] text-muted-foreground font-normal">(for {city || "your area"})</span>
               </h2>
               <div className="space-y-3">
-                {shippingLoading ? (
-                  <div className="py-8 text-center space-y-3">
-                    <div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin mx-auto" />
-                    <p className="text-xs text-muted-foreground">Finding the best shipping options...</p>
-                  </div>
-                ) : shippingMethods.length > 0 ? (
-                  shippingMethods.map((option) => {
-                    const isSelected = shippingId === option.id;
-                    return (
-                      <button key={option.id} onClick={() => setShippingId(option.id)} className={`w-full flex items-center gap-3 px-4 py-4 rounded-2xl border text-left transition-all ${isSelected ? "border-primary bg-primary/5" : "border-border hover:border-primary/40 hover:bg-muted/40"}`}>
-                        <div className={`w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 ${isSelected ? "bg-primary text-white" : "bg-muted text-foreground"}`}>
-                          <Truck className="w-5 h-5" />
+                {SHIPPING_OPTIONS.map((option) => {
+                  const Icon = option.icon;
+                  const isSelected = shippingId === option.id;
+                  return (
+                    <button key={option.id} onClick={() => setShippingId(option.id)} className={`w-full flex items-center gap-3 px-4 py-4 rounded-2xl border text-left transition-all ${isSelected ? "border-primary bg-primary/5" : "border-border hover:border-primary/40 hover:bg-muted/40"}`}>
+                      <div className={`w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 ${isSelected ? "bg-primary text-white" : "bg-muted text-foreground"}`}>
+                        <Icon className="w-5 h-5" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="text-sm font-semibold text-foreground">{option.label}</p>
+                          <p className="text-sm font-semibold text-foreground">{option.price === 0 ? "Free" : format(option.price)}</p>
                         </div>
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between gap-2">
-                            <p className="text-sm font-semibold text-foreground">{option.name}</p>
-                            <p className="text-sm font-semibold text-foreground">{Number(option.fee) === 0 ? "Free" : format(Number(option.fee))}</p>
-                          </div>
-                          <p className="text-xs text-muted-foreground mt-0.5">{option.description || option.estimatedDays || "Standard delivery"}</p>
-                        </div>
-                        <div className={`w-4 h-4 rounded-full border flex items-center justify-center text-[8px] ${isSelected ? "border-primary bg-primary text-white" : "border-border bg-background"}`}>
-                          {isSelected && "✓"}
-                        </div>
-                      </button>
-                    );
-                  })
-                ) : (
-                  <div className="py-8 text-center space-y-2 bg-muted/20 rounded-2xl border border-dashed border-border">
-                    <Truck className="w-8 h-8 mx-auto opacity-20" />
-                    <p className="text-xs text-muted-foreground px-4">No shipping methods available for your location. Please check your address or contact support.</p>
-                  </div>
-                )}
+                        <p className="text-xs text-muted-foreground mt-0.5">{option.detail}</p>
+                      </div>
+                      <div className={`w-4 h-4 rounded-full border flex items-center justify-center text-[8px] ${isSelected ? "border-primary bg-primary text-white" : "border-border bg-background"}`}>
+                        {isSelected && "✓"}
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             </div>
-            <button onClick={() => setStep(4)} disabled={shippingLoading || shippingMethods.length === 0} className="w-full py-3 rounded-2xl bg-[var(--kryros-primary-hover)] text-white text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-50">
-              Continue to Payment <ChevronRight className="w-4 h-4" />
-            </button>
-            <button onClick={() => setStep(2)} className="w-full text-xs text-muted-foreground text-center hover:text-primary transition-colors py-2">← Back to Address</button>
+            <div className="px-4 py-4 border-t border-border/40 bg-background space-y-2">
+              <button onClick={() => setStep(4)} className="w-full py-4 rounded-2xl bg-[var(--kryros-primary-hover)] text-white text-sm font-bold flex items-center justify-center gap-2">
+                Continue to Payment <ChevronRight className="w-4 h-4" />
+              </button>
+              <button onClick={() => setStep(2)} className="w-full text-xs text-muted-foreground text-center hover:text-primary transition-colors py-2">← Back to Address</button>
+            </div>
           </div>
         )}
 
         {/* ── STEP 4: Payment ── */}
         {step === 4 && (
-          <div className="space-y-4">
-            <div className="bg-card border border-border rounded-3xl p-4 space-y-4">
+          <div className="flex-1 flex flex-col">
+            <div className="flex-1 overflow-y-auto bg-card border-t border-border px-4 py-5 space-y-4">
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-bold text-foreground">How would you like to pay?</h2>
                 <span className="text-[11px] text-muted-foreground">Powered by Kryros Pay</span>
@@ -771,19 +764,20 @@ export default function CheckoutPage() {
                   </div>
                 </div>
               )}
-            </div>
 
-            <div className="bg-card border border-border rounded-3xl p-4 space-y-3">
-              <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Subtotal</span><span className="font-semibold">{format(SUBTOTAL)}</span></div>
-              <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Shipping</span><span className="font-semibold">{shippingPrice === 0 ? "Free" : format(shippingPrice)}</span></div>
-              <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Estimated tax</span><span className="font-semibold">{format(TAX)}</span></div>
-              <div className="pt-2 border-t border-border flex items-center justify-between text-sm font-black">
-                <span>Total</span><span className="text-primary">{format(total)}</span>
+              <div className="border-t border-border pt-4 space-y-3">
+                <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Subtotal</span><span className="font-semibold">{format(SUBTOTAL)}</span></div>
+                <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Shipping</span><span className="font-semibold">{shippingPrice === 0 ? "Free" : format(shippingPrice)}</span></div>
+                <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Estimated tax</span><span className="font-semibold">{format(TAX)}</span></div>
+                <div className="pt-2 border-t border-border flex items-center justify-between text-sm font-black">
+                  <span>Total</span><span className="text-primary">{format(total)}</span>
+                </div>
+                <p className="text-[10px] text-muted-foreground">All payments are processed securely. By completing your purchase, you agree to our Terms of Service.</p>
               </div>
-              <p className="text-[10px] text-muted-foreground">All payments are processed securely. By completing your purchase, you agree to our Terms of Service.</p>
             </div>
-
-            <button onClick={() => setStep(3)} className="w-full text-xs text-muted-foreground text-center hover:text-primary transition-colors py-2">← Back to Shipping</button>
+            <div className="px-4 py-4 border-t border-border/40 bg-background">
+              <button onClick={() => setStep(3)} className="w-full text-xs text-muted-foreground text-center hover:text-primary transition-colors py-2">← Back to Shipping</button>
+            </div>
           </div>
         )}
       </div>
