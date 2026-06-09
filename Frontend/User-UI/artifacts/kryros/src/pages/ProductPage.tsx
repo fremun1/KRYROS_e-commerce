@@ -41,6 +41,46 @@ export default function ProductPage() {
   const [activeImg, setActiveImg] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
   const [openSection, setOpenSection] = useState<string | null>("description");
+
+  const renderSpecs = (specs: string) => {
+    if (!specs || specs === "[]" || specs === "{}") return "No specifications available.";
+    
+    // Try to parse if it's JSON
+    try {
+      const parsed = JSON.parse(specs);
+      if (Array.isArray(parsed)) {
+        return (
+          <div className="space-y-2">
+            {parsed.map((s: any, i: number) => (
+              <div key={i} className="flex border-b border-border/50 pb-2 last:border-0">
+                <span className="w-1/3 font-bold text-foreground">{s.key || s.label}:</span>
+                <span className="w-2/3 text-muted-foreground">{s.value}</span>
+              </div>
+            ))}
+          </div>
+        );
+      }
+    } catch (e) {
+      // If not JSON, handle as "Key: Value" lines
+      const lines = specs.split('\n').filter(l => l.includes(':'));
+      if (lines.length > 0) {
+        return (
+          <div className="space-y-2">
+            {lines.map((line, i) => {
+              const [key, ...val] = line.split(':');
+              return (
+                <div key={i} className="flex border-b border-border/50 pb-2 last:border-0">
+                  <span className="w-1/3 font-bold text-foreground">{key.trim()}:</span>
+                  <span className="w-2/3 text-muted-foreground">{val.join(':').trim()}</span>
+                </div>
+              );
+            })}
+          </div>
+        );
+      }
+    }
+    return <div className="whitespace-pre-wrap">{specs}</div>;
+  };
   const [storeStatus, setStoreStatus] = useState<{
     isStoreClosed: boolean;
     message: string;
@@ -424,8 +464,8 @@ export default function ProductPage() {
         {/* Expandable sections */}
         <div className="border border-border rounded-2xl overflow-hidden divide-y divide-border">
           {[
-            { id: "description", label: "Description", content: product.description || "No description available." },
-            { id: "specs", label: "Specifications", content: product.specs || "No specifications available." },
+            { id: "description", label: "Description", content: <div className="whitespace-pre-wrap">{product.description || "No description available."}</div> },
+            { id: "specs", label: "Specifications", content: renderSpecs(product.specs) },
             { id: "reviews", label: "Reviews", extra: product.rating > 0 ? String(product.rating) : undefined, stars: product.rating > 0, content: product.reviewCount > 0 ? `${product.reviewCount.toLocaleString()} verified reviews` : "No reviews yet." },
           ].map(({ id, label, extra, stars, content }) => (
             <div key={id}>
