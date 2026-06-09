@@ -169,10 +169,12 @@ function WholesaleContent() {
   // ── Inventory handlers ──
   const handleAddInv = async () => {
     if (!iForm.name.trim()) { toast.error('Product name required'); return; }
+    if (!iForm.description.trim()) { toast.error('Description required'); return; }
     try {
       await createProduct({
         name: iForm.name,
         sku: iForm.sku,
+        price: Number(iForm.price) || 0,
         wholesalePrice: Number(iForm.price) || 0,
         wholesaleMoq: Number(iForm.moq) || 1,
         categorySlug: iForm.category.toLowerCase().replace(/ /g, '-'),
@@ -195,6 +197,7 @@ function WholesaleContent() {
       await updateProduct(editInv.id, {
         name: iForm.name,
         sku: iForm.sku,
+        price: Number(iForm.price) || 0,
         wholesalePrice: Number(iForm.price) || 0,
         wholesaleMoq: Number(iForm.moq) || 1,
         categorySlug: iForm.category.toLowerCase().replace(/ /g, '-'),

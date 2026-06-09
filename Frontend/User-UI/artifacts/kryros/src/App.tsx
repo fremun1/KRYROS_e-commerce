@@ -251,7 +251,7 @@ function AppRoutes() {
     };
   }, [location]);
 
-  const hideShell = ["/pay", "/checkout", "/dashboard", "/cart"].includes(location);
+  const hideShell = ["/pay", "/checkout", "/dashboard", "/cart", "/get-now"].includes(location);
 
   return (
     <>
