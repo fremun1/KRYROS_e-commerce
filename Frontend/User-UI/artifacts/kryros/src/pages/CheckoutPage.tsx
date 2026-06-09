@@ -3,7 +3,7 @@ import { Link, useLocation } from "wouter";
 import { useCartStore } from "@/store/cartStore";
 import { useAuthStore } from "@/store/authStore";
 import { useCurrencyStore } from "@/store/currencyStore";
-import { API_BASE } from "@/lib/api";
+import { API_BASE, fetchShippingMethods, type ApiShippingMethod } from "@/lib/api";
 import { toast } from "sonner";
 import {
   Check,
@@ -60,12 +60,8 @@ const DIAL_COUNTRIES = [
   { name: "UAE",          code: "AE", dial: "+971" },
 ];
 
-// ── Shipping options (static for now — can be wired to zones API later) ──────
-const SHIPPING_OPTIONS = [
-  { id: "standard", label: "Standard Delivery", detail: "5–10 business days", price: 0,  icon: Truck },
-  { id: "express",  label: "Express Delivery",  detail: "2–3 business days",  price: 15, icon: Zap   },
-  { id: "priority", label: "Priority Delivery", detail: "Next business day",  price: 30, icon: Clock },
-];
+
+
 
 const DEFAULT_CHECKOUT_METHODS = [
   { id: "mobile",   label: "Mobile Money",   sub: "MTN, Airtel, Zamtel",       icon: Smartphone, iconBg: "bg-primary/10" },
@@ -147,6 +143,22 @@ export default function CheckoutPage() {
         // Fallback to Zambia if API fails
         setShippingCountries([{ name: 'Zambia', code: 'ZM', shippingEnabled: true, isActive: true }]);
       });
+  }, []);
+
+  // ── Dynamic shipping methods from admin panel ────────────────────────────────
+  useEffect(() => {
+    setShippingLoading(true);
+    fetchShippingMethods()
+      .then((methods) => {
+        setShippingMethods(methods);
+        if (methods.length > 0) {
+          setShippingId(methods[0].id);
+        }
+      })
+      .catch(() => {
+        // If API fails, leave empty — UI shows a graceful message
+      })
+      .finally(() => setShippingLoading(false));
   }, []);
 
   // ── Dynamic payment config from admin panel ─────────────────────────────────
@@ -251,8 +263,10 @@ export default function CheckoutPage() {
   const [zipCode,      setZipCode]     = useState("");
 
   // Shipping & payment
-  const [shippingId, setShippingId] = useState("standard");
-  const shippingPrice = SHIPPING_OPTIONS.find((s) => s.id === shippingId)?.price ?? 0;
+  const [shippingMethods,   setShippingMethods]   = useState<ApiShippingMethod[]>([]);
+  const [shippingLoading,   setShippingLoading]   = useState(true);
+  const [shippingId,        setShippingId]        = useState("");
+  const shippingPrice = shippingMethods.find((s) => s.id === shippingId) ? Number(shippingMethods.find((s) => s.id === shippingId)!.fee) : 0;
   const SUBTOTAL = cartItems.reduce((s, i) => s + i.price * i.qty, 0);
   const DISCOUNT = 0;
   const FEE_RATE = 0.01; // 1% processing fee — matches PayPage
@@ -689,27 +703,51 @@ export default function CheckoutPage() {
                 Delivery options <span className="text-[11px] text-muted-foreground font-normal">(for {city || "your area"})</span>
               </h2>
               <div className="space-y-3">
-                {SHIPPING_OPTIONS.map((option) => {
-                  const Icon = option.icon;
-                  const isSelected = shippingId === option.id;
-                  return (
-                    <button key={option.id} onClick={() => setShippingId(option.id)} className={`w-full flex items-center gap-3 px-4 py-4 rounded-2xl border text-left transition-all ${isSelected ? "border-primary bg-primary/5" : "border-border hover:border-primary/40 hover:bg-muted/40"}`}>
-                      <div className={`w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 ${isSelected ? "bg-primary text-white" : "bg-muted text-foreground"}`}>
-                        <Icon className="w-5 h-5" />
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between gap-2">
-                          <p className="text-sm font-semibold text-foreground">{option.label}</p>
-                          <p className="text-sm font-semibold text-foreground">{option.price === 0 ? "Free" : format(option.price)}</p>
+                {shippingLoading ? (
+                  <div className="flex flex-col gap-3">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="w-full h-[72px] rounded-2xl border border-border bg-muted/30 animate-pulse" />
+                    ))}
+                  </div>
+                ) : shippingMethods.length === 0 ? (
+                  <div className="flex flex-col items-center gap-2 py-8 text-muted-foreground">
+                    <Truck className="w-8 h-8 opacity-40" />
+                    <p className="text-sm">No shipping methods available.</p>
+                    <p className="text-xs">Please contact support or try again later.</p>
+                  </div>
+                ) : (
+                  shippingMethods.map((option) => {
+                    const fee = Number(option.fee ?? 0);
+                    const isSelected = shippingId === option.id;
+                    // Pick an icon based on name keywords
+                    const Icon = /express|fast|quick/i.test(option.name)
+                      ? Zap
+                      : /priority|next.?day|overnight/i.test(option.name)
+                      ? Clock
+                      : Truck;
+                    return (
+                      <button key={option.id} onClick={() => setShippingId(option.id)} className={`w-full flex items-center gap-3 px-4 py-4 rounded-2xl border text-left transition-all ${isSelected ? "border-primary bg-primary/5" : "border-border hover:border-primary/40 hover:bg-muted/40"}`}>
+                        <div className={`w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 ${isSelected ? "bg-primary text-white" : "bg-muted text-foreground"}`}>
+                          <Icon className="w-5 h-5" />
                         </div>
-                        <p className="text-xs text-muted-foreground mt-0.5">{option.detail}</p>
-                      </div>
-                      <div className={`w-4 h-4 rounded-full border flex items-center justify-center text-[8px] ${isSelected ? "border-primary bg-primary text-white" : "border-border bg-background"}`}>
-                        {isSelected && "✓"}
-                      </div>
-                    </button>
-                  );
-                })}
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="text-sm font-semibold text-foreground">{option.name}</p>
+                            <p className="text-sm font-semibold text-foreground">{fee === 0 ? "Free" : format(fee)}</p>
+                          </div>
+                          {(option.description || option.estimatedDays) && (
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              {option.description || option.estimatedDays}
+                            </p>
+                          )}
+                        </div>
+                        <div className={`w-4 h-4 rounded-full border flex items-center justify-center text-[8px] ${isSelected ? "border-primary bg-primary text-white" : "border-border bg-background"}`}>
+                          {isSelected && "✓"}
+                        </div>
+                      </button>
+                    );
+                  })
+                )}
               </div>
             </div>
             <div className="px-4 py-4 border-t border-border/40 bg-background space-y-2">
