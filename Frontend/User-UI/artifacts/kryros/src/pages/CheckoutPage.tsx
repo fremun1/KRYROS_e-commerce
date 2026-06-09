@@ -3,7 +3,7 @@ import { Link, useLocation } from "wouter";
 import { useCartStore } from "@/store/cartStore";
 import { useAuthStore } from "@/store/authStore";
 import { useCurrencyStore } from "@/store/currencyStore";
-import { API_BASE, fetchShippingMethods, fetchMatchingShippingMethods, type ApiShippingMethod } from "@/lib/api";
+import { API_BASE, fetchMatchingShippingMethods, type ApiShippingMethod } from "@/lib/api";
 import { toast } from "sonner";
 import {
   Check,
@@ -60,8 +60,10 @@ const DIAL_COUNTRIES = [
   { name: "UAE",          code: "AE", dial: "+971" },
 ];
 
+
+
 const DEFAULT_CHECKOUT_METHODS = [
-  { id: "mobile",   label: "Mobile Money",   sub: "", icon: Smartphone, iconBg: "bg-primary/10" },
+  { id: "mobile",   label: "Mobile Money",   sub: "MTN, Airtel, Zamtel",       icon: Smartphone, iconBg: "bg-primary/10" },
   { id: "card",     label: "Card Payment",   sub: "Visa, Mastercard & more",   icon: CreditCard, iconBg: "bg-blue-50 dark:bg-blue-900/20" },
   { id: "bank",     label: "Bank Transfer",  sub: "Local & International",     icon: Building2,  iconBg: "bg-slate-50 dark:bg-slate-800" },
   {
@@ -116,36 +118,6 @@ export default function CheckoutPage() {
   const selectedCurrency = useCurrencyStore((s) => s.selected);
   const allCurrencies    = useCurrencyStore((s) => s.currencies);
 
-  // ── State ───────────────────────────────────────────────────────────────────
-  const [step, setStep] = useState(1);
-  const [ordered,          setOrdered]          = useState(false);
-  const [isSubmitting,     setIsSubmitting]      = useState(false);
-  const [orderError,       setOrderError]        = useState<string | null>(null);
-  const [placedOrderNumber, setPlacedOrderNumber] = useState<string>("");
-  const [placedOrderId,    setPlacedOrderId]     = useState<string>("");
-  const [mmPhase, setMmPhase] = useState<"idle" | "initializing" | "waiting" | "failed_init" | "timed_out">("idle");
-  const [waMessage,        setWaMessage]         = useState<string>("");
-  const [savedCartItems,   setSavedCartItems]    = useState<typeof cartItems>([]);
-  const pollRef     = useRef<ReturnType<typeof setInterval> | null>(null);
-  const whatsappNumber = import.meta.env.VITE_WHATSAPP_NUMBER || "260969597029";
-
-  // Contact
-  const [firstName,     setFirstName]     = useState(authUser?.firstName ?? "");
-  const [lastName,      setLastName]      = useState(authUser?.lastName ?? "");
-  const [email,         setEmail]         = useState(authUser?.email ?? "");
-  const [phone,         setPhone]         = useState("");
-  const [orderNotes,    setOrderNotes]    = useState("");
-  const [phoneCountry,  setPhoneCountry]  = useState(DIAL_COUNTRIES[0]);
-  const [showCountryPicker, setShowCountryPicker] = useState(false);
-  const [countrySearch, setCountrySearch] = useState("");
-
-  // Address
-  const [country,      setCountry]     = useState("");
-  const [state,        setState]       = useState("");
-  const [city,         setCity]        = useState("");
-  const [addressLine,  setAddressLine] = useState("");
-  const [zipCode,      setZipCode]     = useState("");
-
   // ── Dynamic countries from admin panel ──────────────────────────────────────
   type ShippingCountry = { id?: string; name: string; code: string; shippingEnabled: boolean; isActive: boolean };
   const [shippingCountries, setShippingCountries] = useState<ShippingCountry[]>([]);
@@ -168,94 +140,78 @@ export default function CheckoutPage() {
         if (defaultCountry && !country) setCountry(defaultCountry.name);
       })
       .catch(() => {
-        setShippingCountries([]);
+        // Fallback to Zambia if API fails
+        setShippingCountries([{ name: 'Zambia', code: 'ZM', shippingEnabled: true, isActive: true }]);
       });
   }, []);
 
   // ── Dynamic shipping methods from admin panel ────────────────────────────────
-  const [shippingMethods,   setShippingMethods]   = useState<ApiShippingMethod[]>([]);
-  const [shippingLoading,   setShippingLoading]   = useState(true);
-  const [shippingId,        setShippingId]        = useState("");
+  const [shippingMethods, setShippingMethods] = useState<ApiShippingMethod[]>([]);
+  const [shippingLoading, setShippingLoading] = useState(false);
 
   useEffect(() => {
     if (step !== 3) return;
-
     setShippingLoading(true);
-    // Try to find the country ID from shippingCountries
-    const selectedCountryObj = shippingCountries?.find(c => c.name === country);
-    
+    const selectedCountryObj = shippingCountries.find(c => c.name === country);
     fetchMatchingShippingMethods({
       countryId: selectedCountryObj?.id,
       manual: true,
-      stateName: state || "",
-      cityName: city || "",
+      stateName: state,
+      cityName: city,
     })
       .then((methods) => {
         setShippingMethods(methods);
-        if (methods.length > 0) {
-          // Keep current selection if it still exists, otherwise pick first
-          if (!methods.find(m => m.id === shippingId)) {
-            setShippingId(methods[0].id);
-          }
+        if (methods.length > 0 && !methods.find(m => m.id === shippingId)) {
+          setShippingId(methods[0].id);
         }
       })
-      .catch(() => {
-        setShippingMethods([]);
-      })
+      .catch(() => setShippingMethods([]))
       .finally(() => setShippingLoading(false));
   }, [step, country, state, city, shippingCountries]);
 
   // ── Dynamic payment config from admin panel ─────────────────────────────────
   const [bankProviders, setBankProviders]   = useState<{ name: string; config?: { accountName?: string; accountNumber?: string } }[]>([]);
-  const [mobileNetworks, setMobileNetworks] = useState<string[]>([]);
+  const [mobileNetworks, setMobileNetworks] = useState<string[]>(["MTN", "Airtel", "Zamtel", "M-Pesa"]);
   const [apiMethodTypes, setApiMethodTypes] = useState<string[]>([]);
-  const [isConfigLoaded, setIsConfigLoaded] = useState(false);
 
   useEffect(() => {
     fetch(`${API_BASE}/api/payment-config/public`)
       .then((r) => r.json())
       .then((data: any) => {
         const arr: any[] = Array.isArray(data) ? data : data?.data ?? [];
-        
-        // Bank providers
         const bankMethod = arr.find((m: any) => m.type === "bank");
         if (bankMethod?.providers) {
           setBankProviders(bankMethod.providers.filter((p: any) => p.isEnabled));
         }
-
-        // Mobile networks
         const mobileMethod = arr.find((m: any) => m.type === "mobile_wallet");
         if (mobileMethod?.providers?.length > 0) {
           const nets: string[] = mobileMethod.providers
             .filter((p: any) => p.isEnabled)
-            .map((p: any) => 
+            .flatMap((p: any) =>
               (p.networks || [])
                 .filter((n: any) => n.isEnabled)
-                .map((n: any) => (n.name as string).replace(/\s*Mobile\s*Money\s*/i, "").trim())
-            ).flat();
-          setMobileNetworks(nets);
-          if (nets.length > 0 && !mmProvider) setMmProvider(nets[0]);
+                .map((n: any) => (n.name as string).replace(/\s*Mobile\s*Money\s*/i, "").trim()),
+            );
+          if (nets.length > 0) setMobileNetworks(nets);
         }
-
-        // Active types
         const enabledTypes = arr.filter((m: any) => m.isEnabled).map((m: any) => m.type as string);
         setApiMethodTypes(enabledTypes);
-        setIsConfigLoaded(true);
       })
-      .catch(() => {
-        setIsConfigLoaded(true);
-      });
+      .catch(() => {});
   }, []);
 
   const TYPE_TO_ID: Record<string, string> = {
-    mobile_wallet: "mobile", card: "card", bank: "bank", cash: "cod", digital_wallet: "whatsapp", whatsapp: "whatsapp",
+    mobile_wallet: "mobile", card: "card", bank: "bank", cash: "cod", digital_wallet: "whatsapp",
   };
-  
-  const activeCheckoutMethods = isConfigLoaded 
-    ? apiMethodTypes
-        .map((t) => DEFAULT_CHECKOUT_METHODS.find((m) => m.id === (TYPE_TO_ID[t] ?? t)))
-        .filter(Boolean) as typeof DEFAULT_CHECKOUT_METHODS
-    : [];
+  const activeCheckoutMethods =
+    apiMethodTypes.length > 0
+      ? (apiMethodTypes.map((t) => DEFAULT_CHECKOUT_METHODS.find((m) => m.id === (TYPE_TO_ID[t] ?? t))).filter(Boolean) as typeof DEFAULT_CHECKOUT_METHODS)
+      : DEFAULT_CHECKOUT_METHODS;
+
+  if (!activeCheckoutMethods.find((m) => m.id === "whatsapp")) {
+    const wa = DEFAULT_CHECKOUT_METHODS.find((m) => m.id === "whatsapp");
+    if (wa) activeCheckoutMethods.push(wa);
+  }
 
   // ── Helpers: register phone + send receipt ──────────────────────────────────
   const registerPhoneForSms = (customerPhone: string, customerName: string) => {
@@ -284,13 +240,42 @@ export default function CheckoutPage() {
     }).catch(() => {});
   };
 
+  // ── State ───────────────────────────────────────────────────────────────────
+  const [step, setStep] = useState(1);
+  const [ordered,          setOrdered]          = useState(false);
+  const [isSubmitting,     setIsSubmitting]      = useState(false);
+  const [orderError,       setOrderError]        = useState<string | null>(null);
+  const [placedOrderNumber, setPlacedOrderNumber] = useState<string>("");
+  const [placedOrderId,    setPlacedOrderId]     = useState<string>("");
+  const [mmPhase, setMmPhase] = useState<"idle" | "initializing" | "waiting" | "failed_init" | "timed_out">("idle");
+  const [waMessage,        setWaMessage]         = useState<string>("");
+  const [savedCartItems,   setSavedCartItems]    = useState<typeof cartItems>([]);
+  const pollRef     = useRef<ReturnType<typeof setInterval> | null>(null);
+  const whatsappNumber = import.meta.env.VITE_WHATSAPP_NUMBER || "260969597029";
+
+  // Contact
+  const [firstName,     setFirstName]     = useState(authUser?.firstName ?? "");
+  const [lastName,      setLastName]      = useState(authUser?.lastName ?? "");
+  const [email,         setEmail]         = useState(authUser?.email ?? "");
+  const [phone,         setPhone]         = useState("");
+  const [phoneCountry,  setPhoneCountry]  = useState(DIAL_COUNTRIES[0]);
+  const [showCountryPicker, setShowCountryPicker] = useState(false);
+  const [countrySearch, setCountrySearch] = useState("");
+
+  // Address
+  const [country,      setCountry]     = useState("");
+  const [state,        setState]       = useState("");
+  const [city,         setCity]        = useState("");
+  const [addressLine,  setAddressLine] = useState("");
+  const [zipCode,      setZipCode]     = useState("");
+
   // Shipping & payment
+  const [shippingId, setShippingId] = useState("");
   const shippingPrice = shippingMethods.find((s) => s.id === shippingId) ? Number(shippingMethods.find((s) => s.id === shippingId)!.fee) : 0;
   const SUBTOTAL = cartItems.reduce((s, i) => s + i.price * i.qty, 0);
   const DISCOUNT = 0;
-  const FEE_RATE = 0.01; // 1% processing fee
-  const PROCESSING_FEE = Math.round((SUBTOTAL - DISCOUNT + shippingPrice) * FEE_RATE * 100) / 100;
-  const total = SUBTOTAL - DISCOUNT + PROCESSING_FEE + shippingPrice;
+  const TAX = 0;
+  const total = SUBTOTAL - DISCOUNT + TAX + shippingPrice;
 
   const [openMethod,       setOpenMethod]       = useState<string | null>(null);
   const [showProviderDrop, setShowProviderDrop] = useState(false);
@@ -300,7 +285,7 @@ export default function CheckoutPage() {
   const [cvv,       setCvv]       = useState("");
   const [cardName,  setCardName]  = useState("");
   const [saveCard,  setSaveCard]  = useState(false);
-  const [mmProvider, setMmProvider] = useState("");
+  const [mmProvider, setMmProvider] = useState("MTN");
   const [mmPhone,   setMmPhone]   = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
   const [proofFile, setProofFile] = useState<string | null>(null);
@@ -322,141 +307,201 @@ export default function CheckoutPage() {
     currencySymbol: selectedCurrency.symbol,
     exchangeRate: selectedCurrency.exchangeRate,
     ...(openMethod === "mobile" && mmProvider ? { notes: `Mobile money provider: ${mmProvider}` } : {}),
-    ...(orderNotes ? { orderNotes } : {}),
-    shippingAddress: {
-      firstName, lastName, email,
-      phone: `${phoneCountry.dial}${phone}`,
-      addressLine, city, state, country, zipCode,
-      shippingId,
-      shippingFee: shippingPrice,
+    addressDetails: {
+      email, firstName, lastName, phone,
+      address: addressLine || `${city}, ${state}, ${country}`,
+      zipCode: zipCode || undefined,
+      countryName: country, stateName: state || undefined, cityName: city || undefined, manual: true,
     },
   });
 
-  const placeOrder = async () => {
-    if (isSubmitting) return;
-    setIsSubmitting(true);
-    setOrderError(null);
-
-    const backendPaymentMethod = openMethod === "mobile" ? "MOBILE_MONEY" : openMethod === "card" ? "CARD" : openMethod === "bank" ? "BANK_TRANSFER" : openMethod === "whatsapp" ? "WHATSAPP" : "CASH_ON_DELIVERY";
-
-    try {
-      const res = await fetch(`${API_BASE}/api/orders`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}) },
-        body: JSON.stringify(buildOrderPayload(backendPaymentMethod, total)),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Failed to place order");
-
-      setPlacedOrderNumber(data.orderNumber);
-      setPlacedOrderId(data.id);
-      setSavedCartItems([...cartItems]);
-
-      if (openMethod === "mobile") {
-        initMobilePayment(data.id);
-      } else if (openMethod === "whatsapp") {
-        const msg = `Hello Kryros! I just placed order #${data.orderNumber} for ${format(total)}. Please help me complete my payment.`;
-        setWaMessage(msg);
-        setOrdered(true);
-        clearCart();
-      } else {
-        setOrdered(true);
-        clearCart();
-      }
-    } catch (err: any) {
-      setOrderError(err.message);
-      setIsSubmitting(false);
-    }
-  };
-
-  const initMobilePayment = async (orderId: string) => {
-    setMmPhase("initializing");
-    try {
-      const res = await fetch(`${API_BASE}/api/payments/mobile/init`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ orderId, phone: mmPhone, provider: mmProvider }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Failed to init mobile payment");
-
-      setMmPhase("waiting");
-      startPolling(orderId);
-    } catch (err: any) {
-      setMmPhase("failed_init");
-      setOrderError(err.message);
-      setIsSubmitting(false);
-    }
-  };
-
-  const startPolling = (orderId: string) => {
+  const startPolling = (orderId: string, orderNum: string) => {
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (authToken) headers["Authorization"] = `Bearer ${authToken}`;
     let attempts = 0;
+    const MAX_ATTEMPTS = 36;
     pollRef.current = setInterval(async () => {
       attempts++;
-      if (attempts > 30) {
+      if (attempts > MAX_ATTEMPTS) {
         clearInterval(pollRef.current!);
         setMmPhase("timed_out");
-        setIsSubmitting(false);
         return;
       }
       try {
-        const res = await fetch(`${API_BASE}/api/orders/${orderId}`);
-        const data = await res.json();
-        if (data.paymentStatus === "PAID") {
+        const r = await fetch(`${API_BASE}/api/payments/status/${orderId}`, { headers });
+        if (!r.ok) return;
+        const d = await r.json().catch(() => null);
+        if (!d) return;
+        const status = d.status ?? d.paymentStatus ?? "";
+        if (status === "PAID") {
           clearInterval(pollRef.current!);
-          setOrdered(true);
+          setPlacedOrderNumber(orderNum);
           clearCart();
-          setIsSubmitting(false);
+          setOrdered(true);
           registerPhoneForSms(phone, `${firstName} ${lastName}`);
-          sendReceiptAfterOrder(data.orderNumber, format(total), "Mobile Money");
+          sendReceiptAfterOrder(orderNum, total.toFixed(2), `Mobile Money (${mmProvider})`);
+          setMmPhase("idle");
+        } else if (status === "FAILED") {
+          clearInterval(pollRef.current!);
+          setMmPhase("failed_init");
         }
       } catch { /* ignore */ }
-    }, 4000);
+    }, 5000);
   };
 
+  const handleMobileMoneyPay = async () => {
+    if (isSubmitting || !mmPhone.trim()) return;
+    setIsSubmitting(true);
+    setOrderError(null);
+    try {
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (authToken) headers["Authorization"] = `Bearer ${authToken}`;
+      const zmwRate = allCurrencies.find((c) => c.code === "ZMW")?.exchangeRate ?? 18.86;
+      const totalZMW = total * zmwRate;
+      const res = await fetch(`${API_BASE}/api/orders`, { method: "POST", headers, body: JSON.stringify(buildOrderPayload("MOBILE_MONEY", totalZMW)) });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const msg = Array.isArray(data.message) ? data.message.join(", ") : data.message || "Failed to place order.";
+        setOrderError(msg);
+        toast.error(msg);
+        setIsSubmitting(false);
+        return;
+      }
+      const orderId  = data.id ?? "";
+      const orderNum = data.orderNumber ?? data.id ?? "";
+      setPlacedOrderId(orderId);
+      setSavedCartItems([...cartItems]);
+      setMmPhase("initializing");
+      setOpenMethod(null);
+      try {
+        const initRes = await fetch(`${API_BASE}/api/payments/initialize`, { method: "POST", headers, body: JSON.stringify({ orderId, phone: mmPhone, amount: Math.round(totalZMW * 100) / 100 }) });
+        if (!initRes.ok) { setMmPhase("failed_init"); setIsSubmitting(false); return; }
+        setMmPhase("waiting");
+        startPolling(orderId, orderNum);
+      } catch { setMmPhase("failed_init"); }
+    } catch {
+      const msg = "Network error. Please check your connection and try again.";
+      setOrderError(msg);
+      toast.error(msg);
+    } finally { setIsSubmitting(false); }
+  };
+
+  const handlePlaceOrder = async () => {
+    if (isSubmitting || cartItems.length === 0) return;
+    setIsSubmitting(true);
+    setOrderError(null);
+    try {
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (authToken) headers["Authorization"] = `Bearer ${authToken}`;
+      const PAYMENT_METHOD_MAP: Record<string, string> = { card: "CARD", bank: "BANK_TRANSFER", whatsapp: "WHATSAPP", apple: "CARD", google: "CARD", crypto: "CARD" };
+      const backendPaymentMethod = PAYMENT_METHOD_MAP[openMethod ?? "card"] ?? "CARD";
+      const zmwRate  = allCurrencies.find((c) => c.code === "ZMW")?.exchangeRate ?? 18.86;
+      const totalZMW = total * zmwRate;
+      const res = await fetch(`${API_BASE}/api/orders`, { method: "POST", headers, body: JSON.stringify(buildOrderPayload(backendPaymentMethod, totalZMW)) });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const msg = Array.isArray(data.message) ? data.message.join(", ") : data.message || "Failed to place order.";
+        setOrderError(msg);
+        toast.error(msg);
+        setIsSubmitting(false);
+        return;
+      }
+      const orderNum = data.orderNumber ?? data.id ?? "";
+      setPlacedOrderNumber(orderNum);
+      setPlacedOrderId(data.id ?? "");
+      setSavedCartItems([...cartItems]);
+      if (openMethod === "whatsapp") {
+        const itemsList = cartItems.map((i) => `• ${i.qty}× ${i.name}`).join("\n");
+        const msg = `*New Order: ${orderNum}*\n\n*Customer:*\n${firstName} ${lastName}\n${phone}\n\n*Items:*\n${itemsList}\n\n*Total:* ${format(total)}\n\n*Payment Method:* WhatsApp Transfer\nPlease confirm my payment. Thank you!`;
+        setWaMessage(msg);
+        setOrdered(true);
+        clearCart();
+        registerPhoneForSms(phone, `${firstName} ${lastName}`);
+        sendReceiptAfterOrder(orderNum, total.toFixed(2), "WhatsApp Payment");
+        const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(msg)}`;
+        window.open(url, "_blank");
+      } else {
+        setOrdered(true);
+        clearCart();
+        registerPhoneForSms(phone, `${firstName} ${lastName}`);
+        sendReceiptAfterOrder(orderNum, total.toFixed(2), openMethod === "bank" ? "Bank Transfer" : "Card Payment");
+      }
+    } catch {
+      const msg = "Network error. Please check your connection and try again.";
+      setOrderError(msg);
+      toast.error(msg);
+    } finally { setIsSubmitting(false); }
+  };
+
+  const handleWhatsAppRedirect = () => {
+    const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(waMessage)}`;
+    window.open(url, "_blank");
+  };
+
+  // ── Step navigation with validation toasts ──────────────────────────────────
   const goToStep2 = () => {
-    if (!firstName.trim() || !lastName.trim() || (!email.trim() && !phone.trim())) {
-      toast.error("Please fill in your name and at least one contact method.");
-      return;
-    }
+    if (!firstName.trim()) { toast.error("Please enter your first name"); return; }
+    if (!lastName.trim())  { toast.error("Please enter your last name");  return; }
+    if (!email.trim() && !phone.trim()) { toast.error("Please provide at least an email or phone number"); return; }
     setStep(2);
   };
 
   const goToStep3 = () => {
-    if (!country || !city || !addressLine) {
-      toast.error("Please fill in your shipping address.");
-      return;
-    }
+    if (!country) { toast.error("Please select a country"); return; }
+    if (!city.trim()) { toast.error("Please enter your city"); return; }
+    if (!addressLine.trim()) { toast.error("Please enter your address"); return; }
     setStep(3);
   };
 
+  // ── Order confirmation screen ───────────────────────────────────────────────
   if (ordered) {
+    const isManual = openMethod === "bank" || openMethod === "whatsapp";
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 text-center">
-        <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-6">
-          <Check className="w-10 h-10 text-primary" strokeWidth={3} />
-        </div>
-        <h1 className="text-2xl font-bold text-foreground mb-2">Order Placed Successfully!</h1>
-        <p className="text-muted-foreground mb-8">Your order <span className="font-bold text-foreground">#{placedOrderNumber}</span> has been received.</p>
-        
-        <div className="w-full max-w-sm bg-card rounded-2xl border border-border p-5 mb-8 text-left space-y-4">
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">Amount Paid</span>
-            <span className="font-bold text-foreground">{format(total)}</span>
+      <div className="max-w-lg mx-auto bg-background min-h-screen flex flex-col px-6 pt-12 pb-8">
+        <div className="flex-1 flex flex-col items-center justify-center text-center space-y-6">
+          <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-2">
+            <Check className="w-10 h-10 text-primary" strokeWidth={3} />
           </div>
-          {openMethod === "whatsapp" && (
-            <div className="pt-4 border-t border-border">
-              <p className="text-xs text-muted-foreground mb-3">Please click the button below to send your order details to us on WhatsApp to finalize payment.</p>
-              <a href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(waMessage)}`} target="_blank" rel="noreferrer" className="w-full py-3 rounded-xl bg-[#25D366] text-white text-sm font-bold flex items-center justify-center gap-2">
-                Send to WhatsApp
-              </a>
+          <div className="space-y-2">
+            <h1 className="text-2xl font-black text-foreground">Order Placed!</h1>
+            <p className="text-sm text-muted-foreground">Order Number: <span className="font-bold text-foreground">#{placedOrderNumber}</span></p>
+          </div>
+          <div className="w-full bg-card border border-border rounded-3xl p-5 space-y-4">
+            <div className="space-y-3">
+              {savedCartItems.map((item) => (
+                <div key={item.id} className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">{item.qty}× {item.name}</span>
+                  <span className="font-semibold">{format(item.price * item.qty)}</span>
+                </div>
+              ))}
+              <div className="pt-3 border-t border-border flex justify-between font-black">
+                <span>Total Paid</span>
+                <span className="text-primary">{format(total)}</span>
+              </div>
             </div>
-          )}
+          </div>
+          <div className="space-y-3 w-full">
+            <p className="text-sm text-muted-foreground px-4">
+              {isManual ? "We'll confirm your order once we verify your payment." : `Thank you${firstName ? `, ${firstName}` : ""}! Your order is confirmed.`}
+            </p>
+            {isManual && (
+              <div className="bg-primary/5 border border-primary/15 rounded-2xl p-4 text-xs text-primary font-medium">
+                {openMethod === "whatsapp" ? "Our team will contact you on WhatsApp to confirm your payment." : "Send your proof of transfer to support. Once confirmed, your order will be processed."}
+              </div>
+            )}
+          </div>
         </div>
-
-        <Link href="/" className="w-full max-w-sm py-4 rounded-2xl bg-primary text-white text-sm font-bold shadow-lg shadow-primary/20">
-          Continue Shopping
-        </Link>
+        <div className="space-y-3">
+          {openMethod === "whatsapp" && (
+            <button onClick={handleWhatsAppRedirect} className="w-full py-4 bg-[var(--kryros-primary-hover)] text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 hover:opacity-90 active:scale-95 transition-all">
+              <span className="w-5 h-5 rounded-full bg-white/10 flex items-center justify-center text-[10px] font-semibold">WA</span>
+              <span>Open WhatsApp</span>
+            </button>
+          )}
+          <Link href="/shop">
+            <button className="w-full py-3 rounded-2xl border border-border bg-background text-sm font-semibold hover:bg-primary/5 transition-colors">Continue Shopping</button>
+          </Link>
+        </div>
       </div>
     );
   }
@@ -464,9 +509,9 @@ export default function CheckoutPage() {
   const hasPaymentError = !!orderError || mmPhase === "failed_init" || mmPhase === "timed_out";
 
   return (
-    <div className="max-w-lg mx-auto bg-background flex flex-col" style={{ height: "100dvh" }}>
+    <div className="max-w-lg mx-auto bg-background min-h-screen flex flex-col">
       {/* Header */}
-      <div className="sticky top-0 z-20 flex items-center justify-between px-4 pt-5 pb-4 bg-background/90 backdrop-blur border-b border-border/40">
+      <div className="sticky top-0 z-20 flex items-center justify-between px-4 pt-5 pb-3 bg-background/90 backdrop-blur">
         <button onClick={() => navigate("/cart")} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground">
           <ChevronLeft className="w-4 h-4" /> Back to Cart
         </button>
@@ -474,33 +519,25 @@ export default function CheckoutPage() {
       </div>
 
       {/* Progress steps */}
-      <div className="px-4 pt-4 pb-5">
-        <div className="grid grid-cols-4 text-[11px] font-semibold text-muted-foreground mb-3">
-          {[["Contact", 1], ["Address", 2], ["Shipping", 3], ["Payment", 4]].map(([label, s]) => (
-            <div key={label as string} className={`flex flex-col items-center gap-1.5 ${step >= (s as number) ? "text-primary" : ""}`}>
-              <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold border-2 transition-all ${step > (s as number) ? "bg-primary border-primary text-white" : step === (s as number) ? "border-primary text-primary bg-primary/10" : "border-border text-muted-foreground"}`}>
-                {step > (s as number) ? <Check className="w-3 h-3" /> : s as number}
-              </div>
-              <span>{label as string}</span>
-            </div>
-          ))}
+      <div className="px-4 pb-4">
+        <div className="flex justify-between text-[11px] font-semibold text-muted-foreground mb-2">
+          <span className={step >= 1 ? "text-primary" : ""}>Contact</span>
+          <span className={step >= 2 ? "text-primary" : ""}>Address</span>
+          <span className={step >= 3 ? "text-primary" : ""}>Shipping</span>
+          <span className={step >= 4 ? "text-primary" : ""}>Payment</span>
         </div>
-        <div className="flex gap-1">
-          {[1, 2, 3, 4].map((s) => (
-            <div key={s} className="flex-1 h-1 rounded-full bg-muted overflow-hidden">
-              <div className={`h-full rounded-full bg-gradient-to-r from-primary to-[var(--kryros-primary-hover)] transition-all duration-300 ${step >= s ? "w-full" : "w-0"}`} />
-            </div>
-          ))}
+        <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+          <div className="h-full rounded-full bg-gradient-to-r from-primary to-[var(--kryros-primary-hover)] transition-all" style={{ width: `${(step / 4) * 100}%` }} />
         </div>
       </div>
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col min-h-0">
+      <div className="flex-1 overflow-y-auto px-4 pb-6 space-y-3">
 
-        {/* STEP 1: Contact */}
+        {/* ── STEP 1: Contact ── */}
         {step === 1 && (
-          <div className="flex-1 flex flex-col">
-            <div className="flex-1 overflow-y-auto bg-card border-t border-border px-4 py-5 space-y-4">
+          <div className="space-y-4">
+            <div className="bg-card border border-border rounded-3xl p-4 space-y-4">
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-bold text-foreground">Contact information</h2>
                 {authUser
@@ -523,6 +560,7 @@ export default function CheckoutPage() {
               <div className="space-y-2">
                 <label className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
                   <Mail className="w-3.5 h-3.5" />Email address
+                  <span className="text-[10px] text-muted-foreground font-normal ml-1">(optional if phone provided)</span>
                 </label>
                 <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="Enter your email address" className="w-full px-4 py-3.5 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
               </div>
@@ -530,6 +568,7 @@ export default function CheckoutPage() {
               <div className="space-y-2">
                 <label className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
                   <Phone className="w-3.5 h-3.5" />Mobile number
+                  <span className="text-[10px] text-muted-foreground font-normal ml-1">(optional if email provided)</span>
                 </label>
                 <div className="flex gap-2">
                   <div className="flex items-center rounded-xl border border-border bg-muted/40 overflow-hidden min-w-[115px]">
@@ -538,19 +577,14 @@ export default function CheckoutPage() {
                       <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
                     </button>
                   </div>
-                  <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone number" type="tel" className="w-full px-4 py-3.5 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
+                  <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Enter your phone number" type="tel" className="w-full px-4 py-3.5 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <label className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
-                  <Mail className="w-3.5 h-3.5" />Order notes
-                </label>
-                <textarea value={orderNotes} onChange={(e) => setOrderNotes(e.target.value)} placeholder="Any special instructions or notes for your order..." rows={3} className="w-full px-4 py-3.5 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all resize-none" />
-              </div>
-
+              {/* Country picker modal (for phone dial code) */}
               {showCountryPicker && (
                 <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center" onClick={() => setShowCountryPicker(false)}>
+                  <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
                   <div className="relative w-full max-w-sm bg-card border border-border rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center justify-between px-4 pt-4 pb-3 border-b border-border">
                       <h3 className="text-sm font-bold text-foreground">Select Country Code</h3>
@@ -575,20 +609,20 @@ export default function CheckoutPage() {
                 </div>
               )}
             </div>
-            <div className="px-4 py-4 border-t border-border/40 bg-background">
-              <button onClick={goToStep2} className="w-full py-4 rounded-2xl bg-[var(--kryros-primary-hover)] text-white text-sm font-bold flex items-center justify-center gap-2">
-                Continue to Address <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
+
+            <button onClick={goToStep2} className="w-full py-3 rounded-2xl bg-[var(--kryros-primary-hover)] text-white text-sm font-semibold flex items-center justify-center gap-2">
+              Continue to Address <ChevronRight className="w-4 h-4" />
+            </button>
           </div>
         )}
 
-        {/* STEP 2: Address */}
+        {/* ── STEP 2: Address ── */}
         {step === 2 && (
-          <div className="flex-1 flex flex-col">
-            <div className="flex-1 overflow-y-auto bg-card border-t border-border px-4 py-5 space-y-4">
+          <div className="space-y-4">
+            <div className="bg-card border border-border rounded-3xl p-4 space-y-4">
               <h2 className="text-sm font-bold text-foreground">Shipping address</h2>
 
+              {/* Country — dynamic from admin panel */}
               <div className="space-y-1.5">
                 <label className="flex items-center gap-1 text-[11px] font-semibold text-muted-foreground">
                   <Globe className="w-3 h-3" />Country
@@ -608,7 +642,8 @@ export default function CheckoutPage() {
                             <option key={c.code} value={c.name} disabled>{c.name} (Coming soon)</option>
                           )
                         )
-                      : <option value="Zambia">Zambia</option>
+                      : /* Fallback while loading */
+                        <option value="Zambia">Zambia</option>
                     }
                   </select>
                   <ChevronDown className="w-3 h-3 text-muted-foreground absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -618,11 +653,11 @@ export default function CheckoutPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <label className="flex items-center gap-1 text-[11px] font-semibold text-muted-foreground"><MapPin className="w-3 h-3" />State / Province</label>
-                  <input value={state} onChange={(e) => setState(e.target.value)} placeholder="State / Province" className="w-full px-4 py-3.5 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
+                  <input value={state} onChange={(e) => setState(e.target.value)} placeholder="Lusaka Province" className="w-full px-4 py-3.5 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
                 </div>
                 <div className="space-y-1.5">
                   <label className="flex items-center gap-1 text-[11px] font-semibold text-muted-foreground"><Home className="w-3 h-3" />City</label>
-                  <input value={city} onChange={(e) => setCity(e.target.value)} placeholder="City" className="w-full px-4 py-3.5 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
+                  <input value={city} onChange={(e) => setCity(e.target.value)} placeholder="Lusaka" className="w-full px-4 py-3.5 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
                 </div>
               </div>
 
@@ -636,52 +671,41 @@ export default function CheckoutPage() {
                 <input value={zipCode} onChange={(e) => setZipCode(e.target.value)} placeholder="10101" className="w-full px-4 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
               </div>
             </div>
-            <div className="px-4 py-4 border-t border-border/40 bg-background space-y-2">
-              <button onClick={goToStep3} className="w-full py-4 rounded-2xl bg-[var(--kryros-primary-hover)] text-white text-sm font-bold flex items-center justify-center gap-2">
-                Continue to Shipping <ChevronRight className="w-4 h-4" />
-              </button>
-              <button onClick={() => setStep(1)} className="w-full text-xs text-muted-foreground text-center hover:text-primary transition-colors py-2">← Back to Contact</button>
-            </div>
+
+            <button onClick={goToStep3} className="w-full py-3 rounded-2xl bg-[var(--kryros-primary-hover)] text-white text-sm font-semibold flex items-center justify-center gap-2">
+              Continue to Shipping <ChevronRight className="w-4 h-4" />
+            </button>
+            <button onClick={() => setStep(1)} className="w-full text-xs text-muted-foreground text-center hover:text-primary transition-colors py-2">← Back to Contact</button>
           </div>
         )}
 
-        {/* STEP 3: Shipping */}
+        {/* ── STEP 3: Shipping ── */}
         {step === 3 && (
-          <div className="flex-1 flex flex-col">
-            <div className="flex-1 overflow-y-auto bg-card border-t border-border px-4 py-5 space-y-4">
+          <div className="space-y-4">
+            <div className="bg-card border border-border rounded-3xl p-4 space-y-4">
               <h2 className="text-sm font-bold text-foreground">
                 Delivery options <span className="text-[11px] text-muted-foreground font-normal">(for {city || "your area"})</span>
               </h2>
               <div className="space-y-3">
                 {shippingLoading ? (
-                  <div className="flex flex-col gap-3">
-                    {[1, 2, 3].map((i) => (
-                      <div key={i} className="w-full h-[72px] rounded-2xl border border-border bg-muted/30 animate-pulse" />
-                    ))}
+                  <div className="py-8 text-center space-y-3">
+                    <div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin mx-auto" />
+                    <p className="text-xs text-muted-foreground">Finding the best shipping options...</p>
                   </div>
-                ) : shippingMethods.length === 0 ? (
-                  <div className="flex flex-col items-center gap-2 py-8 text-muted-foreground">
-                    <Truck className="w-8 h-8 opacity-40" />
-                    <p className="text-sm">No shipping methods available.</p>
-                  </div>
-                ) : (
+                ) : shippingMethods.length > 0 ? (
                   shippingMethods.map((option) => {
-                    const fee = Number(option.fee ?? 0);
                     const isSelected = shippingId === option.id;
-                    const Icon = /express|fast|quick/i.test(option.name) ? Zap : /priority|next.?day|overnight/i.test(option.name) ? Clock : Truck;
                     return (
                       <button key={option.id} onClick={() => setShippingId(option.id)} className={`w-full flex items-center gap-3 px-4 py-4 rounded-2xl border text-left transition-all ${isSelected ? "border-primary bg-primary/5" : "border-border hover:border-primary/40 hover:bg-muted/40"}`}>
                         <div className={`w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 ${isSelected ? "bg-primary text-white" : "bg-muted text-foreground"}`}>
-                          <Icon className="w-5 h-5" />
+                          <Truck className="w-5 h-5" />
                         </div>
                         <div className="flex-1">
                           <div className="flex items-center justify-between gap-2">
                             <p className="text-sm font-semibold text-foreground">{option.name}</p>
-                            <p className="text-sm font-semibold text-foreground">{fee === 0 ? "Free" : format(fee)}</p>
+                            <p className="text-sm font-semibold text-foreground">{Number(option.fee) === 0 ? "Free" : format(Number(option.fee))}</p>
                           </div>
-                          {(option.description || option.estimatedDays) && (
-                            <p className="text-xs text-muted-foreground mt-0.5">{option.description || option.estimatedDays}</p>
-                          )}
+                          <p className="text-xs text-muted-foreground mt-0.5">{option.description || option.estimatedDays || "Standard delivery"}</p>
                         </div>
                         <div className={`w-4 h-4 rounded-full border flex items-center justify-center text-[8px] ${isSelected ? "border-primary bg-primary text-white" : "border-border bg-background"}`}>
                           {isSelected && "✓"}
@@ -689,22 +713,25 @@ export default function CheckoutPage() {
                       </button>
                     );
                   })
+                ) : (
+                  <div className="py-8 text-center space-y-2 bg-muted/20 rounded-2xl border border-dashed border-border">
+                    <Truck className="w-8 h-8 mx-auto opacity-20" />
+                    <p className="text-xs text-muted-foreground px-4">No shipping methods available for your location. Please check your address or contact support.</p>
+                  </div>
                 )}
               </div>
             </div>
-            <div className="px-4 py-4 border-t border-border/40 bg-background space-y-2">
-              <button onClick={() => setStep(4)} className="w-full py-4 rounded-2xl bg-[var(--kryros-primary-hover)] text-white text-sm font-bold flex items-center justify-center gap-2">
-                Continue to Payment <ChevronRight className="w-4 h-4" />
-              </button>
-              <button onClick={() => setStep(2)} className="w-full text-xs text-muted-foreground text-center hover:text-primary transition-colors py-2">← Back to Address</button>
-            </div>
+            <button onClick={() => setStep(4)} disabled={shippingLoading || shippingMethods.length === 0} className="w-full py-3 rounded-2xl bg-[var(--kryros-primary-hover)] text-white text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-50">
+              Continue to Payment <ChevronRight className="w-4 h-4" />
+            </button>
+            <button onClick={() => setStep(2)} className="w-full text-xs text-muted-foreground text-center hover:text-primary transition-colors py-2">← Back to Address</button>
           </div>
         )}
 
-        {/* STEP 4: Payment */}
+        {/* ── STEP 4: Payment ── */}
         {step === 4 && (
-          <div className="flex-1 flex flex-col">
-            <div className="flex-1 overflow-y-auto bg-card border-t border-border px-4 py-5 space-y-4">
+          <div className="space-y-4">
+            <div className="bg-card border border-border rounded-3xl p-4 space-y-4">
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-bold text-foreground">How would you like to pay?</h2>
                 <span className="text-[11px] text-muted-foreground">Powered by Kryros Pay</span>
@@ -714,95 +741,239 @@ export default function CheckoutPage() {
                 <div className="p-3 rounded-2xl bg-red-50 dark:bg-red-900/15 border border-red-200 dark:border-red-900/30 text-[11px] text-red-600 dark:text-red-300 flex items-start gap-2">
                   <X className="w-3 h-3 mt-0.5" />
                   <div>
-                    <p className="font-semibold mb-0.5">{mmPhase === "timed_out" ? "Timed out" : "Payment Error"}</p>
-                    <p>{orderError || "Please try again."}</p>
+                    <p className="font-semibold mb-0.5">{mmPhase === "timed_out" ? "We couldn't confirm your payment in time." : "We couldn't initialize your payment."}</p>
+                    <p>{orderError || "Please try again, or choose a different payment method. If the problem continues, contact support."}</p>
                   </div>
                 </div>
               )}
 
               <div className="space-y-2">
-                {activeCheckoutMethods.length > 0 ? (
-                  activeCheckoutMethods.map((method) => {
-                    const Icon = method.icon;
-                    return (
-                      <div key={method.id} className="space-y-2">
-                        <button onClick={() => { setOpenMethod(openMethod === method.id ? null : method.id); setOrderError(null); setMmPhase("idle"); }} className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl border transition-all text-left ${openMethod === method.id ? "border-primary bg-primary/5" : "border-border bg-card hover:border-primary/50"}`}>
-                          <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${method.iconBg}`}><Icon /></div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-bold text-foreground">{method.label}</p>
-                            <p className="text-[11px] text-muted-foreground">{method.id === "mobile" ? mobileNetworks.join(", ") : method.sub}</p>
-                          </div>
-                          <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${openMethod === method.id ? "rotate-180" : ""}`} />
-                        </button>
-
-                        {openMethod === method.id && (
-                          <div className="p-4 rounded-2xl bg-muted/30 border border-border/50 space-y-4 animate-in slide-in-from-top-2 duration-200">
-                            {method.id === "mobile" && (
-                              <div className="space-y-3">
-                                <div className="space-y-1.5">
-                                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Select Network</label>
-                                  <div className="grid grid-cols-2 gap-2">
-                                    {mobileNetworks.map((net) => (
-                                      <button key={net} onClick={() => setMmProvider(net)} className={`py-2.5 rounded-xl border text-xs font-bold transition-all ${mmProvider === net ? "border-primary bg-primary text-white" : "border-border bg-background text-foreground"}`}>
-                                        {net}
-                                      </button>
-                                    ))}
-                                  </div>
-                                </div>
-                                <div className="space-y-1.5">
-                                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Phone Number</label>
-                                  <input value={mmPhone} onChange={(e) => setMmPhone(e.target.value)} placeholder="09XXXXXXXX" className="w-full px-4 py-3 rounded-xl border border-border bg-background text-sm focus:ring-2 focus:ring-primary/40 outline-none" />
-                                </div>
-                              </div>
-                            )}
-
-                            {method.id === "bank" && (
-                              <div className="space-y-3">
-                                <p className="text-xs text-muted-foreground">Please transfer <span className="font-bold text-foreground">{format(total)}</span> to any of the accounts below and upload proof of payment.</p>
-                                {bankProviders.map((bank, i) => (
-                                  <div key={i} className="p-3 rounded-xl bg-background border border-border space-y-2">
-                                    <p className="text-xs font-bold text-foreground">{bank.name}</p>
-                                    <div className="flex items-center justify-between">
-                                      <span className="text-[11px] text-muted-foreground">Acc: {bank.config?.accountNumber}</span>
-                                      <CopyBtn text={bank.config?.accountNumber || ""} />
-                                    </div>
-                                  </div>
-                                ))}
-                                <button onClick={() => fileRef.current?.click()} className="w-full py-3 border-2 border-dashed border-border rounded-xl flex flex-col items-center gap-1 hover:border-primary/50 transition-colors">
-                                  <Upload className="w-4 h-4 text-muted-foreground" />
-                                  <span className="text-[10px] font-semibold text-muted-foreground">{proofFile ? "Proof uploaded" : "Upload Proof of Payment"}</span>
-                                </button>
-                                <input type="file" ref={fileRef} className="hidden" onChange={(e) => setProofFile(e.target.files?.[0]?.name || null)} />
-                              </div>
-                            )}
-
-                            {method.id === "whatsapp" && (
-                              <p className="text-xs text-muted-foreground">You will be redirected to WhatsApp to complete your payment with our support team after placing the order.</p>
-                            )}
-
-                            <button onClick={placeOrder} disabled={isSubmitting} className="w-full py-3.5 rounded-xl bg-primary text-white text-sm font-bold disabled:opacity-50">
-                              {isSubmitting ? "Processing..." : `Pay ${format(total)}`}
-                            </button>
-                          </div>
-                        )}
+                {activeCheckoutMethods.map((method) => {
+                  const Icon = method.icon;
+                  return (
+                    <button key={method.id} onClick={() => { setOpenMethod(method.id); setOrderError(null); setMmPhase("idle"); }} className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl border border-border bg-card hover:border-primary/50 hover:bg-primary/[0.02] active:scale-[0.99] transition-all text-left">
+                      <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${method.iconBg}`}><Icon /></div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-foreground">{method.label}</p>
+                        <p className="text-[11px] text-muted-foreground">{method.id === "mobile" ? mobileNetworks.join(", ") : method.sub}</p>
                       </div>
-                    );
-                  })
-                ) : (
-                  <div className="p-8 text-center text-muted-foreground bg-muted/20 rounded-2xl border border-dashed border-border">
-                    <Smartphone className="w-8 h-8 mx-auto mb-2 opacity-20" />
-                    <p className="text-sm">No payment methods available.</p>
-                  </div>
-                )}
+                      <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                    </button>
+                  );
+                })}
               </div>
+
+              {mmPhase === "waiting" && (
+                <div className="mt-3 p-3 rounded-2xl bg-amber-50 dark:bg-amber-900/15 border border-amber-200 dark:border-amber-900/30 text-[11px] text-amber-700 dark:text-amber-200 flex items-start gap-2">
+                  <Clock className="w-3 h-3 mt-0.5" />
+                  <div>
+                    <p className="font-semibold mb-0.5">Waiting for your mobile money payment…</p>
+                    <p>Check your phone and approve the payment prompt. This can take up to 3 minutes.</p>
+                  </div>
+                </div>
+              )}
             </div>
-            <div className="px-4 py-4 border-t border-border/40 bg-background">
-              <button onClick={() => setStep(3)} className="w-full text-xs text-muted-foreground text-center hover:text-primary transition-colors py-2">← Back to Shipping</button>
-              <SecureFooter />
+
+            <div className="bg-card border border-border rounded-3xl p-4 space-y-3">
+              <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Subtotal</span><span className="font-semibold">{format(SUBTOTAL)}</span></div>
+              <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Shipping</span><span className="font-semibold">{shippingPrice === 0 ? "Free" : format(shippingPrice)}</span></div>
+              <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Estimated tax</span><span className="font-semibold">{format(TAX)}</span></div>
+              <div className="pt-2 border-t border-border flex items-center justify-between text-sm font-black">
+                <span>Total</span><span className="text-primary">{format(total)}</span>
+              </div>
+              <p className="text-[10px] text-muted-foreground">All payments are processed securely. By completing your purchase, you agree to our Terms of Service.</p>
             </div>
+
+            <button onClick={() => setStep(3)} className="w-full text-xs text-muted-foreground text-center hover:text-primary transition-colors py-2">← Back to Shipping</button>
           </div>
         )}
       </div>
+
+      {/* ── PAYMENT METHOD PANELS (bottom sheet) ── */}
+      {openMethod && step === 4 && (
+        <div className="fixed inset-0 z-50 flex flex-col justify-end">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setOpenMethod(null)} />
+          <div className="relative bg-background rounded-t-3xl shadow-2xl max-h-[92vh] overflow-y-auto">
+            <div className="flex justify-center pt-3 pb-1"><div className="w-10 h-1 rounded-full bg-border" /></div>
+            <div className="px-5 pb-8 space-y-4">
+              {/* Sheet header */}
+              <div className="flex items-center justify-between pt-1 pb-2">
+                {(() => {
+                  const m = activeCheckoutMethods.find((x) => x.id === openMethod)!;
+                  const Icon = m.icon;
+                  return (
+                    <div className="flex items-center gap-2.5">
+                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${m.iconBg}`}><Icon /></div>
+                      <span className="text-base font-black text-foreground">{m.label}</span>
+                    </div>
+                  );
+                })()}
+                <button onClick={() => setOpenMethod(null)} className="w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors">
+                  <X className="w-4 h-4 text-foreground" />
+                </button>
+              </div>
+
+              {/* MOBILE MONEY */}
+              {openMethod === "mobile" && (
+                <div className="space-y-4">
+                  <div className="relative">
+                    <label className="block text-[11px] font-semibold text-muted-foreground mb-1.5">Provider</label>
+                    <button type="button" onClick={() => setShowProviderDrop((v) => !v)} className="w-full flex items-center gap-2.5 border border-border rounded-2xl px-3.5 py-3 bg-background hover:border-primary/50 transition-colors">
+                      <Smartphone className="w-5 h-5 text-primary flex-shrink-0" />
+                      <span className="flex-1 text-sm font-semibold text-foreground text-left">{mmProvider}</span>
+                      <ChevronDown className={`w-4 h-4 text-muted-foreground flex-shrink-0 transition-transform ${showProviderDrop ? "rotate-180" : ""}`} />
+                    </button>
+                    {showProviderDrop && (
+                      <div className="absolute left-0 right-0 top-full mt-1 z-20 bg-background border border-border rounded-2xl shadow-xl overflow-hidden">
+                        {mobileNetworks.map((name) => (
+                          <button key={name} type="button" onClick={() => { setMmProvider(name); setShowProviderDrop(false); }} className={`w-full flex items-center px-4 py-3.5 text-left hover:bg-muted transition-colors border-b border-border last:border-0 ${mmProvider === name ? "bg-primary/5" : ""}`}>
+                            <span className={`text-sm font-semibold flex-1 ${mmProvider === name ? "text-primary" : "text-foreground"}`}>{name}</span>
+                            {mmProvider === name && <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center flex-shrink-0"><Check className="w-3 h-3 text-white" /></div>}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-semibold text-muted-foreground mb-1.5">Mobile Money Number</label>
+                    <div className="flex items-center gap-2 border border-border rounded-2xl px-3.5 py-3 bg-background focus-within:ring-2 focus-within:ring-primary/30">
+                      <Smartphone className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                      <input value={mmPhone} onChange={(e) => setMmPhone(e.target.value)} placeholder="Enter your mobile money number" type="tel" className="flex-1 text-sm text-foreground outline-none bg-transparent" />
+                    </div>
+                  </div>
+                  <div className="bg-primary/5 border border-primary/15 rounded-2xl px-4 py-3">
+                    <p className="text-[11px] text-muted-foreground">A payment prompt will be sent to your mobile phone. Please approve it to complete the payment.</p>
+                  </div>
+                  {orderError && (
+                    <div className="flex items-start gap-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-2xl px-4 py-3">
+                      <X className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
+                      <p className="text-[12px] text-red-600 dark:text-red-400">{orderError}</p>
+                    </div>
+                  )}
+                  <div className="border-t border-border pt-4 mt-2 space-y-1.5">
+                    <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Amount</span><span className="font-semibold text-foreground">{format(SUBTOTAL)}</span></div>
+                    <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Shipping</span><span className="font-semibold text-foreground">{shippingPrice === 0 ? "Free" : format(shippingPrice)}</span></div>
+                    <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Fee</span><span className="font-semibold text-foreground">{format(TAX)}</span></div>
+                  </div>
+                  <button onClick={handleMobileMoneyPay} disabled={isSubmitting || !mmPhone.trim()} className="w-full py-4 bg-primary text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-primary/90 active:scale-95 transition-all disabled:opacity-60 disabled:cursor-not-allowed">
+                    {isSubmitting ? <><span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />{mmPhase === "initializing" ? "Sending prompt…" : "Processing…"}</> : <><Smartphone className="w-4 h-4" />Pay {format(total)}</>}
+                  </button>
+                  <SecureFooter />
+                </div>
+              )}
+
+              {/* BANK TRANSFER */}
+              {openMethod === "bank" && (
+                <div className="space-y-4">
+                  <div className="bg-primary/5 border border-primary/15 rounded-2xl px-4 py-3 flex items-start gap-2">
+                    <Building2 className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                    <p className="text-[11px] text-muted-foreground">Please transfer the exact amount to the account below and use your payment reference as payment note.</p>
+                  </div>
+                  <div className="space-y-3">
+                    {[
+                      ...(bankProviders.length > 0
+                        ? bankProviders.flatMap((acc) => [
+                            { label: "Bank Name",      val: acc.name },
+                            { label: "Account Name",   val: acc.config?.accountName   || "" },
+                            { label: "Account Number", val: acc.config?.accountNumber || "" },
+                          ])
+                        : [
+                            { label: "Bank Name",      val: "Stanbic Bank Zambia" },
+                            { label: "Account Name",   val: "KRYROS LIMITED"       },
+                            { label: "Account Number", val: "91200012345667"       },
+                          ]
+                      ),
+                      { label: "Reference", val: bankRef },
+                    ].map(({ label, val }) => (
+                      <div key={label} className="flex items-center justify-between py-2 border-b border-border last:border-0">
+                        <div><p className="text-[10px] text-muted-foreground">{label}</p><p className="text-sm font-bold text-foreground">{val}</p></div>
+                        <CopyBtn text={val} />
+                      </div>
+                    ))}
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-semibold text-muted-foreground mb-2">Upload Payment Proof (Optional)</p>
+                    <label className="flex flex-col items-center justify-center border-2 border-dashed border-border rounded-2xl py-6 cursor-pointer hover:border-primary/40 hover:bg-primary/[0.02] transition-colors" onClick={() => fileRef.current?.click()}>
+                      <Upload className="w-6 h-6 text-muted-foreground mb-2" />
+                      <p className="text-xs font-semibold text-foreground">{proofFile ?? "Choose File or Drag & Drop"}</p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">PNG, JPG, PDF up to 10MB</p>
+                      <input ref={fileRef} type="file" className="hidden" accept=".png,.jpg,.jpeg,.pdf" onChange={(e) => setProofFile(e.target.files?.[0]?.name ?? null)} />
+                    </label>
+                  </div>
+                  <div className="border-t border-border pt-4 mt-2 space-y-1.5">
+                    <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Amount</span><span className="font-semibold text-foreground">{format(SUBTOTAL)}</span></div>
+                    <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Shipping</span><span className="font-semibold text-foreground">{shippingPrice === 0 ? "Free" : format(shippingPrice)}</span></div>
+                    <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Fee</span><span className="font-semibold text-foreground">{format(TAX)}</span></div>
+                  </div>
+                  <button onClick={handlePlaceOrder} disabled={isSubmitting} className="w-full py-4 bg-primary text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-primary/90 active:scale-95 transition-all disabled:opacity-60 disabled:cursor-not-allowed">
+                    {isSubmitting ? <><span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />Placing Order…</> : <><Check className="w-4 h-4" />I Have Made the Transfer</>}
+                  </button>
+                  <SecureFooter />
+                </div>
+              )}
+
+              {/* WHATSAPP */}
+              {openMethod === "whatsapp" && (
+                <div className="space-y-4">
+                  <div className="flex flex-col items-center py-6 gap-3">
+                    <div className="w-16 h-16 rounded-2xl bg-green-50 dark:bg-green-900/20 flex items-center justify-center">
+                      <svg viewBox="0 0 24 24" className="w-9 h-9" fill="currentColor">
+                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+                      </svg>
+                    </div>
+                    <p className="text-sm text-center text-muted-foreground px-4">You will be redirected to WhatsApp to complete your payment securely.</p>
+                  </div>
+                  <div className="border-t border-border pt-4 mt-2 space-y-1.5">
+                    <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Amount</span><span className="font-semibold text-foreground">{format(SUBTOTAL)}</span></div>
+                    <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Shipping</span><span className="font-semibold text-foreground">{shippingPrice === 0 ? "Free" : format(shippingPrice)}</span></div>
+                    <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Fee</span><span className="font-semibold text-foreground">{format(TAX)}</span></div>
+                  </div>
+                  <button onClick={handlePlaceOrder} disabled={isSubmitting} className="w-full py-4 bg-[var(--kryros-primary-hover)] text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-[#1ebe5d] active:scale-95 transition-all disabled:opacity-60 disabled:cursor-not-allowed">
+                    {isSubmitting ? <><span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />Preparing WhatsApp…</> : <><svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" /></svg>Continue on WhatsApp</>}
+                  </button>
+                  <SecureFooter />
+                </div>
+              )}
+
+              {/* CARD PAYMENT */}
+              {openMethod === "card" && (
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-[11px] font-semibold text-muted-foreground mb-1.5">Card Number</label>
+                    <div className="flex items-center gap-2 border border-border rounded-2xl px-3.5 py-3 bg-background focus-within:ring-2 focus-within:ring-primary/30">
+                      <input value={cardNum} onChange={(e) => setCardNum(e.target.value)} placeholder="1234 5678 9012 3456" inputMode="numeric" className="flex-1 text-sm text-foreground outline-none bg-transparent" />
+                      <CreditCard className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[11px] font-semibold text-muted-foreground mb-1.5">Expiry Date</label>
+                      <input value={expiry} onChange={(e) => setExpiry(e.target.value)} placeholder="MM / YY" className="w-full border border-border rounded-2xl px-3.5 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/30 bg-background text-foreground" />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-muted-foreground mb-1.5">CVV</label>
+                      <input value={cvv} onChange={(e) => setCvv(e.target.value)} placeholder="123" type="password" className="w-full border border-border rounded-2xl px-3.5 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/30 bg-background text-foreground" />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-semibold text-muted-foreground mb-1.5">Cardholder Name</label>
+                    <input value={cardName} onChange={(e) => setCardName(e.target.value)} placeholder="John Doe" className="w-full border border-border rounded-2xl px-3.5 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/30 bg-background text-foreground" />
+                  </div>
+                  <div className="border-t border-border pt-4 mt-2 space-y-1.5">
+                    <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Amount</span><span className="font-semibold text-foreground">{format(SUBTOTAL)}</span></div>
+                    <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Shipping</span><span className="font-semibold text-foreground">{shippingPrice === 0 ? "Free" : format(shippingPrice)}</span></div>
+                    <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Fee</span><span className="font-semibold text-foreground">{format(TAX)}</span></div>
+                  </div>
+                  <button onClick={handlePlaceOrder} disabled={isSubmitting} className="w-full py-4 bg-primary text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-primary/90 active:scale-95 transition-all disabled:opacity-60 disabled:cursor-not-allowed">
+                    {isSubmitting ? <><span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />Processing payment…</> : <><Lock className="w-4 h-4" />Pay {format(total)}</>}
+                  </button>
+                  <SecureFooter />
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
