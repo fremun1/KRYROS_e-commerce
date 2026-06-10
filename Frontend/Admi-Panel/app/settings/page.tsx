@@ -255,7 +255,7 @@ function SettingsContent() {
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0 20px' }} className="fg">
             <Field label="Store URL"><input style={inputStyle} defaultValue="https://kryrosfrontendv2.onrender.com" /></Field>
             <Field label="Admin Panel URL"><input style={inputStyle} defaultValue="https://kryros-admin.codewords.run" /></Field>
-            <Field label="Tax Rate (%)"><input style={inputStyle} type="number" defaultValue="10" /></Field>
+            <Field label="Processing Fees Rate (%)"><input style={inputStyle} type="number" defaultValue="10" /></Field>
             <Field label="Min Order Amount"><input style={inputStyle} type="number" defaultValue="20" /></Field>
             <Field label="Items Per Page"><input style={inputStyle} type="number" defaultValue="20" /></Field>
             <Field label="Max Cart Items"><input style={inputStyle} type="number" defaultValue="50" /></Field>

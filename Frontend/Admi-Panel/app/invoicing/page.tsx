@@ -9,16 +9,16 @@ import { FileText } from 'lucide-react';
 import { getOrders } from '@/lib/api';
 import toast from 'react-hot-toast';
 
-type Invoice = { id:string; client:string; amount:string; tax:string; total:string; date:string; due:string; status:string };
+type Invoice = { id:string; client:string; amount:string; processingFees:string; total:string; date:string; due:string; status:string };
 const INITIAL: Invoice[] = [
-  { id:'INV-2025-001', client:'TechHub Zambia', amount:'$12,500.00', tax:'$1,250.00', total:'$13,750.00', date:'2025-05-26', due:'2025-06-25', status:'Paid' },
-  { id:'INV-2025-002', client:'Digital World', amount:'$8,400.00', tax:'$840.00', total:'$9,240.00', date:'2025-05-25', due:'2025-06-24', status:'Unpaid' },
-  { id:'INV-2025-003', client:'Electronics Plus', amount:'$25,000.00', tax:'$2,500.00', total:'$27,500.00', date:'2025-05-24', due:'2025-06-23', status:'Paid' },
-  { id:'INV-2025-004', client:'Mobile Zone', amount:'$3,200.00', tax:'$320.00', total:'$3,520.00', date:'2025-05-20', due:'2025-06-19', status:'Overdue' },
-  { id:'INV-2025-005', client:'Smart Gadgets', amount:'$1,800.00', tax:'$180.00', total:'$1,980.00', date:'2025-05-15', due:'2025-06-14', status:'Draft' },
-  { id:'INV-2025-006', client:'Bwalya Chileshe', amount:'$1,099.00', tax:'$109.90', total:'$1,208.90', date:'2025-05-26', due:'2025-06-25', status:'Paid' },
+  { id:'INV-2025-001', client:'TechHub Zambia', amount:'$12,500.00', processingFees:'$1,250.00', total:'$13,750.00', date:'2025-05-26', due:'2025-06-25', status:'Paid' },
+  { id:'INV-2025-002', client:'Digital World', amount:'$8,400.00', processingFees:'$840.00', total:'$9,240.00', date:'2025-05-25', due:'2025-06-24', status:'Unpaid' },
+  { id:'INV-2025-003', client:'Electronics Plus', amount:'$25,000.00', processingFees:'$2,500.00', total:'$27,500.00', date:'2025-05-24', due:'2025-06-23', status:'Paid' },
+  { id:'INV-2025-004', client:'Mobile Zone', amount:'$3,200.00', processingFees:'$320.00', total:'$3,520.00', date:'2025-05-20', due:'2025-06-19', status:'Overdue' },
+  { id:'INV-2025-005', client:'Smart Gadgets', amount:'$1,800.00', processingFees:'$180.00', total:'$1,980.00', date:'2025-05-15', due:'2025-06-14', status:'Draft' },
+  { id:'INV-2025-006', client:'Bwalya Chileshe', amount:'$1,099.00', processingFees:'$109.90', total:'$1,208.90', date:'2025-05-26', due:'2025-06-25', status:'Paid' },
 ];
-const EMPTY = { client:'', amount:'', tax:'', total:'', date:'', due:'', status:'Draft' };
+const EMPTY = { client:'', amount:'', processingFees:'', total:'', date:'', due:'', status:'Draft' };
 const INV_STATUSES = ['Draft','Unpaid','Paid','Overdue'];
 
 function InvoicingContent() {
@@ -36,15 +36,15 @@ function InvoicingContent() {
       if (raw.length === 0) return;
       const normalized: Invoice[] = raw.map((o: any) => {
         const amt = Number(o.total ?? o.subtotal ?? o.amount ?? 0);
-        const tax = Number(o.tax ?? o.taxAmount ?? 0);
-        const total = amt + tax;
+        const processingFees = Number(o.tax ?? o.taxAmount ?? 0);
+        const total = amt + processingFees;
         const d = o.createdAt ? o.createdAt.split('T')[0] : '';
         const due = o.createdAt ? new Date(new Date(o.createdAt).getTime() + 30*24*60*60*1000).toISOString().split('T')[0] : '';
         return {
           id: `INV-${(o.orderNumber || o.id || '').toString().slice(-8)}`,
           client: o.user ? (`${o.user.firstName||''} ${o.user.lastName||''}`.trim() || o.user.email || 'Customer') : 'Customer',
           amount: `$${amt.toLocaleString()}`,
-          tax: `$${tax.toLocaleString()}`,
+          processingFees: `$${processingFees.toLocaleString()}`,
           total: `$${total.toLocaleString()}`,
           date: d,
           due: due,
@@ -109,7 +109,7 @@ function InvoicingContent() {
       </div>
       <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:'10px'}}>
         <FormField label="Amount" value={form.amount} onChange={fp('amount')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="$0.00" />
-        <FormField label="Tax" value={form.tax} onChange={fp('tax')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="$0.00" />
+        <FormField label="Processing Fees" value={form.processingFees} onChange={fp('processingFees')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="$0.00" />
         <FormField label="Total" value={form.total} onChange={fp('total')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="$0.00" />
       </div>
       <FormField label="Status" value={form.status} onChange={fp('status')} options={INV_STATUSES} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
@@ -139,7 +139,7 @@ function InvoicingContent() {
           </div>
           <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:'10px'}}>
             <FormField label="Amount" value={viewRow.amount} readOnly isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-            <FormField label="Tax" value={viewRow.tax} readOnly isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="Processing Fees" value={viewRow.processingFees} readOnly isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
             <FormField label="Total" value={viewRow.total} readOnly isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
           </div>
           <FormField label="Status" value={viewRow.status} readOnly isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />

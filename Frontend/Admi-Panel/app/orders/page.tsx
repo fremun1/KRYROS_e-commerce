@@ -655,7 +655,7 @@ function OrdersContent() {
 
                   {/* Summary */}
                   <Section title="Order Summary" T={T}>
-                    {([['Subtotal', detail.subtotal], ['Shipping', detail.shipping], ['Tax (VAT)', detail.tax], ...(detail.discount > 0 ? [['Discount', -detail.discount]] : [])] as [string, number][]).map(([lbl, val]) => (
+                    {([['Subtotal', detail.subtotal], ['Shipping', detail.shipping], ['Processing Fees', detail.tax], ...(detail.discount > 0 ? [['Discount', -detail.discount]] : [])] as [string, number][]).map(([lbl, val]) => (
                       <div key={lbl} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.79rem', color: T.muted, marginBottom: '0.3rem' }}>
                         <span>{lbl}</span>
                         <span>{val < 0 ? '-' : ''}{fmtMoney(Math.abs(val), detail.currencySymbol)}</span>

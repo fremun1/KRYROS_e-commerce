@@ -93,7 +93,7 @@ function AmountSummaryBar({ amount, fee, currency }: { amount: number; fee: numb
         <span className="font-semibold text-foreground">{format(amount)}</span>
       </div>
       <div className="flex items-center justify-between text-xs">
-        <span className="text-muted-foreground">Fee</span>
+        <span className="text-muted-foreground">Processing Fees</span>
         <span className="font-semibold text-foreground">{format(fee)}</span>
       </div>
     </div>
