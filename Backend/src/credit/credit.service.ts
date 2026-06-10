@@ -17,47 +17,53 @@ export class CreditService {
   }
 
   async getPlans(params?: { productId?: string }) {
+    // If productId is provided, try to find matching plans
     if (params?.productId) {
       const product = await this.prisma.product.findUnique({
         where: { id: params.productId },
         include: { category: true, brand: true }
       });
 
-      if (!product) return [];
+      if (product) {
+        const matchingPlans = await this.prisma.creditPlan.findMany({
+          where: {
+            isActive: true,
+            OR: [
+              // Specific match for brand/category
+              {
+                AND: [
+                  { minimumAmount: { lte: product.price } },
+                  { maximumAmount: { gte: product.price } },
+                  {
+                    OR: [
+                      { targetBrandId: product.brandId },
+                      { targetCategoryId: product.categoryId }
+                    ]
+                  }
+                ]
+              },
+              // General match (no brand/category constraint)
+              {
+                targetBrandId: null,
+                targetCategoryId: null,
+                minimumAmount: { lte: product.price }
+              }
+            ]
+          },
+          orderBy: { duration: 'asc' }
+        });
 
-      return this.prisma.creditPlan.findMany({
-        where: {
-          isActive: true,
-          OR: [
-            // Case 1: Plan matches product criteria
-            {
-              AND: [
-                { minimumAmount: { lte: product.price } },
-                { maximumAmount: { gte: product.price } },
-                {
-                  OR: [
-                    { targetBrandId: null, targetCategoryId: null },
-                    { targetBrandId: product.brandId },
-                    { targetCategoryId: product.categoryId }
-                  ]
-                }
-              ]
-            },
-            // Case 2: General fallback plans (no specific constraints)
-            {
-              targetBrandId: null,
-              targetCategoryId: null,
-              minimumAmount: { lte: product.price }
-            }
-          ]
-        },
-        orderBy: { duration: 'asc' }
-      });
+        if (matchingPlans.length > 0) {
+          return matchingPlans;
+        }
+      }
     }
+
+    // Fallback: return all active plans if no specific match or no productId
     return this.prisma.creditPlan.findMany({ 
       where: { isActive: true },
       include: { brand: true, category: true },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { duration: 'asc' }
     });
   }
 
