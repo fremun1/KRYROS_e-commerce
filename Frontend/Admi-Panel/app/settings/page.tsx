@@ -36,6 +36,7 @@ function SettingsContent() {
   const [emailNotif, setEmailNotif] = useState(true);
   const [pushNotif, setPushNotif] = useState(true);
   const [orderNotif, setOrderNotif] = useState(true);
+  const [processingFeeRate, setProcessingFeeRate] = useState('10');
   
   // ── 2FA state ──────────────────────────────────────────────────────────────
   type TwoFAStep = 'loading' | 'disabled' | 'setup' | 'enabled' | 'disabling';
@@ -76,6 +77,7 @@ function SettingsContent() {
       if (sMap.email_notifications) setEmailNotif(sMap.email_notifications === 'true');
       if (sMap.push_notifications) setPushNotif(sMap.push_notifications === 'true');
       if (sMap.order_notifications) setOrderNotif(sMap.order_notifications === 'true');
+      if (sMap.processing_fee_rate) setProcessingFeeRate(sMap.processing_fee_rate);
       
       setStoreSettings({
         isStoreClosed: sMap.is_store_closed_manual === 'true',
@@ -113,7 +115,8 @@ function SettingsContent() {
         closing_time: storeSettings.closingTime,
         store_operating_days: storeSettings.operatingDays,
         next_opening_time: storeSettings.nextOpeningTime,
-        next_opening_day: storeSettings.nextOpeningDay,
+        next_opening_day: String(storeSettings.nextOpeningDay),
+        processing_fee_rate: processingFeeRate,
       });
       toast.success('Settings saved successfully');
     } catch { toast.error('Failed to save settings — check connection'); }
@@ -255,7 +258,7 @@ function SettingsContent() {
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0 20px' }} className="fg">
             <Field label="Store URL"><input style={inputStyle} defaultValue="https://kryrosfrontendv2.onrender.com" /></Field>
             <Field label="Admin Panel URL"><input style={inputStyle} defaultValue="https://kryros-admin.codewords.run" /></Field>
-            <Field label="Processing Fees Rate (%)"><input style={inputStyle} type="number" defaultValue="10" /></Field>
+            <Field label="Processing Fees Rate (%)"><input style={inputStyle} type="number" value={processingFeeRate} onChange={e=>setProcessingFeeRate(e.target.value)} /></Field>
             <Field label="Min Order Amount"><input style={inputStyle} type="number" defaultValue="20" /></Field>
             <Field label="Items Per Page"><input style={inputStyle} type="number" defaultValue="20" /></Field>
             <Field label="Max Cart Items"><input style={inputStyle} type="number" defaultValue="50" /></Field>

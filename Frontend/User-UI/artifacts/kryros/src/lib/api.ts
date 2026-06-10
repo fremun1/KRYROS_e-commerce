@@ -453,3 +453,17 @@ export async function fetchStoreStatus(): Promise<{
     return null;
   }
 }
+
+/**
+ * Fetch all public settings.
+ */
+export async function fetchSettings(): Promise<any[]> {
+  try {
+    const res = await fetch(`${API_BASE}/api/settings`, { cache: "no-store" });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return Array.isArray(data) ? data : data?.data || [];
+  } catch {
+    return [];
+  }
+}

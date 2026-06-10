@@ -342,7 +342,9 @@ export class OrdersService {
       shipping = subtotal >= shippingConfig.threshold ? 0 : shippingConfig.fee;
     }
 
-    const tax = subtotal * 0.16; // 16% VAT
+    const feeRateSetting = await this.settingsService.getByKey('processing_fee_rate');
+    const feeRate = Number(feeRateSetting?.value || 0) / 100;
+    const tax = subtotal * feeRate;
     const total = subtotal + tax + shipping;
 
     // Backend Source of Truth for Currency

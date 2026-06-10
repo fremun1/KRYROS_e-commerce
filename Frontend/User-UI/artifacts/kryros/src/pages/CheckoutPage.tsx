@@ -3,7 +3,7 @@ import { Link, useLocation } from "wouter";
 import { useCartStore } from "@/store/cartStore";
 import { useAuthStore } from "@/store/authStore";
 import { useCurrencyStore } from "@/store/currencyStore";
-import { API_BASE, fetchMatchingShippingMethods, ApiShippingMethod } from "@/lib/api";
+import { API_BASE, fetchMatchingShippingMethods, fetchSettings, ApiShippingMethod } from "@/lib/api";
 import { toast } from "sonner";
 import {
   Check,
@@ -155,7 +155,7 @@ export default function CheckoutPage() {
 
   const SUBTOTAL = cartItems.reduce((s, i) => s + i.price * i.qty, 0);
   const DISCOUNT = 0;
-  const PROCESSING_FEE = 0;
+  const PROCESSING_FEE = SUBTOTAL * feeRate;
   const total = SUBTOTAL - DISCOUNT + PROCESSING_FEE + shippingPrice;
 
   const [openMethod,       setOpenMethod]       = useState<string | null>(null);
@@ -220,6 +220,7 @@ export default function CheckoutPage() {
   const [bankProviders, setBankProviders]   = useState<{ name: string; config?: { accountName?: string; accountNumber?: string } }[]>([]);
   const [mobileNetworks, setMobileNetworks] = useState<string[]>(["MTN", "Airtel", "Zamtel", "M-Pesa"]);
   const [apiMethodTypes, setApiMethodTypes] = useState<string[]>([]);
+  const [feeRate, setFeeRate] = useState(0);
 
   useEffect(() => {
     fetch(`${API_BASE}/api/payment-config/public`)
@@ -243,6 +244,13 @@ export default function CheckoutPage() {
         }
         const enabledTypes = arr.filter((m: any) => m.isEnabled).map((m: any) => m.type as string);
         setApiMethodTypes(enabledTypes);
+      })
+      .catch(() => {});
+
+    fetchSettings()
+      .then((settings) => {
+        const rate = settings.find((s: any) => s.key === 'processing_fee_rate')?.value;
+        if (rate) setFeeRate(Number(rate) / 100);
       })
       .catch(() => {});
   }, []);

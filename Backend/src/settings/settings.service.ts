@@ -27,6 +27,7 @@ export class SettingsService implements OnModuleInit {
       { key: 'next_opening_time', value: '06:00 PM', type: 'string', category: 'general' },
       { key: 'next_opening_day', value: 'Thursday', type: 'string', category: 'general' },
       { key: 'whatsapp_number', value: process.env.WHATSAPP_NUMBER || '', type: 'string', category: 'contact' },
+      { key: 'processing_fee_rate', value: '0', type: 'number', category: 'general' },
     ];
 
     for (const s of defaultSettings) {
