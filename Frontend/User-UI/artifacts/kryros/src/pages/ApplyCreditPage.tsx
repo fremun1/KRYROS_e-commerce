@@ -63,8 +63,15 @@ export default function ApplyCreditPage() {
 
   const fetchCreditPlans = async () => {
     setPlansLoading(true);
+    const searchParams = new URLSearchParams(window.location.search);
+    const productId = searchParams.get("productId");
+    
     try {
-      const res = await fetch(`${API_BASE}/api/credit/plans`);
+      const url = productId 
+        ? `${API_BASE}/api/credit/plans?productId=${productId}`
+        : `${API_BASE}/api/credit/plans`;
+        
+      const res = await fetch(url);
       if (res.ok) {
         const data = await res.json();
         setCreditPlans(Array.isArray(data) ? data : data.data ?? []);
@@ -89,6 +96,9 @@ export default function ApplyCreditPage() {
     setSubmitError("");
 
     try {
+      const searchParams = new URLSearchParams(window.location.search);
+      const productId = searchParams.get("productId");
+      
       const res = await fetch(`${API_BASE}/api/credit/apply`, {
         method: "POST",
         headers: {
@@ -96,9 +106,14 @@ export default function ApplyCreditPage() {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
+          productId: productId,
           planId: selectedPlan,
           amount: selectedAmount,
           ...formData,
+          country: formData.country || "Zambia",
+          employmentStatus: formData.employmentStatus === "business-owner" ? "self-employed" : 
+                           formData.employmentStatus === "other" ? "unemployed" : 
+                           formData.employmentStatus,
           monthlyIncome: formData.monthlyIncome ? parseFloat(formData.monthlyIncome) : 0,
         }),
       });

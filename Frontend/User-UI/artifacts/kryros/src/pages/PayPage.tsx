@@ -16,14 +16,7 @@ function calcFee(amount: number) {
 
 
 
-const CURRENCIES = [
-  { code: "USD", label: "US Dollar", flag: "🇺🇸" },
-  { code: "ZMW", label: "Zambian Kwacha", flag: "🇿🇲" },
-  { code: "GHS", label: "Ghanaian Cedi", flag: "🇬🇭" },
-  { code: "NGN", label: "Nigerian Naira", flag: "🇳🇬" },
-  { code: "KES", label: "Kenyan Shilling", flag: "🇰🇪" },
-  { code: "GBP", label: "British Pound", flag: "🇬🇧" },
-];
+
 
 
 
@@ -250,17 +243,23 @@ function ReceiptScreen({ receipt, onClose }: { receipt: ReceiptData; onClose: ()
 export default function PayPage() {
   const [, navigate] = useLocation();
   const [step, setStep] = useState<1 | 2>(1);
-  const { selected: selectedCurrency, currencies: allCurrencies, format } = useCurrencyStore();
+  const { selected: selectedCurrency, currencies: allCurrencies, format, setCurrency: setGlobalCurrency } = useCurrencyStore();
 
   // ── Read URL query params (from admin payment link generator) ──
   const urlParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : new URLSearchParams();
   const urlAmount = urlParams.get("amount") || "";
-  const urlCurrency = urlParams.get("currency") || selectedCurrency.code;
+  const urlCurrency = urlParams.get("currency");
   const urlNote = urlParams.get("note") || "";
   const isLinkedPayment = !!urlAmount;
 
+  // If URL provides a currency, sync it to the global store once
+  useEffect(() => {
+    if (urlCurrency) {
+      setGlobalCurrency(urlCurrency);
+    }
+  }, [urlCurrency, setGlobalCurrency]);
+
   const [rawAmount, setRawAmount] = useState(urlAmount);
-  const [currency, setCurrency] = useState(urlCurrency);
   const [showCurrencyDrop, setShowCurrencyDrop] = useState(false);
   const [note, setNote] = useState(urlNote);
 
@@ -269,7 +268,7 @@ export default function PayPage() {
   const amount = parseFloat(rawAmount) || 0;
   const fee = calcFee(amount);
   const total = amount + fee;
-  const currencyObj = allCurrencies.find((c) => c.code === currency) ?? selectedCurrency;
+  const currencyObj = selectedCurrency;
 
   // Mobile money
   const [mmProvider, setMmProvider] = useState("MTN");

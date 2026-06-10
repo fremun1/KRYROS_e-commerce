@@ -233,7 +233,7 @@ export default function ProductPage() {
     });
 
     if (product.allowCredit) {
-      window.location.href = "/apply-credit"; // Redirect to a specialized credit application flow
+      window.location.href = `/apply-credit?productId=${product.id}`; // Redirect to a specialized credit application flow
     } else if (product.isWholesaleOnly) {
       window.location.href = "/wholesale-checkout"; // Redirect to specialized wholesale checkout
     } else {
