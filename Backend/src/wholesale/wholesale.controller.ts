@@ -14,7 +14,48 @@ import { UpdateWholesaleApplicationStatusDto } from './dto/update-wholesale-appl
 export class WholesaleController {
   constructor(private wholesaleService: WholesaleService) {}
 
-  // ── Partner Accounts ──────────────────────────────────────
+  // ── Wholesale Applications ──────────────────────────────
+
+  @Post('apply')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Apply for a wholesale account' })
+  apply(@Req() req: Request, @Body() body: ApplyWholesaleDto) {
+    const userId = (req as any).user.id;
+    return this.wholesaleService.apply(userId, body);
+  }
+
+  @Get('applications')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'List all wholesale applications (Admin only)' })
+  findAllApplications(@Query('status') status?: string) {
+    return this.wholesaleService.findAllApplications(status);
+  }
+
+  @Get('applications/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get a single wholesale application (Admin only)' })
+  findOneApplication(@Param('id') id: string) {
+    return this.wholesaleService.findOneApplication(id);
+  }
+
+  @Put('applications/:id/status')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Update wholesale application status (Admin only)' })
+  updateApplicationStatus(
+    @Param('id') id: string,
+    @Body() body: UpdateWholesaleApplicationStatusDto,
+  ) {
+    return this.wholesaleService.updateApplicationStatus(id, body.status, body.notes);
+  }
+
+  // ── Wholesale Accounts ──────────────────────────────────
 
   @Get('accounts')
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -74,59 +115,10 @@ export class WholesaleController {
     return this.wholesaleService.getAccount(userId);
   }
 
-  @Post("applications")
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: "Apply for a wholesale account" })
-  apply(@Req() req: Request, @Body() body: ApplyWholesaleDto) {
-    return this.wholesaleService.apply({ ...body, userId: (req as any).user.id });
-  }
-
-  @Get("applications")
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: "List all wholesale applications (Admin only)" })
-  findAllApplications(
-    @Query("status") status?: string,
-    @Query("skip") skip?: number,
-    @Query("take") take?: number,
-  ) {
-    return this.wholesaleService.findAllApplications({
-      status,
-      skip: skip ? Number(skip) : undefined,
-      take: take ? Number(take) : undefined,
-    });
-  }
-
-  @Put("applications/:id/status")
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: "Update wholesale application status (Admin only)" })
-  updateApplicationStatus(
-    @Param("id") id: string,
-    @Body() body: UpdateWholesaleApplicationStatusDto,
-  ) {
-    return this.wholesaleService.updateApplicationStatus(id, body.status, body.notes);
-  }
-
-  @Get("applications")
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: "Get current user wholesale applications" })
-  getMyApplications(@Req() req: Request) {
-    const userId = (req as any).user.id;
-    return this.wholesaleService.findUserApplications(userId);
-  }
-
   // ── Wholesale Deals ───────────────────────────────────────
 
   @Get('deals')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'List all wholesale deals (Admin only)' })
+  @ApiOperation({ summary: 'List all wholesale deals' })
   findAllDeals(@Query('accountId') accountId?: string) {
     return this.wholesaleService.findAllDeals(accountId);
   }

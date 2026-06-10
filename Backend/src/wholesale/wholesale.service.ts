@@ -6,6 +6,87 @@ import { Prisma } from '@prisma/client';
 export class WholesaleService {
   constructor(private prisma: PrismaService) {}
 
+  // ── Wholesale Applications ──────────────────────────────
+  async apply(userId: string, data: any) {
+    const { annualRevenue, estimatedMonthlyOrder, ...rest } = data;
+    return this.prisma.wholesaleApplication.create({
+      data: {
+        ...rest,
+        userId,
+        annualRevenue: annualRevenue ? new Prisma.Decimal(annualRevenue) : null,
+        estimatedMonthlyOrder: estimatedMonthlyOrder ? new Prisma.Decimal(estimatedMonthlyOrder) : null,
+        status: 'PENDING',
+      },
+    });
+  }
+
+  async findAllApplications(status?: string) {
+    return this.prisma.wholesaleApplication.findMany({
+      where: status ? { status: status as any } : {},
+      include: {
+        user: {
+          select: { firstName: true, lastName: true, email: true, phone: true },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async findOneApplication(id: string) {
+    return this.prisma.wholesaleApplication.findUnique({
+      where: { id },
+      include: { user: true },
+    });
+  }
+
+  async updateApplicationStatus(id: string, status: string, notes?: string) {
+    const application = await this.prisma.wholesaleApplication.findUnique({
+      where: { id },
+    });
+
+    if (!application) throw new NotFoundException('Application not found');
+
+    const updatedApp = await this.prisma.wholesaleApplication.update({
+      where: { id },
+      data: { status: status as any, notes },
+    });
+
+    // If approved, create a wholesale account
+    if (status === 'APPROVED') {
+      await this.prisma.wholesaleAccount.upsert({
+        where: { userId: application.userId },
+        update: {
+          companyName: application.companyName,
+          taxId: application.taxId,
+          address: application.address,
+          city: application.city,
+          phone: application.phone,
+          contactPerson: `${application.firstName} ${application.lastName}`,
+          status: 'APPROVED',
+        },
+        create: {
+          userId: application.userId,
+          companyName: application.companyName,
+          taxId: application.taxId,
+          address: application.address,
+          city: application.city,
+          phone: application.phone,
+          contactPerson: `${application.firstName} ${application.lastName}`,
+          status: 'APPROVED',
+        },
+      });
+      
+      // Update user role to WHOLESALE
+      await this.prisma.user.update({
+        where: { id: application.userId },
+        data: { role: 'WHOLESALE' },
+      });
+    }
+
+    return updatedApp;
+  }
+
+  // ── Wholesale Accounts ──────────────────────────────────
   async getAccount(userId: string) {
     return this.prisma.wholesaleAccount.findUnique({
       where: { userId },
@@ -47,7 +128,7 @@ export class WholesaleService {
   }) {
     const updateData: any = { ...data };
     if (data.creditLimit !== undefined) {
-      updateData.creditLimit = new Prisma.Decimal(data.creditLimit);
+      updateData.creditLimit = data.creditLimit != null ? new Prisma.Decimal(data.creditLimit) : null;
     }
     if (data.status !== undefined) {
       updateData.status = data.status as any;
@@ -55,7 +136,6 @@ export class WholesaleService {
     return this.prisma.wholesaleAccount.update({ where: { id }, data: updateData });
   }
 
-  /** Admin creates a wholesale account directly (without user applying) */
   async adminCreate(data: {
     companyName: string;
     taxId?: string;
@@ -68,9 +148,8 @@ export class WholesaleService {
     creditLimit?: number;
     status?: string;
     notes?: string;
-    userId?: string;
+    userId: string;
   }) {
-    // If no userId provided, create a placeholder - admin-created accounts may not have a linked user
     const createData: any = {
       companyName: data.companyName,
       taxId: data.taxId || null,
@@ -81,42 +160,18 @@ export class WholesaleService {
       discountTier: data.discountTier ?? 1,
       tierName: data.tierName || null,
       creditLimit: data.creditLimit != null ? new Prisma.Decimal(data.creditLimit) : null,
-      status: (data.status as any) || 'ACTIVE',
+      status: (data.status as any) || 'APPROVED',
       notes: data.notes || null,
+      userId: data.userId,
     };
-    if (data.userId) {
-      createData.userId = data.userId;
-      return this.prisma.wholesaleAccount.create({ data: createData });
-    }
-    // Cannot create without userId due to FK — require userId from admin
-    throw new Error('userId is required to create a wholesale account');
+    
+    return this.prisma.wholesaleAccount.create({ data: createData });
   }
 
   async deleteAccount(id: string) {
     const account = await this.prisma.wholesaleAccount.findUnique({ where: { id } });
     if (!account) throw new NotFoundException('Wholesale account not found');
     return this.prisma.wholesaleAccount.delete({ where: { id } });
-  }
-
-  async apply(data: {
-    userId: string;
-    companyName: string;
-    taxId?: string;
-    address?: string;
-    contactPerson?: string;
-    discountTier?: number;
-  }) {
-    return this.prisma.wholesaleAccount.create({
-      data: {
-        userId: data.userId,
-        companyName: data.companyName,
-        taxId: data.taxId,
-        address: data.address,
-        contactPerson: data.contactPerson,
-        discountTier: data.discountTier ?? 1,
-        status: 'PENDING',
-      },
-    });
   }
 
   // ── Wholesale Deals ───────────────────────────────────────
@@ -168,7 +223,7 @@ export class WholesaleService {
       data: prices.map(p => ({
         productId,
         minQuantity: p.minQuantity,
-        price: p.price,
+        price: new Prisma.Decimal(p.price),
         accountId: p.accountId || null,
       })),
     });

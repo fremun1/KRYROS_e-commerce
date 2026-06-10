@@ -67,12 +67,17 @@ export default function WholesaleCheckoutPage() {
 
     try {
       const res = await fetch(`${API_BASE}/api/wholesale/apply`, {
-        method: \"POST\",
+        method: "POST",
         headers: {
-          \"Content-Type\": \"application/json\",
+          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          annualRevenue: formData.annualRevenue ? parseFloat(formData.annualRevenue) : null,
+          estimatedMonthlyOrder: formData.estimatedMonthlyOrder ? parseFloat(formData.estimatedMonthlyOrder) : null,
+          employeeCount: formData.employeeCount ? parseInt(formData.employeeCount) : null,
+        }),
       });
 
       if (!res.ok) {

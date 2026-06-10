@@ -99,6 +99,7 @@ export default function ApplyCreditPage() {
           planId: selectedPlan,
           amount: selectedAmount,
           ...formData,
+          monthlyIncome: formData.monthlyIncome ? parseFloat(formData.monthlyIncome) : 0,
         }),
       });
 

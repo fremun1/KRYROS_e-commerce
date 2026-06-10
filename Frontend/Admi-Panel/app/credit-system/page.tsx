@@ -63,14 +63,23 @@ function CreditContent() {
 
   // Applications state
   const [applications, setApplications] = useState<Application[]>([]);
+  const loadApplications = () => {
+    api.get('/api/credit/applications').then((r: any) => {
+      const raw = Array.isArray(r.data) ? r.data : (r.data?.data || []);
+      setApplications(raw.map((a: any) => ({
+        id: a.id,
+        user: `${a.user?.firstName} ${a.user?.lastName}`,
+        email: a.user?.email || '',
+        product: a.product?.name || 'Product',
+        plan: a.creditPlan?.name || 'Plan',
+        amount: `K${Number(a.amount).toLocaleString()}`,
+        status: a.status.charAt(0) + a.status.slice(1).toLowerCase(),
+        date: a.createdAt ? a.createdAt.split('T')[0] : '',
+      })));
+    }).catch(() => {});
+  };
   useEffect(() => {
-    // Load applications from API or use mock data
-    // TODO: Replace with actual API call to getCreditApplications() once backend endpoint is ready
-    const mockApplications: Application[] = [
-      { id: 'APP001', user: 'John Doe', email: 'john@example.com', product: 'Laptop', plan: '3-Month', amount: 'K5,000', status: 'Pending', date: '2026-06-10' },
-      { id: 'APP002', user: 'Jane Smith', email: 'jane@example.com', product: 'Smartphone', plan: '6-Month', amount: 'K2,500', status: 'Approved', date: '2026-06-09' },
-    ];
-    setApplications(mockApplications);
+    loadApplications();
   }, []);
   const [viewApp, setViewApp] = useState<Application|null>(null);
   const [editApp, setEditApp] = useState<Application|null>(null);
@@ -205,11 +214,10 @@ function CreditContent() {
   const handleEditApp = async () => {
     if (!editApp) return;
     try {
-      // TODO: Call backend API to update application status
-      // await updateCreditApplicationStatus(editApp.id, appStatus);
-      setApplications(d => d.map(a => a.id===editApp.id ? {...a, status:appStatus} : a));
+      await api.put(`/api/credit/applications/${editApp.id}/status`, { status: appStatus.toUpperCase() });
       toast.success('Application updated'); 
       setEditApp(null);
+      loadApplications();
     } catch (err: any) {
       toast.error(err?.response?.data?.message || 'Failed to update application');
     }

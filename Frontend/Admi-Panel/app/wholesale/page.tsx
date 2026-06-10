@@ -5,22 +5,34 @@ import DataTable, { Column } from '@/components/admin/data-table';
 import PageHeader from '@/components/admin/page-header';
 import { Modal, ConfirmDialog, FormField, ModalFooter } from '@/components/admin/modal';
 import { useTheme } from '@/contexts/theme-context';
-import { Truck, Users, Star, Package, ChevronRight, ChevronLeft, X } from 'lucide-react';
+import { Truck, Users, Star, Package, ChevronRight, ChevronLeft, X, ClipboardList } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { getWholesaleAccounts, updateWholesaleAccountStatus, deleteWholesaleAccount, updateWholesaleAccount, getWholesaleDeals, createWholesaleDeal, updateWholesaleDeal, deleteWholesaleDeal, getProducts, createProduct, updateProduct, deleteProduct } from '@/lib/api';
+import { 
+  getWholesaleAccounts, 
+  updateWholesaleAccountStatus, 
+  deleteWholesaleAccount, 
+  updateWholesaleAccount, 
+  getWholesaleDeals, 
+  createWholesaleDeal, 
+  updateWholesaleDeal, 
+  deleteWholesaleDeal, 
+  getProducts, 
+  createProduct, 
+  updateProduct, 
+  deleteProduct,
+  api
+} from '@/lib/api';
 import CloudinaryUpload from '@/components/ui/file-upload';
 
 // ─── Types ────────────────────────────────────────────────
 type Wholesale = { id:string; name:string; contact:string; phone:string; city:string; tier:string; credit:string; orders:number; totalSpent:string; status:string; joined:string };
+type Application = { id:string; company:string; type:string; applicant:string; email:string; phone:string; status:string; date:string };
 type Deal = { id:string; title:string; description:string; discount:string; minOrder:string; validUntil:string; status:string };
 type WholesaleProduct = { id:string; name:string; sku:string; price:string; moq:string; category:string; status:string };
 
-// ─── Initial Data ─────────────────────────────────────────
-// Partners loaded from API
-// Deals loaded from API
-// Products loaded from API
 const TIERS = ['Bronze','Silver','Gold','Platinum'];
 const PARTNER_STATUSES = ['Active','Inactive','Pending','Suspended'];
+const APP_STATUSES = ['Pending', 'Approved', 'Rejected'];
 
 function WholesaleContent() {
   const { theme } = useTheme();
@@ -31,12 +43,54 @@ function WholesaleContent() {
   const textMuted = isDark ? '#8E9AAF' : '#64748B';
   const surface = isDark ? '#101826' : '#F1F5F9';
 
-  type Section = null | 'accounts' | 'deals' | 'inventory';
-  const [section, setSection] = useState<Section>(null);
+  type Section = 'applications' | 'accounts' | 'deals' | 'inventory';
+  const [section, setSection] = useState<Section>('applications');
+
+  // Applications state
+  const [applications, setApplications] = useState<Application[]>([]);
+  const [loadingApps, setLoadingApps] = useState(false);
+  
+  const loadApplications = () => {
+    setLoadingApps(true);
+    api.get('/api/wholesale/applications').then((r: any) => {
+      const raw = Array.isArray(r.data) ? r.data : (r.data?.data || []);
+      setApplications(raw.map((a: any) => ({
+        id: a.id,
+        company: a.companyName,
+        type: a.businessType,
+        applicant: `${a.firstName} ${a.lastName}`,
+        email: a.email,
+        phone: a.phone,
+        status: a.status.charAt(0) + a.status.slice(1).toLowerCase(),
+        date: a.createdAt ? a.createdAt.split('T')[0] : '',
+      })));
+    }).finally(() => setLoadingApps(false));
+  };
+
+  useEffect(() => {
+    if (section === 'applications') loadApplications();
+  }, [section]);
+
+  const [viewApp, setViewApp] = useState<any | null>(null);
+  const [editApp, setEditApp] = useState<Application | null>(null);
+  const [appStatus, setAppStatus] = useState('Pending');
+
+  const handleUpdateAppStatus = async () => {
+    if (!editApp) return;
+    try {
+      await api.put(`/api/wholesale/applications/${editApp.id}/status`, { status: appStatus.toUpperCase() });
+      toast.success('Application status updated');
+      setEditApp(null);
+      loadApplications();
+      if (appStatus === 'Approved') loadPartners();
+    } catch (err: any) {
+      toast.error('Failed to update application');
+    }
+  };
 
   // Partners state
   const [partners, setPartners] = useState<Wholesale[]>([]);
-  useEffect(() => {
+  const loadPartners = () => {
     getWholesaleAccounts({ limit: 200 }).then((r: any) => {
       const raw: any[] = Array.isArray(r.data?.data) ? r.data.data : Array.isArray(r.data) ? r.data : [];
       const normalized: Wholesale[] = raw.map((w: any) => ({
@@ -54,8 +108,12 @@ function WholesaleContent() {
       }));
       setPartners(normalized);
     }).catch(() => {});
-  }, []);
-  const [addPartnerOpen, setAddPartnerOpen] = useState(false);
+  };
+
+  useEffect(() => {
+    if (section === 'accounts') loadPartners();
+  }, [section]);
+
   const [editPartner, setEditPartner] = useState<Wholesale|null>(null);
   const [deletePartner, setDeletePartner] = useState<Wholesale|null>(null);
   const [viewPartner, setViewPartner] = useState<Wholesale|null>(null);
@@ -64,6 +122,25 @@ function WholesaleContent() {
 
   // Deals state
   const [deals, setDeals] = useState<Deal[]>([]);
+  const loadDeals = () => {
+    getWholesaleDeals().then((r: any) => {
+      const raw = Array.isArray(r.data) ? r.data : (r.data?.data || []);
+      setDeals(raw.map((d: any) => ({
+        id: d.id,
+        title: d.title,
+        description: d.description || '',
+        discount: d.discount ? `${d.discount}%` : '0%',
+        minOrder: d.minOrder ? `K${Number(d.minOrder).toLocaleString()}` : 'K0',
+        validUntil: d.validUntil ? d.validUntil.split('T')[0] : 'Never',
+        status: d.isActive ? 'Active' : 'Inactive',
+      })));
+    });
+  };
+
+  useEffect(() => {
+    if (section === 'deals') loadDeals();
+  }, [section]);
+
   const [addDealOpen, setAddDealOpen] = useState(false);
   const [editDeal, setEditDeal] = useState<Deal|null>(null);
   const [deleteDeal, setDeleteDeal] = useState<Deal|null>(null);
@@ -94,7 +171,6 @@ function WholesaleContent() {
         moq: `${p.wholesaleMoq || 1} units`,
         category: p.category?.name || 'General',
         status: p.isActive !== false ? 'Active' : 'Inactive',
-        // extra data for editing
         description: p.description || '',
         imageUrl: p.images?.[0]?.url || p.images?.[0] || '',
         images: Array.isArray(p.images) ? p.images.map((img: any) => img?.url || img || '').filter(Boolean) : [],
@@ -109,68 +185,72 @@ function WholesaleContent() {
     if (section === 'inventory') loadWholesaleProducts();
   }, [section]);
 
-  const tierColor = (t:string) => ({
-    Platinum:{bg:'rgba(139,92,246,0.12)',color:'#8b5cf6'},
-    Gold:{bg:'rgba(255,193,7,0.12)',color:'#FFC107'},
-    Silver:{bg:'rgba(100,116,139,0.12)',color:'#94a3b8'},
-    Bronze:{bg:'rgba(180,83,9,0.12)',color:'#b45309'},
-  }[t] || {bg:'rgba(100,116,139,0.1)',color:'#8E9AAF'});
-
   const statusBadge = (s:string) => {
     const m: Record<string,{bg:string;color:string}> = {
       Active:{bg:'rgba(31,168,154,0.12)',color:'#1FA89A'},
+      Approved:{bg:'rgba(31,168,154,0.12)',color:'#1FA89A'},
       Inactive:{bg:'rgba(100,116,139,0.1)',color:'#8E9AAF'},
       Pending:{bg:'rgba(255,193,7,0.12)',color:'#FFC107'},
+      Rejected:{bg:'rgba(239,68,68,0.12)',color:'#ef4444'},
       Suspended:{bg:'rgba(239,68,68,0.12)',color:'#ef4444'},
     };
     const c = m[s] || m.Inactive;
     return <span style={{padding:'3px 10px',borderRadius:'20px',fontSize:'12px',fontWeight:600,background:c.bg,color:c.color}}>{s}</span>;
   };
 
-  // ── Partner handlers ──
-  const handleAddPartner = () => {
-    // Wholesale accounts are created by users applying — admin manages status
-    toast.error('Partners are created when users apply for wholesale. Use the Status update to approve/reject.');
-  };
   const handleEditPartner = async () => {
     if (!editPartner) return;
     try {
       const tierNum = pForm.tier==='Bronze'?1:pForm.tier==='Silver'?2:pForm.tier==='Gold'?3:4;
       await updateWholesaleAccount(editPartner.id, { tierName: pForm.tier, discountTier: tierNum, status: pForm.status==='Active'?'ACTIVE':pForm.status==='Pending'?'PENDING':'INACTIVE' });
-      setPartners(d=>d.map(p=>p.id===editPartner.id?{...p,...pForm}:p));
       toast.success('Partner updated'); setEditPartner(null);
+      loadPartners();
     } catch { toast.error('Failed to update partner'); }
   };
-  const handleDeletePartner = async () => {
-    if (!deletePartner) return;
-    try {
-      await deleteWholesaleAccount(deletePartner.id);
-      setPartners(d=>d.filter(p=>p.id!==deletePartner.id));
-      toast.success('Partner removed'); setDeletePartner(null);
-    } catch { toast.error('Failed to delete partner'); }
-  };
 
-  // ── Deal handlers ──
-  const handleAddDeal = () => {
+  const handleAddDeal = async () => {
     if (!dForm.title.trim()) { toast.error('Deal title required'); return; }
-    const d: Deal = { id:`DEL${String(Date.now()).slice(-3)}`, ...dForm };
-    setDeals(prev=>[...prev,d]); toast.success('Deal added'); setAddDealOpen(false);
-  };
-  const handleEditDeal = () => {
-    if (!editDeal) return;
-    setDeals(d=>d.map(x=>x.id===editDeal.id?{...x,...dForm}:x));
-    toast.success('Deal updated'); setEditDeal(null);
-  };
-  const handleDeleteDeal = () => {
-    if (!deleteDeal) return;
-    setDeals(d=>d.filter(x=>x.id!==deleteDeal.id));
-    toast.success('Deal deleted'); setDeleteDeal(null);
+    try {
+      await createWholesaleDeal({
+        title: dForm.title,
+        description: dForm.description,
+        discount: parseFloat(dForm.discount.replace('%', '')) || 0,
+        minOrder: parseFloat(dForm.minOrder.replace('K', '').replace(/,/g, '')) || 0,
+        validUntil: dForm.validUntil,
+        isActive: dForm.status === 'Active'
+      });
+      toast.success('Deal added'); setAddDealOpen(false);
+      loadDeals();
+    } catch { toast.error('Failed to add deal'); }
   };
 
-  // ── Inventory handlers ──
+  const handleEditDeal = async () => {
+    if (!editDeal) return;
+    try {
+      await updateWholesaleDeal(editDeal.id, {
+        title: dForm.title,
+        description: dForm.description,
+        discount: parseFloat(dForm.discount.replace('%', '')) || 0,
+        minOrder: parseFloat(dForm.minOrder.replace('K', '').replace(/,/g, '')) || 0,
+        validUntil: dForm.validUntil,
+        isActive: dForm.status === 'Active'
+      });
+      toast.success('Deal updated'); setEditDeal(null);
+      loadDeals();
+    } catch { toast.error('Failed to update deal'); }
+  };
+
+  const handleDeleteDeal = async () => {
+    if (!deleteDeal) return;
+    try {
+      await deleteWholesaleDeal(deleteDeal.id);
+      toast.success('Deal deleted'); setDeleteDeal(null);
+      loadDeals();
+    } catch { toast.error('Failed to delete deal'); }
+  };
+
   const handleAddInv = async () => {
     if (!iForm.name.trim()) { toast.error('Product name required'); return; }
-    if (!iForm.description.trim()) { toast.error('Description required'); return; }
     try {
       await createProduct({
         name: iForm.name,
@@ -190,312 +270,124 @@ function WholesaleContent() {
       toast.success('Wholesale product added');
       setAddInvOpen(false);
       loadWholesaleProducts();
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message || 'Failed to add product');
-    }
-  };
-  const handleEditInv = async () => {
-    if (!editInv) return;
-    try {
-      await updateProduct(editInv.id, {
-        name: iForm.name,
-        sku: iForm.sku,
-        price: Number(iForm.price) || 0,
-        wholesalePrice: Number(iForm.price) || 0,
-        wholesaleMoq: Number(iForm.moq) || 1,
-        categorySlug: iForm.category.toLowerCase().replace(/ /g, '-'),
-        isActive: iForm.status === 'Active',
-        description: iForm.description,
-        stockTotal: Number(iForm.stockTotal) || 0,
-        stockCurrent: Number(iForm.stockCurrent) || 0,
-        imageDataUrls: invImages,
-        replaceImages: true,
-        specifications: iForm.specifications ? [{ key: 'Specifications', value: iForm.specifications }] : undefined
-      });
-      toast.success('Wholesale product updated');
-      setEditInv(null);
-      loadWholesaleProducts();
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message || 'Failed to update product');
-    }
-  };
-  const handleDeleteInv = async () => {
-    if (!deleteInv) return;
-    try {
-      await deleteProduct(deleteInv.id);
-      toast.success('Product removed');
-      setDeleteInv(null);
-      loadWholesaleProducts();
-    } catch { toast.error('Failed to delete product'); }
+    } catch { toast.error('Failed to add product'); }
   };
 
-  // ── Columns ──
+  const appCols: Column[] = [
+    { key:'id', label:'ID', width:'90px' },
+    { key:'company', label:'Company', render:(v)=><span style={{fontWeight:700,color:textMain}}>{String(v)}</span> },
+    { key:'applicant', label:'Applicant' },
+    { key:'email', label:'Email' },
+    { key:'status', label:'Status', render:(v)=>statusBadge(String(v)) },
+    { key:'date', label:'Date' },
+  ];
+
   const partnerCols: Column[] = [
     { key:'id', label:'ID', width:'90px' },
     { key:'name', label:'Company', render:(v)=><span style={{fontWeight:700,color:textMain}}>{String(v)}</span> },
     { key:'contact', label:'Contact' },
-    { key:'tier', label:'Tier', render:(v)=>{ const c=tierColor(String(v)); return <span style={{padding:'3px 10px',borderRadius:'20px',fontSize:'12px',fontWeight:600,background:c.bg,color:c.color}}>{String(v)}</span>; }},
-    { key:'orders', label:'Orders', render:(v)=><span style={{fontWeight:700,color:'#6366f1'}}>{String(v)}</span> },
-    { key:'totalSpent', label:'Total Spent', render:(v)=><span style={{fontWeight:700,color:textMain}}>{String(v)}</span> },
+    { key:'tier', label:'Tier', render:(v)=>{ const c={Bronze:{bg:'rgba(180,83,9,0.12)',color:'#b45309'},Silver:{bg:'rgba(100,116,139,0.12)',color:'#94a3b8'},Gold:{bg:'rgba(255,193,7,0.12)',color:'#FFC107'},Platinum:{bg:'rgba(139,92,246,0.12)',color:'#8b5cf6'}}[String(v)] || {bg:'rgba(100,116,139,0.1)',color:'#8E9AAF'}; return <span style={{padding:'3px 10px',borderRadius:'20px',fontSize:'12px',fontWeight:600,background:c.bg,color:c.color}}>{String(v)}</span>; }},
     { key:'status', label:'Status', render:(v)=>statusBadge(String(v)) },
   ];
+
   const dealCols: Column[] = [
     { key:'id', label:'ID', width:'90px' },
     { key:'title', label:'Deal Title', render:(v)=><span style={{fontWeight:600,color:textMain}}>{String(v)}</span> },
     { key:'discount', label:'Discount', render:(v)=><span style={{fontWeight:700,color:'#1FA89A'}}>{String(v)}</span> },
     { key:'minOrder', label:'Min Order' },
-    { key:'validUntil', label:'Valid Until' },
     { key:'status', label:'Status', render:(v)=>statusBadge(String(v)) },
   ];
+
   const invCols: Column[] = [
     { key:'id', label:'ID', width:'90px' },
     { key:'name', label:'Product', render:(v)=><span style={{fontWeight:600,color:textMain}}>{String(v)}</span> },
     { key:'sku', label:'SKU', render:(v)=><code style={{fontSize:'12px',color:'#1FA89A',background:'rgba(31,168,154,0.1)',padding:'2px 6px',borderRadius:'4px'}}>{String(v)}</code> },
     { key:'price', label:'Price', render:(v)=><span style={{fontWeight:700,color:textMain}}>{String(v)}</span> },
-    { key:'moq', label:'Min Order Qty' },
     { key:'status', label:'Status', render:(v)=>statusBadge(String(v)) },
   ];
 
-  const partnerForm = (
-    <>
-      <FormField label="Company Name *" value={pForm.name} onChange={pfp('name')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. TechHub Zambia" />
-      <FormField label="Contact / Email" value={pForm.contact} onChange={pfp('contact')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="contact@company.com" />
-      <FormField label="Tier" value={pForm.tier} onChange={pfp('tier')} options={TIERS} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-      <FormField label="Status" value={pForm.status} onChange={pfp('status')} options={PARTNER_STATUSES} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-    </>
-  );
-  const dealForm = (
-    <>
-      <FormField label="Deal Title *" value={dForm.title} onChange={dfp('title')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. Bulk Electronics — 15% Off" />
-      <FormField label="Description" value={dForm.description} onChange={dfp('description')} type="textarea" isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Describe the deal..." />
-      <FormField label="Discount" value={dForm.discount} onChange={dfp('discount')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 15% or Buy 10+2" />
-      <FormField label="Minimum Order" value={dForm.minOrder} onChange={dfp('minOrder')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. $5,000" />
-      <FormField label="Valid Until" value={dForm.validUntil} onChange={dfp('validUntil')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 2025-12-31" />
-      <FormField label="Status" value={dForm.status} onChange={dfp('status')} options={['Active','Inactive']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-    </>
-  );
-  const invForm = (
-    <>
-      <FormField label="Product Name *" value={iForm.name} onChange={ifp('name')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Product name" />
-      <div style={{ marginBottom: '14px' }}>
-        <label style={{ display: 'block', fontSize: '11.5px', fontWeight: 600, color: textMuted, marginBottom: '8px', textTransform: 'uppercase' }}>Product Images</label>
-        
-        {/* Image Previews */}
-        {invImages.length > 0 && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))', gap: '8px', marginBottom: '12px' }}>
-            {invImages.map((url, idx) => (
-              <div key={idx} style={{ position: 'relative', aspectRatio: '1/1', borderRadius: '8px', overflow: 'hidden', border: `1px solid ${border}` }}>
-                <img src={url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                <button 
-                  onClick={() => setInvImages(prev => prev.filter((_, i) => i !== idx))}
-                  style={{ position: 'absolute', top: '4px', right: '4px', background: 'rgba(0,0,0,0.6)', border: 'none', borderRadius: '50%', width: '18px', height: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
-                >
-                  <X size={10} color="white" />
-                </button>
-              </div>
-            ))}
+  return (
+    <AdminShell>
+      <PageHeader title="Wholesale Management" subtitle="Manage applications, partners, deals and bulk inventory" icon={Truck} />
+
+      <div style={{ display:'flex', gap:'12px', marginBottom:'24px', overflowX:'auto', paddingBottom:'4px' }}>
+        {[
+          { id:'applications', label:'Applications', icon:ClipboardList },
+          { id:'accounts', label:'Wholesale Partners', icon:Users },
+          { id:'deals', label:'Featured Deals', icon:Star },
+          { id:'inventory', label:'Bulk Inventory', icon:Package }
+        ].map(t => (
+          <button key={t.id} onClick={() => setSection(t.id as Section)} style={{
+            display:'flex', alignItems:'center', gap:'8px', padding:'10px 16px', borderRadius:'12px', fontSize:'13.5px', fontWeight:600,
+            background: section === t.id ? 'rgba(31,168,154,0.1)' : card,
+            color: section === t.id ? '#1FA89A' : textMuted,
+            border: `1px solid ${section === t.id ? '#1FA89A' : border}`,
+            cursor:'pointer', whiteSpace:'nowrap', transition:'all 0.2s'
+          }}>
+            <t.icon size={16} /> {t.label}
+          </button>
+        ))}
+      </div>
+
+      <div style={{ background:card, border:`1px solid ${border}`, borderRadius:'16px', overflow:'hidden' }}>
+        {section === 'applications' && (
+          <DataTable columns={appCols} data={applications} loading={loadingApps} 
+            onView={setViewApp} onEdit={setEditApp} />
+        )}
+        {section === 'accounts' && (
+          <DataTable columns={partnerCols} data={partners} 
+            onView={setViewPartner} onEdit={setEditPartner} onDelete={setDeletePartner} />
+        )}
+        {section === 'deals' && (
+          <div style={{ padding:'20px' }}>
+            <div style={{ display:'flex', justifyContent:'flex-end', marginBottom:'16px' }}>
+              <button onClick={() => { setDForm({title:'',description:'',discount:'',minOrder:'',validUntil:'',status:'Active'}); setAddDealOpen(true); }}
+                style={{ background:'#1FA89A', color:'white', border:'none', padding:'8px 16px', borderRadius:'8px', fontWeight:600, cursor:'pointer' }}>
+                Add New Deal
+              </button>
+            </div>
+            <DataTable columns={dealCols} data={deals} onEdit={(d) => { setEditDeal(d); setDForm({...d}); }} onDelete={setDeleteDeal} />
           </div>
         )}
-
-        <CloudinaryUpload
-          multiple
-          onUrlChange={(url) => setInvImages(prev => url ? [...prev, url] : prev)}
-          showUrlInput={false}
-        />
-      </div>
-      <FormField label="Description" value={iForm.description} onChange={ifp('description')} type="textarea" isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Detailed product description..." />
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-        <FormField label="SKU" value={iForm.sku} onChange={ifp('sku')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. WHL-PRD-001" />
-        <FormField label="Category" value={iForm.category} onChange={ifp('category')} options={['Electronics','Audio','Wearables','Clothing','Sports']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-      </div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-        <FormField label="Wholesale Price" value={iForm.price} onChange={ifp('price')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 850" />
-        <FormField label="Min Order Qty (MOQ)" value={iForm.moq} onChange={ifp('moq')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 5" />
-      </div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-        <FormField label="Total Stock" value={iForm.stockTotal} onChange={ifp('stockTotal')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 100" />
-        <FormField label="Current Stock" value={iForm.stockCurrent} onChange={ifp('stockCurrent')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 50" />
-      </div>
-      <FormField label="Specifications" value={iForm.specifications} onChange={ifp('specifications')} type="textarea" isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Key: Value (one per line)" />
-      <FormField label="Status" value={iForm.status} onChange={ifp('status')} options={['Active','Inactive']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-    </>
-  );
-
-  // ─── OVERVIEW — 3 section cards ───────────────────────
-  if (!section) {
-    const SECTIONS = [
-      {
-        key: 'accounts' as Section,
-        icon: <Users size={28} color="#1FA89A" />,
-        iconBg: 'rgba(31,168,154,0.1)',
-        title: 'Wholesale Accounts',
-        description: 'Manage applications and approved wholesale partners.',
-        count: partners.length,
-        countColor: '#1FA89A',
-        activeCount: partners.filter(p=>p.status==='Active').length,
-        activeLabel: 'active',
-      },
-      {
-        key: 'deals' as Section,
-        icon: <Star size={28} color="#FFC107" />,
-        iconBg: 'rgba(255,193,7,0.1)',
-        title: 'Featured Deals',
-        description: 'Customize the wholesale offers shown on the storefront.',
-        count: deals.length,
-        countColor: '#FFC107',
-        activeCount: deals.filter(d=>d.status==='Active').length,
-        activeLabel: 'active',
-      },
-      {
-        key: 'inventory' as Section,
-        icon: <Package size={28} color="#6366f1" />,
-        iconBg: 'rgba(99,102,241,0.1)',
-        title: 'Wholesale Inventory',
-        description: 'Exclusive products only available to wholesale buyers.',
-        count: inventory.length,
-        countColor: '#6366f1',
-        activeCount: inventory.filter(p=>p.status==='Active').length,
-        activeLabel: 'active',
-      },
-    ];
-
-    return (
-      <div>
-        <PageHeader title="Wholesale" subtitle="Manage wholesale accounts, deals and exclusive inventory" icon={Truck} />
-        {/* Summary stats */}
-        <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:'14px',marginBottom:'24px'}} className="wg">
-          {[
-            {label:'Active Partners', val:String(partners.filter(p=>p.status==='Active').length), color:'#1FA89A'},
-            {label:'Featured Deals', val:String(deals.filter(d=>d.status==='Active').length), color:'#FFC107'},
-            {label:'Wholesale Products', val:String(inventory.length), color:'#6366f1'},
-          ].map(s=>(
-            <div key={s.label} style={{background:card,border:`1px solid ${border}`,borderRadius:'12px',padding:'16px'}}>
-              <div style={{fontSize:'12px',color:textMuted,marginBottom:'4px'}}>{s.label}</div>
-              <div style={{fontSize:'24px',fontWeight:800,color:s.color}}>{s.val}</div>
+        {section === 'inventory' && (
+          <div style={{ padding:'20px' }}>
+            <div style={{ display:'flex', justifyContent:'flex-end', marginBottom:'16px' }}>
+              <button onClick={() => { setIForm({name:'',sku:'',price:'',moq:'',category:'Electronics',status:'Active',description:'',imageUrl:'',images:[],specifications:'',stockTotal:'100',stockCurrent:'100'}); setInvImages([]); setAddInvOpen(true); }}
+                style={{ background:'#1FA89A', color:'white', border:'none', padding:'8px 16px', borderRadius:'8px', fontWeight:600, cursor:'pointer' }}>
+                Add Wholesale Product
+              </button>
             </div>
-          ))}
-        </div>
-        {/* Section cards */}
-        <div style={{display:'flex',flexDirection:'column',gap:'14px'}}>
-          {SECTIONS.map(sec=>(
-            <div key={sec.key} style={{background:card,border:`1px solid ${border}`,borderRadius:'14px',padding:'20px',cursor:'pointer',transition:'border-color 0.15s',display:'flex',alignItems:'center',gap:'16px'}}
-              onClick={()=>setSection(sec.key)}
-              onMouseEnter={e=>(e.currentTarget.style.borderColor='#1FA89A')}
-              onMouseLeave={e=>(e.currentTarget.style.borderColor=border)}>
-              <div style={{width:'56px',height:'56px',borderRadius:'14px',background:sec.iconBg,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-                {sec.icon}
-              </div>
-              <div style={{flex:1,minWidth:0}}>
-                <div style={{display:'flex',alignItems:'center',gap:'10px',marginBottom:'4px'}}>
-                  <span style={{fontSize:'16px',fontWeight:800,color:textMain}}>{sec.title}</span>
-                  <span style={{padding:'3px 10px',borderRadius:'20px',fontSize:'11.5px',fontWeight:700,background:`rgba(${sec.countColor==='#1FA89A'?'31,168,154':sec.countColor==='#FFC107'?'255,193,7':'99,102,241'},0.12)`,color:sec.countColor}}>
-                    {sec.count} {sec.count===1?'item':'items'}
-                  </span>
-                </div>
-                <p style={{fontSize:'13px',color:textMuted,margin:0}}>{sec.description}</p>
-                {sec.count > 0 && (
-                  <p style={{fontSize:'12px',color:'#1FA89A',margin:'4px 0 0',fontWeight:600}}>{sec.activeCount} {sec.activeLabel}</p>
-                )}
-              </div>
-              <div style={{display:'flex',alignItems:'center',gap:'6px',flexShrink:0,color:'#1FA89A',fontSize:'13px',fontWeight:600}}>
-                Open Section <ChevronRight size={16} />
-              </div>
-            </div>
-          ))}
-        </div>
-        <style>{`.wg{} @media(max-width:768px){.wg{grid-template-columns:1fr!important;}}`}</style>
-      </div>
-    );
-  }
-
-  // ─── SECTION VIEWS ───────────────────────────────────
-  const sectionTitles = { accounts:'Wholesale Accounts', deals:'Featured Deals', inventory:'Wholesale Inventory' };
-  const sectionSubs = {
-    accounts:'Manage applications and approved wholesale partners',
-    deals:'Customize the wholesale offers shown on the storefront',
-    inventory:'Exclusive products only available to wholesale buyers',
-  };
-
-  return (
-    <div>
-      {/* Back nav */}
-      <div style={{marginBottom:'16px'}}>
-        <button onClick={()=>setSection(null)} style={{display:'flex',alignItems:'center',gap:'6px',background:isDark?'#1E293B':'#F1F5F9',border:`1px solid ${border}`,borderRadius:'8px',padding:'8px 14px',cursor:'pointer',color:textMain,fontSize:'13px',fontWeight:600,fontFamily:'var(--font-inter)'}}>
-          <ChevronLeft size={14} /> Back to Wholesale
-        </button>
+            <DataTable columns={invCols} data={inventory} onEdit={(i) => { setEditInv(i); setIForm({...i, price:i.rawPrice.toString(), moq:i.rawMoq.toString()}); setInvImages(i.images); }} onDelete={setDeleteInv} />
+          </div>
+        )}
       </div>
 
-      <PageHeader
-        title={sectionTitles[section!]}
-        subtitle={sectionSubs[section!]}
-        icon={section==='accounts'?Truck:section==='deals'?Star:Package}
-        onAdd={()=>{
-          if (section==='accounts') { setPForm({name:'',contact:'',status:'Active',tier:'Bronze'}); setAddPartnerOpen(true); }
-          if (section==='deals') { setDForm({title:'',description:'',discount:'',minOrder:'',validUntil:'',status:'Active'}); setAddDealOpen(true); }
-          if (section==='inventory') { setIForm({name:'',sku:'',price:'',moq:'',category:'Electronics',status:'Active',description:'',imageUrl:'',images:[],specifications:'',stockTotal:'100',stockCurrent:'100'}); setInvImages([]); setAddInvOpen(true); }
-        }}
-        addLabel={section==='accounts'?'Add Partner':section==='deals'?'Add Deal':'Add Product'}
-      />
+      {/* Modals for Applications */}
+      <Modal open={!!editApp} onClose={() => setEditApp(null)} title="Update Application Status">
+        <div style={{ padding:'20px' }}>
+          <FormField label="Status" value={appStatus} onChange={setAppStatus} options={APP_STATUSES} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+          <p style={{ fontSize:'12px', color:textMuted, marginTop:'12px' }}>Approving will automatically create a wholesale account for this user.</p>
+        </div>
+        <ModalFooter onCancel={() => setEditApp(null)} onConfirm={handleUpdateAppStatus} confirmText="Update Status" />
+      </Modal>
 
-      {section === 'accounts' && (
-        <DataTable columns={partnerCols} data={partners as unknown as Record<string,unknown>[]} searchPlaceholder="Search partners..."
-          onEdit={row=>{ const r=row as unknown as Wholesale; setPForm({name:r.name,contact:r.contact,status:r.status,tier:r.tier}); setEditPartner(r); }}
-          onDelete={row=>setDeletePartner(row as unknown as Wholesale)}
-          onView={row=>setViewPartner(row as unknown as Wholesale)}
-        />
-      )}
-      {section === 'deals' && (
-        <DataTable columns={dealCols} data={deals as unknown as Record<string,unknown>[]} searchPlaceholder="Search deals..."
-          onEdit={row=>{ const r=row as unknown as Deal; setDForm({title:r.title,description:r.description,discount:r.discount,minOrder:r.minOrder,validUntil:r.validUntil,status:r.status}); setEditDeal(r); }}
-          onDelete={row=>setDeleteDeal(row as unknown as Deal)}
-        />
-      )}
-      {section === 'inventory' && (
-        <DataTable columns={invCols} data={inventory as unknown as Record<string,unknown>[]} searchPlaceholder="Search wholesale products..."
-          onEdit={row=>{ 
-            const r=row as any; 
-            setIForm({
-              name:r.name, sku:r.sku, price:String(r.rawPrice||''), moq:String(r.rawMoq||''), 
-              category:r.category, status:r.status, description:r.description, 
-              imageUrl:r.imageUrl, images:r.images, specifications:r.specifications,
-              stockTotal: String(r.stockTotal || 0), stockCurrent: String(r.stockCurrent || 0)
-            }); 
-            setInvImages(r.images || []);
-            setEditInv(r); 
-          }}
-          onDelete={row=>setDeleteInv(row as unknown as WholesaleProduct)}
-        />
-      )}
+      {/* Deal Modal */}
+      <Modal open={addDealOpen || !!editDeal} onClose={() => { setAddDealOpen(false); setEditDeal(null); }} title={editDeal ? "Edit Deal" : "Add New Deal"}>
+        <div style={{ padding:'20px' }}>
+          <FormField label="Title" value={dForm.title} onChange={v => setDForm(f=>({...f,title:v}))} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+          <FormField label="Discount (%)" value={dForm.discount} onChange={v => setDForm(f=>({...f,discount:v}))} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+          <FormField label="Min Order" value={dForm.minOrder} onChange={v => setDForm(f=>({...f,minOrder:v}))} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+          <FormField label="Valid Until" value={dForm.validUntil} onChange={v => setDForm(f=>({...f,validUntil:v}))} type="date" isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+        </div>
+        <ModalFooter onCancel={() => { setAddDealOpen(false); setEditDeal(null); }} onConfirm={editDeal ? handleEditDeal : handleAddDeal} confirmText={editDeal ? "Update Deal" : "Create Deal"} />
+      </Modal>
 
-      {/* Partner Modals */}
-      <Modal open={addPartnerOpen} onClose={()=>setAddPartnerOpen(false)} title="Add Wholesale Partner">{partnerForm}<ModalFooter onClose={()=>setAddPartnerOpen(false)} onSubmit={handleAddPartner} loading={false} submitLabel="Add Partner" isDark={isDark} border={border} textMain={textMain} /></Modal>
-      {editPartner && <Modal open={!!editPartner} onClose={()=>setEditPartner(null)} title={`Edit: ${editPartner.name}`}>{partnerForm}<ModalFooter onClose={()=>setEditPartner(null)} onSubmit={handleEditPartner} loading={false} submitLabel="Save Changes" isDark={isDark} border={border} textMain={textMain} /></Modal>}
-      {viewPartner && (
-        <Modal open={!!viewPartner} onClose={()=>setViewPartner(null)} title="Partner Details">
-          <FormField label="Company" value={viewPartner.name} readOnly isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-          <FormField label="Contact" value={viewPartner.contact} readOnly isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-          <FormField label="Tier" value={viewPartner.tier} readOnly isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-          <FormField label="Credit Limit" value={viewPartner.credit} readOnly isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-          <FormField label="Orders" value={String(viewPartner.orders)} readOnly isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-          <FormField label="Total Spent" value={viewPartner.totalSpent} readOnly isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-          <FormField label="Joined" value={viewPartner.joined} readOnly isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-          <FormField label="Status" value={viewPartner.status} readOnly isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-          <button onClick={()=>setViewPartner(null)} style={{width:'100%',padding:'10px',borderRadius:'9px',background:isDark?'#1E293B':'#F1F5F9',border:`1px solid ${border}`,color:textMain,fontSize:'13.5px',fontWeight:600,cursor:'pointer',fontFamily:'var(--font-inter)'}}>Close</button>
-        </Modal>
-      )}
-      <ConfirmDialog open={!!deletePartner} onClose={()=>setDeletePartner(null)} onConfirm={handleDeletePartner} loading={false} title="Remove Partner" message={`Remove "${deletePartner?.name}" from wholesale?`} />
-
-      {/* Deal Modals */}
-      <Modal open={addDealOpen} onClose={()=>setAddDealOpen(false)} title="Add Featured Deal">{dealForm}<ModalFooter onClose={()=>setAddDealOpen(false)} onSubmit={handleAddDeal} loading={false} submitLabel="Add Deal" isDark={isDark} border={border} textMain={textMain} /></Modal>
-      {editDeal && <Modal open={!!editDeal} onClose={()=>setEditDeal(null)} title={`Edit Deal: ${editDeal.title}`}>{dealForm}<ModalFooter onClose={()=>setEditDeal(null)} onSubmit={handleEditDeal} loading={false} submitLabel="Save Changes" isDark={isDark} border={border} textMain={textMain} /></Modal>}
-      <ConfirmDialog open={!!deleteDeal} onClose={()=>setDeleteDeal(null)} onConfirm={handleDeleteDeal} loading={false} title="Delete Deal" message={`Delete "${deleteDeal?.title}"?`} />
-
-      {/* Inventory Modals */}
-      <Modal open={addInvOpen} onClose={()=>setAddInvOpen(false)} title="Add Wholesale Product">{invForm}<ModalFooter onClose={()=>setAddInvOpen(false)} onSubmit={handleAddInv} loading={false} submitLabel="Add Product" isDark={isDark} border={border} textMain={textMain} /></Modal>
-      {editInv && <Modal open={!!editInv} onClose={()=>setEditInv(null)} title={`Edit: ${editInv.name}`}>{invForm}<ModalFooter onClose={()=>setEditInv(null)} onSubmit={handleEditInv} loading={false} submitLabel="Save Changes" isDark={isDark} border={border} textMain={textMain} /></Modal>}
-      <ConfirmDialog open={!!deleteInv} onClose={()=>setDeleteInv(null)} onConfirm={handleDeleteInv} loading={false} title="Remove Product" message={`Remove "${deleteInv?.name}" from wholesale inventory?`} />
-    </div>
+      {/* Delete Dialogs */}
+      <ConfirmDialog open={!!deleteDeal} title="Delete Deal" message="Are you sure you want to delete this deal?" onCancel={() => setDeleteDeal(null)} onConfirm={handleDeleteDeal} />
+    </AdminShell>
   );
 }
 
-export default function WholesalePage() { return <AdminShell><WholesaleContent /></AdminShell>; }
+export default function WholesalePage() {
+  return <WholesaleContent />;
+}
