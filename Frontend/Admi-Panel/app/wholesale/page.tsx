@@ -177,8 +177,8 @@ function WholesaleContent() {
         specifications: p.specifications || '',
         rawPrice: p.wholesalePrice || p.price || 0,
         rawMoq: p.wholesaleMoq || 1,
-        stockTotal: p.stockTotal || 0,
-        stockCurrent: p.stockCurrent || 0
+        stockTotal: p.stockTotal ?? p.inventory?.stock ?? 0,
+        stockCurrent: p.stockCurrent ?? p.inventory?.stock ?? 0
       })));
     });
   };

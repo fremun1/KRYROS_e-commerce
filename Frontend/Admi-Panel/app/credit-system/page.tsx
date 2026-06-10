@@ -137,8 +137,8 @@ function CreditContent() {
         creditMinimum: String(p.creditMinimum || ''),
         images: Array.isArray(p.images) ? p.images.map((img: any) => img?.url || img || '').filter(Boolean) : [],
         rawPrice: p.price || 0,
-        stockTotal: p.stockTotal || 0,
-        stockCurrent: p.stockCurrent || 0
+        stockTotal: p.stockTotal ?? p.inventory?.stock ?? 0,
+        stockCurrent: p.stockCurrent ?? p.inventory?.stock ?? 0
       })));
     });
   };

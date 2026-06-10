@@ -32,7 +32,6 @@ export class ProductsController {
 
   @Get()
   @UseGuards(OptionalJwtAuthGuard)
-  @UseInterceptors(CacheInterceptor)
   @ApiOperation({ summary: 'Get all products (Public)' })
   findAll(
     @Request() req,
