@@ -100,7 +100,7 @@ function WholesaleContent() {
         phone: w.user?.phone || w.phone || '',
         city: w.city || '',
         tier: w.tierName || (w.discountTier===1?'Bronze':w.discountTier===2?'Silver':w.discountTier===3?'Gold':'Platinum') || 'Bronze',
-        credit: w.creditLimit ? `K${Number(w.creditLimit).toLocaleString()}` : '$0',
+        credit: w.creditLimit ? `$${Number(w.creditLimit).toLocaleString()}` : '$0',
         orders: w._count?.orders ?? 0,
         totalSpent: '$0',
         status: w.status === 'ACTIVE' || w.status === 'APPROVED' ? 'Active' : w.status === 'PENDING' ? 'Pending' : 'Inactive',
@@ -130,7 +130,7 @@ function WholesaleContent() {
         title: d.title,
         description: d.description || '',
         discount: d.discount ? `${d.discount}%` : '0%',
-        minOrder: d.minOrder ? `K${Number(d.minOrder).toLocaleString()}` : 'K0',
+        minOrder: d.minOrder ? `$${Number(d.minOrder).toLocaleString()}` : '$0',
         validUntil: d.validUntil ? d.validUntil.split('T')[0] : 'Never',
         status: d.isActive ? 'Active' : 'Inactive',
       })));
@@ -167,7 +167,7 @@ function WholesaleContent() {
         id: p.id,
         name: p.name,
         sku: p.sku,
-        price: p.wholesalePrice ? `K${Number(p.wholesalePrice).toLocaleString()}` : (p.price ? `K${Number(p.price).toLocaleString()}` : '$0'),
+        price: p.wholesalePrice ? `$${Number(p.wholesalePrice).toLocaleString()}` : (p.price ? `$${Number(p.price).toLocaleString()}` : '$0'),
         moq: `${p.wholesaleMoq || 1} units`,
         category: p.category?.name || 'General',
         status: p.isActive !== false ? 'Active' : 'Inactive',
@@ -215,7 +215,7 @@ function WholesaleContent() {
         title: dForm.title,
         description: dForm.description,
         discount: parseFloat(dForm.discount.replace('%', '')) || 0,
-        minOrder: parseFloat(dForm.minOrder.replace('K', '').replace(/,/g, '')) || 0,
+        minOrder: parseFloat(dForm.minOrder.replace('$', '').replace(/,/g, '')) || 0,
         validUntil: dForm.validUntil,
         isActive: dForm.status === 'Active'
       });
@@ -231,7 +231,7 @@ function WholesaleContent() {
         title: dForm.title,
         description: dForm.description,
         discount: parseFloat(dForm.discount.replace('%', '')) || 0,
-        minOrder: parseFloat(dForm.minOrder.replace('K', '').replace(/,/g, '')) || 0,
+        minOrder: parseFloat(dForm.minOrder.replace('$', '').replace(/,/g, '')) || 0,
         validUntil: dForm.validUntil,
         isActive: dForm.status === 'Active'
       });
@@ -357,7 +357,7 @@ function WholesaleContent() {
                   title: d.title,
                   description: d.description,
                   discount: d.discount.replace('%', ''),
-                  minOrder: d.minOrder.replace('K', '').replace(/,/g, ''),
+                  minOrder: d.minOrder.replace('$', '').replace(/,/g, ''),
                   validUntil: d.validUntil,
                   status: d.status
                 }); 

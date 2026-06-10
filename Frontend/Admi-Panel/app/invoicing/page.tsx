@@ -43,9 +43,9 @@ function InvoicingContent() {
         return {
           id: `INV-${(o.orderNumber || o.id || '').toString().slice(-8)}`,
           client: o.user ? (`${o.user.firstName||''} ${o.user.lastName||''}`.trim() || o.user.email || 'Customer') : 'Customer',
-          amount: `K${amt.toLocaleString()}`,
-          tax: `K${tax.toLocaleString()}`,
-          total: `K${total.toLocaleString()}`,
+          amount: `$${amt.toLocaleString()}`,
+          tax: `$${tax.toLocaleString()}`,
+          total: `$${total.toLocaleString()}`,
           date: d,
           due: due,
           status: o.paymentStatus==='PAID'||o.status==='DELIVERED' ? 'Paid' : o.paymentStatus==='PENDING' ? 'Unpaid' : o.status==='CANCELLED' ? 'Draft' : 'Unpaid',

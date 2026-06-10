@@ -5,7 +5,7 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export function formatCurrency(amount: number | string, currency = 'ZMW'): string {
+export function formatCurrency(amount: number | string, currency = '$'): string {
   const num = typeof amount === 'string' ? parseFloat(amount) : amount;
   if (isNaN(num)) return `${currency} 0.00`;
   return `${currency} ${num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;

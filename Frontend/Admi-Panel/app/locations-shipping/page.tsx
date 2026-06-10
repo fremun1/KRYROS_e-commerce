@@ -382,7 +382,7 @@ function ShippingContent() {
     {key:'name',label:'Name',render:(v)=><span style={{fontWeight:600,color:textMain}}>{String(v)}</span>},
     {key:'description',label:'Description',render:(v)=><span style={{color:textMuted,fontSize:'12px'}}>{String(v).slice(0,40)||'—'}</span>},
     {key:'fee',label:'Fee',render:(v)=><span style={{fontWeight:600,color:'#1FA89A'}}>${String(v)}</span>},
-    {key:'minThreshold',label:'Free Ship Above',render:(v)=><span style={{color:textMuted,fontSize:'12px'}}>{Number(v)>0?`K${v}`:'—'}</span>},
+    {key:'minThreshold',label:'Free Ship Above',render:(v)=><span style={{color:textMuted,fontSize:'12px'}}>{Number(v)>0?`$${v}`:'—'}</span>},
     {key:'estimatedDays',label:'Est. Days',render:(v)=><span style={{color:textMuted,fontSize:'12px'}}>{String(v)||'—'}</span>},
     {key:'status',label:'Status',render:(v)=><span style={{padding:'3px 10px',borderRadius:'20px',fontSize:'12px',fontWeight:600,background:v==='Active'?'rgba(31,168,154,0.12)':'rgba(100,116,139,0.1)',color:v==='Active'?'#1FA89A':'#8E9AAF'}}>{String(v)}</span>},
   ];

@@ -46,13 +46,13 @@ function CreditContent() {
         id: c.id || '',
         customer: c.user ? [c.user.firstName, c.user.lastName].filter(Boolean).join(' ') || c.user.email : 'Customer',
         phone: c.user?.phone || '',
-        limit: c.amount ? `K${Number(c.amount).toLocaleString()}` : '$0',
-        used: c.usedAmount ? `K${Number(c.usedAmount).toLocaleString()}` : '$0',
-        available: c.remainingAmount ? `K${Number(c.remainingAmount).toLocaleString()}` : '$0',
+        limit: c.amount ? `$${Number(c.amount).toLocaleString()}` : '$0',
+        used: c.usedAmount ? `$${Number(c.usedAmount).toLocaleString()}` : '$0',
+        available: c.remainingAmount ? `$${Number(c.remainingAmount).toLocaleString()}` : '$0',
         due: c.dueDate ? c.dueDate.split('T')[0] : '',
         status: c.status === 'ACTIVE' ? 'Active' : c.status === 'DEFAULTED' ? 'Defaulted' : c.status === 'PAID' ? 'Paid' : (c.status || 'Active'),
         plan: c.plan?.name || c.planName || '',
-        outstanding: c.remainingAmount ? `K${Number(c.remainingAmount).toLocaleString()}` : '$0',
+        outstanding: c.remainingAmount ? `$${Number(c.remainingAmount).toLocaleString()}` : '$0',
       }));
       setCredits(normalized);
     }).catch(() => {});
@@ -72,7 +72,7 @@ function CreditContent() {
         email: a.user?.email || '',
         product: a.product?.name || 'Product',
         plan: a.creditPlan?.name || 'Plan',
-        amount: `K${Number(a.amount).toLocaleString()}`,
+        amount: `$${Number(a.amount).toLocaleString()}`,
         status: a.status.charAt(0) + a.status.slice(1).toLowerCase(),
         date: a.createdAt ? a.createdAt.split('T')[0] : '',
       })));
@@ -127,7 +127,7 @@ function CreditContent() {
         id: p.id,
         name: p.name,
         sku: p.sku,
-        price: p.price ? `K${Number(p.price).toLocaleString()}` : '$0',
+        price: p.price ? `$${Number(p.price).toLocaleString()}` : '$0',
         plans: p.allowCredit ? 'Credit Enabled' : 'Disabled',
         status: p.isActive !== false ? 'Active' : 'Inactive',
         // Extra for editing

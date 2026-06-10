@@ -514,7 +514,7 @@ function OrdersContent() {
                         </td>
                         <td style={{ padding: '0.75rem 1rem', fontWeight: 700, color: T.text, whiteSpace: 'nowrap' as const }}>
                           {fmtMoney(o.total, o.currencySymbol)}
-                          {o.totalZMW != null && <div style={{ fontSize: '0.68rem', color: T.muted }}>ZMW {Number(o.totalZMW).toLocaleString()}</div>}
+                          {/* ZMW display removed */}
                         </td>
                         <td style={{ padding: '0.75rem 1rem' }}>
                           <span style={{ background: psc.bg, color: psc.color, fontSize: '0.68rem', fontWeight: 700, padding: '2px 7px', borderRadius: '4px', whiteSpace: 'nowrap' as const }}>{psc.label}</span>
@@ -665,11 +665,7 @@ function OrdersContent() {
                       <span>Total</span>
                       <span>{fmtMoney(detail.total, detail.currencySymbol)}</span>
                     </div>
-                    {detail.totalZMW != null && (
-                      <div style={{ textAlign: 'right', color: T.muted, fontSize: '0.69rem', marginTop: '0.2rem' }}>
-                        &asymp; ZMW {Number(detail.totalZMW).toLocaleString()}
-                      </div>
-                    )}
+                    {/* ZMW display removed */}
                   </Section>
 
                   {/* Status History */}

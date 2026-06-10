@@ -203,8 +203,8 @@ function CountriesContent() {
     <>
       <FormField label="Country Name *" value={addCForm.name} onChange={acfp('name')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. Zambia" />
       <FormField label="Country Code * (2-letter)" value={addCForm.code} onChange={acfp('code')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. ZM" />
-      <FormField label="Currency Code * (3-letter)" value={addCForm.currency} onChange={acfp('currency')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. ZMW" />
-      <FormField label="Currency Symbol *" value={addCForm.symbol} onChange={acfp('symbol')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. ZK" />
+      <FormField label="Currency Code * (3-letter)" value={addCForm.currency} onChange={acfp('currency')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. USD" />
+      <FormField label="Currency Symbol *" value={addCForm.symbol} onChange={acfp('symbol')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. $" />
       <FormField label="Exchange Rate (vs USD)" value={addCForm.rate} onChange={acfp('rate')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 27.5" />
       <FormField label="Symbol Position" value={addCForm.symbolPosition} onChange={acfp('symbolPosition')} options={['BEFORE','AFTER']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
       <FormField label="Flag Emoji" value={addCForm.flag} onChange={acfp('flag')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 🇿🇲" />

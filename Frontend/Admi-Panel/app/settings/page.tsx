@@ -235,7 +235,7 @@ function SettingsContent() {
             <Field label="Phone Number"><input style={inputStyle} value={storePhone} onChange={e=>setStorePhone(e.target.value)} /></Field>
             <Field label="Default Currency">
               <select style={inputStyle} value={currency} onChange={e=>setCurrency(e.target.value)}>
-                {['USD','ZMW','ZAR','GBP','EUR'].map(c=><option key={c}>{c}</option>)}
+                {['USD'].map(c=><option key={c}>{c}</option>)}
               </select>
             </Field>
             <Field label="Timezone">

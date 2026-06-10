@@ -55,10 +55,10 @@ function ReportsContent() {
       const d = r.data;
       if (!d) return;
       setKpis([
-        { label: 'Total Revenue', val: d.totalRevenue ? `K${Number(d.totalRevenue).toLocaleString()}` : '$0', change: d.revenueGrowth ? `${d.revenueGrowth>0?'+':''}${d.revenueGrowth}%` : '0%', up: (d.revenueGrowth||0)>=0 },
+        { label: 'Total Revenue', val: d.totalRevenue ? `$${Number(d.totalRevenue).toLocaleString()}` : '$0', change: d.revenueGrowth ? `${d.revenueGrowth>0?'+':''}${d.revenueGrowth}%` : '0%', up: (d.revenueGrowth||0)>=0 },
         { label: 'Total Orders', val: String(d.totalOrders||0), change: d.ordersGrowth ? `${d.ordersGrowth>0?'+':''}${d.ordersGrowth}%` : '0%', up: (d.ordersGrowth||0)>=0 },
         { label: 'New Customers', val: String(d.newCustomers||d.totalCustomers||0), change: d.customersGrowth ? `${d.customersGrowth>0?'+':''}${d.customersGrowth}%` : '0%', up: true },
-        { label: 'Avg Order Value', val: d.averageOrderValue ? `K${Number(d.averageOrderValue).toFixed(0)}` : '$0', change: '0%', up: false },
+        { label: 'Avg Order Value', val: d.averageOrderValue ? `$${Number(d.averageOrderValue).toFixed(0)}` : '$0', change: '0%', up: false },
       ]);
       if (Array.isArray(d.monthly) && d.monthly.length > 0) {
         setChartData(d.monthly.map((m: any) => ({ month: m.month||m.name, revenue: Number(m.revenue||0), orders: Number(m.orders||0), customers: Number(m.customers||0) })));
@@ -73,7 +73,7 @@ function ReportsContent() {
       if (raw.length === 0) return;
       setProdData(raw.map((p: any, i: number) => ({
         rank: i+1, name: p.name||'Unknown',
-        revenue: p.price ? `K${Number(p.price).toLocaleString()}` : '$0',
+        revenue: p.price ? `$${Number(p.price).toLocaleString()}` : '$0',
         units: p._count?.orderItems ?? p.sold ?? 0,
         growth: '+0%', up: true,
       })));

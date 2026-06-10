@@ -103,7 +103,7 @@ function WalletContent() {
   const [viewTx, setViewTx] = useState<Tx|null>(null);
   const [viewLink, setViewLink] = useState<PayLink|null>(null);
   const [showGenModal, setShowGenModal] = useState(false);
-  const [genForm, setGenForm] = useState({ name:'', amount:'', currency:'ZMW', note:'' });
+  const [genForm, setGenForm] = useState({ name:'', amount:'', currency:'USD', note:'' });
   const [genLoading, setGenLoading] = useState(false);
   const [generatedLink, setGeneratedLink] = useState<string|null>(null);
 
@@ -160,8 +160,8 @@ function WalletContent() {
           id: t.id?.slice(-8) || `W${Date.now().toString().slice(-5)}`,
           user: t.user ? (`${t.user.firstName||''} ${t.user.lastName||''}`.trim() || t.user.email || 'Customer') : 'Customer',
           type: t.type || 'Wallet', method: t.paymentMethod || t.method || 'Wallet',
-          amount: t.amount ? `K${Number(t.amount).toLocaleString()}` : '$0',
-          fee: t.fee ? `K${Number(t.fee).toLocaleString()}` : '$0',
+          amount: t.amount ? `$${Number(t.amount).toLocaleString()}` : '$0',
+          fee: t.fee ? `$${Number(t.fee).toLocaleString()}` : '$0',
           date: t.createdAt ? t.createdAt.split('T')[0] : '',
           status: t.status==='COMPLETED'||t.status==='SUCCESS' ? 'Completed' : t.status==='PENDING' ? 'Pending' : t.status==='FAILED' ? 'Failed' : (t.status||'Completed'),
           ref: t.reference || t.id || '',
@@ -170,7 +170,7 @@ function WalletContent() {
           id: p.id?.slice(-8) || `P${Date.now().toString().slice(-5)}`,
           user: p.user ? (`${p.user.firstName||''} ${p.user.lastName||''}`.trim() || p.user.email || 'Customer') : 'Customer',
           type: 'Payment', method: p.provider || p.method || 'Mobile Money',
-          amount: p.amount ? `K${Number(p.amount).toLocaleString()}` : '$0', fee: '$0',
+          amount: p.amount ? `$${Number(p.amount).toLocaleString()}` : '$0', fee: '$0',
           date: p.createdAt ? p.createdAt.split('T')[0] : '',
           status: p.status==='PAID'||p.status==='COMPLETED' ? 'Completed' : p.status==='PENDING' ? 'Pending' : p.status==='FAILED' ? 'Failed' : (p.status||'Pending'),
           ref: p.reference || p.id || '',
@@ -190,7 +190,7 @@ function WalletContent() {
     const params = new URLSearchParams({ amount: genForm.amount, currency: genForm.currency, ref, ...(genForm.note ? { note: genForm.note } : {}) });
     const link = `${FRONTEND_PAYMENT_URL}?${params.toString()}`;
     setGeneratedLink(link);
-    const newLink: PayLink = { id: ref, name: genForm.name || `Payment - K${Number(genForm.amount).toLocaleString()} ${genForm.currency}`, url: link, amount: `K${Number(genForm.amount).toLocaleString()} ${genForm.currency}`, currency: genForm.currency, note: genForm.note, clicks: '0', status: 'Active', created: new Date().toISOString().split('T')[0] };
+    const newLink: PayLink = { id: ref, name: genForm.name || `Payment - $${Number(genForm.amount).toLocaleString()}`, url: link, amount: `$${Number(genForm.amount).toLocaleString()}`, currency: 'USD', note: genForm.note, clicks: '0', status: 'Active', created: new Date().toISOString().split('T')[0] };
     setPayLinks(d => [newLink, ...d]);
     toast.success('Payment link generated!');
     setGenLoading(false);
@@ -472,9 +472,9 @@ function WalletContent() {
       {/* Stats */}
       <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:'14px',marginBottom:'24px'}} className="sg">
         {[
-          { label:'Total Deposits', val:`K${totalDeposits.toLocaleString()}`, color:'#1FA89A' },
-          { label:'Total Payments', val:`K${totalPayments.toLocaleString()}`, color:'#6366f1' },
-          { label:'Pending',        val:`K${totalPending.toLocaleString()}`,  color:'#FFC107' },
+          { label:'Total Deposits', val:`$${totalDeposits.toLocaleString()}`, color:'#1FA89A' },
+          { label:'Total Payments', val:`$${totalPayments.toLocaleString()}`, color:'#6366f1' },
+          { label:'Pending',        val:`$${totalPending.toLocaleString()}`,  color:'#FFC107' },
           { label:'Payment Links',  val:String(payLinks.length),              color:'#1FA89A' },
         ].map(s=>(
           <div key={s.label} style={{background:card,border:`1px solid ${border}`,borderRadius:'12px',padding:'16px'}}>
@@ -508,7 +508,7 @@ function WalletContent() {
           {activeTab === 'links' && (
             <>
               <div style={{marginBottom:'12px',display:'flex',justifyContent:'flex-end'}}>
-                <button onClick={()=>{setShowGenModal(true);setGeneratedLink(null);setGenForm({name:'',amount:'',currency:'ZMW',note:''});}}
+                <button onClick={()=>{setShowGenModal(true);setGeneratedLink(null);setGenForm({name:'',amount:'',currency:'USD',note:''});}}
                   style={{display:'flex',alignItems:'center',gap:'6px',padding:'9px 16px',background:'linear-gradient(135deg,#1FA89A,#27B9AF)',border:'none',borderRadius:'9px',color:'white',fontSize:'13px',fontWeight:600,cursor:'pointer',fontFamily:'var(--font-inter)'}}>
                   <Plus size={14} /> Generate Payment Link
                 </button>
@@ -633,7 +633,7 @@ function WalletContent() {
           <div>
             <label style={{fontSize:'12px',fontWeight:600,color:textMuted,display:'block',marginBottom:'6px'}}>Currency</label>
             <select value={genForm.currency} onChange={e=>setGenForm(f=>({...f,currency:e.target.value}))} style={{...inputStyle,cursor:'pointer'}}>
-              <option>ZMW</option><option>USD</option>
+              <option>USD</option>
             </select>
           </div>
         </div>
