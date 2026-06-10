@@ -225,13 +225,16 @@ function CreditContent() {
   const handleAddPlan = async () => {
     if (!planForm.name.trim()) { toast.error('Plan name required'); return; }
     try {
-      const interestVal = parseFloat(String(planForm.interest).replace('%', '')) || 0;
+      const interestVal = parseFloat(String(planForm.interest).replace(/[^0-9.]/g, '')) || 0;
+      const minVal = parseFloat(String(planForm.minAmount).replace(/[^0-9.]/g, '')) || 0;
+      const maxVal = parseFloat(String(planForm.maxAmount).replace(/[^0-9.]/g, '')) || 999999;
+      
       const resp = await createCreditPlan({
         name: planForm.name,
         duration: Number(planForm.months),
         interestRate: interestVal,
-        minimumAmount: Number(planForm.minAmount) || 0,
-        maximumAmount: Number(planForm.maxAmount) || 999999,
+        minimumAmount: minVal,
+        maximumAmount: maxVal,
         isActive: planForm.status === 'Active',
       });
       const p: Plan = { id: resp.data?.id || `PLN${Date.now()}`, ...planForm, months: Number(planForm.months) };
@@ -245,13 +248,16 @@ function CreditContent() {
   const handleEditPlan = async () => {
     if (!editPlan) return;
     try {
-      const interestVal = parseFloat(String(planForm.interest).replace('%', '')) || 0;
+      const interestVal = parseFloat(String(planForm.interest).replace(/[^0-9.]/g, '')) || 0;
+      const minVal = parseFloat(String(planForm.minAmount).replace(/[^0-9.]/g, '')) || 0;
+      const maxVal = parseFloat(String(planForm.maxAmount).replace(/[^0-9.]/g, '')) || 999999;
+
       await updateCreditPlan(editPlan.id, {
         name: planForm.name,
         duration: Number(planForm.months),
         interestRate: interestVal,
-        minimumAmount: Number(planForm.minAmount) || 0,
-        maximumAmount: Number(planForm.maxAmount) || 999999,
+        minimumAmount: minVal,
+        maximumAmount: maxVal,
         isActive: planForm.status === 'Active',
       });
       setPlans(d => d.map(p => p.id===editPlan.id ? {...p, ...planForm, months:Number(planForm.months)} : p));
