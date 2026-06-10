@@ -331,7 +331,7 @@ function WholesaleContent() {
 
       <div style={{ background:card, border:`1px solid ${border}`, borderRadius:'16px', overflow:'hidden' }}>
         {section === 'applications' && (
-          <DataTable columns={appCols} data={applications} loading={loadingApps} 
+          <DataTable columns={appCols} data={applications} 
             onView={(row) => setViewApp(row as unknown as Application)} 
             onEdit={(row) => setEditApp(row as unknown as Application)} />
         )}
