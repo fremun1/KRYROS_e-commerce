@@ -73,6 +73,7 @@ interface OrderItem {
   id: string;
   name: string;
   orderId: string;
+  totalDisplay: string;
   date: string;
   status: string;
   image: string;
@@ -157,6 +158,9 @@ export default function DashboardPage() {
           id: String(o.id),
           name: o.items?.[0]?.product?.name ?? o.productName ?? "Order",
           orderId: `#${o.orderNumber ?? o.id}`,
+          totalDisplay: o.totalZMW && o.currencyCode === 'ZMW' 
+            ? `ZMW ${Number(o.totalZMW).toLocaleString()}` 
+            : `${o.currencyCode || 'USD'} ${Number(o.total || 0).toLocaleString()}`,
           date: o.createdAt
             ? new Date(o.createdAt).toLocaleDateString("en", { month: "short", day: "numeric", year: "numeric" })
             : "",
@@ -896,8 +900,11 @@ export default function DashboardPage() {
                             <img src={order.image} alt={order.name} className="w-11 h-11 object-cover rounded-xl bg-muted flex-shrink-0" />
                             <div className="flex-1 min-w-0">
                               <p className="text-xs font-semibold text-foreground truncate">{order.name}</p>
-                              <p className="text-[10px] text-muted-foreground">Order ID: {order.orderId}</p>
-                              <p className="text-[10px] text-muted-foreground">{order.date}</p>
+                              <div className="flex items-center justify-between mt-0.5">
+                                <p className="text-[10px] text-muted-foreground font-medium">{order.orderId}</p>
+                                <p className="text-[10px] font-bold text-primary">{order.totalDisplay}</p>
+                              </div>
+                              <p className="text-[10px] text-muted-foreground mt-0.5">{order.date}</p>
                             </div>
                             <div className="flex items-center gap-1.5 flex-shrink-0">
                               <span className={`text-[9px] font-bold px-2 py-1 rounded-full ${statusColors[order.status] ?? "bg-muted text-muted-foreground"}`}>

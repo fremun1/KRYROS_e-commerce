@@ -101,9 +101,13 @@ export interface ApiOrder {
   id: string;
   orderNumber?: string;
   status: string;
+  paymentStatus?: string;
   createdAt: string;
   estimatedDelivery?: string;
   total?: number;
+  totalZMW?: number;
+  currencyCode?: string;
+  currencySymbol?: string;
   items?: {
     product?: {
       name?: string;

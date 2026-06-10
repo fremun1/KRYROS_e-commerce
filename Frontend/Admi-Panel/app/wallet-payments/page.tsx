@@ -103,7 +103,7 @@ function WalletContent() {
   const [viewTx, setViewTx] = useState<Tx|null>(null);
   const [viewLink, setViewLink] = useState<PayLink|null>(null);
   const [showGenModal, setShowGenModal] = useState(false);
-  const [genForm, setGenForm] = useState({ name:'', amount:'', currency:'USD', note:'' });
+  const [genForm, setGenForm] = useState({ name:'', amount:'', currency:'ZMW', note:'' });
   const [genLoading, setGenLoading] = useState(false);
   const [generatedLink, setGeneratedLink] = useState<string|null>(null);
 
@@ -633,7 +633,9 @@ function WalletContent() {
           <div>
             <label style={{fontSize:'12px',fontWeight:600,color:textMuted,display:'block',marginBottom:'6px'}}>Currency</label>
             <select value={genForm.currency} onChange={e=>setGenForm(f=>({...f,currency:e.target.value}))} style={{...inputStyle,cursor:'pointer'}}>
-              <option>USD</option>
+              <option value="ZMW">ZMW</option>
+              <option value="USD">USD</option>
+              <option value="NGN">NGN</option>
             </select>
           </div>
         </div>

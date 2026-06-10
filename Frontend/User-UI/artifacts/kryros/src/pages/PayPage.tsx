@@ -248,16 +248,16 @@ export default function PayPage() {
   // ── Read URL query params (from admin payment link generator) ──
   const urlParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : new URLSearchParams();
   const urlAmount = urlParams.get("amount") || "";
-  const urlCurrency = urlParams.get("currency");
+  const urlCurrency = urlParams.get("currency")?.toUpperCase();
   const urlNote = urlParams.get("note") || "";
   const isLinkedPayment = !!urlAmount;
 
   // If URL provides a currency, sync it to the global store once
   useEffect(() => {
-    if (urlCurrency) {
+    if (urlCurrency && allCurrencies.some(c => c.code === urlCurrency)) {
       setGlobalCurrency(urlCurrency);
     }
-  }, [urlCurrency, setGlobalCurrency]);
+  }, [urlCurrency, allCurrencies, setGlobalCurrency]);
 
   const [rawAmount, setRawAmount] = useState(urlAmount);
   const [showCurrencyDrop, setShowCurrencyDrop] = useState(false);
