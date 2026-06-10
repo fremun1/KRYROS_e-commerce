@@ -33,6 +33,8 @@ const ShippingPage      = lazy(() => import("@/pages/ShippingPage"));
 const SecurityPage      = lazy(() => import("@/pages/SecurityPage"));
 const PayPage           = lazy(() => import("@/pages/PayPage"));
 const WishlistPage      = lazy(() => import("@/pages/WishlistPage"));
+const ApplyCreditPage   = lazy(() => import("@/pages/ApplyCreditPage"));
+const WholesaleCheckoutPage = lazy(() => import("@/pages/WholesaleCheckoutPage"));
 const NotFound          = lazy(() => import("@/pages/not-found"));
 
 import SplashScreen from "@/components/SplashScreen";
@@ -251,7 +253,7 @@ function AppRoutes() {
     };
   }, [location]);
 
-  const hideShell = ["/pay", "/checkout", "/dashboard", "/cart", "/get-now"].includes(location);
+  const hideShell = ["/pay", "/checkout", "/dashboard", "/cart", "/get-now", "/apply-credit", "/wholesale-checkout"].includes(location);
 
   return (
     <>
@@ -284,6 +286,8 @@ function AppRoutes() {
           <Route path="/security" component={SecurityPage} />
           <Route path="/pay" component={PayPage} />
           <Route path="/wishlist" component={WishlistPage} />
+          <Route path="/apply-credit" component={ApplyCreditPage} />
+          <Route path="/wholesale-checkout" component={WholesaleCheckoutPage} />
           <Route component={NotFound} />
         </Switch>
       </Suspense>

@@ -111,7 +111,7 @@ interface UserProfile {
   addresses: Address[];
 }
 
-type ActiveSection = "overview" | "profile" | "addresses";
+type ActiveSection = "overview" | "profile" | "addresses" | "credit" | "wholesale";
 
 export default function DashboardPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -240,7 +240,8 @@ export default function DashboardPage() {
     { icon: Package, label: "Orders", href: "/track" },
     { icon: Heart, label: "Wishlist", href: "/wishlist" },
     { icon: MapPin, label: "Addresses", section: "addresses" },
-    { icon: CreditCard, label: "Payment Methods", href: "/get-now" },
+    { icon: CreditCard, label: "Credit Plans", section: "credit" },
+    { icon: ShoppingBag, label: "Wholesale Account", section: "wholesale" },
     { icon: Zap, label: "Get Now Plans", href: "/get-now" },
     { icon: MapPin, label: "Pickup Stations", href: "/pickup-stations" },
     { icon: MessageCircle, label: "Messages", href: "/contact" },
@@ -470,6 +471,117 @@ export default function DashboardPage() {
     </div>
   );
 
+  const CreditSection = () => (
+    <div className="max-w-2xl">
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-black text-foreground">My Credit Plans</h1>
+          <p className="text-sm text-muted-foreground">Manage your installment payments</p>
+        </div>
+        <Link href="/apply-credit">
+          <button className="flex items-center gap-1.5 px-4 py-2 bg-primary text-white rounded-xl text-xs font-bold hover:bg-primary/90 transition-colors">
+            <Plus className="w-3.5 h-3.5" /> Apply for Credit
+          </button>
+        </Link>
+      </div>
+
+      <div className="bg-card border border-border rounded-2xl p-5">
+        <div className="flex flex-col items-center py-8 text-center">
+          <CreditCard className="w-12 h-12 text-muted-foreground/30 mb-3" />
+          <p className="text-sm font-medium text-muted-foreground">No active credit plans</p>
+          <p className="text-xs text-muted-foreground/70 mt-1">Apply for credit to start shopping with installment payments</p>
+          <Link href="/apply-credit">
+            <button className="mt-4 px-5 py-2 bg-primary text-white rounded-xl text-xs font-bold hover:bg-primary/90 transition-colors">
+              Apply Now
+            </button>
+          </Link>
+        </div>
+      </div>
+
+      <div className="mt-6 bg-primary/10 border border-primary/20 rounded-2xl p-5">
+        <div className="flex items-start gap-3">
+          <Info className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+          <div>
+            <h3 className="text-sm font-bold text-primary mb-1">How Credit Works</h3>
+            <p className="text-xs text-primary/80 leading-relaxed">
+              Get approved instantly, shop now, and pay later with flexible monthly installments. No hidden fees, transparent pricing.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const WholesaleSection = () => (
+    <div className="max-w-2xl">
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-black text-foreground">Wholesale Account</h1>
+          <p className="text-sm text-muted-foreground">Manage your bulk orders and wholesale benefits</p>
+        </div>
+        <Link href="/wholesale">
+          <button className="flex items-center gap-1.5 px-4 py-2 bg-primary text-white rounded-xl text-xs font-bold hover:bg-primary/90 transition-colors">
+            <Plus className="w-3.5 h-3.5" /> Request Wholesale
+          </button>
+        </Link>
+      </div>
+
+      <div className="grid lg:grid-cols-2 gap-4 mb-6">
+        {[
+          { label: "Account Status", value: "Not Activated", icon: Building2, color: "text-muted-foreground" },
+          { label: "Tier Level", value: "—", icon: Tag, color: "text-muted-foreground" },
+          { label: "Credit Limit", value: "—", icon: DollarSign, color: "text-muted-foreground" },
+          { label: "Total Orders", value: "0", icon: Package, color: "text-muted-foreground" },
+        ].map(({ label, value, icon: Icon, color }) => (
+          <div key={label} className="bg-card border border-border rounded-2xl p-4">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
+                <Icon className={`w-4 h-4 ${color}`} />
+              </div>
+              <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">{label}</p>
+            </div>
+            <p className="text-lg font-black text-foreground">{value}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="bg-card border border-border rounded-2xl p-5 mb-6">
+        <h3 className="text-sm font-bold text-foreground mb-3">Wholesale Benefits</h3>
+        <div className="space-y-2">
+          {[
+            "Tiered pricing with volume discounts",
+            "Extended payment terms",
+            "Dedicated account manager",
+            "Priority customer support",
+            "Exclusive wholesale deals",
+          ].map((benefit, i) => (
+            <div key={i} className="flex items-center gap-2">
+              <Check className="w-4 h-4 text-primary flex-shrink-0" />
+              <p className="text-xs text-foreground">{benefit}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="bg-primary/10 border border-primary/20 rounded-2xl p-5">
+        <div className="flex items-start gap-3">
+          <Info className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+          <div>
+            <h3 className="text-sm font-bold text-primary mb-1">Get Wholesale Access</h3>
+            <p className="text-xs text-primary/80 leading-relaxed mb-3">
+              Apply for a wholesale account to unlock bulk pricing, extended payment terms, and exclusive deals.
+            </p>
+            <Link href="/wholesale">
+              <button className="px-4 py-2 bg-primary text-white rounded-lg text-xs font-bold hover:bg-primary/90 transition-colors">
+                Apply for Wholesale
+              </button>
+            </Link>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   const AddressesSection = () => {
     const addresses = profile?.addresses ?? [];
     return (
@@ -693,6 +805,12 @@ export default function DashboardPage() {
 
           {/* Addresses Section */}
           {activeSection === "addresses" && <AddressesSection />}
+
+          {/* Credit Section */}
+          {activeSection === "credit" && <CreditSection />}
+
+          {/* Wholesale Section */}
+          {activeSection === "wholesale" && <WholesaleSection />}
 
           {/* Overview Section */}
           {activeSection === "overview" && (

@@ -63,6 +63,15 @@ function CreditContent() {
 
   // Applications state
   const [applications, setApplications] = useState<Application[]>([]);
+  useEffect(() => {
+    // Load applications from API or use mock data
+    // TODO: Replace with actual API call to getCreditApplications() once backend endpoint is ready
+    const mockApplications: Application[] = [
+      { id: 'APP001', user: 'John Doe', email: 'john@example.com', product: 'Laptop', plan: '3-Month', amount: 'K5,000', status: 'Pending', date: '2026-06-10' },
+      { id: 'APP002', user: 'Jane Smith', email: 'jane@example.com', product: 'Smartphone', plan: '6-Month', amount: 'K2,500', status: 'Approved', date: '2026-06-09' },
+    ];
+    setApplications(mockApplications);
+  }, []);
   const [viewApp, setViewApp] = useState<Application|null>(null);
   const [editApp, setEditApp] = useState<Application|null>(null);
   const [appStatus, setAppStatus] = useState('Pending');
@@ -193,10 +202,17 @@ function CreditContent() {
     setCredits(d => d.map(c => c.id===editCredit.id ? {...c, status:creditForm.status} : c));
     toast.success('Credit account updated'); setEditCredit(null);
   };
-  const handleEditApp = () => {
+  const handleEditApp = async () => {
     if (!editApp) return;
-    setApplications(d => d.map(a => a.id===editApp.id ? {...a, status:appStatus} : a));
-    toast.success('Application updated'); setEditApp(null);
+    try {
+      // TODO: Call backend API to update application status
+      // await updateCreditApplicationStatus(editApp.id, appStatus);
+      setApplications(d => d.map(a => a.id===editApp.id ? {...a, status:appStatus} : a));
+      toast.success('Application updated'); 
+      setEditApp(null);
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Failed to update application');
+    }
   };
   const handleAddPlan = async () => {
     if (!planForm.name.trim()) { toast.error('Plan name required'); return; }
