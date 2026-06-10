@@ -4,15 +4,11 @@ import {
   ChevronLeft, Lock, ChevronDown, ChevronRight, X,
   Smartphone, CreditCard, Building2, Check, Upload, AlertCircle, Download,
 } from "lucide-react";
-import { API_BASE } from "@/lib/api";
+import { API_BASE, fetchSettings } from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
 import { useCurrencyStore } from "@/store/currencyStore";
 
-const FEE_RATE = 0.01;
-
-function calcFee(amount: number) {
-  return Math.round(amount * FEE_RATE * 100) / 100;
-}
+// FEE_RATE is now dynamic from settings
 
 
 
@@ -266,7 +262,7 @@ export default function PayPage() {
   const [openMethod, setOpenMethod] = useState<string | null>(null);
 
   const amount = parseFloat(rawAmount) || 0;
-  const fee = calcFee(amount);
+  const fee = Math.round(amount * feeRate * 100) / 100;
   const total = amount + fee;
   
   // Use code from store
@@ -289,6 +285,7 @@ export default function PayPage() {
   const [bankProviders, setBankProviders] = useState<{ name:string; config?:{ accountName?:string; accountNumber?:string } }[]>([]);
   const [mobileNetworks, setMobileNetworks] = useState<string[]>(["MTN", "Airtel", "Zamtel"]);
   const [apiMethodTypes, setApiMethodTypes] = useState<string[]>([]);
+  const [feeRate, setFeeRate] = useState(0.01);
 
   useEffect(() => {
     fetch(`${API_BASE}/api/payment-config/public`)
@@ -323,6 +320,13 @@ export default function PayPage() {
         // Store enabled method types (in admin-configured order)
         const enabledTypes = arr.filter((m: any) => m.isEnabled).map((m: any) => m.type as string);
         setApiMethodTypes(enabledTypes);
+      })
+      .catch(() => {});
+
+    fetchSettings()
+      .then((settings) => {
+        const rate = settings.find((s: any) => s.key === 'processing_fee_rate')?.value;
+        if (rate) setFeeRate(Number(rate) / 100);
       })
       .catch(() => {});
   }, []);
