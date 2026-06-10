@@ -76,8 +76,8 @@ export default function ApplyCreditPage() {
         let data = await res.json();
         let plans = Array.isArray(data) ? data : data.data ?? [];
         
-        // Fallback: if no plans found for product, fetch general plans
-        if (plans.length === 0 && productId) {
+        // Fallback: if no plans found for product, fetch all active plans
+        if (plans.length === 0) {
           const fallbackRes = await fetch(`${API_BASE}/api/credit/plans`);
           if (fallbackRes.ok) {
             const fallbackData = await fallbackRes.json();

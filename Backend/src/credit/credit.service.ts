@@ -28,25 +28,29 @@ export class CreditService {
         const matchingPlans = await this.prisma.creditPlan.findMany({
           where: {
             isActive: true,
-            OR: [
-              // Specific match for brand/category
+            AND: [
+              { minimumAmount: { lte: product.price } },
               {
-                AND: [
-                  { minimumAmount: { lte: product.price } },
+                OR: [
                   { maximumAmount: { gte: product.price } },
+                  { maximumAmount: 0 } // 0 means no limit
+                ]
+              },
+              {
+                OR: [
+                  // Specific match for brand/category
                   {
                     OR: [
                       { targetBrandId: product.brandId },
                       { targetCategoryId: product.categoryId }
                     ]
+                  },
+                  // General match (no brand/category constraint)
+                  {
+                    targetBrandId: null,
+                    targetCategoryId: null,
                   }
                 ]
-              },
-              // General match (no brand/category constraint)
-              {
-                targetBrandId: null,
-                targetCategoryId: null,
-                minimumAmount: { lte: product.price }
               }
             ]
           },
