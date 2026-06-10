@@ -119,13 +119,6 @@ export class CreditService {
     return { data: accounts, meta: { total, skip, take } };
   }
 
-  async updateAccountStatus(id: string, status: string) {
-    return this.prisma.creditAccount.update({
-      where: { id },
-      data: { status: status as any },
-    });
-  }
-
   async getCreditApplications(params: { skip?: number; take?: number; status?: string }) {
     const { skip = 0, take: rawTake = 20, status } = params;
     const take = Math.min(Math.max(1, Number(rawTake) || 20), 100);
@@ -234,7 +227,6 @@ export class CreditService {
           employerPhone: applicationDetails.employerPhone,
         },
       });
-      return application;
 
       // Update profile
       await tx.creditProfile.update({

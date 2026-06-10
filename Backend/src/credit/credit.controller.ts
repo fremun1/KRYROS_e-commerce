@@ -156,4 +156,5 @@ export class CreditController {
   apply(@Req() req: Request, @Body() body: ApplyCreditDto) {
     const userId = (req as any).user.id;
     return this.creditService.applyForCredit(userId, body);
+  }
 }

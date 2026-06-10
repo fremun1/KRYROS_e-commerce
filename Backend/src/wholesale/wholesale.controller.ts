@@ -115,6 +115,15 @@ export class WholesaleController {
     return this.wholesaleService.getAccount(userId);
   }
 
+  @Get('my-applications')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get current user wholesale applications' })
+  getMyApplications(@Req() req: Request) {
+    const userId = (req as any).user.id;
+    return this.wholesaleService.findUserApplications(userId);
+  }
+
   // ── Wholesale Deals ───────────────────────────────────────
 
   @Get('deals')

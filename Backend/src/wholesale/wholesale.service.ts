@@ -32,6 +32,13 @@ export class WholesaleService {
     });
   }
 
+  async findUserApplications(userId: string) {
+    return this.prisma.wholesaleApplication.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
   async findOneApplication(id: string) {
     return this.prisma.wholesaleApplication.findUnique({
       where: { id },
