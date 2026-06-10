@@ -268,7 +268,11 @@ export default function PayPage() {
   const amount = parseFloat(rawAmount) || 0;
   const fee = calcFee(amount);
   const total = amount + fee;
-  const currencyObj = selectedCurrency;
+  
+  // Use code from store
+  const currency = selectedCurrency.code;
+  const setCurrency = setGlobalCurrency;
+  const CURRENCIES = allCurrencies;
 
   // Mobile money
   const [mmProvider, setMmProvider] = useState("MTN");
