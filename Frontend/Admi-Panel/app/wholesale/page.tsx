@@ -332,11 +332,14 @@ function WholesaleContent() {
       <div style={{ background:card, border:`1px solid ${border}`, borderRadius:'16px', overflow:'hidden' }}>
         {section === 'applications' && (
           <DataTable columns={appCols} data={applications} loading={loadingApps} 
-            onView={setViewApp} onEdit={setEditApp} />
+            onView={(row) => setViewApp(row as unknown as Application)} 
+            onEdit={(row) => setEditApp(row as unknown as Application)} />
         )}
         {section === 'accounts' && (
           <DataTable columns={partnerCols} data={partners} 
-            onView={setViewPartner} onEdit={setEditPartner} onDelete={setDeletePartner} />
+            onView={(row) => setViewPartner(row as unknown as Wholesale)} 
+            onEdit={(row) => setEditPartner(row as unknown as Wholesale)} 
+            onDelete={(row) => setDeletePartner(row as unknown as Wholesale)} />
         )}
         {section === 'deals' && (
           <div style={{ padding:'20px' }}>
