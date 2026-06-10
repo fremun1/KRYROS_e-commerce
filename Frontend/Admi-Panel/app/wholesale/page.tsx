@@ -349,7 +349,20 @@ function WholesaleContent() {
                 Add New Deal
               </button>
             </div>
-            <DataTable columns={dealCols} data={deals} onEdit={(d) => { setEditDeal(d); setDForm({...d}); }} onDelete={setDeleteDeal} />
+            <DataTable columns={dealCols} data={deals} 
+              onEdit={(row) => { 
+                const d = row as unknown as Deal;
+                setEditDeal(d); 
+                setDForm({
+                  title: d.title,
+                  description: d.description,
+                  discount: d.discount.replace('%', ''),
+                  minOrder: d.minOrder.replace('K', '').replace(/,/g, ''),
+                  validUntil: d.validUntil,
+                  status: d.status
+                }); 
+              }} 
+              onDelete={(row) => setDeleteDeal(row as unknown as Deal)} />
           </div>
         )}
         {section === 'inventory' && (
@@ -360,7 +373,27 @@ function WholesaleContent() {
                 Add Wholesale Product
               </button>
             </div>
-            <DataTable columns={invCols} data={inventory} onEdit={(i) => { setEditInv(i); setIForm({...i, price:i.rawPrice.toString(), moq:i.rawMoq.toString()}); setInvImages(i.images); }} onDelete={setDeleteInv} />
+            <DataTable columns={invCols} data={inventory} 
+              onEdit={(row) => { 
+                const i = row as any;
+                setEditInv(i); 
+                setIForm({
+                  name: i.name,
+                  sku: i.sku,
+                  price: String(i.rawPrice || ''),
+                  moq: String(i.rawMoq || ''),
+                  category: i.category,
+                  status: i.status,
+                  description: i.description || '',
+                  imageUrl: i.imageUrl || '',
+                  images: i.images || [],
+                  specifications: i.specifications || '',
+                  stockTotal: String(i.stockTotal || 100),
+                  stockCurrent: String(i.stockCurrent || 100)
+                }); 
+                setInvImages(i.images || []); 
+              }} 
+              onDelete={(row) => setDeleteInv(row as unknown as WholesaleProduct)} />
           </div>
         )}
       </div>
@@ -371,7 +404,7 @@ function WholesaleContent() {
           <FormField label="Status" value={appStatus} onChange={setAppStatus} options={APP_STATUSES} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
           <p style={{ fontSize:'12px', color:textMuted, marginTop:'12px' }}>Approving will automatically create a wholesale account for this user.</p>
         </div>
-        <ModalFooter onCancel={() => setEditApp(null)} onConfirm={handleUpdateAppStatus} confirmText="Update Status" />
+        <ModalFooter onClose={() => setEditApp(null)} onSubmit={handleUpdateAppStatus} loading={false} submitLabel="Update Status" isDark={isDark} border={border} textMain={textMain} />
       </Modal>
 
       {/* Deal Modal */}
@@ -382,11 +415,11 @@ function WholesaleContent() {
           <FormField label="Min Order" value={dForm.minOrder} onChange={v => setDForm(f=>({...f,minOrder:v}))} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
           <FormField label="Valid Until" value={dForm.validUntil} onChange={v => setDForm(f=>({...f,validUntil:v}))} type="date" isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
         </div>
-        <ModalFooter onCancel={() => { setAddDealOpen(false); setEditDeal(null); }} onConfirm={editDeal ? handleEditDeal : handleAddDeal} confirmText={editDeal ? "Update Deal" : "Create Deal"} />
+        <ModalFooter onClose={() => { setAddDealOpen(false); setEditDeal(null); }} onSubmit={editDeal ? handleEditDeal : handleAddDeal} loading={false} submitLabel={editDeal ? "Update Deal" : "Create Deal"} isDark={isDark} border={border} textMain={textMain} />
       </Modal>
 
       {/* Delete Dialogs */}
-      <ConfirmDialog open={!!deleteDeal} title="Delete Deal" message="Are you sure you want to delete this deal?" onCancel={() => setDeleteDeal(null)} onConfirm={handleDeleteDeal} />
+      <ConfirmDialog open={!!deleteDeal} title="Delete Deal" message="Are you sure you want to delete this deal?" onClose={() => setDeleteDeal(null)} onConfirm={handleDeleteDeal} />
     </AdminShell>
   );
 }
