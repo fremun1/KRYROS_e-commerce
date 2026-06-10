@@ -353,9 +353,9 @@ export default function CheckoutPage() {
     try {
       const headers: Record<string, string> = { "Content-Type": "application/json" };
       if (authToken) headers["Authorization"] = `Bearer ${authToken}`;
-      const zmwRate = allCurrencies.find((c) => c.code === "ZMW")?.exchangeRate ?? 18.86;
-      const totalZMW = total * zmwRate;
-      const res = await fetch(`${API_BASE}/api/orders`, { method: "POST", headers, body: JSON.stringify(buildOrderPayload("MOBILE_MONEY", totalZMW)) });
+      const exchangeRate = selectedCurrency.exchangeRate || 1;
+      const totalLocal = total * exchangeRate;
+      const res = await fetch(`${API_BASE}/api/orders`, { method: "POST", headers, body: JSON.stringify(buildOrderPayload("MOBILE_MONEY", totalLocal)) });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         const msg = Array.isArray(data.message) ? data.message.join(", ") : data.message || "Failed to place order.";
@@ -392,9 +392,9 @@ export default function CheckoutPage() {
       if (authToken) headers["Authorization"] = `Bearer ${authToken}`;
       const PAYMENT_METHOD_MAP: Record<string, string> = { card: "CARD", bank: "BANK_TRANSFER", whatsapp: "WHATSAPP", apple: "CARD", google: "CARD", crypto: "CARD" };
       const backendPaymentMethod = PAYMENT_METHOD_MAP[openMethod ?? "card"] ?? "CARD";
-      const zmwRate  = allCurrencies.find((c) => c.code === "ZMW")?.exchangeRate ?? 18.86;
-      const totalZMW = total * zmwRate;
-      const res = await fetch(`${API_BASE}/api/orders`, { method: "POST", headers, body: JSON.stringify(buildOrderPayload(backendPaymentMethod, totalZMW)) });
+      const exchangeRate = selectedCurrency.exchangeRate || 1;
+      const totalLocal = total * exchangeRate;
+      const res = await fetch(`${API_BASE}/api/orders`, { method: "POST", headers, body: JSON.stringify(buildOrderPayload(backendPaymentMethod, totalLocal)) });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         const msg = Array.isArray(data.message) ? data.message.join(", ") : data.message || "Failed to place order.";

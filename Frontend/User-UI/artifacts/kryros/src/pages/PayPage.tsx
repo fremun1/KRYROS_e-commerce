@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { API_BASE } from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
+import { useCurrencyStore } from "@/store/currencyStore";
 
 const FEE_RATE = 0.01;
 
@@ -96,11 +97,11 @@ function AmountSummaryBar({ amount, fee, currency }: { amount: number; fee: numb
     <div className="border-t border-border pt-4 mt-2 space-y-1.5">
       <div className="flex items-center justify-between text-xs">
         <span className="text-muted-foreground">Amount</span>
-        <span className="font-semibold text-foreground">{currency} {amount.toFixed(2)}</span>
+        <span className="font-semibold text-foreground">{format(amount)}</span>
       </div>
       <div className="flex items-center justify-between text-xs">
         <span className="text-muted-foreground">Fee</span>
-        <span className="font-semibold text-foreground">{currency} {fee.toFixed(2)}</span>
+        <span className="font-semibold text-foreground">{format(fee)}</span>
       </div>
     </div>
   );
@@ -249,11 +250,12 @@ function ReceiptScreen({ receipt, onClose }: { receipt: ReceiptData; onClose: ()
 export default function PayPage() {
   const [, navigate] = useLocation();
   const [step, setStep] = useState<1 | 2>(1);
+  const { selected: selectedCurrency, currencies: allCurrencies, format } = useCurrencyStore();
 
   // ── Read URL query params (from admin payment link generator) ──
   const urlParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : new URLSearchParams();
   const urlAmount = urlParams.get("amount") || "";
-  const urlCurrency = urlParams.get("currency") || "ZMW";
+  const urlCurrency = urlParams.get("currency") || selectedCurrency.code;
   const urlNote = urlParams.get("note") || "";
   const isLinkedPayment = !!urlAmount;
 
@@ -267,7 +269,7 @@ export default function PayPage() {
   const amount = parseFloat(rawAmount) || 0;
   const fee = calcFee(amount);
   const total = amount + fee;
-  const currencyObj = CURRENCIES.find((c) => c.code === currency) ?? CURRENCIES[0];
+  const currencyObj = allCurrencies.find((c) => c.code === currency) ?? selectedCurrency;
 
   // Mobile money
   const [mmProvider, setMmProvider] = useState("MTN");
@@ -694,15 +696,15 @@ export default function PayPage() {
             <p className="text-sm font-bold text-foreground mb-3">Payment Summary</p>
             <div className="flex justify-between text-xs">
               <span className="text-muted-foreground">Amount</span>
-              <span className="font-semibold text-foreground">{currency} {amount.toFixed(2)}</span>
+              <span className="font-semibold text-foreground">{format(amount)}</span>
             </div>
             <div className="flex justify-between text-xs">
               <span className="text-muted-foreground">Processing Fee</span>
-              <span className="font-semibold text-foreground">{currency} {fee.toFixed(2)}</span>
+              <span className="font-semibold text-foreground">{format(fee)}</span>
             </div>
             <div className="flex justify-between text-sm font-black pt-2 border-t border-border">
               <span className="text-foreground">Total Payable</span>
-              <span className="text-primary">{currency} {total.toFixed(2)}</span>
+              <span className="text-primary">{format(total)}</span>
             </div>
           </div>
 
@@ -720,9 +722,9 @@ export default function PayPage() {
           {/* Desktop sticky payment summary */}
           <div className="hidden lg:block w-80 flex-shrink-0 sticky top-6 border border-border rounded-2xl px-5 py-5 bg-background space-y-3">
             <p className="text-sm font-bold text-foreground">Payment Summary</p>
-            <div className="flex justify-between text-xs"><span className="text-muted-foreground">Amount</span><span className="font-semibold text-foreground">{currency} {amount.toFixed(2)}</span></div>
-            <div className="flex justify-between text-xs"><span className="text-muted-foreground">Processing Fee</span><span className="font-semibold text-foreground">{currency} {fee.toFixed(2)}</span></div>
-            <div className="flex justify-between text-sm font-black pt-3 border-t border-border"><span className="text-foreground">Total Payable</span><span className="text-primary">{currency} {total.toFixed(2)}</span></div>
+            <div className="flex justify-between text-xs"><span className="text-muted-foreground">Amount</span><span className="font-semibold text-foreground">{format(amount)}</span></div>
+            <div className="flex justify-between text-xs"><span className="text-muted-foreground">Processing Fee</span><span className="font-semibold text-foreground">{format(fee)}</span></div>
+            <div className="flex justify-between text-sm font-black pt-3 border-t border-border"><span className="text-foreground">Total Payable</span><span className="text-primary">{format(total)}</span></div>
             <SecureFooter />
           </div>
         </div>
@@ -736,15 +738,15 @@ export default function PayPage() {
               <span className="text-xs text-muted-foreground">You are sending</span>
               <button onClick={() => setStep(1)} className="text-xs text-primary font-semibold hover:underline">Change</button>
             </div>
-            <p className="text-3xl font-black text-foreground">{currency} {total.toFixed(2)}</p>
+            <p className="text-3xl font-black text-foreground">{format(total)}</p>
             <div className="space-y-1 pt-1">
               <div className="flex justify-between text-xs">
                 <span className="text-muted-foreground">Amount</span>
-                <span className="font-semibold text-foreground">{currency} {amount.toFixed(2)}</span>
+                <span className="font-semibold text-foreground">{format(amount)}</span>
               </div>
               <div className="flex justify-between text-xs">
                 <span className="text-muted-foreground">Processing Fee</span>
-                <span className="font-semibold text-foreground">{currency} {fee.toFixed(2)}</span>
+                <span className="font-semibold text-foreground">{format(fee)}</span>
               </div>
             </div>
           </div>
@@ -887,7 +889,7 @@ export default function PayPage() {
                         {payStatus === "sending" ? "Sending prompt…" : "Processing…"}
                       </>
                     ) : (
-                      <><Smartphone className="w-4 h-4" /> Pay {currency} {total.toFixed(2)}</>
+                      <><Smartphone className="w-4 h-4" /> Pay {format(total)}</>
                     )}
                   </button>
                   <SecureFooter />
@@ -1026,7 +1028,7 @@ export default function PayPage() {
                   <button
                     className="w-full py-4 bg-primary text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-primary/90 active:scale-95 transition-all"
                   >
-                    <Lock className="w-4 h-4" /> Pay {currency} {total.toFixed(2)}
+                    <Lock className="w-4 h-4" /> Pay {format(total)}
                   </button>
                   <SecureFooter />
                 </div>
