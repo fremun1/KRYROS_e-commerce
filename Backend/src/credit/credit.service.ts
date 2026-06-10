@@ -1,4 +1,5 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { ApplyCreditDto } from './dto/apply-credit.dto';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -125,6 +126,55 @@ export class CreditService {
     });
   }
 
+  async getCreditApplications(params: { skip?: number; take?: number; status?: string }) {
+    const { skip = 0, take: rawTake = 20, status } = params;
+    const take = Math.min(Math.max(1, Number(rawTake) || 20), 100);
+    const where: any = {};
+    if (status) where.status = status;
+
+    const [applications, total] = await Promise.all([
+      this.prisma.creditApplication.findMany({
+        where,
+        skip,
+        take,
+        include: {
+          user: { select: { id: true, email: true, firstName: true, lastName: true, phone: true } },
+          product: { select: { id: true, name: true, price: true } },
+          creditPlan: true,
+        },
+        orderBy: { createdAt: 'desc' },
+      }),
+      this.prisma.creditApplication.count({ where }),
+    ]);
+
+    return { data: applications, meta: { total, skip, take } };
+  }
+
+  async updateApplicationStatus(id: string, status: string) {
+    return this.prisma.creditApplication.update({
+      where: { id },
+      data: { status: status as any },
+    });
+  }
+
+  async getMyApplications(userId: string) {
+    return this.prisma.creditApplication.findMany({
+      where: { userId },
+      include: {
+        product: { select: { id: true, name: true, price: true } },
+        creditPlan: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async updateAccountStatus(id: string, status: string) {
+    return this.prisma.creditAccount.update({
+      where: { id },
+      data: { status: status as any },
+    });
+  }
+
   async calculateInstallment(amount: number, planId: string) {
     const plan = await this.prisma.creditPlan.findUnique({ where: { id: planId } });
     if (!plan) throw new NotFoundException('Credit plan not found');
@@ -136,8 +186,8 @@ export class CreditService {
     return { totalPayable, monthlyPayment, interest, plan };
   }
 
-  async applyForCredit(userId: string, data: { productId: string; planId: string; amount: number }) {
-    const { productId, planId, amount } = data;
+  async applyForCredit(userId: string, data: ApplyCreditDto) {
+    const { productId, planId, amount, ...applicationDetails } = data;
     
     // Check product allows credit
     const product = await this.prisma.product.findUnique({ where: { id: productId } });
@@ -162,20 +212,29 @@ export class CreditService {
     nextPaymentDate.setMonth(nextPaymentDate.getMonth() + 1);
 
     return this.prisma.$transaction(async (tx) => {
-      const account = await tx.creditAccount.create({
+      const application = await tx.creditApplication.create({
         data: {
           userId,
           productId,
           creditPlanId: planId,
-          creditProfileId: profile.id,
-          amount: amount,
-          totalPayable: calculation.totalPayable,
-          monthlyPayment: calculation.monthlyPayment,
-          remainingAmount: calculation.totalPayable,
-          nextPaymentDate,
-          status: 'ACTIVE',
+          amount,
+          status: 'PENDING',
+          firstName: applicationDetails.firstName,
+          lastName: applicationDetails.lastName,
+          email: applicationDetails.email,
+          phone: applicationDetails.phone,
+          address: applicationDetails.address,
+          city: applicationDetails.city,
+          state: applicationDetails.state,
+          country: applicationDetails.country,
+          zipCode: applicationDetails.zipCode,
+          employmentStatus: applicationDetails.employmentStatus,
+          monthlyIncome: applicationDetails.monthlyIncome,
+          employerName: applicationDetails.employerName,
+          employerPhone: applicationDetails.employerPhone,
         },
       });
+      return application;
 
       // Update profile
       await tx.creditProfile.update({
@@ -186,7 +245,7 @@ export class CreditService {
         },
       });
 
-      return account;
+      return application;
     });
   }
 }

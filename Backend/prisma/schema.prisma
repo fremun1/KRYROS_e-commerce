@@ -30,6 +30,7 @@ model User {
   updatedAt            DateTime             @updatedAt
   addresses            Address[]
   creditAccounts       CreditAccount[]
+  creditApplications   CreditApplication[]
   creditProfile        CreditProfile?
   notifications        Notification[]
   orders               Order[]
@@ -229,6 +230,7 @@ model Product {
   fullyTested            Boolean           @default(true)
   fullyTestedText        String?
   creditAccounts         CreditAccount[]
+  creditApplications     CreditApplication[]
   inventory              Inventory?
   orderItems             OrderItem[]
   images                 ProductImage[]
@@ -473,6 +475,38 @@ model CreditProfile {
   @@map("credit_profiles")
 }
 
+model CreditApplication {
+  id               String            @id @default(uuid())
+  userId           String
+  productId        String
+  creditPlanId     String
+  amount           Decimal           @db.Decimal(10, 2)
+  status           CreditAppStatus   @default(PENDING)
+  firstName        String
+  lastName         String
+  email            String
+  phone            String
+  address          String
+  city             String
+  state            String?
+  country          String
+  zipCode          String?
+  employmentStatus String
+  monthlyIncome    Decimal           @db.Decimal(10, 2)
+  employerName     String?
+  employerPhone    String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  user             User              @relation(fields: [userId], references: [id])
+  product          Product           @relation(fields: [productId], references: [id])
+  creditPlan       CreditPlan        @relation(fields: [creditPlanId], references: [id])
+
+  @@index([userId])
+  @@index([productId])
+  @@index([creditPlanId])
+  @@map("credit_applications")
+}
+
 model CreditAccount {
   id              String              @id @default(uuid())
   userId          String
@@ -513,6 +547,7 @@ model CreditPlan {
   targetBrandId    Int?
   targetCategoryId String?
   accounts         CreditAccount[]
+  applications     CreditApplication[]
   brand            Brand?          @relation(fields: [targetBrandId], references: [id])
   category         Category?       @relation(fields: [targetCategoryId], references: [id])
 
@@ -1103,9 +1138,16 @@ enum WholesaleStatus {
   SUSPENDED
 }
 
+enum CreditAppStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 enum CreditStatus {
   ACTIVE
-  SUSPENDED
+  DEFAULTED
+  PAID
   CLOSED
   BLACKLISTED
 }

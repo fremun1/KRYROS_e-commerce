@@ -7,6 +7,7 @@ import { Roles } from '../common/decorators/roles.decorator';
 import { UserRole } from '@prisma/client';
 import { Request } from 'express';
 import { ApplyWholesaleDto } from './dto/apply-wholesale.dto';
+import { UpdateWholesaleApplicationStatusDto } from './dto/update-wholesale-application-status.dto';
 
 @ApiTags('Wholesale')
 @Controller('wholesale')
@@ -73,12 +74,50 @@ export class WholesaleController {
     return this.wholesaleService.getAccount(userId);
   }
 
-  @Post('apply')
+  @Post("applications")
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Apply for a wholesale account' })
+  @ApiOperation({ summary: "Apply for a wholesale account" })
   apply(@Req() req: Request, @Body() body: ApplyWholesaleDto) {
     return this.wholesaleService.apply({ ...body, userId: (req as any).user.id });
+  }
+
+  @Get("applications")
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: "List all wholesale applications (Admin only)" })
+  findAllApplications(
+    @Query("status") status?: string,
+    @Query("skip") skip?: number,
+    @Query("take") take?: number,
+  ) {
+    return this.wholesaleService.findAllApplications({
+      status,
+      skip: skip ? Number(skip) : undefined,
+      take: take ? Number(take) : undefined,
+    });
+  }
+
+  @Put("applications/:id/status")
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: "Update wholesale application status (Admin only)" })
+  updateApplicationStatus(
+    @Param("id") id: string,
+    @Body() body: UpdateWholesaleApplicationStatusDto,
+  ) {
+    return this.wholesaleService.updateApplicationStatus(id, body.status, body.notes);
+  }
+
+  @Get("applications")
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: "Get current user wholesale applications" })
+  getMyApplications(@Req() req: Request) {
+    const userId = (req as any).user.id;
+    return this.wholesaleService.findUserApplications(userId);
   }
 
   // ── Wholesale Deals ───────────────────────────────────────

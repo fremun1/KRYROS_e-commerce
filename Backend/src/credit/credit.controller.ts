@@ -8,6 +8,7 @@ import { UserRole } from '@prisma/client';
 import { Request } from 'express';
 import { CreateCreditPlanDto } from './dto/create-credit-plan.dto';
 import { UpdateCreditPlanDto } from './dto/update-credit-plan.dto';
+import { ApplyCreditDto } from './dto/apply-credit.dto';
 
 @ApiTags('Credit')
 @Controller('credit')
@@ -56,6 +57,23 @@ export class CreditController {
     return this.creditService.deletePlan(id);
   }
 
+  @Get('applications')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get all credit applications (Admin only)' })
+  getApplications(
+    @Query('skip') skip?: number,
+    @Query('take') take?: number,
+    @Query('status') status?: string,
+  ) {
+    return this.creditService.getCreditApplications({
+      skip: skip ? Number(skip) : undefined,
+      take: take ? Number(take) : undefined,
+      status,
+    });
+  }
+
   @Get('accounts')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
@@ -82,13 +100,31 @@ export class CreditController {
     });
   }
 
+  @Put('applications/:id/status')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Update credit application status (Admin only)' })
+  updateApplicationStatus(@Param('id') id: string, @Body() body: { status: string }) {
+    return this.creditService.updateApplicationStatus(id, body.status);
+  }
+
   @Put('accounts/:id/status')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update credit account status (Admin only)' })
-  updateStatus(@Param('id') id: string, @Body() body: { status: string }) {
+  updateAccountStatus(@Param('id') id: string, @Body() body: { status: string }) {
     return this.creditService.updateAccountStatus(id, body.status);
+  }
+
+  @Get('my-applications')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get current user credit applications' })
+  getMyApplications(@Req() req: Request) {
+    const userId = (req as any).user.id;
+    return this.creditService.getMyApplications(userId);
   }
 
   @Get('my-credits')
@@ -117,18 +153,7 @@ export class CreditController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Apply for credit' })
-  apply(@Req() req: Request, @Body() body: { productId: string; planId: string; amount: number }) {
+  apply(@Req() req: Request, @Body() body: ApplyCreditDto) {
     const userId = (req as any).user.id;
-    const amount = Number(body.amount);
-    if (!body.productId || typeof body.productId !== 'string' || body.productId.trim() === '') {
-      throw new BadRequestException('productId is required');
-    }
-    if (!body.planId || typeof body.planId !== 'string' || body.planId.trim() === '') {
-      throw new BadRequestException('planId is required');
-    }
-    if (!isFinite(amount) || amount <= 0 || amount > 10_000_000) {
-      throw new BadRequestException('amount must be a positive number not exceeding 10,000,000');
-    }
-    return this.creditService.applyForCredit(userId, { ...body, amount });
-  }
+    return this.creditService.applyForCredit(userId, body);
 }
