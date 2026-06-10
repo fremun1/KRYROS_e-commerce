@@ -7,7 +7,7 @@ import { Modal, ConfirmDialog, FormField, ModalFooter } from '@/components/admin
 import { useTheme } from '@/contexts/theme-context';
 import { CreditCard, X } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { getCreditAccounts, getCreditPlans, createCreditPlan, updateCreditPlan, deleteCreditPlan, getProducts, createProduct, updateProduct, deleteProduct } from '@/lib/api';
+import api, { getCreditAccounts, getCreditPlans, createCreditPlan, updateCreditPlan, deleteCreditPlan, getProducts, createProduct, updateProduct, deleteProduct } from '@/lib/api';
 import CloudinaryUpload from '@/components/ui/file-upload';
 
 // ─── Types ────────────────────────────────────────────────
