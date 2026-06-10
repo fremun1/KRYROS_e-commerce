@@ -248,4 +248,288 @@ export default function ApplyCreditPage() {
                           </div>
                           <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-border/50">
                             <div className="flex items-center gap-1.5">
-                              <Calendar className="w-3.5 h-3.5 text-muted-foreground" />\n                              <span className=\"text-xs text-muted-foreground\">{plan.duration}mo</span>\n                            </div>\n                            <div className=\"flex items-center gap-1.5\">\n                              <Percent className=\"w-3.5 h-3.5 text-muted-foreground\" />\n                              <span className=\"text-xs text-muted-foreground\">{plan.interestRate}%</span>\n                            </div>\n                            <div className=\"flex items-center gap-1.5\">\n                              <DollarSign className=\"w-3.5 h-3.5 text-muted-foreground\" />\n                              <span className=\"text-xs text-muted-foreground\">{format(plan.minimumAmount)}-{format(plan.maximumAmount)}</span>\n                            </div>\n                          </div>\n                        </button>\n                      ))}\n                    </div>\n                  )}\n                </div>\n              )}\n\n              {/* Step 2: Enter Amount */}\n              {currentStep === 2 && selectedPlanData && (\n                <div className=\"space-y-4 mb-6\">\n                  <h2 className=\"text-lg font-bold text-foreground mb-4\">How much do you need?</h2>\n                  <div className=\"bg-card border border-border rounded-2xl p-4 mb-4\">\n                    <p className=\"text-xs text-muted-foreground mb-2\">Selected Plan</p>\n                    <p className=\"text-lg font-black text-foreground\">{selectedPlanData.name || `${selectedPlanData.duration}-Month Plan`}</p>\n                    <p className=\"text-xs text-muted-foreground mt-1\">{selectedPlanData.duration} months • {selectedPlanData.interestRate}% interest</p>\n                  </div>\n\n                  <div>\n                    <label className=\"block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2\">\n                      Credit Amount\n                    </label>\n                    <div className=\"relative\">\n                      <span className=\"absolute left-3 top-1/2 -translate-y-1/2 text-lg font-bold text-foreground\">K</span>\n                      <input\n                        type=\"number\"\n                        name=\"creditAmount\"\n                        value={selectedAmount || \"\"}\n                        onChange={(e) => setSelectedAmount(Number(e.target.value) || null)}\n                        min={selectedPlanData.minimumAmount}\n                        max={selectedPlanData.maximumAmount}\n                        className=\"w-full pl-8 pr-4 py-3 border border-border rounded-xl text-lg font-bold text-foreground bg-background focus:outline-none focus:ring-2 focus:ring-primary/30\"\n                        placeholder=\"0\"\n                      />\n                    </div>\n                    <p className=\"text-xs text-muted-foreground mt-2\">\n                      Range: {format(selectedPlanData.minimumAmount)} - {format(selectedPlanData.maximumAmount)}\n                    </p>\n                  </div>\n\n                  {selectedAmount && (\n                    <div className=\"bg-primary/10 border border-primary/20 rounded-xl p-4 space-y-2\">\n                      <div className=\"flex items-center justify-between\">\n                        <span className=\"text-xs text-muted-foreground\">Credit Amount</span>\n                        <span className=\"text-sm font-bold text-foreground\">{format(selectedAmount)}</span>\n                      </div>\n                      <div className=\"flex items-center justify-between\">\n                        <span className=\"text-xs text-muted-foreground\">Interest ({selectedPlanData.interestRate}%)</span>\n                        <span className=\"text-sm font-bold text-foreground\">{format(selectedAmount * selectedPlanData.interestRate / 100)}</span>\n                      </div>\n                      <div className=\"border-t border-primary/20 pt-2 flex items-center justify-between\">\n                        <span className=\"text-xs font-bold text-primary\">Total Amount</span>\n                        <span className=\"text-lg font-black text-primary\">{format(selectedAmount * (1 + selectedPlanData.interestRate / 100))}</span>\n                      </div>\n                      <div className=\"border-t border-primary/20 pt-2 flex items-center justify-between\">\n                        <span className=\"text-xs font-bold text-primary\">Monthly Payment</span>\n                        <span className=\"text-lg font-black text-primary\">{format(monthlyPayment)}</span>\n                      </div>\n                    </div>\n                  )}\n                </div>\n              )}\n\n              {/* Step 3: Personal Info */}\n              {currentStep === 3 && (\n                <div className=\"space-y-4 mb-6\">\n                  <h2 className=\"text-lg font-bold text-foreground mb-4\">Your Information</h2>\n\n                  <div className=\"grid grid-cols-2 gap-3\">\n                    <div>\n                      <label className=\"block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2\">\n                        First Name\n                      </label>\n                      <input\n                        type=\"text\"\n                        name=\"firstName\"\n                        value={formData.firstName}\n                        onChange={handleFormChange}\n                        required\n                        className=\"w-full px-3 py-2.5 border border-border rounded-xl text-sm text-foreground bg-background focus:outline-none focus:ring-2 focus:ring-primary/30\"\n                      />\n                    </div>\n                    <div>\n                      <label className=\"block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2\">\n                        Last Name\n                      </label>\n                      <input\n                        type=\"text\"\n                        name=\"lastName\"\n                        value={formData.lastName}\n                        onChange={handleFormChange}\n                        required\n                        className=\"w-full px-3 py-2.5 border border-border rounded-xl text-sm text-foreground bg-background focus:outline-none focus:ring-2 focus:ring-primary/30\"\n                      />\n                    </div>\n                  </div>\n\n                  <div>\n                    <label className=\"block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1\">\n                      <Mail className=\"w-3 h-3\" /> Email\n                    </label>\n                    <input\n                      type=\"email\"\n                      name=\"email\"\n                      value={formData.email}\n                      onChange={handleFormChange}\n                      required\n                      className=\"w-full px-3 py-2.5 border border-border rounded-xl text-sm text-foreground bg-background focus:outline-none focus:ring-2 focus:ring-primary/30\"\n                    />\n                  </div>\n\n                  <div>\n                    <label className=\"block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1\">\n                      <Phone className=\"w-3 h-3\" /> Phone\n                    </label>\n                    <input\n                      type=\"tel\"\n                      name=\"phone\"\n                      value={formData.phone}\n                      onChange={handleFormChange}\n                      required\n                      placeholder=\"+260966423719\"\n                      className=\"w-full px-3 py-2.5 border border-border rounded-xl text-sm text-foreground bg-background focus:outline-none focus:ring-2 focus:ring-primary/30\"\n                    />\n                  </div>\n\n                  <div>\n                    <label className=\"block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1\">\n                      <MapPin className=\"w-3 h-3\" /> Address\n                    </label>\n                    <input\n                      type=\"text\"\n                      name=\"address\"\n                      value={formData.address}\n                      onChange={handleFormChange}\n                      required\n                      className=\"w-full px-3 py-2.5 border border-border rounded-xl text-sm text-foreground bg-background focus:outline-none focus:ring-2 focus:ring-primary/30\"\n                    />\n                  </div>\n\n                  <div className=\"grid grid-cols-2 gap-3\">\n                    <div>\n                      <label className=\"block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2\">City</label>\n                      <input\n                        type=\"text\"\n                        name=\"city\"\n                        value={formData.city}\n                        onChange={handleFormChange}\n                        required\n                        className=\"w-full px-3 py-2.5 border border-border rounded-xl text-sm text-foreground bg-background focus:outline-none focus:ring-2 focus:ring-primary/30\"\n                      />\n                    </div>\n                    <div>\n                      <label className=\"block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2\">State/Province</label>\n                      <input\n                        type=\"text\"\n                        name=\"state\"\n                        value={formData.state}\n                        onChange={handleFormChange}\n                        className=\"w-full px-3 py-2.5 border border-border rounded-xl text-sm text-foreground bg-background focus:outline-none focus:ring-2 focus:ring-primary/30\"\n                      />\n                    </div>\n                  </div>\n\n                  <div className=\"grid grid-cols-2 gap-3\">\n                    <div>\n                      <label className=\"block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2\">Country</label>\n                      <input\n                        type=\"text\"\n                        name=\"country\"\n                        value={formData.country}\n                        onChange={handleFormChange}\n                        required\n                        className=\"w-full px-3 py-2.5 border border-border rounded-xl text-sm text-foreground bg-background focus:outline-none focus:ring-2 focus:ring-primary/30\"\n                      />\n                    </div>\n                    <div>\n                      <label className=\"block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2\">Zip Code</label>\n                      <input\n                        type=\"text\"\n                        name=\"zipCode\"\n                        value={formData.zipCode}\n                        onChange={handleFormChange}\n                        className=\"w-full px-3 py-2.5 border border-border rounded-xl text-sm text-foreground bg-background focus:outline-none focus:ring-2 focus:ring-primary/30\"\n                      />\n                    </div>\n                  </div>\n\n                  <div>\n                    <label className=\"block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2\">Employment Status</label>\n                    <select\n                      name=\"employmentStatus\"\n                      value={formData.employmentStatus}\n                      onChange={handleFormChange}\n                      required\n                      className=\"w-full px-3 py-2.5 border border-border rounded-xl text-sm text-foreground bg-background focus:outline-none focus:ring-2 focus:ring-primary/30\"\n                    >\n                      <option value=\"\">Select employment status</option>\n                      <option value=\"employed\">Employed</option>\n                      <option value=\"self-employed\">Self-Employed</option>\n                      <option value=\"unemployed\">Unemployed</option>\n                      <option value=\"student\">Student</option>\n                      <option value=\"retired\">Retired</option>\n                    </select>\n                  </div>\n\n                  {formData.employmentStatus === \"employed\" && (\n                    <>\n                      <div>\n                        <label className=\"block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2\">Employer Name</label>\n                        <input\n                          type=\"text\"\n                          name=\"employerName\"\n                          value={formData.employerName}\n                          onChange={handleFormChange}\n                          className=\"w-full px-3 py-2.5 border border-border rounded-xl text-sm text-foreground bg-background focus:outline-none focus:ring-2 focus:ring-primary/30\"\n                        />\n                      </div>\n                      <div>\n                        <label className=\"block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2\">Employer Phone</label>\n                        <input\n                          type=\"tel\"\n                          name=\"employerPhone\"\n                          value={formData.employerPhone}\n                          onChange={handleFormChange}\n                          className=\"w-full px-3 py-2.5 border border-border rounded-xl text-sm text-foreground bg-background focus:outline-none focus:ring-2 focus:ring-primary/30\"\n                        />\n                      </div>\n                    </>\n                  )}\n\n                  <div>\n                    <label className=\"block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2\">Monthly Income</label>\n                    <input\n                      type=\"number\"\n                      name=\"monthlyIncome\"\n                      value={formData.monthlyIncome}\n                      onChange={handleFormChange}\n                      required\n                      className=\"w-full px-3 py-2.5 border border-border rounded-xl text-sm text-foreground bg-background focus:outline-none focus:ring-2 focus:ring-primary/30\"\n                    />\n                  </div>\n                </div>\n              )}\n\n              {/* Step 4: Review & Submit */}\n              {currentStep === 4 && (\n                <div className=\"space-y-4 mb-6\">\n                  <h2 className=\"text-lg font-bold text-foreground mb-4\">Review Your Application</h2>\n\n                  <div className=\"bg-card border border-border rounded-2xl p-4 space-y-3\">\n                    <div>\n                      <p className=\"text-xs text-muted-foreground mb-1\">Credit Plan</p>\n                      <p className=\"text-sm font-bold text-foreground\">{selectedPlanData?.name || `${selectedPlanData?.duration}-Month Plan`}</p>\n                    </div>\n                    <div className=\"border-t border-border pt-3\">\n                      <p className=\"text-xs text-muted-foreground mb-1\">Credit Amount</p>\n                      <p className=\"text-sm font-bold text-foreground\">{format(selectedAmount || 0)}</p>\n                    </div>\n                    <div className=\"border-t border-border pt-3\">\n                      <p className=\"text-xs text-muted-foreground mb-1\">Monthly Payment</p>\n                      <p className=\"text-sm font-bold text-foreground\">{format(monthlyPayment)}</p>\n                    </div>\n                    <div className=\"border-t border-border pt-3\">\n                      <p className=\"text-xs text-muted-foreground mb-1\">Applicant</p>\n                      <p className=\"text-sm font-bold text-foreground\">{formData.firstName} {formData.lastName}</p>\n                      <p className=\"text-xs text-muted-foreground mt-1\">{formData.email} • {formData.phone}</p>\n                    </div>\n                  </div>\n\n                  <div className=\"bg-primary/10 border border-primary/20 rounded-xl p-4 flex items-start gap-3\">\n                    <Info className=\"w-5 h-5 text-primary flex-shrink-0 mt-0.5\" />\n                    <div>\n                      <p className=\"text-xs font-bold text-primary mb-1\">By submitting this application</p>\n                      <p className=\"text-xs text-primary/80 leading-relaxed\">\n                        You agree to our terms and conditions. We'll review your application and contact you within 24 hours with a decision.\n                      </p>\n                    </div>\n                  </div>\n                </div>\n              )}\n\n              {/* Navigation Buttons */}\n              <div className=\"flex gap-3 mb-6\">\n                {currentStep > 1 && (\n                  <button\n                    type=\"button\"\n                    onClick={() => setCurrentStep(currentStep - 1)}\n                    className=\"flex-1 py-3 border border-border rounded-xl text-sm font-bold text-foreground hover:bg-muted transition-colors\"\n                  >\n                    Previous\n                  </button>\n                )}\n                {currentStep < 4 ? (\n                  <button\n                    type=\"button\"\n                    onClick={() => {\n                      if (currentStep === 1 && !selectedPlan) return;\n                      if (currentStep === 2 && !selectedAmount) return;\n                      setCurrentStep(currentStep + 1);\n                    }}\n                    disabled={(\n                      (currentStep === 1 && !selectedPlan) ||\n                      (currentStep === 2 && !selectedAmount)\n                    )}\n                    className=\"flex-1 py-3 bg-primary text-white rounded-xl text-sm font-bold hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed\"\n                  >\n                    Next\n                  </button>\n                ) : (\n                  <button\n                    type=\"submit\"\n                    disabled={isSubmitting}\n                    className=\"flex-1 py-3 bg-primary text-white rounded-xl text-sm font-bold hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2\"\n                  >\n                    {isSubmitting ? (\n                      <>\n                        <Loader2 className=\"w-4 h-4 animate-spin\" /> Submitting...\n                      </>\n                    ) : (\n                      <>\n                        <Check className=\"w-4 h-4\" /> Submit Application\n                      </>\n                    )}\n                  </button>\n                )}\n              </div>\n            </form>\n          </>\n        )}\n      </div>\n    </div>\n  );\n}\n
+                              <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
+                              <span className="text-xs text-muted-foreground">{plan.duration}mo</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <Percent className="w-3.5 h-3.5 text-muted-foreground" />
+                              <span className="text-xs text-muted-foreground">{plan.interestRate}%</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <DollarSign className="w-3.5 h-3.5 text-muted-foreground" />
+                              <span className="text-xs text-muted-foreground">{format(plan.minimumAmount)}-{format(plan.maximumAmount)}</span>
+                            </div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Step 2: Enter Amount */}
+              {currentStep === 2 && selectedPlanData && (
+                <div className="space-y-4 mb-6">
+                  <h2 className="text-lg font-bold text-foreground mb-4">How much do you need?</h2>
+                  <div className="bg-card border border-border rounded-2xl p-4 mb-4">
+                    <p className="text-xs text-muted-foreground mb-2">Selected Plan</p>
+                    <p className="text-lg font-black text-foreground">{selectedPlanData.name || `${selectedPlanData.duration}-Month Plan`}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{selectedPlanData.duration} months • {selectedPlanData.interestRate}% interest</p>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">
+                      Credit Amount
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-lg font-bold text-foreground">K</span>
+                      <input
+                        type="number"
+                        name="creditAmount"
+                        value={selectedAmount || ""}
+                        onChange={(e) => setSelectedAmount(Number(e.target.value) || null)}
+                        min={selectedPlanData.minimumAmount}
+                        max={selectedPlanData.maximumAmount}
+                        className="w-full pl-8 pr-4 py-3 border border-border rounded-xl text-lg font-bold text-foreground bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
+                        placeholder="0"
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Range: {format(selectedPlanData.minimumAmount)} - {format(selectedPlanData.maximumAmount)}
+                    </p>
+                  </div>
+
+                  {selectedAmount && (
+                    <div className="bg-primary/10 border border-primary/20 rounded-xl p-4 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-muted-foreground">Credit Amount</span>
+                        <span className="text-sm font-bold text-foreground">{format(selectedAmount)}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-muted-foreground">Interest ({selectedPlanData.interestRate}%)</span>
+                        <span className="text-sm font-bold text-foreground">{format(selectedAmount * selectedPlanData.interestRate / 100)}</span>
+                      </div>
+                      <div className="border-t border-primary/20 pt-2 flex items-center justify-between">
+                        <span className="text-xs font-bold text-primary">Total Amount</span>
+                        <span className="text-lg font-black text-primary">{format(selectedAmount * (1 + selectedPlanData.interestRate / 100))}</span>
+                      </div>
+                      <div className="border-t border-primary/20 pt-2 flex items-center justify-between">
+                        <span className="text-xs font-bold text-primary">Monthly Payment</span>
+                        <span className="text-lg font-black text-primary">{format(monthlyPayment)}</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Step 3: Personal Info */}
+              {currentStep === 3 && (
+                <div className="space-y-4 mb-6">
+                  <h2 className="text-lg font-bold text-foreground mb-4">Your Information</h2>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">First Name</label>
+                      <input
+                        type="text"
+                        name="firstName"
+                        value={formData.firstName}
+                        onChange={handleFormChange}
+                        required
+                        className="w-full px-3 py-2.5 border border-border rounded-xl text-sm text-foreground bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Last Name</label>
+                      <input
+                        type="text"
+                        name="lastName"
+                        value={formData.lastName}
+                        onChange={handleFormChange}
+                        required
+                        className="w-full px-3 py-2.5 border border-border rounded-xl text-sm text-foreground bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1">
+                      <Mail className="w-3 h-3" /> Email
+                    </label>
+                    <input
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleFormChange}
+                      required
+                      className="w-full px-3 py-2.5 border border-border rounded-xl text-sm text-foreground bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1">
+                      <Phone className="w-3 h-3" /> Phone
+                    </label>
+                    <input
+                      type="tel"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleFormChange}
+                      required
+                      placeholder="+260977123456"
+                      className="w-full px-3 py-2.5 border border-border rounded-xl text-sm text-foreground bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1">
+                      <MapPin className="w-3 h-3" /> Address
+                    </label>
+                    <input
+                      type="text"
+                      name="address"
+                      value={formData.address}
+                      onChange={handleFormChange}
+                      required
+                      className="w-full px-3 py-2.5 border border-border rounded-xl text-sm text-foreground bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">City</label>
+                      <input
+                        type="text"
+                        name="city"
+                        value={formData.city}
+                        onChange={handleFormChange}
+                        required
+                        className="w-full px-3 py-2.5 border border-border rounded-xl text-sm text-foreground bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Zip Code</label>
+                      <input
+                        type="text"
+                        name="zipCode"
+                        value={formData.zipCode}
+                        onChange={handleFormChange}
+                        className="w-full px-3 py-2.5 border border-border rounded-xl text-sm text-foreground bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Employment Status</label>
+                    <select
+                      name="employmentStatus"
+                      value={formData.employmentStatus}
+                      onChange={handleFormChange}
+                      required
+                      className="w-full px-3 py-2.5 border border-border rounded-xl text-sm text-foreground bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    >
+                      <option value="">Select status</option>
+                      <option value="employed">Employed</option>
+                      <option value="self-employed">Self-Employed</option>
+                      <option value="business-owner">Business Owner</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1">
+                      <DollarSign className="w-3 h-3" /> Monthly Income (K)
+                    </label>
+                    <input
+                      type="number"
+                      name="monthlyIncome"
+                      value={formData.monthlyIncome}
+                      onChange={handleFormChange}
+                      required
+                      placeholder="e.g. 5000"
+                      className="w-full px-3 py-2.5 border border-border rounded-xl text-sm text-foreground bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Step 4: Review */}
+              {currentStep === 4 && (
+                <div className="space-y-4 mb-6">
+                  <h2 className="text-lg font-bold text-foreground mb-4">Review Your Application</h2>
+                  <div className="bg-card border border-border rounded-2xl p-4 space-y-4">
+                    <div>
+                      <h3 className="text-xs font-black text-primary uppercase tracking-widest mb-2">Selected Plan</h3>
+                      <p className="text-sm font-bold text-foreground">{selectedPlanData?.name || `${selectedPlanData?.duration}-Month Plan`}</p>
+                      <p className="text-xs text-muted-foreground">{selectedPlanData?.duration} months • {selectedPlanData?.interestRate}% interest</p>
+                    </div>
+                    <div className="pt-4 border-t border-border">
+                      <h3 className="text-xs font-black text-primary uppercase tracking-widest mb-2">Amount Details</h3>
+                      <div className="grid grid-cols-2 gap-2">
+                        <p className="text-xs text-muted-foreground">Requested: <span className="font-bold text-foreground">{format(selectedAmount || 0)}</span></p>
+                        <p className="text-xs text-muted-foreground">Monthly: <span className="font-bold text-foreground">{format(monthlyPayment)}</span></p>
+                      </div>
+                    </div>
+                    <div className="pt-4 border-t border-border">
+                      <h3 className="text-xs font-black text-primary uppercase tracking-widest mb-2">Personal Details</h3>
+                      <p className="text-sm font-bold text-foreground">{formData.firstName} {formData.lastName}</p>
+                      <p className="text-xs text-muted-foreground">{formData.email} • {formData.phone}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{formData.address}, {formData.city}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2 p-3 bg-blue-500/5 border border-blue-500/10 rounded-xl">
+                    <Info className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
+                    <p className="text-[10px] text-blue-600/80 leading-relaxed">
+                      By submitting, you authorize us to review your credit history. Approval usually takes 24-48 hours.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Navigation Buttons */}
+              <div className="flex gap-3 mt-8">
+                {currentStep > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => setCurrentStep((s) => s - 1)}
+                    className="flex-1 py-3 border border-border rounded-xl text-sm font-bold text-foreground hover:bg-muted transition-colors"
+                  >
+                    Back
+                  </button>
+                )}
+                {currentStep < 4 ? (
+                  <button
+                    type="button"
+                    onClick={() => setCurrentStep((s) => s + 1)}
+                    disabled={
+                      (currentStep === 1 && !selectedPlan) ||
+                      (currentStep === 2 && (!selectedAmount || selectedAmount < (selectedPlanData?.minimumAmount || 0) || selectedAmount > (selectedPlanData?.maximumAmount || 0))) ||
+                      (currentStep === 3 && (!formData.firstName || !formData.lastName || !formData.email || !formData.phone || !formData.address || !formData.city || !formData.employmentStatus || !formData.monthlyIncome))
+                    }
+                    className="flex-[2] py-3 bg-primary text-white rounded-xl text-sm font-black hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Continue
+                  </button>
+                ) : (
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="flex-[2] py-3 bg-primary text-white rounded-xl text-sm font-black hover:opacity-90 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" /> Submitting...
+                      </>
+                    ) : (
+                      "Submit Application"
+                    )}
+                  </button>
+                )}
+              </div>
+            </form>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
