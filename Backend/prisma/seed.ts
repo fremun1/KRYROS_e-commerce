@@ -118,8 +118,50 @@ async function main() {
   });
   console.log('  ✔ PayPal (disabled)');
 
-  console.log('\n✅ Checkout payment config seeded successfully!');
-  console.log('   Open the admin panel → Wallet & Payments → Checkout Methods to manage.');
+  // ── 6. Default Credit Plans ──────────────────────────────────────────────
+  const creditPlans = [
+    {
+      id: 'seed-plan-3',
+      name: 'Pay in 3 Months',
+      duration: 3,
+      interestRate: 0,
+      minimumAmount: 100,
+      maximumAmount: 10000,
+      isActive: true,
+      description: 'Spread your payment over 3 months with 0% interest.',
+    },
+    {
+      id: 'seed-plan-6',
+      name: 'Pay in 6 Months',
+      duration: 6,
+      interestRate: 5,
+      minimumAmount: 500,
+      maximumAmount: 20000,
+      isActive: true,
+      description: 'Flexible 6-month plan with low interest.',
+    },
+    {
+      id: 'seed-plan-12',
+      name: 'Pay in 12 Months',
+      duration: 12,
+      interestRate: 10,
+      minimumAmount: 1000,
+      maximumAmount: 50000,
+      isActive: true,
+      description: 'Long-term 12-month financing plan.',
+    },
+  ];
+
+  for (const plan of creditPlans) {
+    await prisma.creditPlan.upsert({
+      where: { id: plan.id },
+      update: {},
+      create: plan,
+    });
+  }
+  console.log('  ✔ Default Credit Plans seeded');
+
+  console.log('\n✅ All configurations seeded successfully!');
 }
 
 main()

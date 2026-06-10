@@ -71,6 +71,7 @@ export default function ApplyCreditPage() {
         ? `${API_BASE}/api/credit/plans?productId=${productId}`
         : `${API_BASE}/api/credit/plans`;
         
+      console.log("Fetching credit plans from:", url);
       const res = await fetch(url);
       if (res.ok) {
         let data = await res.json();
@@ -78,6 +79,7 @@ export default function ApplyCreditPage() {
         
         // Fallback: if no plans found for product, fetch all active plans
         if (plans.length === 0) {
+          console.log("No specific plans found, fetching all active plans as fallback...");
           const fallbackRes = await fetch(`${API_BASE}/api/credit/plans`);
           if (fallbackRes.ok) {
             const fallbackData = await fallbackRes.json();
@@ -85,6 +87,7 @@ export default function ApplyCreditPage() {
           }
         }
         
+        console.log("Final plans loaded:", plans.length);
         setCreditPlans(plans);
       }
     } catch (err) {
