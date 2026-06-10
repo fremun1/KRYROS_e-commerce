@@ -53,47 +53,63 @@ export default function ApplyCreditPage() {
   const [submitError, setSubmitError] = useState("");
   const [submitSuccess, setSubmitSuccess] = useState(false);
 
+  const [product, setProduct] = useState<any>(null);
+  const [productLoading, setProductLoading] = useState(false);
+
   useEffect(() => {
     if (!token) {
-      setLocation("/login");
+      const currentPath = window.location.pathname + window.location.search;
+      setLocation(`/login?redirect=${encodeURIComponent(currentPath)}`);
       return;
     }
-    fetchCreditPlans();
+    fetchData();
   }, [token, setLocation]);
 
-  const fetchCreditPlans = async () => {
-    setPlansLoading(true);
+  const fetchData = async () => {
     const searchParams = new URLSearchParams(window.location.search);
     const productId = searchParams.get("productId");
     
+    setPlansLoading(true);
+    if (productId) setProductLoading(true);
+
     try {
+      // 1. Fetch Product if ID exists
+      if (productId) {
+        const prodRes = await fetch(`${API_BASE}/api/products/${productId}`);
+        if (prodRes.ok) {
+          const prodData = await prodRes.json();
+          setProduct(prodData);
+          if (prodData.price) {
+            setSelectedAmount(Number(prodData.price));
+          }
+        }
+        setProductLoading(false);
+      }
+
+      // 2. Fetch Credit Plans
       const url = productId 
         ? `${API_BASE}/api/credit/plans?productId=${productId}`
         : `${API_BASE}/api/credit/plans`;
         
-      console.log("Fetching credit plans from:", url);
       const res = await fetch(url);
       if (res.ok) {
         let data = await res.json();
         let plans = Array.isArray(data) ? data : data.data ?? [];
         
-        // Fallback: if no plans found for product, fetch all active plans
         if (plans.length === 0) {
-          console.log("No specific plans found, fetching all active plans as fallback...");
           const fallbackRes = await fetch(`${API_BASE}/api/credit/plans`);
           if (fallbackRes.ok) {
             const fallbackData = await fallbackRes.json();
             plans = Array.isArray(fallbackData) ? fallbackData : fallbackData.data ?? [];
           }
         }
-        
-        console.log("Final plans loaded:", plans.length);
         setCreditPlans(plans);
       }
     } catch (err) {
-      console.error("Failed to fetch credit plans:", err);
+      console.error("Failed to fetch data:", err);
     } finally {
       setPlansLoading(false);
+      setProductLoading(false);
     }
   };
 
@@ -166,10 +182,10 @@ export default function ApplyCreditPage() {
       <div className="sticky top-0 z-20 bg-background border-b border-border">
         <div className="max-w-2xl mx-auto px-4 md:px-6 py-4 flex items-center justify-between">
           <button
-            onClick={() => setLocation("/dashboard")}
-            className="flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors"
+            onClick={() => window.history.back()}
+            className="p-2 hover:bg-muted rounded-full transition-colors"
           >
-            <ArrowLeft className="w-4 h-4" /> Back
+            <ArrowLeft className="w-5 h-5 text-foreground" />
           </button>
           <h1 className="text-lg font-black text-foreground">Apply for Credit</h1>
           <div className="w-16" />
@@ -231,6 +247,26 @@ export default function ApplyCreditPage() {
                 <div>
                   <p className="text-sm font-bold text-red-600">Error</p>
                   <p className="text-xs text-red-600/80 mt-0.5">{submitError}</p>
+                </div>
+              </div>
+            )}
+
+            {/* Product Summary */}
+            {product && (
+              <div className="mb-6 p-4 bg-card border border-border rounded-2xl flex items-center gap-4">
+                <div className="w-16 h-16 bg-muted rounded-xl overflow-hidden flex-shrink-0 border border-border">
+                  {product.image ? (
+                    <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                      <CreditCard className="w-6 h-6" />
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider mb-0.5">Applying for</p>
+                  <h3 className="text-sm font-black text-foreground truncate">{product.name}</h3>
+                  <p className="text-sm font-bold text-primary mt-0.5">{format(product.price)}</p>
                 </div>
               </div>
             )}
