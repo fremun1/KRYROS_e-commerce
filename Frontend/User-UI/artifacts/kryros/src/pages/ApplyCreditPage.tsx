@@ -73,8 +73,19 @@ export default function ApplyCreditPage() {
         
       const res = await fetch(url);
       if (res.ok) {
-        const data = await res.json();
-        setCreditPlans(Array.isArray(data) ? data : data.data ?? []);
+        let data = await res.json();
+        let plans = Array.isArray(data) ? data : data.data ?? [];
+        
+        // Fallback: if no plans found for product, fetch general plans
+        if (plans.length === 0 && productId) {
+          const fallbackRes = await fetch(`${API_BASE}/api/credit/plans`);
+          if (fallbackRes.ok) {
+            const fallbackData = await fallbackRes.json();
+            plans = Array.isArray(fallbackData) ? fallbackData : fallbackData.data ?? [];
+          }
+        }
+        
+        setCreditPlans(plans);
       }
     } catch (err) {
       console.error("Failed to fetch credit plans:", err);
