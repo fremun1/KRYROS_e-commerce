@@ -176,7 +176,9 @@ function WholesaleContent() {
         images: Array.isArray(p.images) ? p.images.map((img: any) => img?.url || img || '').filter(Boolean) : [],
         specifications: p.specifications || '',
         rawPrice: p.wholesalePrice || p.price || 0,
-        rawMoq: p.wholesaleMoq || 1
+        rawMoq: p.wholesaleMoq || 1,
+        stockTotal: p.stockTotal || 0,
+        stockCurrent: p.stockCurrent || 0
       })));
     });
   };
