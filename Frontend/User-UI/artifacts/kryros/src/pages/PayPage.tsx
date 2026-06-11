@@ -81,7 +81,7 @@ function SecureFooter() {
   );
 }
 
-function AmountSummaryBar({ amount, fee, currency }: { amount: number; fee: number; currency: string }) {
+function AmountSummaryBar({ amount, fee, currency, format }: { amount: number; fee: number; currency: string; format: (val: number) => string }) {
   return (
     <div className="border-t border-border pt-4 mt-2 space-y-1.5">
       <div className="flex items-center justify-between text-xs">
@@ -883,7 +883,7 @@ export default function PayPage() {
                     </div>
                   )}
 
-                  <AmountSummaryBar amount={amount} fee={fee} currency={currency} />
+                  <AmountSummaryBar amount={amount} fee={fee} currency={currency} format={format} />
 
                   <button
                     onClick={handleMobileMoneyPay}
@@ -955,7 +955,7 @@ export default function PayPage() {
                       />
                     </label>
                   </div>
-                  <AmountSummaryBar amount={amount} fee={fee} currency={currency} />
+                  <AmountSummaryBar amount={amount} fee={fee} currency={currency} format={format} />
                   <button
                     onClick={() => setPayStatus("waiting")}
                     className="w-full py-4 bg-primary text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-primary/90 active:scale-95 transition-all"
@@ -979,7 +979,7 @@ export default function PayPage() {
                       You will be redirected to WhatsApp to complete your payment securely.
                     </p>
                   </div>
-                  <AmountSummaryBar amount={amount} fee={fee} currency={currency} />
+                  <AmountSummaryBar amount={amount} fee={fee} currency={currency} format={format} />
                   <button
                     onClick={handleWhatsAppPay}
                     className="w-full py-4 bg-[var(--kryros-primary-hover)] text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-[#1ebe5d] active:scale-95 transition-all"
@@ -1031,7 +1031,7 @@ export default function PayPage() {
                       className="w-full border border-border rounded-2xl px-3.5 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/30 bg-background text-foreground"
                     />
                   </div>
-                  <AmountSummaryBar amount={amount} fee={fee} currency={currency} />
+                  <AmountSummaryBar amount={amount} fee={fee} currency={currency} format={format} />
                   <button
                     className="w-full py-4 bg-primary text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-primary/90 active:scale-95 transition-all"
                   >
@@ -1045,7 +1045,7 @@ export default function PayPage() {
               {openMethod === "apple" && (
                 <div className="space-y-4">
                   <p className="text-xs text-center text-muted-foreground">Authenticate with Face ID or Touch ID to complete payment.</p>
-                  <AmountSummaryBar amount={amount} fee={fee} currency={currency} />
+                  <AmountSummaryBar amount={amount} fee={fee} currency={currency} format={format} />
                   <button
                     className="w-full py-4 rounded-2xl font-bold text-base flex items-center justify-center gap-2 hover:opacity-90 active:scale-95 transition-all"
                     style={{ background: "#000", color: "#fff" }}
@@ -1060,7 +1060,7 @@ export default function PayPage() {
               {openMethod === "google" && (
                 <div className="space-y-4">
                   <p className="text-xs text-center text-muted-foreground">You'll be redirected to Google Pay to complete your payment.</p>
-                  <AmountSummaryBar amount={amount} fee={fee} currency={currency} />
+                  <AmountSummaryBar amount={amount} fee={fee} currency={currency} format={format} />
                   <button
                     className="w-full py-4 rounded-2xl font-bold text-base flex items-center justify-center gap-2 hover:opacity-90 active:scale-95 transition-all border border-border"
                     style={{ background: "#fff", color: "#000" }}

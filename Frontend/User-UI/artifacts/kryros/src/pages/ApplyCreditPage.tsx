@@ -68,8 +68,11 @@ export default function ApplyCreditPage() {
     const productId = searchParams.get("productId");
     
     try {
-      // Simply fetch all active plans to ensure they show up
-      const res = await fetch(`${API_BASE}/api/credit/plans`);
+      // Fetch credit plans, optionally filtered by productId
+      const plansUrl = productId 
+        ? `${API_BASE}/api/credit/plans?productId=${encodeURIComponent(productId)}`
+        : `${API_BASE}/api/credit/plans`;
+      const res = await fetch(plansUrl);
       if (res.ok) {
         const data = await res.json();
         const plans = Array.isArray(data) ? data : data.data ?? [];
