@@ -52,7 +52,7 @@
     "posthog-js": "^1.376.3",
     "react": "19.2.3",
     "react-day-picker": "^9.13.0",
-    "react-dom": "19.2.3",
+    "react-dom": "19.2.7",
     "react-hook-form": "^7.71.1",
     "react-hot-toast": "^2.6.0",
     "react-resizable-panels": "^4.4.1",
