@@ -15,7 +15,6 @@ export class LoginDto {
   @IsNotEmpty()
   @MinLength(6)
   @MaxLength(128)
-  // Note: intentionally NOT trimmed — passwords may contain intentional leading/trailing spaces
   password!: string;
 
   // Optional during migration — required once all client apps send the token

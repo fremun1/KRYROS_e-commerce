@@ -19,7 +19,6 @@ export class CreateUserDto {
   @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).*$/, {
     message: 'Password must contain at least one uppercase letter, one lowercase letter, and one number',
   })
-  // Note: intentionally NOT trimmed — passwords may contain intentional leading/trailing spaces
   password!: string;
 
   @ApiProperty({ example: 'John' })
