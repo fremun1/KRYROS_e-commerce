@@ -39,7 +39,7 @@ dependencies:
   webview_flutter: ^4.11.0
   
   # For SVG support
-  flutter_svg: ^2.0.10+1
+  flutter_svg: ^2.3.0
 
   # For launching external apps (WhatsApp, Phone, Email)
   url_launcher: ^6.3.1
