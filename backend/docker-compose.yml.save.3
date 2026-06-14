@@ -1,0 +1,39 @@
+version: '3.8'
+services:
+  postgres_db:
+    image: postgres:16-alpine
+    container_name: production_db
+    restart: always
+    environment:
+      POSTGRES_USER: kryros_admin
+      POSTGRES_PASSWORD: @0969597029Golden
+      POSTGRES_DB: kryros_prod_db
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    deploy:
+      resources:
+        limits:
+          memory: 800M
+
+  nestjs_api:
+    image: node:20-alpine
+    container_name: nestjs_backend
+    restart: always
+    ports:
+      - "80:3000"
+    working_dir: /app
+    volumes:
+      - .:/app
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgres://kryros_admin:@0969597029Golden@postgres_db:5432/kryros_prod_db
+      TZ: "Africa/Lusaka"
+    command: sh -c "npm install && npm run build && npm run start:prod"
+    depends_on:
+      - postgres_db
+
+volumes:
+  pgdata:
+@0969597029Golden
