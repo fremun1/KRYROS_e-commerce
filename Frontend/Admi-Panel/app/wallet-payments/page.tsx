@@ -32,7 +32,7 @@ const METHOD_TYPES: { value:string; label:string }[] = [
   { value:'digital_wallet',label:'Digital Wallet'},
 ];
 
-const FRONTEND_PAYMENT_URL = 'https://kryros.com/pay';
+const FRONTEND_PAYMENT_URL = (process.env.NEXT_PUBLIC_FRONTEND_URL || "") + "/pay";
 
 const STATUS_COLOR: Record<string,string> = {
   Completed:'#1FA89A', Active:'#1FA89A', Yes:'#1FA89A',

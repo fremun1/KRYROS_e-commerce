@@ -106,7 +106,7 @@ async function bootstrap() {
 
   // CORS — explicit allowlist with wildcard subdomain support (e.g. https://*.replit.dev)
   const rawOrigins = process.env.CORS_ORIGINS || (isProd
-    ? 'https://kryros-interface.onrender.com,https://kryrosadmin-iqcj.onrender.com'
+    ? ''
     : 'http://localhost:3000,http://localhost:3001,http://localhost:5000');
   const corsList = rawOrigins
     .split(',')

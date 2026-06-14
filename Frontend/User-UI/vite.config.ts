@@ -76,7 +76,7 @@ export default defineConfig({
     allowedHosts: true,
     proxy: {
       "/api": {
-        target: process.env.BACKEND_URL || "https://kryrosbackend-rwb2.onrender.com",
+        target: process.env.BACKEND_URL,
         changeOrigin: true,
         secure: false,
       },

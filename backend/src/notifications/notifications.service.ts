@@ -443,7 +443,7 @@ export class NotificationsService implements OnModuleInit {
         firstName,
         orderNumber: order.orderNumber,
         status,
-        trackingUrl: `${this.configService.get('FRONTEND_URL') || 'https://kryros-interface.onrender.com'}/orders/${orderId}`,
+        trackingUrl: `${this.configService.get('FRONTEND_URL')}/orders/${orderId}`,
       }).catch(e => this.logger.warn(`Email notification failed for order ${order.orderNumber}: ${e.message}`));
     }
 
@@ -504,7 +504,7 @@ export class NotificationsService implements OnModuleInit {
           currency,
           paymentMethod: (order.paymentMethod || 'Standard').replace(/_/g, ' '),
           shippingAddress: shippingAddr,
-          trackingUrl: `${this.configService.get('FRONTEND_URL') || 'https://kryros-interface.onrender.com'}/orders/${orderId}`,
+          trackingUrl: `${this.configService.get('FRONTEND_URL')}/orders/${orderId}`,
         }).catch(e => this.logger.warn(`Order confirmation email failed for ${order.orderNumber}: ${e.message}`));
 
         // Auto-register customer as an email contact for future blasts
