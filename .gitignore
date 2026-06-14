@@ -41,3 +41,7 @@ backend/
 frontend/
 backup.sql
 frontend-dist.zip
+backend/
+frontend/
+backup.sql
+frontend-dist.zip
