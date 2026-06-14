@@ -263,6 +263,7 @@ export default function PayPage() {
 
   const amount = parseFloat(rawAmount) || 0;
   const [feeRate, setFeeRate] = useState(0.01);
+  const [feeRate, setFeeRate] = useState(0.01);
   const fee = Math.round(amount * feeRate * 100) / 100;
   const total = amount + fee;
   
