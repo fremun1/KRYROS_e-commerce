@@ -155,6 +155,7 @@ export default function CheckoutPage() {
 
   const SUBTOTAL = cartItems.reduce((s, i) => s + i.price * i.qty, 0);
   const DISCOUNT = 0;
+  const [feeRate, setFeeRate] = useState(0);
   const PROCESSING_FEE = SUBTOTAL * feeRate;
   const total = SUBTOTAL - DISCOUNT + PROCESSING_FEE + shippingPrice;
 
@@ -220,7 +221,6 @@ export default function CheckoutPage() {
   const [bankProviders, setBankProviders]   = useState<{ name: string; config?: { accountName?: string; accountNumber?: string } }[]>([]);
   const [mobileNetworks, setMobileNetworks] = useState<string[]>(["MTN", "Airtel", "Zamtel", "M-Pesa"]);
   const [apiMethodTypes, setApiMethodTypes] = useState<string[]>([]);
-  const [feeRate, setFeeRate] = useState(0);
 
   useEffect(() => {
     fetch(`${API_BASE}/api/payment-config/public`)

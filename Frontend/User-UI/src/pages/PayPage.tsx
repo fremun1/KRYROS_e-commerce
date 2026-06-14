@@ -262,6 +262,7 @@ export default function PayPage() {
   const [openMethod, setOpenMethod] = useState<string | null>(null);
 
   const amount = parseFloat(rawAmount) || 0;
+  const [feeRate, setFeeRate] = useState(0.01);
   const fee = Math.round(amount * feeRate * 100) / 100;
   const total = amount + fee;
   
@@ -285,7 +286,6 @@ export default function PayPage() {
   const [bankProviders, setBankProviders] = useState<{ name:string; config?:{ accountName?:string; accountNumber?:string } }[]>([]);
   const [mobileNetworks, setMobileNetworks] = useState<string[]>(["MTN", "Airtel", "Zamtel"]);
   const [apiMethodTypes, setApiMethodTypes] = useState<string[]>([]);
-  const [feeRate, setFeeRate] = useState(0.01);
 
   useEffect(() => {
     fetch(`${API_BASE}/api/payment-config/public`)
