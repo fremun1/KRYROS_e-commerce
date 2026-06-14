@@ -256,8 +256,8 @@ function SettingsContent() {
         <div>
           <SectionTitle title="Store Settings" sub="Configure your eCommerce store options" />
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0 20px' }} className="fg">
-            <Field label="Store URL"><input style={inputStyle} defaultValue="https://kryrosfrontendv2.onrender.com" /></Field>
-            <Field label="Admin Panel URL"><input style={inputStyle} defaultValue="https://kryros-admin.codewords.run" /></Field>
+            <Field label="Store URL"><input style={inputStyle} defaultValue="https://kryros.com" /></Field>
+            <Field label="Admin Panel URL"><input style={inputStyle} defaultValue="https://admin.kryros.com" /></Field>
             <Field label="Processing Fees Rate (%)"><input style={inputStyle} type="number" value={processingFeeRate} onChange={e=>setProcessingFeeRate(e.target.value)} /></Field>
             <Field label="Min Order Amount"><input style={inputStyle} type="number" defaultValue="20" /></Field>
             <Field label="Items Per Page"><input style={inputStyle} type="number" defaultValue="20" /></Field>

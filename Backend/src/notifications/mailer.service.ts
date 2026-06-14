@@ -84,7 +84,7 @@ export class MailerService {
     trackingUrl?: string;
   }): string {
     const { firstName, orderNumber, total, currency, paymentMethod, shippingAddress, trackingUrl } = params;
-    const appUrl = this.configService.get('FRONTEND_URL') || 'https://kryros-interface.onrender.com';
+    const appUrl = this.configService.get('FRONTEND_URL') || 'https://kryros.com';
     return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Order Confirmed - KRYROS</title><style>${BASE_STYLES}</style></head>
 <body><div class="wrapper"><div class="card">
   <div class="header">
@@ -121,7 +121,7 @@ export class MailerService {
     trackingUrl?: string;
   }): string {
     const { firstName, orderNumber, status, statusMessage, statusEmoji, statusColor, trackingUrl } = params;
-    const appUrl = this.configService.get('FRONTEND_URL') || 'https://kryros-interface.onrender.com';
+    const appUrl = this.configService.get('FRONTEND_URL') || 'https://kryros.com';
     return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Order Update - KRYROS</title><style>${BASE_STYLES}</style></head>
 <body><div class="wrapper"><div class="card">
   <div class="header">
@@ -154,7 +154,7 @@ export class MailerService {
     ctaUrl?: string;
   }): string {
     const { firstName, subject, headline, bodyHtml, ctaText, ctaUrl } = params;
-    const appUrl = this.configService.get('FRONTEND_URL') || 'https://kryros-interface.onrender.com';
+    const appUrl = this.configService.get('FRONTEND_URL') || 'https://kryros.com';
     return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${subject} - KRYROS</title><style>${BASE_STYLES}</style></head>
 <body><div class="wrapper"><div class="card">
   <div class="header">
@@ -251,7 +251,7 @@ export class MailerService {
   }
   // ─── Newsletter: Welcome Email ────────────────────────────────────────────
   async sendNewsletterWelcome(email: string): Promise<void> {
-    const appUrl = this.configService.get('FRONTEND_URL') || 'https://kryros-interface.onrender.com';
+    const appUrl = this.configService.get('FRONTEND_URL') || 'https://kryros.com';
     const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Welcome to KRYROS Newsletter</title><style>${BASE_STYLES}
   .nl-highlight { background: linear-gradient(135deg, #1FA89A22, #27B9AF11); border: 1px solid #1FA89A44; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
   .nl-item { display: flex; align-items: center; gap: 10px; font-size: 13px; color: #475569; margin-bottom: 10px; }
@@ -289,7 +289,7 @@ export class MailerService {
 
   // ─── Newsletter: Bulk Send ────────────────────────────────────────────────
   async sendNewsletterEmail(to: string, subject: string, body: string): Promise<void> {
-    const appUrl = this.configService.get('FRONTEND_URL') || 'https://kryros-interface.onrender.com';
+    const appUrl = this.configService.get('FRONTEND_URL') || 'https://kryros.com';
     // Convert plain text body to basic HTML paragraphs
     const bodyHtml = body
       .split('\n')

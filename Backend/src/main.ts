@@ -104,9 +104,9 @@ async function bootstrap() {
   app.use(json({ limit: '10mb' }));
   app.use(urlencoded({ limit: '10mb', extended: true }));
 
-  // CORS — explicit allowlist with wildcard subdomain support (e.g. https://*.replit.dev)
+  // CORS - explicit allowlist
   const rawOrigins = process.env.CORS_ORIGINS || (isProd
-    ? 'https://kryros-interface.onrender.com,https://kryrosadmin-iqcj.onrender.com'
+    ? 'https://kryros.com,https://www.kryros.com,https://admin.kryros.com'
     : 'http://localhost:3000,http://localhost:3001,http://localhost:5000');
   const corsList = rawOrigins
     .split(',')

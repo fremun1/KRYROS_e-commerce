@@ -2,22 +2,16 @@
 
 A comprehensive multi-service commerce + fintech platform for **KRYROS MOBILE TECH LIMITED**.
 
-## 📦 GitHub Repository
-https://github.com/StarkTol/KRYROS_MOBILE_PROJECT
-
----
-
 ## 🏗️ Project Structure
 
 ```
-KRYROS_MOBILE_PROJECT/
-├── Backend/                 # NestJS API Server
-│   ├── prisma/             # Database schema (50+ models)
+KRYROS_e-commerce/
+├── Backend/                 # NestJS API Server (api.kryros.com)
+│   ├── prisma/             # Database schema
 │   └── src/                # API modules
 ├── Frontend/
-│   ├── User-UI/           # Customer-facing app
-│   └── Admi-Panel/        # Admin dashboard
-└── render.yaml            # Render.com deployment config
+│   ├── User-UI/           # Customer-facing app (kryros.com)
+│   └── Admi-Panel/        # Admin dashboard (admin.kryros.com)
 ```
 
 ---
@@ -36,8 +30,8 @@ KRYROS_MOBILE_PROJECT/
 ### 1. Clone & Install
 
 ```bash
-git clone https://github.com/StarkTol/KRYROS_MOBILE_PROJECT.git
-cd KRYROS_MOBILE_PROJECT
+git clone https://github.com/fremun1/KRYROS_e-commerce.git
+cd KRYROS_e-commerce
 ```
 
 ### 2. Backend Setup
@@ -55,7 +49,7 @@ npx prisma migrate dev
 
 # Start backend
 npm run start:dev
-# Backend runs on http://localhost:3000
+# Backend runs on http://localhost:8080
 ```
 
 ### 3. Frontend Setup (User UI)
@@ -64,12 +58,9 @@ npm run start:dev
 cd Frontend/User-UI
 npm install
 
-# Copy and configure environment
-cp .env.example .env
-
 # Start development server
 npm run dev
-# User UI runs on http://localhost:3000
+# User UI runs on http://localhost:5000
 ```
 
 ### 4. Frontend Setup (Admin Panel)
@@ -78,45 +69,25 @@ npm run dev
 cd Frontend/Admi-Panel
 npm install
 npm run dev
-# Admin Panel runs on http://localhost:3001
+# Admin Panel runs on http://localhost:3000
 ```
 
 ---
 
-## 🔧 Deployment on Render.com
+## 🔧 Deployment (DigitalOcean / VPS)
 
-### Prerequisites
-1. Create a Render.com account
-2. Create a PostgreSQL database on Render
+### Backend
+1. Set up a Node.js environment on your VPS.
+2. Use PM2 to manage the NestJS process.
+3. Configure Nginx as a reverse proxy for `api.kryros.com` pointing to port `8080`.
 
-### Manual Deployment Steps
+### Frontend (User UI)
+1. Build the project: `npm run build`.
+2. Serve the `dist/public` folder using Nginx for `kryros.com`.
 
-1. **Deploy Backend:**
-   - Create new Web Service
-   - Build Command: `cd Backend && npm install && npx prisma generate`
-   - Start Command: `cd Backend && npm run start:prod`
-   - Add Environment Variables:
-     - `DATABASE_URL`: Your Neon PostgreSQL connection string
-     - `JWT_SECRET`: A random secure string
-
-2. **Deploy User UI:**
-   - Create new Web Service
-   - Build Command: `cd Frontend/User-UI && npm install && npm run build`
-   - Start Command: `cd Frontend/User-UI && npm run start`
-   - Add Environment Variables:
-     - `NEXT_PUBLIC_API_URL`: Your backend API base (e.g., https://kryrosbackend-hxfp.onrender.com/api)
-     - `NEXT_PUBLIC_FRONTEND_URL`: https://kryros.com
-     - `NEXT_PUBLIC_ADMIN_URL`: https://kryrosadmin.onrender.com
-
-3. **Deploy Admin Panel:**
-   - Create new Web Service  
-   - Build Command: `cd Frontend/Admi-Panel && npm install && npm run build`
-   - Start Command: `cd Frontend/Admi-Panel && npm run start`
-   - Add Environment Variables:
-     - `NEXT_PUBLIC_API_URL`: Your backend API base (e.g., https://kryrosbackend-hxfp.onrender.com/api)
-
-### Or Use render.yaml
-The `render.yaml` file contains the deployment configuration. Connect your GitHub repo to Render and it will auto-detect the configuration.
+### Admin Panel
+1. Build the project: `npm run build`.
+2. Serve the output using Nginx for `admin.kryros.com`.
 
 ---
 
@@ -124,20 +95,23 @@ The `render.yaml` file contains the deployment configuration. Connect your GitHu
 
 ### Backend
 ```env
+PORT=8080
+NODE_ENV=production
 FRONTEND_URL=https://kryros.com
-CORS_ORIGINS=https://kryros.com,https://www.kryros.com,https://kryrosweb-dr6p.onrender.com,https://kryrosadmin.onrender.com
+CORS_ORIGINS=https://kryros.com,https://www.kryros.com,https://admin.kryros.com
 DATABASE_URL=...
 JWT_SECRET=...
 ```
 
-### Frontend (User UI & Admin)
+### Frontend (User UI)
 ```env
-NEXT_PUBLIC_API_URL=https://kryrosbackend-hxfp.onrender.com/api
-NEXT_PUBLIC_FRONTEND_URL=https://kryros.com
-NEXT_PUBLIC_ADMIN_URL=https://kryrosadmin.onrender.com
+VITE_API_URL=https://api.kryros.com
 ```
 
-Tip: copy the provided .env.example files in each app to .env.local or .env.production as needed.
+### Admin Panel
+```env
+NEXT_PUBLIC_API_URL=https://api.kryros.com
+```
 
 ---
 
@@ -145,11 +119,10 @@ Tip: copy the provided .env.example files in each app to .env.local or .env.prod
 
 | Layer | Technology |
 |-------|------------|
-| Frontend | Next.js 14, Tailwind CSS, Framer Motion |
+| Frontend | Vite (User-UI), Next.js (Admin), Tailwind CSS |
 | Backend | NestJS, Prisma ORM |
-| Database | PostgreSQL (Neon) |
+| Database | PostgreSQL |
 | Auth | JWT |
-| Payments | Paystack, Flutterwave |
 
 ---
 
