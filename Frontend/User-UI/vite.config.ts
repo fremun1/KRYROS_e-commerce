@@ -1,6 +1,5 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
-import tailwindcss from "@tailwindcss/vite";
 import path from "path";
 
 const rawPort = process.env.PORT ?? "5000";
@@ -15,13 +14,10 @@ export default defineConfig({
   base: basePath,
   plugins: [
     react(),
-    tailwindcss(),
-
   ],
   resolve: {
     alias: {
       "@": path.resolve(import.meta.dirname, "src"),
-      "@assets": path.resolve(import.meta.dirname, "..", "..", "attached_assets"),
     },
     dedupe: ["react", "react-dom"],
   },
@@ -30,18 +26,12 @@ export default defineConfig({
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
     sourcemap: false,
-    // ── Chunk splitting — browser caches vendor chunks independently ──────
-    // On re-deploy, only changed app chunks need to be re-downloaded.
     rollupOptions: {
       output: {
         manualChunks: {
-          // React runtime — almost never changes
           "vendor-react": ["react", "react-dom"],
-          // Routing
           "vendor-router": ["wouter"],
-          // Data fetching — large but stable
           "vendor-query": ["@tanstack/react-query"],
-          // All Radix UI components bundled together
           "vendor-radix": [
             "@radix-ui/react-accordion",
             "@radix-ui/react-alert-dialog",
@@ -61,25 +51,19 @@ export default defineConfig({
             "@radix-ui/react-toast",
             "@radix-ui/react-tooltip",
           ],
-          // Animation — heavy, lazy split
           "vendor-motion": ["framer-motion"],
-          // Charts — only loaded on chart pages
           "vendor-charts": ["recharts"],
-          // Icons
           "vendor-icons": ["lucide-react"],
-          // Forms
           "vendor-forms": ["react-hook-form", "@hookform/resolvers"],
         },
       },
     },
-    // Warn if any chunk exceeds 500 KB
     chunkSizeWarningLimit: 500,
   },
   server: {
     port: resolvedPort,
     strictPort: true,
     host: "0.0.0.0",
-    allowedHosts: true,
     fs: { strict: true },
     proxy: {
       "/api": {
@@ -92,6 +76,5 @@ export default defineConfig({
   preview: {
     port: resolvedPort,
     host: "0.0.0.0",
-    allowedHosts: true,
   },
 });
