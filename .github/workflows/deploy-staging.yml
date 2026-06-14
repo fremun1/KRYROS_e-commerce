@@ -1,0 +1,36 @@
+name: Deploy to Staging
+
+on:
+  push:
+    branches:
+      - staging
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            set -e
+            echo "=== Pulling latest code ==="
+            cd /app/staging && git pull origin staging
+
+            echo "=== Installing backend deps ==="
+            cd /app/staging/Backend && npm install
+
+            echo "=== Building User-UI ==="
+            cd /app/staging/Frontend/User-UI && npm install && npm run build
+
+            echo "=== Building Admin Panel ==="
+            cd /app/staging/Frontend/Admi-Panel && npm install && npm run build
+
+            echo "=== Restarting services ==="
+            pm2 restart staging-backend
+            pm2 restart stagingadmin
+
+            echo "=== Deployment complete ==="
