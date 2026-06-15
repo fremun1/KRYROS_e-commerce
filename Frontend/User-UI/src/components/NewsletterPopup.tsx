@@ -99,7 +99,8 @@ export default function NewsletterPopup() {
           style={{
             position: "absolute", top: 12, right: 12,
             width: 38, height: 38,
-            background: "var(--kryros-dark-card)",
+            background: "rgba(15, 23, 42, 0.72)",
+            backdropFilter: "blur(4px)",
             borderRadius: 10,
             border: "none",
             display: "flex", alignItems: "center", justifyContent: "center",
@@ -125,10 +126,10 @@ export default function NewsletterPopup() {
             }}>
               <CheckCircle size={32} color="white" />
             </div>
-            <h3 style={{ fontSize: 22, fontWeight: 800, color: "var(--kryros-light-text-main)", marginBottom: 8 }}>
+            <h3 style={{ fontSize: 22, fontWeight: 800, color: "hsl(var(--foreground))", marginBottom: 8 }}>
               You're subscribed!
             </h3>
-            <p style={{ fontSize: 14, color: "var(--kryros-light-text-muted)", lineHeight: 1.55 }}>
+            <p style={{ fontSize: 14, color: "hsl(var(--muted-foreground))", lineHeight: 1.55 }}>
               Welcome to KRYROS updates. Check your inbox for a welcome email!
             </p>
           </div>
@@ -160,13 +161,13 @@ export default function NewsletterPopup() {
             {/* Form area */}
             <div style={{ padding: "20px 22px 22px", background: "white" }}>
               {/* Subheading */}
-              <p style={{ fontSize: 13.5, color: "var(--kryros-dark-text-secondary)", lineHeight: 1.6, marginBottom: 10, marginRight: 8 }}>
+              <p style={{ fontSize: 13.5, color: "hsl(var(--muted-foreground))", lineHeight: 1.6, marginBottom: 10, marginRight: 8 }}>
                 {config?.subheading}
               </p>
 
               {/* Main heading */}
               <h2 style={{
-                fontSize: 30, fontWeight: 900, color: "var(--kryros-light-text-main)",
+                fontSize: 30, fontWeight: 900, color: "hsl(var(--foreground))",
                 lineHeight: 1.08, marginBottom: 18, letterSpacing: "-0.5px",
               }}>
                 {config?.heading}
@@ -179,15 +180,17 @@ export default function NewsletterPopup() {
                 onChange={(e) => { setEmail(e.target.value); setError(""); }}
                 onKeyDown={(e) => e.key === "Enter" && handleSubscribe()}
                 placeholder={config.placeholder || "Your E-mail"}
+                className="placeholder:text-slate-400"
                 style={{
                   display: "block",
                   width: "100%",
                   padding: "13px 14px",
-                  fontSize: 14, color: "var(--kryros-light-text-main)",
-                  border: "1.5px solid var(--kryros-light-border)",
+                  fontSize: 14, color: "hsl(var(--foreground))",
+                  border: "1.5px solid hsl(var(--border))",
                   borderRadius: 10,
                   outline: "none",
                   background: "white",
+                  boxShadow: "0 1px 2px rgba(15, 23, 42, 0.04)",
                   fontFamily: "inherit",
                   boxSizing: "border-box",
                   marginBottom: error ? 6 : 10,
@@ -209,7 +212,7 @@ export default function NewsletterPopup() {
                   gap: 6,
                   width: "100%",
                   padding: "13px 20px",
-                  background: "var(--kryros-light-text-main)",
+                  background: "var(--kryros-primary)",
                   color: "white",
                   fontSize: 14, fontWeight: 700,
                   border: "none",
@@ -220,9 +223,10 @@ export default function NewsletterPopup() {
                   transition: "background 0.2s",
                   marginBottom: 10,
                   boxSizing: "border-box",
+                  boxShadow: "0 10px 24px rgba(var(--kryros-primary-rgb), 0.24)",
                 }}
-                onMouseEnter={(e) => !loading && (e.currentTarget.style.background = "#1a2d5a")}
-                onMouseLeave={(e) => (e.currentTarget.style.background = "var(--kryros-light-text-main)")}
+                onMouseEnter={(e) => !loading && (e.currentTarget.style.background = "var(--kryros-primary-hover)")}
+                onMouseLeave={(e) => (e.currentTarget.style.background = "var(--kryros-primary)")}
               >
                 {loading && <Loader2 size={14} className="animate-spin" />}
                 {config.button_text || "Submit"}
