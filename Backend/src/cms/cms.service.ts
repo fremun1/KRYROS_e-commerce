@@ -1,5 +1,6 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { ConfigService } from '@nestjs/config';
 import type { Cache } from 'cache-manager';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateBannerDto } from './dto/create-banner.dto';
@@ -18,6 +19,7 @@ import { UpdateHomePageSectionDto } from './dto/update-homepage-section.dto';
 export class CMSService {
   constructor(
     private prisma: PrismaService,
+    private readonly configService: ConfigService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
