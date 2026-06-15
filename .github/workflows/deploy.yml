@@ -1,0 +1,44 @@
+name: Deploy to DigitalOcean
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.DO_HOST }}
+          username: ${{ secrets.DO_USERNAME }}
+          key: ${{ secrets.DO_SSH_KEY }}
+          passphrase: ${{ secrets.DO_SSH_PASSPHRASE }}
+          script: |
+            cd /var/www/KRYROS_e-commerce || exit
+            git pull origin main
+            
+            # Backend Setup
+            cd backend
+            npm install
+            npm run build
+            npx prisma generate
+            # Restart backend (assuming pm2 is used)
+            pm2 restart kryros-backend || pm2 start dist/main.js --name kryros-backend
+            
+            # Frontend Admin Panel Setup
+            cd ../Frontend/Admi-Panel
+            npm install
+            npm run build
+            # Restart Admin Panel (assuming pm2 is used)
+            pm2 restart kryros-admin || pm2 start npm --name "kryros-admin" -- start
+            
+            # Frontend User UI Setup
+            cd ../User-UI
+            npm install
+            npm run build
+            # Usually served via Nginx, so just building is enough if Nginx points to dist/
