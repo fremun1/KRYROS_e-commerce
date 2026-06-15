@@ -6,6 +6,13 @@ import { useCurrencyStore } from "@/store/currencyStore";
 import { API_BASE, fetchMatchingShippingMethods, fetchSettings, ApiShippingMethod } from "@/lib/api";
 import { toast } from "sonner";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Check,
   CreditCard,
   Smartphone,
@@ -586,13 +593,18 @@ export default function CheckoutPage() {
                   <span className="text-[10px] text-muted-foreground font-normal ml-1">(optional if email provided)</span>
                 </label>
                 <div className="flex gap-2">
-                  <div className="flex items-center rounded-xl border border-border bg-muted/40 overflow-hidden min-w-[115px]">
-                    <input value={phoneCountry.dial} onChange={(e) => setPhoneCountry((prev) => ({ ...prev, dial: e.target.value }))} placeholder="+260" type="tel" className="w-full px-3 py-3.5 bg-transparent text-sm font-semibold text-foreground outline-none" />
-                    <button type="button" onClick={() => { setShowCountryPicker(true); setCountrySearch(""); }} className="px-2 py-3.5 hover:bg-muted transition-colors border-l border-border flex-shrink-0">
-                      <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
-                    </button>
+                  <button
+                    type="button"
+                    onClick={() => { setShowCountryPicker(true); setCountrySearch(""); }}
+                    className="w-[88px] sm:w-[96px] px-3 py-3.5 rounded-xl border border-border bg-muted/40 hover:bg-muted/70 transition-colors flex items-center justify-between flex-shrink-0"
+                  >
+                    <span className="text-sm font-semibold text-foreground leading-none">{phoneCountry.dial}</span>
+                    <span className="w-px h-5 bg-border/80 mx-2" />
+                    <ChevronDown className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                  </button>
+                  <div className="flex-1">
+                    <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone number" type="tel" className="w-full px-4 py-3.5 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
                   </div>
-                  <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone number" type="tel" className="w-full px-4 py-3.5 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
                 </div>
               </div>
 
@@ -653,26 +665,29 @@ export default function CheckoutPage() {
                 <label className="flex items-center gap-1 text-[11px] font-semibold text-muted-foreground">
                   <Globe className="w-3 h-3" />Country
                 </label>
-                <div className="relative">
-                  <select
-                    value={country}
-                    onChange={(e) => setCountry(e.target.value)}
-                    className="w-full px-4 py-3.5 pr-8 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary appearance-none transition-all"
+                <Select value={country} onValueChange={setCountry}>
+                  <SelectTrigger
+                    className="h-[50px] rounded-xl border-border bg-background px-4 text-sm shadow-none focus:ring-2 focus:ring-primary/40 focus:border-primary"
                   >
-                    <option value="">Select your country...</option>
-                    {shippingCountries.length > 0
-                      ? shippingCountries.map((c) =>
-                          c.isActive && c.shippingEnabled ? (
-                            <option key={c.code} value={c.name}>{c.name}</option>
-                          ) : (
-                            <option key={c.code} value={c.name} disabled>{c.name} (Coming soon)</option>
-                          )
-                        )
-                      : <option value="Zambia">Zambia</option>
-                    }
-                  </select>
-                  <ChevronDown className="w-3 h-3 text-muted-foreground absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                </div>
+                    <SelectValue placeholder="Select your country..." />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl border-border">
+                    {shippingCountries.length > 0 ? (
+                      shippingCountries.map((c) => (
+                        <SelectItem
+                          key={c.code}
+                          value={c.name}
+                          disabled={!c.isActive || !c.shippingEnabled}
+                          className="py-2.5"
+                        >
+                          {!c.isActive || !c.shippingEnabled ? `${c.name} (Coming soon)` : c.name}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="Zambia">Zambia</SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
