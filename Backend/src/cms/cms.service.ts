@@ -950,8 +950,8 @@ export class CMSService {
       data: {
         description:
           'Your trusted source for phones, electronics, accessories, software, and technology services in Zambia and beyond.',
-        contactPhone: '+260 966 423 719',
-        contactEmail: 'kryrosmobile@gmail.com',
+        contactPhone: this.configService.get('CONTACT_PHONE', '+260 966 423 719'),
+        contactEmail: this.configService.get('CONTACT_EMAIL', 'kryrosmobile@gmail.com'),
         contactAddress: 'Lusaka, Zambia',
         newsletterTitle: 'Subscribe to our Newsletter',
         newsletterSubtitle: 'Get the latest deals and updates directly to your inbox',

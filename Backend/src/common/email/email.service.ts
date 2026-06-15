@@ -16,7 +16,8 @@ export class EmailService {
     const pass = configService.get<string>('SMTP_PASS');
     const fromName = configService.get<string>('EMAIL_FROM_NAME', 'KRYROS Platform');
 
-    this.fromAddress = user ? `"${fromName}" <${user}>` : `"${fromName}" <noreply@kryros.com>`;
+    const mailFrom = configService.get<string>('MAIL_FROM');
+    this.fromAddress = mailFrom || (user ? `"${fromName}" <${user}>` : `"${fromName}" <noreply@kryros.com>`);
 
     if (user && pass) {
       this.transporter = nodemailer.createTransport({
@@ -35,7 +36,11 @@ export class EmailService {
   }
 
   async sendPasswordReset(to: string, rawToken: string): Promise<void> {
-    const appUrl = this.configService.get<string>('APP_URL', 'https://kryros.com');
+    const appUrl = this.configService.get<string>('APP_URL') || this.configService.get<string>('FRONTEND_URL');
+    if (!appUrl) {
+      this.logger.error('APP_URL/FRONTEND_URL environment variable is missing');
+      throw new Error('APP_URL/FRONTEND_URL environment variable is missing');
+    }
     const link = `${appUrl}/reset-password?token=${rawToken}`;
 
     await this.send(to, 'Reset Your KRYROS Password', `
@@ -52,7 +57,11 @@ export class EmailService {
   }
 
   async sendEmailVerification(to: string, rawToken: string): Promise<void> {
-    const appUrl = this.configService.get<string>('APP_URL', 'https://kryros.com');
+    const appUrl = this.configService.get<string>('APP_URL') || this.configService.get<string>('FRONTEND_URL');
+    if (!appUrl) {
+      this.logger.error('APP_URL/FRONTEND_URL environment variable is missing');
+      throw new Error('APP_URL/FRONTEND_URL environment variable is missing');
+    }
     const link = `${appUrl}/api/auth/verify-email?token=${rawToken}`;
 
     await this.send(to, 'Verify Your KRYROS Email Address', `

@@ -10,7 +10,7 @@ const faqs = [
   { category: "Returns", q: "What is your return policy?", a: "We accept returns within 30 days of delivery. Items must be in original condition and packaging." },
   { category: "Returns", q: "How do I request a refund?", a: "Go to My Orders, select the item, tap 'Return / Exchange', and follow the instructions to ship it back." },
   { category: "Account", q: "Which payment methods do you accept?", a: "We accept Visa, Mastercard, PayPal, Apple Pay, Google Pay, and bank transfers." },
-  { category: "Account", q: "How can I contact customer support?", a: "You can reach us via email at kryrosmobile@gmail.com, by phone at +1(800) 123-4567, or through Live Chat in the app." },
+  { category: "Account", q: "How can I contact customer support?", a: `You can reach us via email at ${import.meta.env.VITE_CONTACT_EMAIL || "info@kryros.com"}, by phone at ${import.meta.env.VITE_CONTACT_PHONE || "+260 97X XXX XXX"}, or through Live Chat in the app.` },
 ];
 
 export default function FaqPage() {

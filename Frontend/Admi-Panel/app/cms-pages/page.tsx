@@ -338,7 +338,7 @@ const INITIAL_PAGES: CmsPage[] = [
   },
   { id: 'PG003', title: 'Contact', slug: '/contact', lastEdited: '2025-03-20', status: 'Published',
     sections: [
-      { name: 'Contact Form', items: [{ id: 'i8a', content: { heading: 'Get in Touch', subheading: "We'd love to hear from you", email: 'info@kryros.com', phone: '+260 97X XXX XXX', address: 'Lusaka, Zambia' }, status: 'Active' }] },
+      { name: 'Contact Form', items: [{ id: 'i8a', content: { heading: 'Get in Touch', subheading: "We'd love to hear from you", email: process.env.NEXT_PUBLIC_STORE_EMAIL || 'info@kryros.com', phone: process.env.NEXT_PUBLIC_STORE_PHONE || '+260 97X XXX XXX', address: 'Lusaka, Zambia' }, status: 'Active' }] },
       { name: 'Location Map', items: [{ id: 'i9a', content: { heading: 'Find Us', address: 'Lusaka, Zambia', map_embed_url: '' }, status: 'Active' }] },
       { name: 'Business Hours', items: [{ id: 'i10a', content: { heading: 'Business Hours', mon_fri: '08:00 AM – 06:00 PM', saturday: '09:00 AM – 04:00 PM', sunday: 'Closed' }, status: 'Active' }] },
     ],

@@ -29,7 +29,7 @@ function SettingsContent() {
   const surface = isDark ? '#101826' : '#F1F5F9';
   const [activeTab, setActiveTab] = useState<Tab>('general');
   const [storeName, setStoreName] = useState('Kryros Mobile');
-  const [storeEmail, setStoreEmail] = useState('info@kryros.com');
+  const [storeEmail, setStoreEmail] = useState(process.env.NEXT_PUBLIC_STORE_EMAIL || 'info@kryros.com');
   const [storePhone, setStorePhone] = useState('+260 97X XXX XXX');
   const [currency, setCurrency] = useState('USD');
   const [timezone, setTimezone] = useState('Africa/Lusaka');

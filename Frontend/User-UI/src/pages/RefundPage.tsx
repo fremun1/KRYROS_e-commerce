@@ -50,7 +50,7 @@ export default function RefundPage() {
 
       <div className="bg-primary/5 border border-primary/20 rounded-2xl p-4 text-center">
         <p className="text-xs font-bold text-foreground mb-0.5">Need Help?</p>
-        <p className="text-xs text-muted-foreground">Contact our support team within your 7-day window at kryrosmobile@gmail.com</p>
+        <p className="text-xs text-muted-foreground">Contact our support team within your 7-day window at {import.meta.env.VITE_CONTACT_EMAIL || "info@kryros.com"}</p>
       </div>
     </div>
   );
