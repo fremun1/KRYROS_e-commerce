@@ -37,5 +37,7 @@ google-services.json
 GoogleService-Info.plist
 firebase-env.js
 .firebase/
+backend/
+frontend/
 backup.sql
 frontend-dist.zip
