@@ -87,6 +87,10 @@ export default function LoginPage() {
     const captchaToken = await getCaptchaToken("login");
     const result = await login(identifier.trim(), password, captchaToken || undefined);
     if (result.success) {
+      // Trigger mobile bridge if running in WebView
+      if ((window as any).MobileBridge) {
+        (window as any).MobileBridge.postMessage('user_logged_in');
+      }
       const newToken = useAuthStore.getState().token;
       if (newToken && localIds.length > 0) {
         await syncLocalWishlistToServer(newToken, localIds);

@@ -112,6 +112,10 @@ function LoginForm() {
       setStep("2fa");
       setLoading(false);
     } else if (result.success) {
+      // Trigger mobile bridge if running in WebView
+      if ((window as any).MobileBridge) {
+        (window as any).MobileBridge.postMessage('user_logged_in');
+      }
       router.replace("/dashboard");
       return;
     } else {
@@ -126,7 +130,14 @@ function LoginForm() {
     setTwoFaLoading(true);
     setTwoFaError("");
     const ok = await completeTwoFactor(twoFaCode, twoFaToken);
-    if (!ok) setTwoFaError("Invalid code. Please try again — codes refresh every 30 seconds.");
+    if (ok) {
+      // Trigger mobile bridge if running in WebView
+      if ((window as any).MobileBridge) {
+        (window as any).MobileBridge.postMessage('user_logged_in');
+      }
+    } else {
+      setTwoFaError("Invalid code. Please try again — codes refresh every 30 seconds.");
+    }
     setTwoFaLoading(false);
   };
 
