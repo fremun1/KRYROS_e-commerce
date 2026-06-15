@@ -168,7 +168,8 @@ export default function DashboardPage() {
           image:
             o.items?.[0]?.product?.images?.[0]?.url ??
             o.items?.[0]?.product?.images?.[0] ??
-            (import.meta as unknown as { env: Record<string, string> }).env?.VITE_FALLBACK_IMAGE_URL || "https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=100&q=80",
+            ((import.meta as unknown as { env: Record<string, string> }).env?.VITE_FALLBACK_IMAGE_URL ??
+              "https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=100&q=80"),
         }));
         setRecentOrders(mapped);
       })
