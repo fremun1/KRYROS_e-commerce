@@ -65,7 +65,8 @@ export default function RegisterPage() {
     if (!RECAPTCHA_SITE_KEY) return;
     if (!document.querySelector(`script[src*="recaptcha"]`)) {
       const script = document.createElement("script");
-      script.src = `https://www.google.com/recaptcha/api.js?render=${RECAPTCHA_SITE_KEY}`;
+      const recaptchaUrl = (import.meta as unknown as { env: Record<string, string> }).env?.VITE_RECAPTCHA_URL || "https://www.google.com/recaptcha/api.js";
+      script.src = `${recaptchaUrl}?render=${RECAPTCHA_SITE_KEY}`;
       script.async = true;
       document.head.appendChild(script);
     }

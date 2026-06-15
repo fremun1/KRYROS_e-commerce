@@ -55,8 +55,8 @@ export default function AboutPage() {
           {[
             { label: "Registered", value: "KRYROS MOBILE TECH LIMITED" },
             { label: "Address", value: "West Sussex, Burgess Hill, United Kingdom" },
-            { label: "Email", value: "kryrosmobile@gmail.com" },
-            { label: "Phone", value: "(+260) 966-423-719" },
+            { label: "Email", value: import.meta.env.VITE_CONTACT_EMAIL || "kryrosmobile@gmail.com" },
+            { label: "Phone", value: import.meta.env.VITE_CONTACT_PHONE || "(+260) 966-423-719" },
           ].map(({ label, value }) => (
             <div key={label} className="flex gap-3 text-xs">
               <span className="font-semibold text-foreground w-20 flex-shrink-0">{label}</span>

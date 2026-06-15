@@ -128,7 +128,8 @@ export class AuthService {
       throw new BadRequestException('CAPTCHA configuration error');
     }
     const params = new URLSearchParams({ secret, response: token });
-    const res = await fetch('https://www.google.com/recaptcha/api/siteverify', {
+    const verifyUrl = process.env.RECAPTCHA_VERIFY_URL || 'https://www.google.com/recaptcha/api/siteverify';
+    const res = await fetch(verifyUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: params.toString(),

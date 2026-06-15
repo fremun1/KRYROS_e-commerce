@@ -117,7 +117,7 @@ export class AuthController {
   @SkipThrottle()
   @ApiOperation({ summary: 'Verify email address via token from verification email' })
   async verifyEmail(@Query('token') token: string) {
-    const appUrl = process.env.APP_URL || 'https://kryros.com';
+    const appUrl = process.env.APP_URL || ''; // Strictly use environment variable in production
     try {
       await this.authService.verifyEmail(token);
       return { verified: true, message: 'Email verified successfully. You can now log in.' };

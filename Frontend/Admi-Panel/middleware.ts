@@ -5,7 +5,7 @@ import type { NextRequest } from "next/server";
 const IS_PROD = process.env.NODE_ENV === "production";
 
 const PRODUCTION_ALLOWED_ORIGINS = [
-  "https://codewords.agemo.ai",
+  process.env.CODEWORDS_APP_URL || "https://codewords.agemo.ai",
   "https://codewords-staging.agemo.ai",
 ];
 

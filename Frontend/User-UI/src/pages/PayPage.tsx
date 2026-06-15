@@ -279,7 +279,7 @@ export default function PayPage() {
   const fileRef = useRef<HTMLInputElement>(null);
   const [proofFile, setProofFile] = useState<string | null>(null);
 
-  const whatsappNumber = import.meta.env.VITE_WHATSAPP_NUMBER || "260969597029";
+  const whatsappNumber = import.meta.env.VITE_WHATSAPP_NUMBER || "260969597029"; // Default if env not set
   const [showProviderDrop, setShowProviderDrop] = useState(false);
   const [payRef, setPayRef] = useState(() => "PAY-" + Date.now().toString(36).toUpperCase().slice(-8));
   // ── Dynamic payment config (from admin panel) ─────────────────────────

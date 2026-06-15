@@ -1,6 +1,7 @@
-export const API_BASE = import.meta.env.VITE_API_URL
-  ? import.meta.env.VITE_API_URL.replace(/\/api$/, "")
-  : "";
+export const API_BASE = (import.meta.env.VITE_API_URL || "").replace(/\/api$/, "");
+if (import.meta.env.PROD && !API_BASE) {
+  console.warn("VITE_API_URL is not set in production environment.");
+}
 
 export interface Product {
   id: string;

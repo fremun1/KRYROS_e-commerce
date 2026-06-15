@@ -90,7 +90,7 @@ function normalizeOrder(o: ApiOrder): OrderRow {
     estDelivery: o.estimatedDelivery
       ? new Date(o.estimatedDelivery).toLocaleDateString("en", { month: "short", day: "numeric", year: "numeric" })
       : "—",
-    image: image || "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=200&q=80",
+    image: image || (import.meta as unknown as { env: Record<string, string> }).env?.VITE_FALLBACK_IMAGE_URL || "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=200&q=80",
     timeline: getTimeline(o.status),
   };
 }

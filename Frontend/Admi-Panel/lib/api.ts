@@ -3,7 +3,7 @@ import { logout } from "./auth";
 
 // ── Axios instance ────────────────────────────────────────────────────────────
 const api = axios.create({
-  baseURL: "",
+  baseURL: process.env.NEXT_PUBLIC_API_URL || "",
   timeout: 30000,
   headers: { "Content-Type": "application/json" },
 });

@@ -106,7 +106,7 @@ async function bootstrap() {
 
   // CORS - explicit allowlist
   const rawOrigins = process.env.CORS_ORIGINS || (isProd
-    ? 'https://kryros.com,https://www.kryros.com,https://admin.kryros.com'
+    ? '' // Strictly use environment variable in production
     : 'http://localhost:3000,http://localhost:3001,http://localhost:5000');
   const corsList = rawOrigins
     .split(',')

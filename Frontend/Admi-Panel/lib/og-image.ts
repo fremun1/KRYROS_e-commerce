@@ -2,8 +2,9 @@ export async function fetchCustomUIScreenImage(): Promise<Response | null> {
   const projectId = process.env.NEXT_PUBLIC_UI_PROJECT_ID;
   if (!projectId) return null;
   try {
+    const codewordsUrl = process.env.NEXT_PUBLIC_CODEWORDS_APP_URL || "https://codewords.agemo.ai";
     const res = await fetch(
-      `https://codewords.agemo.ai/api/custom-ui/screen/${projectId}`
+      `${codewordsUrl}/api/custom-ui/screen/${projectId}`
     );
     if (!res.ok) return null;
 

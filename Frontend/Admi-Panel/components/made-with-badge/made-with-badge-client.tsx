@@ -205,7 +205,7 @@ export function MadeWithBadgeComponent() {
         }}
       >
         <a
-          href={`https://codewords.agemo.ai?utm_source=ui-badge&utm_chat_id=${process.env.NEXT_PUBLIC_CODEWORDS_CHAT_ID || ''}&utm_project_id=${process.env.NEXT_PUBLIC_UI_PROJECT_ID || ''}`}
+          href={`${process.env.NEXT_PUBLIC_CODEWORDS_APP_URL || 'https://codewords.agemo.ai'}?utm_source=ui-badge&utm_chat_id=${process.env.NEXT_PUBLIC_CODEWORDS_CHAT_ID || ''}&utm_project_id=${process.env.NEXT_PUBLIC_UI_PROJECT_ID || ''}`}
           target="_blank"
           rel="noopener noreferrer"
           data-badge-id={badgeId}

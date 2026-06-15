@@ -16,7 +16,7 @@ export default function ContactPage() {
           </div>
           <div className="flex-1">
             <p className="text-sm font-bold text-foreground">Customer Support</p>
-            <p className="text-xs text-primary font-medium">kryrosmobile@gmail.com</p>
+            <p className="text-xs text-primary font-medium">{import.meta.env.VITE_CONTACT_EMAIL || "kryrosmobile@gmail.com"}</p>
           </div>
         </div>
 
@@ -26,19 +26,19 @@ export default function ContactPage() {
             <Phone className="w-5 h-5 text-primary" />
           </div>
           <div className="flex-1">
-            <p className="text-sm font-bold text-foreground">(+260) 966-423-719</p>
+            <p className="text-sm font-bold text-foreground">{import.meta.env.VITE_CONTACT_PHONE || "(+260) 966-423-719"}</p>
             <p className="text-xs text-muted-foreground">Support Hours: 08:00–18:00 CAT</p>
           </div>
         </div>
 
         {/* Live Chat - WhatsApp */}
-        <a href="https://wa.me/260966423719" target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 p-4 bg-card border border-border rounded-2xl cursor-pointer hover:border-primary/30 transition-all">
+        <a href={`https://wa.me/${import.meta.env.VITE_WHATSAPP_NUMBER || "260966423719"}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 p-4 bg-card border border-border rounded-2xl cursor-pointer hover:border-primary/30 transition-all">
           <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
             <MessageCircle className="w-5 h-5 text-primary" />
           </div>
           <div className="flex-1">
             <p className="text-sm font-bold text-foreground">Live Chat</p>
-            <p className="text-xs text-muted-foreground">(+260) 966-423-719 · WhatsApp</p>
+            <p className="text-xs text-muted-foreground">{import.meta.env.VITE_CONTACT_PHONE || "(+260) 966-423-719"} · WhatsApp</p>
           </div>
           <button className="px-3 py-1.5 bg-primary text-white rounded-xl text-xs font-bold hover:opacity-90 transition-all flex-shrink-0">
             Chat Now
