@@ -593,15 +593,32 @@ export default function CheckoutPage() {
                   <span className="text-[10px] text-muted-foreground font-normal ml-1">(optional if email provided)</span>
                 </label>
                 <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => { setShowCountryPicker(true); setCountrySearch(""); }}
-                    className="w-[88px] sm:w-[96px] px-3 py-3.5 rounded-xl border border-border bg-muted/40 hover:bg-muted/70 transition-colors flex items-center justify-between flex-shrink-0"
-                  >
-                    <span className="text-sm font-semibold text-foreground leading-none">{phoneCountry.dial}</span>
-                    <span className="w-px h-5 bg-border/80 mx-2" />
-                    <ChevronDown className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
-                  </button>
+                  <div className="w-[112px] sm:w-[120px] rounded-xl border border-border bg-muted/40 hover:bg-muted/70 transition-colors flex items-center flex-shrink-0 overflow-hidden">
+                    <input
+                      list="checkout-dial-codes"
+                      value={phoneCountry.dial}
+                      onChange={(e) => {
+                        const nextValue = e.target.value;
+                        const match = DIAL_COUNTRIES.find((c) => c.dial === nextValue || c.name.toLowerCase() === nextValue.toLowerCase());
+                        setPhoneCountry(match ?? { ...phoneCountry, dial: nextValue });
+                      }}
+                      placeholder="+260"
+                      type="text"
+                      className="w-full min-w-0 px-3 py-3.5 bg-transparent text-sm font-semibold text-foreground outline-none"
+                    />
+                    <datalist id="checkout-dial-codes">
+                      {DIAL_COUNTRIES.map((c) => (
+                        <option key={c.code} value={c.dial}>{c.name}</option>
+                      ))}
+                    </datalist>
+                    <button
+                      type="button"
+                      onClick={() => { setShowCountryPicker(true); setCountrySearch(""); }}
+                      className="px-2 py-3.5 border-l border-border hover:bg-muted transition-colors flex-shrink-0"
+                    >
+                      <ChevronDown className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                    </button>
+                  </div>
                   <div className="flex-1">
                     <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone number" type="tel" className="w-full px-4 py-3.5 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
                   </div>

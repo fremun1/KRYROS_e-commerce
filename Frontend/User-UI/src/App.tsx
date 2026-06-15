@@ -38,6 +38,7 @@ const WholesaleCheckoutPage = lazy(() => import("@/pages/WholesaleCheckoutPage")
 const NotFound          = lazy(() => import("@/pages/not-found"));
 
 import SplashScreen from "@/components/SplashScreen";
+import PwaInstallPrompt from "@/components/PwaInstallPrompt";
 import { useAuthStore } from "@/store/authStore";
 import { useCurrencyStore } from "@/store/currencyStore";
 
@@ -309,6 +310,7 @@ export default function App() {
         <WouterRouter>
           <AppRoutes />
         </WouterRouter>
+        <PwaInstallPrompt />
         <Toaster position="top-center" richColors />
       </TooltipProvider>
     </QueryClientProvider>

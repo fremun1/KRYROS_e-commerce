@@ -85,10 +85,11 @@ export default function NewsletterPopup() {
       onClick={handleDismiss}
     >
       <div
-        className="relative w-full bg-white shadow-2xl overflow-hidden"
+        className="relative w-full shadow-2xl overflow-hidden"
         style={{
           maxWidth: 360,
           borderRadius: 20,
+          background: "hsl(var(--card))",
           animation: "nlPopupIn 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards",
         }}
         onClick={(e) => e.stopPropagation()}
@@ -159,7 +160,7 @@ export default function NewsletterPopup() {
             )}
 
             {/* Form area */}
-            <div style={{ padding: "20px 22px 22px", background: "white" }}>
+            <div style={{ padding: "20px 22px 22px", background: "hsl(var(--card))" }}>
               {/* Subheading */}
               <p style={{ fontSize: 13.5, color: "hsl(var(--muted-foreground))", lineHeight: 1.6, marginBottom: 10, marginRight: 8 }}>
                 {config?.subheading}
@@ -189,7 +190,7 @@ export default function NewsletterPopup() {
                   border: "1.5px solid hsl(var(--border))",
                   borderRadius: 10,
                   outline: "none",
-                  background: "white",
+                  background: "hsl(var(--background))",
                   boxShadow: "0 1px 2px rgba(15, 23, 42, 0.04)",
                   fontFamily: "inherit",
                   boxSizing: "border-box",
@@ -234,7 +235,7 @@ export default function NewsletterPopup() {
 
               {/* Footnote */}
               {config.footnote && (
-                <p style={{ fontSize: 11.5, color: "#9CA3AF", lineHeight: 1.55 }}>
+                <p style={{ fontSize: 11.5, color: "hsl(var(--muted-foreground))", lineHeight: 1.55 }}>
                   {config.footnote}
                 </p>
               )}
