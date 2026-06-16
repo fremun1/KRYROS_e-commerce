@@ -2,9 +2,16 @@ import axios from "axios";
 import { logout } from "./auth";
 
 // ── Axios instance ────────────────────────────────────────────────────────────
+// IMPORTANT:
+// Keep authenticated admin requests on the SAME ORIGIN as the admin app.
+// The Next.js app rewrites `/api/*` to the backend and middleware injects the
+// Authorization header from the httpOnly admin cookies. If we point axios
+// directly at `NEXT_PUBLIC_API_URL`, browser requests can bypass that flow,
+// causing dashboard data to fail to load and sessions to drop on refresh.
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || "",
+  baseURL: "",
   timeout: 30000,
+  withCredentials: true,
   headers: { "Content-Type": "application/json" },
 });
 
@@ -496,4 +503,3 @@ export const deleteEmailContact = (id: string) =>
 
 export const sendEmailBlast = (payload: { subject: string; body: string; emailIds?: string[] }) =>
   api.post('/api/notifications/email/blast', payload);
-
