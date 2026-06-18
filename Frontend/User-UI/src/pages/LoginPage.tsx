@@ -1,14 +1,12 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation, useSearch } from "wouter";
-import { Mail, Lock, Eye, EyeOff, ShieldCheck, Zap, Headphones, AlertCircle, Loader2 } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, AlertCircle, Loader2 } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import { useWishlistStore } from "@/store/wishlistStore";
 import { API_BASE } from "@/lib/api";
 
-// reCAPTCHA v3 site key (baked in at build time via VITE_RECAPTCHA_SITE_KEY)
 const RECAPTCHA_SITE_KEY = (import.meta as unknown as { env: Record<string, string> }).env?.VITE_RECAPTCHA_SITE_KEY ?? "";
 
-/** Execute reCAPTCHA v3 silently and return a token. Returns "" if not configured. */
 async function getCaptchaToken(action: string): Promise<string> {
   if (!RECAPTCHA_SITE_KEY) return "";
   const w = window as unknown as {
@@ -40,7 +38,10 @@ async function syncLocalWishlistToServer(token: string, localIds: string[]) {
   );
 }
 
+type Tab = "login" | "register" | "forgot";
+
 export default function LoginPage() {
+  const [activeTab, setActiveTab] = useState<Tab>("login");
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [showPw, setShowPw] = useState(false);
@@ -56,16 +57,11 @@ export default function LoginPage() {
   })();
 
   useEffect(() => {
-    if (token && user) {
-      setLocation(redirectTo);
-    }
+    if (token && user) setLocation(redirectTo);
   }, [token, user]);
 
-  useEffect(() => {
-    return () => clearError();
-  }, []);
+  useEffect(() => { return () => clearError(); }, []);
 
-  // Load reCAPTCHA v3 script on mount; remove badge on unmount
   useEffect(() => {
     if (!RECAPTCHA_SITE_KEY) return;
     if (!document.querySelector(`script[src*="recaptcha"]`)) {
@@ -84,14 +80,10 @@ export default function LoginPage() {
     e.preventDefault();
     if (!identifier.trim() || !password) return;
     const localIds = [...localWishlistIds];
-    // Get reCAPTCHA token silently before submitting
     const captchaToken = await getCaptchaToken("login");
     const result = await login(identifier.trim(), password, captchaToken || undefined);
     if (result.success) {
-      // Trigger mobile bridge if running in WebView
-      if ((window as any).MobileBridge) {
-        (window as any).MobileBridge.postMessage('user_logged_in');
-      }
+      if ((window as any).MobileBridge) (window as any).MobileBridge.postMessage("user_logged_in");
       const newToken = useAuthStore.getState().token;
       if (newToken && localIds.length > 0) {
         await syncLocalWishlistToServer(newToken, localIds);
@@ -102,34 +94,60 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center px-4 py-10">
+    <div className="min-h-screen flex items-center justify-center px-4 py-10" style={{ background: "#f0f4f8" }}>
       <div className="w-full max-w-sm">
-        <div className="bg-card border border-border rounded-3xl overflow-hidden shadow-xl">
+        {/* Card */}
+        <div className="bg-white rounded-3xl shadow-xl overflow-hidden">
 
-          <div className="relative bg-card px-6 pt-6 pb-5 overflow-hidden border-b border-border">
+          {/* Logo */}
+          <div className="pt-8 pb-2 flex justify-center">
             <Link href="/">
-              <img src="/kryros-logo.png" alt="KRYROS" className="h-12 w-12 cursor-pointer" onError={(e) => { (e.target as HTMLImageElement).src = '/kryros-logo.svg'; }} />
+              <span className="text-3xl font-black tracking-tight cursor-pointer select-none">
+                <span style={{ color: "#1a2340" }}>KRY</span><span style={{ color: "#27B9AF" }}>ROS</span>
+              </span>
             </Link>
-            <h1 className="text-2xl font-black text-foreground mt-4 mb-1 whitespace-nowrap">Welcome Back</h1>
-            <p className="text-xs text-muted-foreground">Login to continue shopping with KRYROS</p>
           </div>
 
-          <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4 bg-card">
+          {/* Tab switcher */}
+          <div className="mx-5 mt-5 mb-5">
+            <div className="flex rounded-2xl overflow-hidden" style={{ background: "#f0f4f8" }}>
+              {(["login", "register", "forgot"] as Tab[]).map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => {
+                    if (tab === "register") { setLocation("/register"); return; }
+                    if (tab === "forgot") { setLocation("/forgot-password"); return; }
+                    setActiveTab(tab);
+                  }}
+                  className="flex-1 py-3 text-sm font-semibold transition-all duration-200"
+                  style={{
+                    background: activeTab === tab ? "#27B9AF" : "transparent",
+                    color: activeTab === tab ? "#fff" : "#6b7280",
+                    borderRadius: "14px",
+                  }}
+                >
+                  {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="px-5 pb-6 space-y-4">
 
             {error && (
-              <div className="flex items-start gap-2.5 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl">
-                <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
-                <p className="text-xs text-red-700 dark:text-red-400 font-medium">{error}</p>
+              <div className="flex items-start gap-2 p-3 rounded-xl border" style={{ background: "#fef2f2", borderColor: "#fecaca" }}>
+                <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: "#ef4444" }} />
+                <p className="text-xs font-medium" style={{ color: "#b91c1c" }}>{error}</p>
               </div>
             )}
 
+            {/* Email or Phone */}
             <div>
-              <label className="block text-xs font-semibold text-foreground mb-1.5">
-                Email or Phone Number
-                <span className="text-muted-foreground font-normal ml-1 text-[10px]">(use either to log in)</span>
-              </label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <label className="block text-sm font-bold mb-2" style={{ color: "#1a2340" }}>Email or Phone</label>
+              <div className="flex items-center gap-3 border rounded-2xl px-4 py-3.5 transition-all"
+                style={{ borderColor: "#e5e7eb", background: "#fff" }}>
+                <Mail className="w-4 h-4 flex-shrink-0" style={{ color: "#27B9AF" }} />
                 <input
                   type="text"
                   value={identifier}
@@ -137,21 +155,19 @@ export default function LoginPage() {
                   placeholder="Enter your email or phone number"
                   required
                   autoComplete="username"
-                  className="w-full pl-10 pr-4 py-3 bg-background border border-border rounded-xl text-sm text-foreground outline-none focus:ring-2 focus:ring-primary/30 placeholder:text-muted-foreground/50"
+                  className="flex-1 text-sm outline-none bg-transparent"
+                  style={{ color: "#1a2340" }}
                   data-testid="input-email"
                 />
               </div>
             </div>
 
+            {/* Password */}
             <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="text-xs font-semibold text-foreground">Password</label>
-                <Link href="/forgot-password">
-                  <span className="text-xs text-primary cursor-pointer hover:underline font-medium">Forgot Password?</span>
-                </Link>
-              </div>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <label className="block text-sm font-bold mb-2" style={{ color: "#1a2340" }}>Password</label>
+              <div className="flex items-center gap-3 border rounded-2xl px-4 py-3.5 transition-all"
+                style={{ borderColor: "#e5e7eb", background: "#fff" }}>
+                <Lock className="w-4 h-4 flex-shrink-0" style={{ color: "#27B9AF" }} />
                 <input
                   type={showPw ? "text" : "password"}
                   value={password}
@@ -160,59 +176,68 @@ export default function LoginPage() {
                   required
                   autoComplete="current-password"
                   maxLength={128}
-                  className="w-full pl-10 pr-10 py-3 bg-background border border-border rounded-xl text-sm text-foreground outline-none focus:ring-2 focus:ring-primary/30 placeholder:text-muted-foreground/50"
+                  className="flex-1 text-sm outline-none bg-transparent"
+                  style={{ color: "#1a2340" }}
                   data-testid="input-password"
                 />
-                <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-                  {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                <button type="button" onClick={() => setShowPw(!showPw)} className="text-gray-400 hover:text-gray-600">
+                  {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" style={{ color: "#27B9AF" }} />}
                 </button>
               </div>
             </div>
 
+            {/* Cloudflare-style verify widget */}
+            <div className="flex items-center justify-between border rounded-2xl px-4 py-3.5"
+              style={{ borderColor: "#e5e7eb", background: "#f9fafb" }}>
+              <div className="flex items-center gap-3">
+                <div className="w-5 h-5 border-2 rounded" style={{ borderColor: "#9ca3af" }} />
+                <span className="text-sm" style={{ color: "#374151" }}>Verify you are human</span>
+              </div>
+              <div className="flex flex-col items-end">
+                <div className="flex items-center gap-1">
+                  <svg viewBox="0 0 512 512" className="w-6 h-6" fill="none">
+                    <ellipse cx="256" cy="256" rx="256" ry="256" fill="#F38020"/>
+                    <path d="M327 180c-8-36-39-62-76-62-30 0-57 17-70 43-3-1-6-1-9-1-33 0-59 27-59 60 0 2 0 4 1 6h4c0-1 0-3 0-4 0-30 24-55 54-55 4 0 8 0 12 1l7 2 3-6c11-23 35-38 62-38 32 0 60 22 67 53l2 8 8-1c22 0 40 18 40 40 0 21-17 38-39 40v4c27-2 47-25 47-52 0-28-21-50-49-50l-5 0z" fill="white"/>
+                  </svg>
+                  <div>
+                    <p className="text-[10px] font-bold" style={{ color: "#374151" }}>CLOUDFLARE</p>
+                    <p className="text-[9px]" style={{ color: "#9ca3af" }}>
+                      <span className="underline cursor-pointer">Privacy</span>
+                      {" · "}
+                      <span className="underline cursor-pointer">Terms</span>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Login button */}
             <button
               type="submit"
               disabled={isLoading || !identifier.trim() || !password}
               data-testid="btn-login"
-              className="w-full py-3.5 bg-primary text-white rounded-2xl font-bold text-sm hover:opacity-90 transition-opacity active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full py-4 rounded-2xl font-bold text-sm text-white transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              style={{ background: "linear-gradient(135deg, #27B9AF 0%, #1a9e95 100%)" }}
             >
               {isLoading ? (
                 <><Loader2 className="w-4 h-4 animate-spin" /> Logging in...</>
-              ) : (
-                "Login"
-              )}
+              ) : "Login"}
             </button>
 
-            <p className="text-center text-xs text-muted-foreground pb-1">
-              {"Don't have an account? "}
+            <p className="text-center text-xs" style={{ color: "#9ca3af" }}>
+              Don't have an account?{" "}
               <Link href="/register">
-                <span className="text-primary font-semibold cursor-pointer hover:underline">Register Now</span>
+                <span className="font-semibold cursor-pointer" style={{ color: "#27B9AF" }}>Register Now</span>
               </Link>
             </p>
-
-            {RECAPTCHA_SITE_KEY && (
-              <p className="text-center text-[10px] text-muted-foreground/60 pb-1">
-                Protected by reCAPTCHA.{" "}
-                <a href="https://policies.google.com/privacy" target="_blank" rel="noreferrer" className="underline">Privacy</a>
-                {" · "}
-                <a href="https://policies.google.com/terms" target="_blank" rel="noreferrer" className="underline">Terms</a>
-              </p>
-            )}
           </form>
-
-          <div className="flex items-center justify-around px-6 py-4 border-t border-border bg-muted/30">
-            {[
-              { icon: ShieldCheck, title: "Secure & Safe", sub: "Your data is protected" },
-              { icon: Zap, title: "Fast & Easy", sub: "Quick access to your account" },
-              { icon: Headphones, title: "24/7 Support", sub: "We're here to help" },
-            ].map(({ icon: Icon, title, sub }) => (
-              <div key={title} className="text-center">
-                <Icon className="w-4 h-4 text-primary mx-auto mb-0.5" />
-                <p className="text-[9px] font-bold text-foreground">{title}</p>
-                <p className="text-[8px] text-muted-foreground">{sub}</p>
-              </div>
-            ))}
-          </div>
         </div>
+
+        {/* Footer */}
+        <p className="text-center text-xs mt-4" style={{ color: "#9ca3af" }}>
+          Your payment is safe with{" "}
+          <span className="font-bold" style={{ color: "#27B9AF" }}>KRYROS</span>
+        </p>
       </div>
     </div>
   );
