@@ -19,7 +19,6 @@ import {
   Building2,
   Lock,
   ChevronLeft,
-  ChevronRight,
   Truck,
   Zap,
   Clock,
@@ -33,6 +32,7 @@ import {
   Upload,
   ChevronDown,
   Search,
+  Package,
 } from "lucide-react";
 
 // ── Country dial codes (for phone picker only) ────────────────────────────────
@@ -82,6 +82,27 @@ const DEFAULT_CHECKOUT_METHODS = [
   },
 ];
 
+interface PickupStation {
+  id: string;
+  name: string;
+  address: string;
+  city: string;
+  hours: string;
+  isActive: boolean;
+}
+
+function normalizePickupStation(s: any): PickupStation {
+  const addressParts = [s.address, s.city, s.state, s.country].filter(Boolean);
+  return {
+    id: s.id,
+    name: s.name,
+    address: addressParts.join(", ") || "",
+    city: s.city || "",
+    hours: s.openingHours || "",
+    isActive: s.isActive !== false,
+  };
+}
+
 function CopyBtn({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
   return (
@@ -113,6 +134,19 @@ function SecureFooter() {
   );
 }
 
+// Numbered section header used for every section (1. Shipping Information, 2. Pickup Station, etc.)
+function SectionHeader({ number, icon: Icon, title }: { number: number; icon: any; title: string }) {
+  return (
+    <div className="flex items-center gap-2.5 mb-3.5">
+      <div className="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-[11px] font-bold flex-shrink-0">
+        {number}
+      </div>
+      <Icon className="w-4 h-4 text-foreground flex-shrink-0" />
+      <h2 className="text-sm font-bold text-foreground">{title}</h2>
+    </div>
+  );
+}
+
 export default function CheckoutPage() {
   const [, navigate] = useLocation();
   const cartItems    = useCartStore((s) => s.items);
@@ -121,10 +155,8 @@ export default function CheckoutPage() {
   const authToken    = useAuthStore((s) => s.token);
   const format       = useCurrencyStore((s) => s.format);
   const selectedCurrency = useCurrencyStore((s) => s.selected);
-  const allCurrencies    = useCurrencyStore((s) => s.currencies);
 
-  // ── State (Declared first to avoid ReferenceError) ─────────────────────────
-  const [step, setStep] = useState(1);
+  // ── State ────────────────────────────────────────────────────────────────
   const [ordered,          setOrdered]          = useState(false);
   const [isSubmitting,     setIsSubmitting]      = useState(false);
   const [orderError,       setOrderError]        = useState<string | null>(null);
@@ -136,7 +168,7 @@ export default function CheckoutPage() {
   const pollRef     = useRef<ReturnType<typeof setInterval> | null>(null);
   const whatsappNumber = import.meta.env.VITE_WHATSAPP_NUMBER || "260969597029";
 
-  // Contact
+  // Shipping Information (Section 1)
   const [firstName,     setFirstName]     = useState(authUser?.firstName ?? "");
   const [lastName,      setLastName]      = useState(authUser?.lastName ?? "");
   const [email,         setEmail]         = useState(authUser?.email ?? "");
@@ -145,15 +177,19 @@ export default function CheckoutPage() {
   const [phoneCountry,  setPhoneCountry]  = useState(DIAL_COUNTRIES[0]);
   const [showCountryPicker, setShowCountryPicker] = useState(false);
   const [countrySearch, setCountrySearch] = useState("");
-
-  // Address
   const [country,      setCountry]     = useState("");
   const [state,        setState]       = useState("");
   const [city,         setCity]        = useState("");
   const [addressLine,  setAddressLine] = useState("");
   const [zipCode,      setZipCode]     = useState("");
 
-  // Shipping & payment
+  // Pickup Station (Section 2)
+  const [pickupStations, setPickupStations] = useState<PickupStation[]>([]);
+  const [pickupStationId, setPickupStationId] = useState("");
+  const [loadingStations, setLoadingStations] = useState(false);
+  const [showStationDrop, setShowStationDrop] = useState(false);
+
+  // Shipping Method (Section 3) & totals
   const [shippingMethods, setShippingMethods] = useState<ApiShippingMethod[]>([]);
   const [isLoadingShipping, setIsLoadingShipping] = useState(false);
   const [shippingId, setShippingId] = useState("");
@@ -166,14 +202,14 @@ export default function CheckoutPage() {
   const PROCESSING_FEE = SUBTOTAL * feeRate;
   const total = SUBTOTAL - DISCOUNT + PROCESSING_FEE + shippingPrice;
 
-  const [openMethod,       setOpenMethod]       = useState<string | null>(null);
+  // Payment Method (Section 4) — openMethod now controls inline expansion, not a bottom sheet
+  const [openMethod,       setOpenMethod]       = useState<string | null>("mobile");
   const [showProviderDrop, setShowProviderDrop] = useState(false);
   const [bankRef]   = useState(() => "PAY-" + Date.now().toString(36).toUpperCase().slice(-8));
   const [cardNum,   setCardNum]   = useState("");
   const [expiry,    setExpiry]    = useState("");
   const [cvv,       setCvv]       = useState("");
   const [cardName,  setCardName]  = useState("");
-  const [saveCard,  setSaveCard]  = useState(false);
   const [mmProvider, setMmProvider] = useState("MTN");
   const [mmPhone,   setMmPhone]   = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
@@ -195,19 +231,34 @@ export default function CheckoutPage() {
           isActive: c.isActive !== false && c.status !== false,
         }));
         setShippingCountries(mapped);
-        // Auto-select the default country if we have one
         const defaultCountry = mapped.find((c) => c.isActive && c.shippingEnabled);
         if (defaultCountry && !country) setCountry(defaultCountry.name);
       })
       .catch(() => {
-        // Fallback to Zambia if API fails
         setShippingCountries([{ name: 'Zambia', code: 'ZM', shippingEnabled: true, isActive: true }]);
       });
   }, []);
 
-  // ── Dynamic shipping methods ────────────────────────────────────────────────
+  // ── Pickup stations (Section 2) ──────────────────────────────────────────
   useEffect(() => {
-    if (step === 3 && country) {
+    let cancelled = false;
+    setLoadingStations(true);
+    fetch(`${API_BASE}/api/pickup-stations?active=true`)
+      .then((r) => r.json())
+      .then((data: any) => {
+        const list = Array.isArray(data) ? data : (data?.data ?? []);
+        if (!cancelled) {
+          setPickupStations(list.filter((s: any) => s.isActive !== false).map(normalizePickupStation));
+        }
+      })
+      .catch(() => {})
+      .finally(() => { if (!cancelled) setLoadingStations(false); });
+    return () => { cancelled = true; };
+  }, []);
+
+  // ── Dynamic shipping methods — now fetched as soon as we have a country/city instead of gated by step ──
+  useEffect(() => {
+    if (country) {
       setIsLoadingShipping(true);
       fetchMatchingShippingMethods({
         stateName: state,
@@ -222,7 +273,7 @@ export default function CheckoutPage() {
         })
         .finally(() => setIsLoadingShipping(false));
     }
-  }, [step, country, state, city]);
+  }, [country, state, city]);
 
   // ── Dynamic payment config from admin panel ─────────────────────────────────
   const [bankProviders, setBankProviders]   = useState<{ name: string; config?: { accountName?: string; accountNumber?: string } }[]>([]);
@@ -324,6 +375,7 @@ export default function CheckoutPage() {
       address: addressLine || `${city}, ${state}, ${country}`,
       zipCode: zipCode || undefined,
       countryName: country, stateName: state || undefined, cityName: city || undefined, manual: true,
+      pickupStationId: pickupStationId || undefined,
     },
   });
 
@@ -361,8 +413,19 @@ export default function CheckoutPage() {
     }, 5000);
   };
 
+  const validateShippingInfo = () => {
+    if (!firstName.trim()) { toast.error("Please enter your first name"); return false; }
+    if (!lastName.trim())  { toast.error("Please enter your last name");  return false; }
+    if (!email.trim() && !phone.trim()) { toast.error("Please provide at least an email or phone number"); return false; }
+    if (!country) { toast.error("Please select a country"); return false; }
+    if (!city.trim()) { toast.error("Please enter your city"); return false; }
+    if (!addressLine.trim()) { toast.error("Please enter your address"); return false; }
+    return true;
+  };
+
   const handleMobileMoneyPay = async () => {
     if (isSubmitting || !mmPhone.trim()) return;
+    if (!validateShippingInfo()) return;
     setIsSubmitting(true);
     setOrderError(null);
     try {
@@ -384,9 +447,8 @@ export default function CheckoutPage() {
       setPlacedOrderId(orderId);
       setSavedCartItems([...cartItems]);
       setMmPhase("initializing");
-      setOpenMethod(null);
       try {
-        const initRes = await fetch(`${API_BASE}/api/payments/initialize`, { method: "POST", headers, body: JSON.stringify({ orderId, phone: mmPhone, amount: Math.round(totalZMW * 100) / 100 }) });
+        const initRes = await fetch(`${API_BASE}/api/payments/initialize`, { method: "POST", headers, body: JSON.stringify({ orderId, phone: mmPhone, amount: Math.round(totalLocal * 100) / 100 }) });
         if (!initRes.ok) { setMmPhase("failed_init"); setIsSubmitting(false); return; }
         setMmPhase("waiting");
         startPolling(orderId, orderNum);
@@ -400,6 +462,7 @@ export default function CheckoutPage() {
 
   const handlePlaceOrder = async () => {
     if (isSubmitting || cartItems.length === 0) return;
+    if (!validateShippingInfo()) return;
     setIsSubmitting(true);
     setOrderError(null);
     try {
@@ -448,21 +511,6 @@ export default function CheckoutPage() {
   const handleWhatsAppRedirect = () => {
     const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(waMessage)}`;
     window.open(url, "_blank");
-  };
-
-  // ── Step navigation with validation toasts ──────────────────────────────────
-  const goToStep2 = () => {
-    if (!firstName.trim()) { toast.error("Please enter your first name"); return; }
-    if (!lastName.trim())  { toast.error("Please enter your last name");  return; }
-    if (!email.trim() && !phone.trim()) { toast.error("Please provide at least an email or phone number"); return; }
-    setStep(2);
-  };
-
-  const goToStep3 = () => {
-    if (!country) { toast.error("Please select a country"); return; }
-    if (!city.trim()) { toast.error("Please enter your city"); return; }
-    if (!addressLine.trim()) { toast.error("Please enter your address"); return; }
-    setStep(3);
   };
 
   // ── Order confirmation screen ───────────────────────────────────────────────
@@ -519,81 +567,44 @@ export default function CheckoutPage() {
   }
 
   const hasPaymentError = !!orderError || mmPhase === "failed_init" || mmPhase === "timed_out";
+  const selectedStation = pickupStations.find((s) => s.id === pickupStationId);
+
+  // Icon used per shipping method id, matching reference (truck / truck / rocket)
+  const shippingIcon = (name: string) => {
+    const n = name.toLowerCase();
+    if (n.includes("express") || n.includes("same day") || n.includes("next day")) return Zap;
+    return Truck;
+  };
 
   return (
     <div className="max-w-lg mx-auto bg-background min-h-screen flex flex-col">
       {/* Header */}
-      <div className="sticky top-0 z-20 flex items-center justify-between px-4 pt-5 pb-3 bg-background/90 backdrop-blur">
+      <div className="sticky top-0 z-20 flex items-center justify-between px-4 pt-5 pb-3 bg-background/90 backdrop-blur border-b border-border/60">
         <button onClick={() => navigate("/cart")} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground">
           <ChevronLeft className="w-4 h-4" /> Back to Cart
         </button>
-        <span className="text-[11px] font-semibold text-muted-foreground">Secure Checkout</span>
+        <span className="text-base font-bold text-foreground absolute left-1/2 -translate-x-1/2">Checkout</span>
+        <span className="flex items-center gap-1 text-[11px] font-semibold text-primary">
+          <Lock className="w-3 h-3" /> Secure Checkout
+        </span>
       </div>
 
-      {/* Progress steps */}
-      <div className="px-4 pt-4 pb-5">
-        {/* Step labels — each takes equal width so spacing is even */}
-        <div className="grid grid-cols-4 text-[11px] font-semibold text-muted-foreground mb-3">
-          {[["Contact", 1], ["Address", 2], ["Shipping", 3], ["Payment", 4]].map(([label, s]) => (
-            <div key={label as string} className={`flex flex-col items-center gap-1.5 ${step >= (s as number) ? "text-primary" : ""}`}>
-              <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold border-2 transition-all ${step > (s as number) ? "bg-primary border-primary text-white" : step === (s as number) ? "border-primary text-primary bg-primary/10" : "border-border text-muted-foreground"}`}>
-                {step > (s as number) ? <Check className="w-3 h-3" /> : s as number}
+      {/* Single scrolling page — all sections always visible */}
+      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 pb-32">
+
+        {/* ── SECTION 1: Shipping Information ── */}
+        <div className="bg-card border border-border rounded-2xl p-4">
+          <SectionHeader number={1} icon={User} title="Shipping Information" />
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <label className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground"><User className="w-3 h-3" />Full Name</label>
+                <input value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="John" className="w-full px-3.5 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
               </div>
-              <span>{label as string}</span>
-            </div>
-          ))}
-        </div>
-        {/* Progress bar — divided into 4 equal segments */}
-        <div className="flex gap-1">
-          {[1, 2, 3, 4].map((s) => (
-            <div key={s} className="flex-1 h-1 rounded-full bg-muted overflow-hidden">
-              <div className={`h-full rounded-full bg-gradient-to-r from-primary to-[var(--kryros-primary-hover)] transition-all duration-300 ${step >= s ? "w-full" : "w-0"}`} />
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Main content — fills remaining screen, button pinned to bottom */}
-      <div className="flex-1 flex flex-col min-h-0">
-
-        {/* ── STEP 1: Contact ── */}
-        {step === 1 && (
-          <div className="flex-1 flex flex-col overflow-y-auto">
-            <div className="bg-card border-t border-border px-4 py-4 space-y-3">
-              <div className="flex items-center justify-between">
-                <h2 className="text-sm font-bold text-foreground">Contact information</h2>
-                {authUser
-                  ? <span className="text-[11px] text-muted-foreground">Logged in as {authUser.email}</span>
-                  : <Link href="/login" className="text-[11px] font-semibold text-primary">Log in</Link>
-                }
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <label className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground"><User className="w-3.5 h-3.5" />First name</label>
-                  <input value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="John" className="w-full px-4 py-3.5 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
-                </div>
-                <div className="space-y-2">
-                  <label className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground"><User className="w-3.5 h-3.5" />Last name</label>
-                  <input value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Doe" className="w-full px-4 py-3.5 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
-                  <Mail className="w-3.5 h-3.5" />Email address
-                  <span className="text-[10px] text-muted-foreground font-normal ml-1">(optional if phone provided)</span>
-                </label>
-                <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="Enter your email address" className="w-full px-4 py-3.5 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
-              </div>
-
-              <div className="space-y-2">
-                <label className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
-                  <Phone className="w-3.5 h-3.5" />Mobile number
-                  <span className="text-[10px] text-muted-foreground font-normal ml-1">(optional if email provided)</span>
-                </label>
-                <div className="flex gap-2">
-                  <div className="w-[112px] sm:w-[120px] rounded-xl border border-border bg-muted/40 hover:bg-muted/70 transition-colors flex items-center flex-shrink-0 overflow-hidden">
+              <div className="space-y-1.5">
+                <label className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground"><Phone className="w-3 h-3" />Phone Number</label>
+                <div className="flex gap-1.5">
+                  <div className="w-[68px] rounded-xl border border-border bg-muted/40 flex items-center flex-shrink-0 overflow-hidden">
                     <input
                       list="checkout-dial-codes"
                       value={phoneCountry.dial}
@@ -604,99 +615,56 @@ export default function CheckoutPage() {
                       }}
                       placeholder="+260"
                       type="text"
-                      className="w-full min-w-0 px-3 py-3.5 bg-transparent text-sm font-semibold text-foreground outline-none"
+                      className="w-full min-w-0 px-2 py-3 bg-transparent text-xs font-semibold text-foreground outline-none"
                     />
                     <datalist id="checkout-dial-codes">
                       {DIAL_COUNTRIES.map((c) => (
                         <option key={c.code} value={c.dial}>{c.name}</option>
                       ))}
                     </datalist>
-                    <button
-                      type="button"
-                      onClick={() => { setShowCountryPicker(true); setCountrySearch(""); }}
-                      className="px-2 py-3.5 border-l border-border hover:bg-muted transition-colors flex-shrink-0"
-                    >
-                      <ChevronDown className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
-                    </button>
                   </div>
-                  <div className="flex-1">
-                    <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone number" type="tel" className="w-full px-4 py-3.5 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
-                  </div>
+                  <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="97 123 4567" type="tel" className="flex-1 min-w-0 px-3 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
                 </div>
               </div>
-
-              <div className="space-y-2">
-                <label className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
-                  <Mail className="w-3.5 h-3.5" />Order notes
-                  <span className="text-[10px] text-muted-foreground font-normal ml-1">(optional)</span>
-                </label>
-                <textarea value={orderNotes} onChange={(e) => setOrderNotes(e.target.value)} placeholder="Any special instructions or notes for your order..." rows={4} className="w-full px-4 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all resize-none" />
-              </div>
-
-              {/* Continue Button — now right under the content */}
-              <div className="pt-2 pb-4">
-                <button onClick={goToStep2} className="w-full py-4 rounded-2xl bg-[var(--kryros-primary-hover)] text-white text-sm font-bold flex items-center justify-center gap-2 shadow-lg active:scale-[0.98] transition-all">
-                  Continue to Address <ChevronRight className="w-4 h-4" />
-                </button>
-              </div>
-
-              {/* Country picker modal (for phone dial code) */}
-              {showCountryPicker && (
-                <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center" onClick={() => setShowCountryPicker(false)}>
-                  <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
-                  <div className="relative w-full max-w-sm bg-card border border-border rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
-                    <div className="flex items-center justify-between px-4 pt-4 pb-3 border-b border-border">
-                      <h3 className="text-sm font-bold text-foreground">Select Country Code</h3>
-                      <button onClick={() => setShowCountryPicker(false)} className="p-1.5 rounded-full hover:bg-muted transition-colors"><X className="w-4 h-4" /></button>
-                    </div>
-                    <div className="px-4 py-3 border-b border-border">
-                      <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-muted/60 border border-border">
-                        <Search className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                        <input autoFocus value={countrySearch} onChange={(e) => setCountrySearch(e.target.value)} placeholder="Search country..." className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground" />
-                      </div>
-                    </div>
-                    <div className="overflow-y-auto max-h-64 divide-y divide-border/50">
-                      {DIAL_COUNTRIES.filter((c) => c.name.toLowerCase().includes(countrySearch.toLowerCase()) || c.dial.includes(countrySearch)).map((c) => (
-                        <button key={c.code} onClick={() => { setPhoneCountry(c); setShowCountryPicker(false); }} className={`w-full flex items-center gap-3 px-4 py-3 text-sm hover:bg-muted/60 transition-colors ${phoneCountry.code === c.code ? "bg-primary/5 text-primary font-semibold" : "text-foreground"}`}>
-                          <span className="flex-1 text-left">{c.name}</span>
-                          <span className="text-xs text-muted-foreground font-mono">{c.dial}</span>
-                          {phoneCountry.code === c.code && <Check className="w-3.5 h-3.5 text-primary" />}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
-          </div>
-        )}
 
-        {/* ── STEP 2: Address ── */}
-        {step === 2 && (
-          <div className="flex-1 flex flex-col">
-            <div className="flex-1 overflow-y-auto bg-card border-t border-border px-4 py-5 space-y-4">
-              <h2 className="text-sm font-bold text-foreground">Shipping address</h2>
-
-              {/* Country — dynamic from admin panel */}
+            <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <label className="flex items-center gap-1 text-[11px] font-semibold text-muted-foreground">
-                  <Globe className="w-3 h-3" />Country
-                </label>
+                <label className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground"><Mail className="w-3 h-3" />Email Address</label>
+                <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="you@email.com" className="w-full px-3.5 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
+              </div>
+              <div className="space-y-1.5">
+                <label className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground"><MapPin className="w-3 h-3" />Address</label>
+                <input value={addressLine} onChange={(e) => setAddressLine(e.target.value)} placeholder="123 Independence Ave" className="w-full px-3.5 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <label className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground"><Home className="w-3 h-3" />Town / City</label>
+                <input value={city} onChange={(e) => setCity(e.target.value)} placeholder="Lusaka" className="w-full px-3.5 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
+              </div>
+              <div className="space-y-1.5">
+                <label className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground"><MapPin className="w-3 h-3" />Province / State</label>
+                <input value={state} onChange={(e) => setState(e.target.value)} placeholder="Lusaka Province" className="w-full px-3.5 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <label className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground"><Mail className="w-3 h-3" />Postal Code</label>
+                <input value={zipCode} onChange={(e) => setZipCode(e.target.value)} placeholder="10101" className="w-full px-3.5 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
+              </div>
+              <div className="space-y-1.5">
+                <label className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground"><Globe className="w-3 h-3" />Country</label>
                 <Select value={country} onValueChange={setCountry}>
-                  <SelectTrigger
-                    className="h-[50px] rounded-xl border-border bg-background px-4 text-sm shadow-none focus:ring-2 focus:ring-primary/40 focus:border-primary"
-                  >
-                    <SelectValue placeholder="Select your country..." />
+                  <SelectTrigger className="h-[46px] rounded-xl border-border bg-background px-3.5 text-sm shadow-none focus:ring-2 focus:ring-primary/40 focus:border-primary">
+                    <SelectValue placeholder="Select country" />
                   </SelectTrigger>
                   <SelectContent className="rounded-xl border-border">
                     {shippingCountries.length > 0 ? (
                       shippingCountries.map((c) => (
-                        <SelectItem
-                          key={c.code}
-                          value={c.name}
-                          disabled={!c.isActive || !c.shippingEnabled}
-                          className="py-2.5"
-                        >
+                        <SelectItem key={c.code} value={c.name} disabled={!c.isActive || !c.shippingEnabled} className="py-2.5">
                           {!c.isActive || !c.shippingEnabled ? `${c.name} (Coming soon)` : c.name}
                         </SelectItem>
                       ))
@@ -706,189 +674,191 @@ export default function CheckoutPage() {
                   </SelectContent>
                 </Select>
               </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <label className="flex items-center gap-1 text-[11px] font-semibold text-muted-foreground"><MapPin className="w-3 h-3" />State / Province</label>
-                  <input value={state} onChange={(e) => setState(e.target.value)} placeholder="State / Province" className="w-full px-4 py-3.5 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="flex items-center gap-1 text-[11px] font-semibold text-muted-foreground"><Home className="w-3 h-3" />City</label>
-                  <input value={city} onChange={(e) => setCity(e.target.value)} placeholder="City" className="w-full px-4 py-3.5 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="flex items-center gap-1 text-[11px] font-semibold text-muted-foreground"><MapPin className="w-3 h-3" />Address</label>
-                <input value={addressLine} onChange={(e) => setAddressLine(e.target.value)} placeholder="Street name, building, house number" className="w-full px-4 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="flex items-center gap-1 text-[11px] font-semibold text-muted-foreground"><MapPin className="w-3 h-3" />ZIP / Postal code (optional)</label>
-                <input value={zipCode} onChange={(e) => setZipCode(e.target.value)} placeholder="10101" className="w-full px-4 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
-              </div>
-            </div>
-            <div className="px-4 py-4 border-t border-border/40 bg-background space-y-2">
-              <button onClick={goToStep3} className="w-full py-4 rounded-2xl bg-[var(--kryros-primary-hover)] text-white text-sm font-bold flex items-center justify-center gap-2">
-                Continue to Shipping <ChevronRight className="w-4 h-4" />
-              </button>
-              <button onClick={() => setStep(1)} className="w-full text-xs text-muted-foreground text-center hover:text-primary transition-colors py-2">← Back to Contact</button>
             </div>
           </div>
-        )}
 
-        {/* ── STEP 3: Shipping ── */}
-        {step === 3 && (
-          <div className="flex-1 flex flex-col">
-            <div className="flex-1 overflow-y-auto bg-card border-t border-border px-4 py-5 space-y-4">
-              <h2 className="text-sm font-bold text-foreground">
-                Delivery options <span className="text-[11px] text-muted-foreground font-normal">(for {city || "your area"})</span>
-              </h2>
-              <div className="space-y-3">
-                {isLoadingShipping ? (
-                  <div className="py-12 flex flex-col items-center justify-center gap-3">
-                    <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
-                    <p className="text-xs text-muted-foreground">Finding delivery options...</p>
-                  </div>
-                ) : shippingMethods.length > 0 ? (
-                  shippingMethods.map((option) => {
-                    const isSelected = shippingId === option.id;
-                    return (
-                      <button key={option.id} onClick={() => setShippingId(option.id)} className={`w-full flex items-center gap-3 px-4 py-4 rounded-2xl border text-left transition-all ${isSelected ? "border-primary bg-primary/5" : "border-border hover:border-primary/40 hover:bg-muted/40"}`}>
-                        <div className={`w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 ${isSelected ? "bg-primary text-white" : "bg-muted text-foreground"}`}>
-                          <Truck className="w-5 h-5" />
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between gap-2">
-                            <p className="text-sm font-semibold text-foreground">{option.name}</p>
-                            <p className="text-sm font-semibold text-foreground">{Number(option.fee) === 0 ? "Free" : format(Number(option.fee))}</p>
-                          </div>
-                          <p className="text-xs text-muted-foreground mt-0.5">{option.description || (option.estimatedDays ? `Estimated ${option.estimatedDays}` : "")}</p>
-                        </div>
-                        <div className={`w-4 h-4 rounded-full border flex items-center justify-center text-[8px] ${isSelected ? "border-primary bg-primary text-white" : "border-border bg-background"}`}>
-                          {isSelected && "✓"}
-                        </div>
-                      </button>
-                    );
-                  })
-                ) : (
-                  <div className="py-12 px-6 flex flex-col items-center justify-center text-center gap-2 border-2 border-dashed border-border rounded-3xl">
-                    <MapPin className="w-8 h-8 text-muted-foreground/40" />
-                    <p className="text-sm font-bold text-foreground">No shipping available</p>
-                    <p className="text-xs text-muted-foreground">We don't have shipping options for your current location yet.</p>
-                  </div>
-                )}
-              </div>
-            </div>
-            <div className="px-4 py-4 border-t border-border/40 bg-background space-y-2">
-              <button onClick={() => setStep(4)} disabled={!shippingId} className="w-full py-4 rounded-2xl bg-[var(--kryros-primary-hover)] text-white text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
-                Continue to Payment <ChevronRight className="w-4 h-4" />
-              </button>
-              <button onClick={() => setStep(2)} className="w-full text-xs text-muted-foreground text-center hover:text-primary transition-colors py-2">← Back to Address</button>
-            </div>
-          </div>
-        )}
-
-        {/* ── STEP 4: Payment ── */}
-        {step === 4 && (
-          <div className="flex-1 flex flex-col">
-            <div className="flex-1 overflow-y-auto bg-card border-t border-border px-4 py-5 space-y-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-sm font-bold text-foreground">How would you like to pay?</h2>
-                <span className="text-[11px] text-muted-foreground">Powered by Kryros Pay</span>
-              </div>
-
-              {hasPaymentError && (
-                <div className="p-3 rounded-2xl bg-red-50 dark:bg-red-900/15 border border-red-200 dark:border-red-900/30 text-[11px] text-red-600 dark:text-red-300 flex items-start gap-2">
-                  <X className="w-3 h-3 mt-0.5" />
-                  <div>
-                    <p className="font-semibold mb-0.5">{mmPhase === "timed_out" ? "We couldn't confirm your payment in time." : "We couldn't initialize your payment."}</p>
-                    <p>{orderError || "Please try again, or choose a different payment method. If the problem continues, contact support."}</p>
+          {/* Country picker modal (for phone dial code) — kept available, opened from a small link */}
+          <button type="button" onClick={() => { setShowCountryPicker(true); setCountrySearch(""); }} className="text-[10px] text-primary font-semibold mt-2 hover:underline">
+            Change dial code
+          </button>
+          {showCountryPicker && (
+            <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center" onClick={() => setShowCountryPicker(false)}>
+              <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+              <div className="relative w-full max-w-sm bg-card border border-border rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
+                <div className="flex items-center justify-between px-4 pt-4 pb-3 border-b border-border">
+                  <h3 className="text-sm font-bold text-foreground">Select Country Code</h3>
+                  <button onClick={() => setShowCountryPicker(false)} className="p-1.5 rounded-full hover:bg-muted transition-colors"><X className="w-4 h-4" /></button>
+                </div>
+                <div className="px-4 py-3 border-b border-border">
+                  <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-muted/60 border border-border">
+                    <Search className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                    <input autoFocus value={countrySearch} onChange={(e) => setCountrySearch(e.target.value)} placeholder="Search country..." className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground" />
                   </div>
                 </div>
-              )}
-
-              <div className="space-y-2">
-                {activeCheckoutMethods.map((method) => {
-                  const Icon = method.icon;
-                  return (
-                    <button key={method.id} onClick={() => { setOpenMethod(method.id); setOrderError(null); setMmPhase("idle"); }} className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl border border-border bg-card hover:border-primary/50 hover:bg-primary/[0.02] active:scale-[0.99] transition-all text-left">
-                      <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${method.iconBg}`}><Icon /></div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-bold text-foreground">{method.label}</p>
-                        <p className="text-[11px] text-muted-foreground">{method.id === "mobile" ? mobileNetworks.join(", ") : method.sub}</p>
-                      </div>
-                      <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                <div className="overflow-y-auto max-h-64 divide-y divide-border/50">
+                  {DIAL_COUNTRIES.filter((c) => c.name.toLowerCase().includes(countrySearch.toLowerCase()) || c.dial.includes(countrySearch)).map((c) => (
+                    <button key={c.code} onClick={() => { setPhoneCountry(c); setShowCountryPicker(false); }} className={`w-full flex items-center gap-3 px-4 py-3 text-sm hover:bg-muted/60 transition-colors ${phoneCountry.code === c.code ? "bg-primary/5 text-primary font-semibold" : "text-foreground"}`}>
+                      <span className="flex-1 text-left">{c.name}</span>
+                      <span className="text-xs text-muted-foreground font-mono">{c.dial}</span>
+                      {phoneCountry.code === c.code && <Check className="w-3.5 h-3.5 text-primary" />}
                     </button>
-                  );
-                })}
-              </div>
-
-              {mmPhase === "waiting" && (
-                <div className="mt-3 p-3 rounded-2xl bg-amber-50 dark:bg-amber-900/15 border border-amber-200 dark:border-amber-900/30 text-[11px] text-amber-700 dark:text-amber-200 flex items-start gap-2">
-                  <Clock className="w-3 h-3 mt-0.5" />
-                  <div>
-                    <p className="font-semibold mb-0.5">Waiting for your mobile money payment…</p>
-                    <p>Check your phone and approve the payment prompt. This can take up to 3 minutes.</p>
-                  </div>
+                  ))}
                 </div>
-              )}
-
-              <div className="border-t border-border pt-4 space-y-3">
-                <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Subtotal</span><span className="font-semibold">{format(SUBTOTAL)}</span></div>
-                <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Shipping</span><span className="font-semibold">{shippingPrice === 0 ? "Free" : format(shippingPrice)}</span></div>
-                <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Processing Fees</span><span className="font-semibold">{format(PROCESSING_FEE)}</span></div>
-                <div className="pt-2 border-t border-border flex items-center justify-between text-sm font-black">
-                  <span>Total</span><span className="text-primary">{format(total)}</span>
-                </div>
-                <p className="text-[10px] text-muted-foreground">All payments are processed securely. By completing your purchase, you agree to our Terms of Service.</p>
               </div>
             </div>
-            <div className="px-4 py-4 border-t border-border/40 bg-background">
-              <button onClick={() => setStep(3)} className="w-full text-xs text-muted-foreground text-center hover:text-primary transition-colors py-2">← Back to Shipping</button>
-            </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
 
-      {/* ── PAYMENT METHOD PANELS (bottom sheet) ── */}
-      {openMethod && step === 4 && (
-        <div className="fixed inset-0 z-50 flex flex-col justify-end">
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setOpenMethod(null)} />
-          <div className="relative bg-background rounded-t-3xl shadow-2xl max-h-[92vh] overflow-y-auto">
-            <div className="flex justify-center pt-3 pb-1"><div className="w-10 h-1 rounded-full bg-border" /></div>
-            <div className="px-5 pb-8 space-y-4">
-              {/* Sheet header */}
-              <div className="flex items-center justify-between pt-1 pb-2">
-                {(() => {
-                  const m = activeCheckoutMethods.find((x) => x.id === openMethod)!;
-                  const Icon = m.icon;
-                  return (
-                    <div className="flex items-center gap-2.5">
-                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${m.iconBg}`}><Icon /></div>
-                      <span className="text-base font-black text-foreground">{m.label}</span>
-                    </div>
-                  );
-                })()}
-                <button onClick={() => setOpenMethod(null)} className="w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors">
-                  <X className="w-4 h-4 text-foreground" />
+        {/* ── SECTION 2: Pickup Station ── */}
+        <div className="bg-card border border-border rounded-2xl p-4">
+          <SectionHeader number={2} icon={Package} title="Pickup Station" />
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setShowStationDrop((v) => !v)}
+              className="w-full flex items-center gap-2.5 border border-border rounded-xl px-3.5 py-3 bg-background hover:border-primary/50 transition-colors"
+            >
+              <Package className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+              <span className={`flex-1 text-sm text-left ${selectedStation ? "font-semibold text-foreground" : "text-muted-foreground"}`}>
+                {loadingStations ? "Loading stations…" : selectedStation ? selectedStation.name : "Choose Pickup Station"}
+              </span>
+              <ChevronDown className={`w-4 h-4 text-muted-foreground flex-shrink-0 transition-transform ${showStationDrop ? "rotate-180" : ""}`} />
+            </button>
+            {showStationDrop && (
+              <div className="absolute left-0 right-0 top-full mt-1 z-20 bg-background border border-border rounded-xl shadow-xl overflow-hidden max-h-56 overflow-y-auto">
+                <button
+                  type="button"
+                  onClick={() => { setPickupStationId(""); setShowStationDrop(false); }}
+                  className="w-full flex items-center px-4 py-3 text-left hover:bg-muted transition-colors border-b border-border text-sm text-muted-foreground"
+                >
+                  No pickup station (deliver to address)
                 </button>
+                {pickupStations.length === 0 && !loadingStations && (
+                  <div className="px-4 py-3 text-xs text-muted-foreground">No pickup stations available yet.</div>
+                )}
+                {pickupStations.map((s) => (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={() => { setPickupStationId(s.id); setShowStationDrop(false); }}
+                    className={`w-full flex items-start gap-2 px-4 py-3 text-left hover:bg-muted transition-colors border-b border-border last:border-0 ${pickupStationId === s.id ? "bg-primary/5" : ""}`}
+                  >
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-sm font-semibold ${pickupStationId === s.id ? "text-primary" : "text-foreground"}`}>{s.name}</p>
+                      <p className="text-[11px] text-muted-foreground truncate">{s.address}</p>
+                    </div>
+                    {pickupStationId === s.id && (
+                      <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <Check className="w-3 h-3 text-white" />
+                      </div>
+                    )}
+                  </button>
+                ))}
               </div>
+            )}
+          </div>
+          <p className="flex items-start gap-1.5 text-[11px] text-muted-foreground mt-2">
+            <MapPin className="w-3 h-3 mt-0.5 flex-shrink-0" />
+            {pickupStationId ? "Your order will be delivered to the selected pickup station." : "Leave unselected to have your order delivered to your address above."}
+          </p>
+        </div>
 
-              {/* MOBILE MONEY */}
+        {/* ── SECTION 3: Shipping Method ── */}
+        <div className="bg-card border border-border rounded-2xl p-4">
+          <SectionHeader number={3} icon={Truck} title="Shipping Method" />
+          {isLoadingShipping ? (
+            <div className="py-8 flex flex-col items-center justify-center gap-2">
+              <div className="w-6 h-6 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+              <p className="text-xs text-muted-foreground">Finding delivery options...</p>
+            </div>
+          ) : shippingMethods.length > 0 ? (
+            <div className="grid grid-cols-3 gap-2">
+              {shippingMethods.map((option) => {
+                const isSelected = shippingId === option.id;
+                const Icon = shippingIcon(option.name);
+                return (
+                  <button
+                    key={option.id}
+                    onClick={() => setShippingId(option.id)}
+                    className={`flex flex-col items-start gap-1.5 px-3 py-3 rounded-xl border text-left transition-all ${isSelected ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"}`}
+                  >
+                    <Icon className={`w-4 h-4 ${isSelected ? "text-primary" : "text-muted-foreground"}`} />
+                    <p className="text-xs font-bold text-foreground leading-tight">{option.name}</p>
+                    <p className="text-[10px] text-muted-foreground leading-tight">{option.description || option.estimatedDays || ""}</p>
+                    <p className={`text-xs font-bold ${isSelected ? "text-primary" : "text-foreground"}`}>{Number(option.fee) === 0 ? "FREE" : format(Number(option.fee))}</p>
+                  </button>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="py-8 px-4 flex flex-col items-center justify-center text-center gap-2 border-2 border-dashed border-border rounded-xl">
+              <MapPin className="w-6 h-6 text-muted-foreground/40" />
+              <p className="text-xs font-bold text-foreground">No shipping available</p>
+              <p className="text-[11px] text-muted-foreground">Enter your country and city above to see delivery options.</p>
+            </div>
+          )}
+        </div>
+
+        {/* ── SECTION 4: Payment Method ── */}
+        <div className="bg-card border border-border rounded-2xl p-4">
+          <SectionHeader number={4} icon={CreditCard} title="Payment Method" />
+
+          {hasPaymentError && (
+            <div className="p-3 mb-3 rounded-xl bg-red-50 dark:bg-red-900/15 border border-red-200 dark:border-red-900/30 text-[11px] text-red-600 dark:text-red-300 flex items-start gap-2">
+              <X className="w-3 h-3 mt-0.5" />
+              <div>
+                <p className="font-semibold mb-0.5">{mmPhase === "timed_out" ? "We couldn't confirm your payment in time." : "We couldn't initialize your payment."}</p>
+                <p>{orderError || "Please try again, or choose a different payment method."}</p>
+              </div>
+            </div>
+          )}
+
+          {mmPhase === "waiting" && (
+            <div className="p-3 mb-3 rounded-xl bg-amber-50 dark:bg-amber-900/15 border border-amber-200 dark:border-amber-900/30 text-[11px] text-amber-700 dark:text-amber-200 flex items-start gap-2">
+              <Clock className="w-3 h-3 mt-0.5" />
+              <div>
+                <p className="font-semibold mb-0.5">Waiting for your mobile money payment…</p>
+                <p>Check your phone and approve the payment prompt. This can take up to 3 minutes.</p>
+              </div>
+            </div>
+          )}
+
+          <div className="grid grid-cols-3 gap-2 mb-1">
+            {activeCheckoutMethods.map((method) => {
+              const Icon = method.icon;
+              const isSelected = openMethod === method.id;
+              return (
+                <button
+                  key={method.id}
+                  onClick={() => { setOpenMethod(method.id); setOrderError(null); setMmPhase("idle"); }}
+                  className={`flex flex-col items-center gap-1.5 px-2 py-3 rounded-xl border text-center transition-all ${isSelected ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"}`}
+                >
+                  <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${method.iconBg}`}><Icon /></div>
+                  <p className="text-[11px] font-bold text-foreground leading-tight">{method.label.replace(" Payment", "")}</p>
+                  <p className="text-[9px] text-muted-foreground leading-tight">{method.id === "mobile" ? mobileNetworks.slice(0, 2).join(", ") : method.sub}</p>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Inline expansion panel — opens directly under the selected method, matching the reference's intent */}
+          {openMethod && (
+            <div className="mt-4 pt-4 border-t border-border space-y-4">
+
+              {/* MOBILE MONEY — inline fields */}
               {openMethod === "mobile" && (
-                <div className="space-y-4">
+                <div className="space-y-3">
                   <div className="relative">
                     <label className="block text-[11px] font-semibold text-muted-foreground mb-1.5">Provider</label>
-                    <button type="button" onClick={() => setShowProviderDrop((v) => !v)} className="w-full flex items-center gap-2.5 border border-border rounded-2xl px-3.5 py-3 bg-background hover:border-primary/50 transition-colors">
-                      <Smartphone className="w-5 h-5 text-primary flex-shrink-0" />
+                    <button type="button" onClick={() => setShowProviderDrop((v) => !v)} className="w-full flex items-center gap-2.5 border border-border rounded-xl px-3.5 py-3 bg-background hover:border-primary/50 transition-colors">
+                      <Smartphone className="w-4 h-4 text-primary flex-shrink-0" />
                       <span className="flex-1 text-sm font-semibold text-foreground text-left">{mmProvider}</span>
                       <ChevronDown className={`w-4 h-4 text-muted-foreground flex-shrink-0 transition-transform ${showProviderDrop ? "rotate-180" : ""}`} />
                     </button>
                     {showProviderDrop && (
-                      <div className="absolute left-0 right-0 top-full mt-1 z-20 bg-background border border-border rounded-2xl shadow-xl overflow-hidden">
+                      <div className="absolute left-0 right-0 top-full mt-1 z-20 bg-background border border-border rounded-xl shadow-xl overflow-hidden">
                         {mobileNetworks.map((name) => (
-                          <button key={name} type="button" onClick={() => { setMmProvider(name); setShowProviderDrop(false); }} className={`w-full flex items-center px-4 py-3.5 text-left hover:bg-muted transition-colors border-b border-border last:border-0 ${mmProvider === name ? "bg-primary/5" : ""}`}>
+                          <button key={name} type="button" onClick={() => { setMmProvider(name); setShowProviderDrop(false); }} className={`w-full flex items-center px-4 py-3 text-left hover:bg-muted transition-colors border-b border-border last:border-0 ${mmProvider === name ? "bg-primary/5" : ""}`}>
                             <span className={`text-sm font-semibold flex-1 ${mmProvider === name ? "text-primary" : "text-foreground"}`}>{name}</span>
                             {mmProvider === name && <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center flex-shrink-0"><Check className="w-3 h-3 text-white" /></div>}
                           </button>
@@ -898,40 +868,52 @@ export default function CheckoutPage() {
                   </div>
                   <div>
                     <label className="block text-[11px] font-semibold text-muted-foreground mb-1.5">Mobile Money Number</label>
-                    <div className="flex items-center gap-2 border border-border rounded-2xl px-3.5 py-3 bg-background focus-within:ring-2 focus-within:ring-primary/30">
+                    <div className="flex items-center gap-2 border border-border rounded-xl px-3.5 py-3 bg-background focus-within:ring-2 focus-within:ring-primary/30">
                       <Smartphone className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                      <input value={mmPhone} onChange={(e) => setMmPhone(e.target.value)} placeholder="Enter your mobile money number" type="tel" className="flex-1 text-sm text-foreground outline-none bg-transparent" />
+                      <input value={mmPhone} onChange={(e) => setMmPhone(e.target.value)} placeholder="Enter the number to charge" type="tel" className="flex-1 text-sm text-foreground outline-none bg-transparent" />
                     </div>
                   </div>
-                  <div className="bg-primary/5 border border-primary/15 rounded-2xl px-4 py-3">
-                    <p className="text-[11px] text-muted-foreground">A payment prompt will be sent to your mobile phone. Please approve it to complete the payment.</p>
+                  <div className="bg-primary/5 border border-primary/15 rounded-xl px-3.5 py-2.5">
+                    <p className="text-[11px] text-muted-foreground">A payment prompt will be sent to this number. Please approve it to complete the payment.</p>
                   </div>
-                  {orderError && (
-                    <div className="flex items-start gap-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-2xl px-4 py-3">
-                      <X className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
-                      <p className="text-[12px] text-red-600 dark:text-red-400">{orderError}</p>
-                    </div>
-                  )}
-                  <div className="border-t border-border pt-4 mt-2 space-y-1.5">
-                    <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Amount</span><span className="font-semibold text-foreground">{format(SUBTOTAL)}</span></div>
-                    <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Shipping</span><span className="font-semibold text-foreground">{shippingPrice === 0 ? "Free" : format(shippingPrice)}</span></div>
-                    <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Processing Fees</span><span className="font-semibold text-foreground">{format(PROCESSING_FEE)}</span></div>
-                  </div>
-                  <button onClick={handleMobileMoneyPay} disabled={isSubmitting || !mmPhone.trim()} className="w-full py-4 bg-primary text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-primary/90 active:scale-95 transition-all disabled:opacity-60 disabled:cursor-not-allowed">
-                    {isSubmitting ? <><span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />{mmPhase === "initializing" ? "Sending prompt…" : "Processing…"}</> : <><Smartphone className="w-4 h-4" />Pay {format(total)}</>}
-                  </button>
-                  <SecureFooter />
                 </div>
               )}
 
-              {/* BANK TRANSFER */}
-              {openMethod === "bank" && (
-                <div className="space-y-4">
-                  <div className="bg-primary/5 border border-primary/15 rounded-2xl px-4 py-3 flex items-start gap-2">
-                    <Building2 className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-                    <p className="text-[11px] text-muted-foreground">Please transfer the exact amount to the account below and use your payment reference as payment note.</p>
+              {/* CARD PAYMENT — inline fields */}
+              {openMethod === "card" && (
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-[11px] font-semibold text-muted-foreground mb-1.5">Card Number</label>
+                    <div className="flex items-center gap-2 border border-border rounded-xl px-3.5 py-3 bg-background focus-within:ring-2 focus-within:ring-primary/30">
+                      <input value={cardNum} onChange={(e) => setCardNum(e.target.value)} placeholder="1234 5678 9012 3456" inputMode="numeric" className="flex-1 text-sm text-foreground outline-none bg-transparent" />
+                      <CreditCard className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                    </div>
                   </div>
-                  <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[11px] font-semibold text-muted-foreground mb-1.5">Expiry Date</label>
+                      <input value={expiry} onChange={(e) => setExpiry(e.target.value)} placeholder="MM / YY" className="w-full border border-border rounded-xl px-3.5 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/30 bg-background text-foreground" />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-muted-foreground mb-1.5">CVV</label>
+                      <input value={cvv} onChange={(e) => setCvv(e.target.value)} placeholder="123" type="password" className="w-full border border-border rounded-xl px-3.5 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/30 bg-background text-foreground" />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-semibold text-muted-foreground mb-1.5">Cardholder Name</label>
+                    <input value={cardName} onChange={(e) => setCardName(e.target.value)} placeholder="John Doe" className="w-full border border-border rounded-xl px-3.5 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/30 bg-background text-foreground" />
+                  </div>
+                </div>
+              )}
+
+              {/* BANK TRANSFER — inline fields */}
+              {openMethod === "bank" && (
+                <div className="space-y-3">
+                  <div className="bg-primary/5 border border-primary/15 rounded-xl px-3.5 py-2.5 flex items-start gap-2">
+                    <Building2 className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                    <p className="text-[11px] text-muted-foreground">Transfer the exact amount to the account below and use your reference as payment note.</p>
+                  </div>
+                  <div className="space-y-2.5">
                     {[
                       ...(bankProviders.length > 0
                         ? bankProviders.flatMap((acc) => [
@@ -948,94 +930,92 @@ export default function CheckoutPage() {
                       { label: "Reference", val: bankRef },
                     ].map(({ label, val }) => (
                       <div key={label} className="flex items-center justify-between py-2 border-b border-border last:border-0">
-                        <div><p className="text-[10px] text-muted-foreground">{label}</p><p className="text-sm font-bold text-foreground">{val}</p></div>
+                        <div>
+                          <p className="text-[10px] text-muted-foreground">{label}</p>
+                          <p className="text-sm font-bold text-foreground">{val}</p>
+                        </div>
                         <CopyBtn text={val} />
                       </div>
                     ))}
                   </div>
                   <div>
                     <p className="text-[11px] font-semibold text-muted-foreground mb-2">Upload Payment Proof (Optional)</p>
-                    <label className="flex flex-col items-center justify-center border-2 border-dashed border-border rounded-2xl py-6 cursor-pointer hover:border-primary/40 hover:bg-primary/[0.02] transition-colors" onClick={() => fileRef.current?.click()}>
-                      <Upload className="w-6 h-6 text-muted-foreground mb-2" />
+                    <label className="flex flex-col items-center justify-center border-2 border-dashed border-border rounded-xl py-5 cursor-pointer hover:border-primary/40 hover:bg-primary/[0.02] transition-colors" onClick={() => fileRef.current?.click()}>
+                      <Upload className="w-5 h-5 text-muted-foreground mb-2" />
                       <p className="text-xs font-semibold text-foreground">{proofFile ?? "Choose File or Drag & Drop"}</p>
                       <p className="text-[10px] text-muted-foreground mt-0.5">PNG, JPG, PDF up to 10MB</p>
                       <input ref={fileRef} type="file" className="hidden" accept=".png,.jpg,.jpeg,.pdf" onChange={(e) => setProofFile(e.target.files?.[0]?.name ?? null)} />
                     </label>
                   </div>
-                  <div className="border-t border-border pt-4 mt-2 space-y-1.5">
-                    <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Amount</span><span className="font-semibold text-foreground">{format(SUBTOTAL)}</span></div>
-                    <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Shipping</span><span className="font-semibold text-foreground">{shippingPrice === 0 ? "Free" : format(shippingPrice)}</span></div>
-                    <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Processing Fees</span><span className="font-semibold text-foreground">{format(PROCESSING_FEE)}</span></div>
-                  </div>
-                  <button onClick={handlePlaceOrder} disabled={isSubmitting} className="w-full py-4 bg-primary text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-primary/90 active:scale-95 transition-all disabled:opacity-60 disabled:cursor-not-allowed">
-                    {isSubmitting ? <><span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />Placing Order…</> : <><Check className="w-4 h-4" />I Have Made the Transfer</>}
-                  </button>
-                  <SecureFooter />
                 </div>
               )}
 
-              {/* WHATSAPP */}
+              {/* WHATSAPP — inline confirmation copy */}
               {openMethod === "whatsapp" && (
-                <div className="space-y-4">
-                  <div className="flex flex-col items-center py-6 gap-3">
-                    <div className="w-16 h-16 rounded-2xl bg-green-50 dark:bg-green-900/20 flex items-center justify-center">
-                      <svg viewBox="0 0 24 24" className="w-9 h-9" fill="currentColor">
-                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
-                      </svg>
-                    </div>
-                    <p className="text-sm text-center text-muted-foreground px-4">You will be redirected to WhatsApp to complete your payment securely.</p>
+                <div className="flex flex-col items-center py-4 gap-2.5">
+                  <div className="w-12 h-12 rounded-xl bg-green-50 dark:bg-green-900/20 flex items-center justify-center">
+                    <svg viewBox="0 0 24 24" className="w-6 h-6 text-green-600" fill="currentColor">
+                      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+                    </svg>
                   </div>
-                  <div className="border-t border-border pt-4 mt-2 space-y-1.5">
-                    <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Amount</span><span className="font-semibold text-foreground">{format(SUBTOTAL)}</span></div>
-                    <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Shipping</span><span className="font-semibold text-foreground">{shippingPrice === 0 ? "Free" : format(shippingPrice)}</span></div>
-                    <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Processing Fees</span><span className="font-semibold text-foreground">{format(PROCESSING_FEE)}</span></div>
-                  </div>
-                  <button onClick={handlePlaceOrder} disabled={isSubmitting} className="w-full py-4 bg-[var(--kryros-primary-hover)] text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-[#1ebe5d] active:scale-95 transition-all disabled:opacity-60 disabled:cursor-not-allowed">
-                    {isSubmitting ? <><span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />Preparing WhatsApp…</> : <><svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" /></svg>Continue on WhatsApp</>}
-                  </button>
-                  <SecureFooter />
-                </div>
-              )}
-
-              {/* CARD PAYMENT */}
-              {openMethod === "card" && (
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-[11px] font-semibold text-muted-foreground mb-1.5">Card Number</label>
-                    <div className="flex items-center gap-2 border border-border rounded-2xl px-3.5 py-3 bg-background focus-within:ring-2 focus-within:ring-primary/30">
-                      <input value={cardNum} onChange={(e) => setCardNum(e.target.value)} placeholder="1234 5678 9012 3456" inputMode="numeric" className="flex-1 text-sm text-foreground outline-none bg-transparent" />
-                      <CreditCard className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-[11px] font-semibold text-muted-foreground mb-1.5">Expiry Date</label>
-                      <input value={expiry} onChange={(e) => setExpiry(e.target.value)} placeholder="MM / YY" className="w-full border border-border rounded-2xl px-3.5 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/30 bg-background text-foreground" />
-                    </div>
-                    <div>
-                      <label className="block text-[11px] font-semibold text-muted-foreground mb-1.5">CVV</label>
-                      <input value={cvv} onChange={(e) => setCvv(e.target.value)} placeholder="123" type="password" className="w-full border border-border rounded-2xl px-3.5 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/30 bg-background text-foreground" />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-semibold text-muted-foreground mb-1.5">Cardholder Name</label>
-                    <input value={cardName} onChange={(e) => setCardName(e.target.value)} placeholder="John Doe" className="w-full border border-border rounded-2xl px-3.5 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/30 bg-background text-foreground" />
-                  </div>
-                  <div className="border-t border-border pt-4 mt-2 space-y-1.5">
-                    <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Amount</span><span className="font-semibold text-foreground">{format(SUBTOTAL)}</span></div>
-                    <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Shipping</span><span className="font-semibold text-foreground">{shippingPrice === 0 ? "Free" : format(shippingPrice)}</span></div>
-                    <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Processing Fees</span><span className="font-semibold text-foreground">{format(PROCESSING_FEE)}</span></div>
-                  </div>
-                  <button onClick={handlePlaceOrder} disabled={isSubmitting} className="w-full py-4 bg-primary text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-primary/90 active:scale-95 transition-all disabled:opacity-60 disabled:cursor-not-allowed">
-                    {isSubmitting ? <><span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />Processing payment…</> : <><Lock className="w-4 h-4" />Pay {format(total)}</>}
-                  </button>
-                  <SecureFooter />
+                  <p className="text-xs text-center text-muted-foreground px-4">You'll be redirected to WhatsApp to confirm your payment with our team.</p>
                 </div>
               )}
             </div>
+          )}
+        </div>
+
+        {/* ── SECTION 5: Order Summary ── */}
+        <div className="bg-card border border-border rounded-2xl p-4">
+          <SectionHeader number={5} icon={Package} title="Order Summary" />
+          <div className="space-y-3">
+            {cartItems.map((item) => (
+              <div key={item.id} className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+                  {item.image && <img src={item.image} alt={item.name} className="w-full h-full object-cover" />}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-foreground truncate">{item.name}</p>
+                  <p className="text-[11px] text-muted-foreground">Qty: {item.qty}</p>
+                </div>
+                <p className="text-sm font-semibold text-foreground flex-shrink-0">{format(item.price * item.qty)}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="border-t border-border mt-4 pt-3 space-y-1.5">
+            <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Subtotal</span><span className="font-semibold text-foreground">{format(SUBTOTAL)}</span></div>
+            <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Shipping</span><span className="font-semibold text-foreground">{shippingPrice === 0 ? "FREE" : format(shippingPrice)}</span></div>
+            <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Tax</span><span className="font-semibold text-foreground">{format(0)}</span></div>
+            <div className="pt-2 border-t border-border flex items-center justify-between text-base font-black">
+              <span className="text-foreground">Total</span><span className="text-primary">{format(total)}</span>
+            </div>
           </div>
         </div>
-      )}
+
+        <SecureFooter />
+      </div>
+
+      {/* Pinned Pay Now button */}
+      <div className="sticky bottom-0 px-4 py-4 border-t border-border bg-background/95 backdrop-blur">
+        <button
+          onClick={() => {
+            if (openMethod === "mobile") handleMobileMoneyPay();
+            else handlePlaceOrder();
+          }}
+          disabled={isSubmitting || !openMethod || cartItems.length === 0}
+          className="w-full py-4 rounded-2xl bg-primary text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg active:scale-[0.98] transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+        >
+          {isSubmitting ? (
+            <>
+              <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+              {mmPhase === "initializing" ? "Sending prompt…" : "Processing…"}
+            </>
+          ) : (
+            <><Lock className="w-4 h-4" /> Pay Now</>
+          )}
+        </button>
+      </div>
     </div>
   );
 }
