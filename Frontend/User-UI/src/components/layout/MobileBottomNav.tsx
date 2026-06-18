@@ -51,17 +51,17 @@ export default function MobileBottomNav() {
               const isPay = href === "/pay";
 
               if (isPay) {
-                // Raised floating circle treatment for the center "Pay" tab
+                // Raised floating circle treatment for the center "Pay" tab — kept small enough to clear the screen edge when the bar hides on scroll
                 return (
                   <Link key={href} href={href}>
-                    <button className="flex flex-col items-center gap-1 px-3 -mt-9 relative">
+                    <button className="flex flex-col items-center gap-1 px-3 -mt-6 relative">
                       <div
-                        className={`w-16 h-16 rounded-full flex items-center justify-center shadow-lg transition-all duration-200 ${
+                        className={`w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all duration-200 ${
                           isActive ? "bg-primary shadow-primary/40" : "bg-primary/90"
                         }`}
-                        style={{ boxShadow: "0 8px 24px rgba(39, 185, 175, 0.35)" }}
+                        style={{ boxShadow: "0 6px 16px rgba(39, 185, 175, 0.35)" }}
                       >
-                        <Icon className="w-6 h-6 text-white" strokeWidth={2} />
+                        <Icon className="w-5 h-5 text-white" strokeWidth={2} />
                       </div>
                       <span className={`text-[10px] font-medium leading-tight ${isActive ? "text-primary" : "text-muted-foreground"}`}>
                         {label}
