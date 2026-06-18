@@ -43,33 +43,56 @@ export default function MobileBottomNav() {
         transform: visible && !sidebarOpen ? "translateY(0)" : "translateY(110%)",
       }}
     >
-      <div className="bg-card/97 backdrop-blur-xl border-t border-border shadow-2xl"
-        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
-      >
-        <div className="flex items-center justify-around py-2">
-          {navItems.map(({ label, icon: Icon, href, badge }) => {
-            const isActive = location === href || (href !== "/" && location.startsWith(href));
-            return (
-              <Link key={href} href={href}>
-                <button className="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-all duration-200 relative">
-                  <div className={`relative p-1.5 rounded-xl transition-all duration-200 ${isActive ? "bg-primary/10" : ""}`}>
-                    <Icon
-                      className={`w-5 h-5 transition-all duration-200 ${isActive ? "text-primary" : "text-muted-foreground"}`}
-                      strokeWidth={isActive ? 2.5 : 2}
-                    />
-                    {badge != null && badge > 0 && (
-                      <span className="absolute -top-1 -right-1 min-w-[16px] h-4 bg-primary text-white text-[9px] font-bold rounded-full flex items-center justify-center px-0.5 leading-none">
-                        {badge > 99 ? "99+" : badge}
+      <div className="relative px-3 pb-3" style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 12px)" }}>
+        <div className="bg-card/97 backdrop-blur-xl rounded-[28px] shadow-2xl border border-border/60">
+          <div className="flex items-center justify-around py-2.5">
+            {navItems.map(({ label, icon: Icon, href, badge }) => {
+              const isActive = location === href || (href !== "/" && location.startsWith(href));
+              const isPay = href === "/pay";
+
+              if (isPay) {
+                // Raised floating circle treatment for the center "Pay" tab
+                return (
+                  <Link key={href} href={href}>
+                    <button className="flex flex-col items-center gap-1 px-3 -mt-9 relative">
+                      <div
+                        className={`w-16 h-16 rounded-full flex items-center justify-center shadow-lg transition-all duration-200 ${
+                          isActive ? "bg-primary shadow-primary/40" : "bg-primary/90"
+                        }`}
+                        style={{ boxShadow: "0 8px 24px rgba(39, 185, 175, 0.35)" }}
+                      >
+                        <Icon className="w-6 h-6 text-white" strokeWidth={2} />
+                      </div>
+                      <span className={`text-[10px] font-medium leading-tight ${isActive ? "text-primary" : "text-muted-foreground"}`}>
+                        {label}
                       </span>
-                    )}
-                  </div>
-                  <span className={`text-[10px] font-medium transition-colors duration-200 leading-tight ${isActive ? "text-primary" : "text-muted-foreground"}`}>
-                    {label}
-                  </span>
-                </button>
-              </Link>
-            );
-          })}
+                    </button>
+                  </Link>
+                );
+              }
+
+              return (
+                <Link key={href} href={href}>
+                  <button className="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-all duration-200 relative">
+                    <div className="relative p-1.5 rounded-xl transition-all duration-200">
+                      <Icon
+                        className={`w-5 h-5 transition-all duration-200 ${isActive ? "text-primary" : "text-muted-foreground"}`}
+                        strokeWidth={isActive ? 2.5 : 2}
+                      />
+                      {badge != null && badge > 0 && (
+                        <span className="absolute -top-1 -right-1 min-w-[16px] h-4 bg-primary text-white text-[9px] font-bold rounded-full flex items-center justify-center px-0.5 leading-none">
+                          {badge > 99 ? "99+" : badge}
+                        </span>
+                      )}
+                    </div>
+                    <span className={`text-[10px] font-medium transition-colors duration-200 leading-tight ${isActive ? "text-primary" : "text-muted-foreground"}`}>
+                      {label}
+                    </span>
+                  </button>
+                </Link>
+              );
+            })}
+          </div>
         </div>
       </div>
     </nav>
