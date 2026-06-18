@@ -599,11 +599,11 @@ export default function CheckoutPage() {
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <label className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground"><User className="w-3 h-3" />First Name</label>
-                <input value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="John" className="w-full px-3.5 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
+                <input value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="Enter first name" className="w-full px-3.5 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
               </div>
               <div className="space-y-1.5">
                 <label className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground"><User className="w-3 h-3" />Last Name</label>
-                <input value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Mwansa" className="w-full px-3.5 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
+                <input value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Enter last name" className="w-full px-3.5 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
               </div>
             </div>
 
@@ -620,7 +620,7 @@ export default function CheckoutPage() {
                       const match = DIAL_COUNTRIES.find((c) => c.dial === nextValue || c.name.toLowerCase() === nextValue.toLowerCase());
                       setPhoneCountry(match ?? { ...phoneCountry, dial: nextValue });
                     }}
-                    placeholder="+260"
+                    placeholder="+1"
                     type="text"
                     className="w-full min-w-0 px-3 py-3 bg-transparent text-sm font-semibold text-foreground outline-none"
                   />
@@ -630,7 +630,7 @@ export default function CheckoutPage() {
                     ))}
                   </datalist>
                 </div>
-                <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="97 123 4567" type="tel" className="flex-1 min-w-0 px-3.5 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
+                <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Enter phone number" type="tel" className="flex-1 min-w-0 px-3.5 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
               </div>
             </div>
 
@@ -641,25 +641,25 @@ export default function CheckoutPage() {
               </div>
               <div className="space-y-1.5">
                 <label className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground"><MapPin className="w-3 h-3" />Address</label>
-                <input value={addressLine} onChange={(e) => setAddressLine(e.target.value)} placeholder="123 Independence Ave" className="w-full px-3.5 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
+                <input value={addressLine} onChange={(e) => setAddressLine(e.target.value)} placeholder="Enter street address" className="w-full px-3.5 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <label className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground"><Home className="w-3 h-3" />Town / City</label>
-                <input value={city} onChange={(e) => setCity(e.target.value)} placeholder="Lusaka" className="w-full px-3.5 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
+                <input value={city} onChange={(e) => setCity(e.target.value)} placeholder="Enter city" className="w-full px-3.5 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
               </div>
               <div className="space-y-1.5">
                 <label className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground"><MapPin className="w-3 h-3" />Province / State</label>
-                <input value={state} onChange={(e) => setState(e.target.value)} placeholder="Lusaka Province" className="w-full px-3.5 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
+                <input value={state} onChange={(e) => setState(e.target.value)} placeholder="Enter province / state" className="w-full px-3.5 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <label className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground"><Mail className="w-3 h-3" />Postal Code</label>
-                <input value={zipCode} onChange={(e) => setZipCode(e.target.value)} placeholder="10101" className="w-full px-3.5 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
+                <input value={zipCode} onChange={(e) => setZipCode(e.target.value)} placeholder="Enter postal code" className="w-full px-3.5 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
               </div>
               <div className="space-y-1.5">
                 <label className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground"><Globe className="w-3 h-3" />Country</label>
