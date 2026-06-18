@@ -558,91 +558,208 @@ export default function PayPage() {
               )}
             </div>
 
-            {/* If mobile selected inline, show network + phone (matches Image 3 bottom half) */}
-            {openMethod === "mobile" && (
+            {/* Selected method panel — renders inline on the page (no overlay/sheet), matching Image 1 */}
+            {openMethod && (
               <div className="space-y-4">
                 <div className="border-t" style={{ borderColor: "#e5e7eb" }} />
 
-                {/* Network dropdown */}
-                <div>
-                  <label className="block text-sm font-bold mb-2 text-gray-900">Network</label>
-                  <div className="relative">
-                    <button
-                      type="button"
-                      onClick={() => setShowProviderDrop((v) => !v)}
-                      className="w-full flex items-center justify-between border rounded-2xl px-4 py-3.5 bg-white text-sm font-semibold text-gray-900 hover:border-teal-300 transition-colors"
-                      style={{ borderColor: "#e5e7eb" }}
-                    >
-                      {mmProvider}
-                      <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${showProviderDrop ? "rotate-180" : ""}`} />
-                    </button>
-                    {showProviderDrop && (
-                      <div className="absolute left-0 right-0 top-full mt-1 z-20 bg-white border rounded-2xl shadow-xl overflow-hidden" style={{ borderColor: "#e5e7eb" }}>
-                        {mobileNetworks.map((name) => (
-                          <button key={name} type="button"
-                            onClick={() => { setMmProvider(name); setShowProviderDrop(false); }}
-                            className="w-full flex items-center px-4 py-3.5 text-left hover:bg-gray-50 transition-colors border-b last:border-0 text-sm font-semibold"
-                            style={{ borderColor: "#f3f4f6", color: mmProvider === name ? TEAL : "#1a2340" }}>
-                            {name}
-                            {mmProvider === name && (
-                              <div className="ml-auto w-5 h-5 rounded-full flex items-center justify-center" style={{ background: TEAL }}>
-                                <Check className="w-3 h-3 text-white" />
-                              </div>
-                            )}
-                          </button>
-                        ))}
+                {/* Panel header (icon + label + close) */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: "#e6f7f6" }}>
+                      <MethodIcon type={activeMethods.find((x) => x.id === openMethod)?.icon || "card"} />
+                    </div>
+                    <span className="text-base font-black text-gray-900">
+                      {activeMethods.find((x) => x.id === openMethod)?.label}
+                    </span>
+                  </div>
+                  <button onClick={() => setOpenMethod(null)} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors">
+                    <X className="w-4 h-4 text-gray-700" />
+                  </button>
+                </div>
+
+                {/* MOBILE — Network + Phone (dynamic: mobileNetworks comes from API config) */}
+                {openMethod === "mobile" && (
+                  <>
+                    <div>
+                      <label className="block text-sm font-bold mb-2 text-gray-900">Network</label>
+                      <div className="relative">
+                        <button
+                          type="button"
+                          onClick={() => setShowProviderDrop((v) => !v)}
+                          className="w-full flex items-center justify-between border rounded-2xl px-4 py-3.5 bg-white text-sm font-semibold text-gray-900 hover:border-teal-300 transition-colors"
+                          style={{ borderColor: "#e5e7eb" }}
+                        >
+                          {mmProvider}
+                          <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${showProviderDrop ? "rotate-180" : ""}`} />
+                        </button>
+                        {showProviderDrop && (
+                          <div className="absolute left-0 right-0 top-full mt-1 z-20 bg-white border rounded-2xl shadow-xl overflow-hidden" style={{ borderColor: "#e5e7eb" }}>
+                            {mobileNetworks.map((name) => (
+                              <button key={name} type="button"
+                                onClick={() => { setMmProvider(name); setShowProviderDrop(false); }}
+                                className="w-full flex items-center px-4 py-3.5 text-left hover:bg-gray-50 transition-colors border-b last:border-0 text-sm font-semibold"
+                                style={{ borderColor: "#f3f4f6", color: mmProvider === name ? TEAL : "#1a2340" }}>
+                                {name}
+                                {mmProvider === name && (
+                                  <div className="ml-auto w-5 h-5 rounded-full flex items-center justify-center" style={{ background: TEAL }}>
+                                    <Check className="w-3 h-3 text-white" />
+                                  </div>
+                                )}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-bold mb-2 text-gray-900">Phone Number</label>
+                      <div className="flex items-center border rounded-2xl bg-white overflow-hidden" style={{ borderColor: "#e5e7eb" }}>
+                        <span className="px-4 py-3.5 font-bold text-sm border-r" style={{ color: TEAL, borderColor: "#e5e7eb" }}>+260</span>
+                        <input
+                          value={mmPhone}
+                          onChange={(e) => setMmPhone(e.target.value)}
+                          placeholder=""
+                          type="tel"
+                          className="flex-1 px-3 py-3.5 text-sm text-gray-900 outline-none bg-transparent"
+                        />
+                      </div>
+                    </div>
+
+                    {payError && (
+                      <div className="flex items-start gap-2 rounded-2xl px-4 py-3 border" style={{ background: "#fef2f2", borderColor: "#fecaca" }}>
+                        <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
+                        <p className="text-xs text-red-600">{payError}</p>
                       </div>
                     )}
-                  </div>
-                </div>
 
-                {/* Phone Number */}
-                <div>
-                  <label className="block text-sm font-bold mb-2 text-gray-900">Phone Number</label>
-                  <div className="flex items-center border rounded-2xl bg-white overflow-hidden" style={{ borderColor: "#e5e7eb" }}>
-                    <span className="px-4 py-3.5 font-bold text-sm border-r" style={{ color: TEAL, borderColor: "#e5e7eb" }}>+260</span>
-                    <input
-                      value={mmPhone}
-                      onChange={(e) => setMmPhone(e.target.value)}
-                      placeholder=""
-                      type="tel"
-                      className="flex-1 px-3 py-3.5 text-sm text-gray-900 outline-none bg-transparent"
-                    />
-                  </div>
-                </div>
-
-                {payError && (
-                  <div className="flex items-start gap-2 rounded-2xl px-4 py-3 border" style={{ background: "#fef2f2", borderColor: "#fecaca" }}>
-                    <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
-                    <p className="text-xs text-red-600">{payError}</p>
-                  </div>
+                    <button
+                      onClick={handleMobileMoneyPay}
+                      disabled={payLoading}
+                      className="w-full py-4 rounded-2xl font-bold text-sm text-white flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-60"
+                      style={{ background: `linear-gradient(135deg, ${TEAL} 0%, ${TEAL_DARK} 100%)` }}
+                    >
+                      {payLoading ? (
+                        <><span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />{payStatus === "sending" ? "Sending…" : "Processing…"}</>
+                      ) : (
+                        <><Lock className="w-4 h-4" /> Pay Now <ChevronDown className="w-4 h-4 ml-auto" /></>
+                      )}
+                    </button>
+                  </>
                 )}
 
-                {/* Pay Now button */}
-                <button
-                  onClick={handleMobileMoneyPay}
-                  disabled={payLoading}
-                  className="w-full py-4 rounded-2xl font-bold text-sm text-white flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-60"
-                  style={{ background: `linear-gradient(135deg, ${TEAL} 0%, ${TEAL_DARK} 100%)` }}
-                >
-                  {payLoading ? (
-                    <><span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />{payStatus === "sending" ? "Sending…" : "Processing…"}</>
-                  ) : (
-                    <><Lock className="w-4 h-4" /> Pay Now <ChevronDown className="w-4 h-4 ml-auto" /></>
-                  )}
-                </button>
-              </div>
-            )}
+                {/* CARD */}
+                {openMethod === "card" && (
+                  <>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">Card Number</label>
+                      <div className="flex items-center gap-2 border rounded-2xl px-3.5 py-3 bg-white focus-within:ring-2" style={{ borderColor: "#e5e7eb" }}>
+                        <input placeholder="1234 5678 9012 3456" inputMode="numeric" className="flex-1 text-sm text-gray-900 outline-none bg-transparent" />
+                        <CreditCard className="w-4 h-4 text-gray-400" />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">Expiry</label>
+                        <input placeholder="MM / YY" className="w-full border rounded-2xl px-3.5 py-3 text-sm outline-none focus:ring-2 bg-white text-gray-900" style={{ borderColor: "#e5e7eb" }} />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">CVV</label>
+                        <input placeholder="123" type="password" className="w-full border rounded-2xl px-3.5 py-3 text-sm outline-none focus:ring-2 bg-white text-gray-900" style={{ borderColor: "#e5e7eb" }} />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">Cardholder Name</label>
+                      <input placeholder="John Doe" className="w-full border rounded-2xl px-3.5 py-3 text-sm outline-none focus:ring-2 bg-white text-gray-900" style={{ borderColor: "#e5e7eb" }} />
+                    </div>
+                    <div className="border-t pt-3 space-y-2" style={{ borderColor: "#f3f4f6" }}>
+                      <div className="flex justify-between text-xs"><span className="text-gray-400">Amount</span><span className="font-semibold text-gray-900">{format(amount)}</span></div>
+                      <div className="flex justify-between text-xs"><span className="text-gray-400">Fee</span><span className="font-semibold text-gray-900">{format(fee)}</span></div>
+                    </div>
+                    <button className="w-full py-4 rounded-2xl font-bold text-sm text-white flex items-center justify-center gap-2 active:scale-95 transition-all"
+                      style={{ background: `linear-gradient(135deg, ${TEAL} 0%, ${TEAL_DARK} 100%)` }}>
+                      <Lock className="w-4 h-4" /> Pay {format(total)}
+                    </button>
+                    <p className="text-[11px] text-center text-gray-400 flex items-center justify-center gap-1.5"><Lock className="w-3 h-3" /> Secure · Encrypted · Safe</p>
+                  </>
+                )}
 
-            {/* If card, whatsapp, bank — show a Pay Now button that opens the sheet */}
-            {openMethod && openMethod !== "mobile" && (
-              <button
-                onClick={() => {}} // handled by bottom sheet below
-                className="w-full py-4 rounded-2xl font-bold text-sm text-white flex items-center justify-center gap-2 transition-all active:scale-95"
-                style={{ background: `linear-gradient(135deg, ${TEAL} 0%, ${TEAL_DARK} 100%)` }}
-              >
-                <Lock className="w-4 h-4" /> Pay Now
-              </button>
+                {/* WHATSAPP */}
+                {openMethod === "whatsapp" && (
+                  <>
+                    <div className="flex flex-col items-center py-4 gap-3">
+                      <div className="w-16 h-16 rounded-2xl flex items-center justify-center" style={{ background: "#dcfce7" }}>
+                        <svg viewBox="0 0 24 24" className="w-9 h-9" fill="#25D366">
+                          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+                        </svg>
+                      </div>
+                      <p className="text-sm text-center text-gray-500 px-4">You will be redirected to WhatsApp to complete your payment securely.</p>
+                    </div>
+                    <div className="border-t pt-3 space-y-2" style={{ borderColor: "#f3f4f6" }}>
+                      <div className="flex justify-between text-xs"><span className="text-gray-400">Amount</span><span className="font-semibold text-gray-900">{format(amount)}</span></div>
+                      <div className="flex justify-between text-xs"><span className="text-gray-400">Fee</span><span className="font-semibold text-gray-900">{format(fee)}</span></div>
+                    </div>
+                    <button onClick={handleWhatsAppPay} className="w-full py-4 rounded-2xl font-bold text-sm text-white flex items-center justify-center gap-2 active:scale-95 transition-all" style={{ background: "#25D366" }}>
+                      <svg viewBox="0 0 24 24" className="w-4 h-4" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                      Continue on WhatsApp
+                    </button>
+                    <p className="text-[11px] text-center text-gray-400 flex items-center justify-center gap-1.5"><Lock className="w-3 h-3" /> Secure · Encrypted · Safe</p>
+                  </>
+                )}
+
+                {/* BANK — dynamic: bankProviders comes from API config, falls back to default account */}
+                {openMethod === "bank" && (
+                  <>
+                    <div className="rounded-2xl px-4 py-3 flex items-start gap-2 border" style={{ background: "#f0fdf4", borderColor: "#bbf7d0" }}>
+                      <Building2 className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: TEAL }} />
+                      <p className="text-[11px] text-gray-500">Please transfer the exact amount to the account below and use your payment reference as payment note.</p>
+                    </div>
+                    <div className="space-y-3">
+                      {[
+                        ...(bankProviders.length > 0
+                          ? bankProviders.flatMap((acc) => [
+                              { label: "Bank Name", val: acc.name },
+                              { label: "Account Name", val: acc.config?.accountName || "" },
+                              { label: "Account Number", val: acc.config?.accountNumber || "" },
+                            ])
+                          : [
+                              { label: "Bank Name", val: "Stanbic Bank Zambia" },
+                              { label: "Account Name", val: "KRYROS LIMITED" },
+                              { label: "Account Number", val: "91200012345667" },
+                            ]),
+                        { label: "Reference", val: payRef },
+                      ].map(({ label, val }) => (
+                        <div key={label} className="flex items-center justify-between py-2 border-b last:border-0" style={{ borderColor: "#f3f4f6" }}>
+                          <div>
+                            <p className="text-[10px] text-gray-400">{label}</p>
+                            <p className="text-sm font-bold text-gray-900">{val}</p>
+                          </div>
+                          <CopyBtn text={val} />
+                        </div>
+                      ))}
+                    </div>
+                    <div>
+                      <p className="text-[11px] font-semibold text-gray-500 mb-2">Upload Payment Proof (Optional)</p>
+                      <label className="flex flex-col items-center justify-center border-2 border-dashed rounded-2xl py-6 cursor-pointer hover:bg-gray-50 transition-colors" style={{ borderColor: "#d1d5db" }} onClick={() => fileRef.current?.click()}>
+                        <Upload className="w-6 h-6 text-gray-400 mb-2" />
+                        <p className="text-xs font-semibold text-gray-700">{proofFile ?? "Choose File or Drag & Drop"}</p>
+                        <p className="text-[10px] text-gray-400 mt-0.5">PNG, JPG, PDF up to 10MB</p>
+                        <input ref={fileRef} type="file" className="hidden" accept=".png,.jpg,.jpeg,.pdf" onChange={(e) => setProofFile(e.target.files?.[0]?.name ?? null)} />
+                      </label>
+                    </div>
+                    <div className="border-t pt-3 space-y-2" style={{ borderColor: "#f3f4f6" }}>
+                      <div className="flex justify-between text-xs"><span className="text-gray-400">Amount</span><span className="font-semibold text-gray-900">{format(amount)}</span></div>
+                      <div className="flex justify-between text-xs"><span className="text-gray-400">Fee</span><span className="font-semibold text-gray-900">{format(fee)}</span></div>
+                    </div>
+                    <button onClick={() => setPayStatus("waiting")} className="w-full py-4 rounded-2xl font-bold text-sm text-white flex items-center justify-center gap-2 active:scale-95 transition-all"
+                      style={{ background: `linear-gradient(135deg, ${TEAL} 0%, ${TEAL_DARK} 100%)` }}>
+                      <Check className="w-4 h-4" /> I Have Made the Transfer
+                    </button>
+                    <p className="text-[11px] text-center text-gray-400 flex items-center justify-center gap-1.5"><Lock className="w-3 h-3" /> Secure · Encrypted · Safe</p>
+                  </>
+                )}
+              </div>
             )}
 
             <p className="text-[11px] text-center text-gray-400 flex items-center justify-center gap-1.5">
@@ -651,155 +768,6 @@ export default function PayPage() {
           </div>
         )}
       </div>
-
-      {/* ══════════════════════════════════════════════════════════════════
-          BOTTOM SHEET — Card / WhatsApp / Bank payment panels
-      ════════════════════════════════════════════════════════════════════ */}
-      {openMethod && openMethod !== "mobile" && (
-        <div className="fixed inset-0 z-50 flex flex-col justify-end">
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setOpenMethod(null)} />
-          <div className="relative bg-white rounded-t-3xl shadow-2xl max-h-[92vh] overflow-y-auto">
-            {/* Drag handle */}
-            <div className="flex justify-center pt-3 pb-1">
-              <div className="w-10 h-1 rounded-full bg-gray-200" />
-            </div>
-
-            <div className="px-5 pb-8 space-y-4">
-              {/* Sheet header */}
-              <div className="flex items-center justify-between pt-1 pb-2">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: "#e6f7f6" }}>
-                    <MethodIcon type={activeMethods.find(x => x.id === openMethod)?.icon || "card"} />
-                  </div>
-                  <span className="text-base font-black text-gray-900">
-                    {activeMethods.find(x => x.id === openMethod)?.label}
-                  </span>
-                </div>
-                <button onClick={() => setOpenMethod(null)} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors">
-                  <X className="w-4 h-4 text-gray-700" />
-                </button>
-              </div>
-
-              {/* You are sending */}
-              <div className="text-center py-2">
-                <p className="text-xs text-gray-400">You are sending</p>
-                <p className="text-2xl font-black mt-0.5" style={{ color: TEAL }}>{currency} {total.toFixed(2)}</p>
-              </div>
-
-              {/* CARD PAYMENT */}
-              {openMethod === "card" && (
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">Card Number</label>
-                    <div className="flex items-center gap-2 border rounded-2xl px-3.5 py-3 bg-white focus-within:ring-2" style={{ borderColor: "#e5e7eb" }}>
-                      <input placeholder="1234 5678 9012 3456" inputMode="numeric" className="flex-1 text-sm text-gray-900 outline-none bg-transparent" />
-                      <CreditCard className="w-4 h-4 text-gray-400" />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">Expiry</label>
-                      <input placeholder="MM / YY" className="w-full border rounded-2xl px-3.5 py-3 text-sm outline-none focus:ring-2 bg-white text-gray-900" style={{ borderColor: "#e5e7eb" }} />
-                    </div>
-                    <div>
-                      <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">CVV</label>
-                      <input placeholder="123" type="password" className="w-full border rounded-2xl px-3.5 py-3 text-sm outline-none focus:ring-2 bg-white text-gray-900" style={{ borderColor: "#e5e7eb" }} />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-semibold text-gray-500 mb-1.5">Cardholder Name</label>
-                    <input placeholder="John Doe" className="w-full border rounded-2xl px-3.5 py-3 text-sm outline-none focus:ring-2 bg-white text-gray-900" style={{ borderColor: "#e5e7eb" }} />
-                  </div>
-                  <div className="border-t pt-3 space-y-2" style={{ borderColor: "#f3f4f6" }}>
-                    <div className="flex justify-between text-xs"><span className="text-gray-400">Amount</span><span className="font-semibold text-gray-900">{format(amount)}</span></div>
-                    <div className="flex justify-between text-xs"><span className="text-gray-400">Fee</span><span className="font-semibold text-gray-900">{format(fee)}</span></div>
-                  </div>
-                  <button className="w-full py-4 rounded-2xl font-bold text-sm text-white flex items-center justify-center gap-2 active:scale-95 transition-all"
-                    style={{ background: `linear-gradient(135deg, ${TEAL} 0%, ${TEAL_DARK} 100%)` }}>
-                    <Lock className="w-4 h-4" /> Pay {format(total)}
-                  </button>
-                  <p className="text-[11px] text-center text-gray-400 flex items-center justify-center gap-1.5"><Lock className="w-3 h-3" /> Secure · Encrypted · Safe</p>
-                </div>
-              )}
-
-              {/* WHATSAPP */}
-              {openMethod === "whatsapp" && (
-                <div className="space-y-4">
-                  <div className="flex flex-col items-center py-4 gap-3">
-                    <div className="w-16 h-16 rounded-2xl flex items-center justify-center" style={{ background: "#dcfce7" }}>
-                      <svg viewBox="0 0 24 24" className="w-9 h-9" fill="#25D366">
-                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
-                      </svg>
-                    </div>
-                    <p className="text-sm text-center text-gray-500 px-4">You will be redirected to WhatsApp to complete your payment securely.</p>
-                  </div>
-                  <div className="border-t pt-3 space-y-2" style={{ borderColor: "#f3f4f6" }}>
-                    <div className="flex justify-between text-xs"><span className="text-gray-400">Amount</span><span className="font-semibold text-gray-900">{format(amount)}</span></div>
-                    <div className="flex justify-between text-xs"><span className="text-gray-400">Fee</span><span className="font-semibold text-gray-900">{format(fee)}</span></div>
-                  </div>
-                  <button onClick={handleWhatsAppPay} className="w-full py-4 rounded-2xl font-bold text-sm text-white flex items-center justify-center gap-2 active:scale-95 transition-all" style={{ background: "#25D366" }}>
-                    <svg viewBox="0 0 24 24" className="w-4 h-4" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-                    Continue on WhatsApp
-                  </button>
-                  <p className="text-[11px] text-center text-gray-400 flex items-center justify-center gap-1.5"><Lock className="w-3 h-3" /> Secure · Encrypted · Safe</p>
-                </div>
-              )}
-
-              {/* BANK TRANSFER */}
-              {openMethod === "bank" && (
-                <div className="space-y-4">
-                  <div className="rounded-2xl px-4 py-3 flex items-start gap-2 border" style={{ background: "#f0fdf4", borderColor: "#bbf7d0" }}>
-                    <Building2 className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: TEAL }} />
-                    <p className="text-[11px] text-gray-500">Please transfer the exact amount to the account below and use your payment reference as payment note.</p>
-                  </div>
-                  <div className="space-y-3">
-                    {[
-                      ...(bankProviders.length > 0
-                        ? bankProviders.flatMap((acc) => [
-                            { label: "Bank Name", val: acc.name },
-                            { label: "Account Name", val: acc.config?.accountName || "" },
-                            { label: "Account Number", val: acc.config?.accountNumber || "" },
-                          ])
-                        : [
-                            { label: "Bank Name", val: "Stanbic Bank Zambia" },
-                            { label: "Account Name", val: "KRYROS LIMITED" },
-                            { label: "Account Number", val: "91200012345667" },
-                          ]),
-                      { label: "Reference", val: payRef },
-                    ].map(({ label, val }) => (
-                      <div key={label} className="flex items-center justify-between py-2 border-b last:border-0" style={{ borderColor: "#f3f4f6" }}>
-                        <div>
-                          <p className="text-[10px] text-gray-400">{label}</p>
-                          <p className="text-sm font-bold text-gray-900">{val}</p>
-                        </div>
-                        <CopyBtn text={val} />
-                      </div>
-                    ))}
-                  </div>
-                  <div>
-                    <p className="text-[11px] font-semibold text-gray-500 mb-2">Upload Payment Proof (Optional)</p>
-                    <label className="flex flex-col items-center justify-center border-2 border-dashed rounded-2xl py-6 cursor-pointer hover:bg-gray-50 transition-colors" style={{ borderColor: "#d1d5db" }} onClick={() => fileRef.current?.click()}>
-                      <Upload className="w-6 h-6 text-gray-400 mb-2" />
-                      <p className="text-xs font-semibold text-gray-700">{proofFile ?? "Choose File or Drag & Drop"}</p>
-                      <p className="text-[10px] text-gray-400 mt-0.5">PNG, JPG, PDF up to 10MB</p>
-                      <input ref={fileRef} type="file" className="hidden" accept=".png,.jpg,.jpeg,.pdf" onChange={(e) => setProofFile(e.target.files?.[0]?.name ?? null)} />
-                    </label>
-                  </div>
-                  <div className="border-t pt-3 space-y-2" style={{ borderColor: "#f3f4f6" }}>
-                    <div className="flex justify-between text-xs"><span className="text-gray-400">Amount</span><span className="font-semibold text-gray-900">{format(amount)}</span></div>
-                    <div className="flex justify-between text-xs"><span className="text-gray-400">Fee</span><span className="font-semibold text-gray-900">{format(fee)}</span></div>
-                  </div>
-                  <button onClick={() => setPayStatus("waiting")} className="w-full py-4 rounded-2xl font-bold text-sm text-white flex items-center justify-center gap-2 active:scale-95 transition-all"
-                    style={{ background: `linear-gradient(135deg, ${TEAL} 0%, ${TEAL_DARK} 100%)` }}>
-                    <Check className="w-4 h-4" /> I Have Made the Transfer
-                  </button>
-                  <p className="text-[11px] text-center text-gray-400 flex items-center justify-center gap-1.5"><Lock className="w-3 h-3" /> Secure · Encrypted · Safe</p>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
