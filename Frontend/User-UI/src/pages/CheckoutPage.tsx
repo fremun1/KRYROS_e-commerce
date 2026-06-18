@@ -598,33 +598,39 @@ export default function CheckoutPage() {
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <label className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground"><User className="w-3 h-3" />Full Name</label>
+                <label className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground"><User className="w-3 h-3" />First Name</label>
                 <input value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="John" className="w-full px-3.5 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
               </div>
               <div className="space-y-1.5">
-                <label className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground"><Phone className="w-3 h-3" />Phone Number</label>
-                <div className="flex gap-1.5">
-                  <div className="w-[68px] rounded-xl border border-border bg-muted/40 flex items-center flex-shrink-0 overflow-hidden">
-                    <input
-                      list="checkout-dial-codes"
-                      value={phoneCountry.dial}
-                      onChange={(e) => {
-                        const nextValue = e.target.value;
-                        const match = DIAL_COUNTRIES.find((c) => c.dial === nextValue || c.name.toLowerCase() === nextValue.toLowerCase());
-                        setPhoneCountry(match ?? { ...phoneCountry, dial: nextValue });
-                      }}
-                      placeholder="+260"
-                      type="text"
-                      className="w-full min-w-0 px-2 py-3 bg-transparent text-xs font-semibold text-foreground outline-none"
-                    />
-                    <datalist id="checkout-dial-codes">
-                      {DIAL_COUNTRIES.map((c) => (
-                        <option key={c.code} value={c.dial}>{c.name}</option>
-                      ))}
-                    </datalist>
-                  </div>
-                  <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="97 123 4567" type="tel" className="flex-1 min-w-0 px-3 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
+                <label className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground"><User className="w-3 h-3" />Last Name</label>
+                <input value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Mwansa" className="w-full px-3.5 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
+              </div>
+            </div>
+
+            {/* Phone Number gets its own full-width row so the dial code + number both have room */}
+            <div className="space-y-1.5">
+              <label className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground"><Phone className="w-3 h-3" />Phone Number</label>
+              <div className="flex gap-1.5">
+                <div className="w-[88px] rounded-xl border border-border bg-muted/40 flex items-center flex-shrink-0 overflow-hidden">
+                  <input
+                    list="checkout-dial-codes"
+                    value={phoneCountry.dial}
+                    onChange={(e) => {
+                      const nextValue = e.target.value;
+                      const match = DIAL_COUNTRIES.find((c) => c.dial === nextValue || c.name.toLowerCase() === nextValue.toLowerCase());
+                      setPhoneCountry(match ?? { ...phoneCountry, dial: nextValue });
+                    }}
+                    placeholder="+260"
+                    type="text"
+                    className="w-full min-w-0 px-3 py-3 bg-transparent text-sm font-semibold text-foreground outline-none"
+                  />
+                  <datalist id="checkout-dial-codes">
+                    {DIAL_COUNTRIES.map((c) => (
+                      <option key={c.code} value={c.dial}>{c.name}</option>
+                    ))}
+                  </datalist>
                 </div>
+                <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="97 123 4567" type="tel" className="flex-1 min-w-0 px-3.5 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
               </div>
             </div>
 
