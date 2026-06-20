@@ -4,9 +4,8 @@ import { useCartStore } from "@/store/cartStore";
 import { useSidebarStore } from "@/store/sidebarStore";
 import { useEffect, useRef, useState } from "react";
 
-const TEAL = "#27B9AF";
-const NAV_H = 64; // px height of the bar
-const BUMP_R = 28; // radius of the raised Pay circle
+const NAV_H = 72; // px height of the bar
+const CIRCLE_R = 32; // radius of the raised Pay circle (diameter = 64px)
 
 export default function MobileBottomNav() {
   const [location] = useLocation();
@@ -44,50 +43,41 @@ export default function MobileBottomNav() {
     >
       {/* Safe-area padding wrapper */}
       <div style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
-        {/*
-          SVG notch bar — draws the white rounded rect with a smooth arch cutout
-          in the center for the Pay button to sit in.
-        */}
-        <div className="relative" style={{ height: NAV_H + 20 }}>
-          {/* Background bar with notch rendered as an inline SVG */}
+        {/* Main nav container with notch for Pay button */}
+        <div className="relative" style={{ height: NAV_H + 16 }}>
+          {/* Background bar with notch using SVG */}
           <svg
-            viewBox={`0 0 375 ${NAV_H + 20}`}
+            viewBox={`0 0 375 ${NAV_H + 16}`}
             preserveAspectRatio="none"
-            className="absolute inset-0 w-full h-full drop-shadow-xl"
-            style={{ filter: "drop-shadow(0 -2px 12px rgba(0,0,0,0.10))" }}
+            className="absolute inset-0 w-full h-full"
+            style={{
+              filter: "drop-shadow(0 -4px 16px rgba(0,0,0,0.08))"
+            }}
           >
-            <defs>
-              <filter id="navShadow">
-                <feDropShadow dx="0" dy="-2" stdDeviation="6" floodColor="rgba(0,0,0,0.10)" />
-              </filter>
-            </defs>
-            {/*
-              Path: start at bottom-left corner, go up to bar height,
-              across to notch start, curve down into notch, curve back up,
-              continue to top-right, down to bottom-right, close.
-              Notch center is at x=187.5 (middle). Notch radius ~34px with padding.
-            */}
+            {/* Main bar path with smooth notch */}
             <path
               d={`
-                M 0,20
+                M 0,16
                 Q 0,0 20,0
-                L 152,0
-                Q 167,0 170,14
-                A ${BUMP_R + 6},${BUMP_R + 6} 0 0 0 205,14
-                Q 208,0 223,0
+                L 145,0
+                Q 162,0 165,12
+                A ${CIRCLE_R + 8},${CIRCLE_R + 8} 0 0 0 210,12
+                Q 213,0 230,0
                 L 355,0
-                Q 375,0 375,20
-                L 375,${NAV_H + 20}
-                L 0,${NAV_H + 20}
+                Q 375,0 375,16
+                L 375,${NAV_H + 16}
+                L 0,${NAV_H + 16}
                 Z
               `}
-              fill="rgba(255,255,255,0.97)"
+              fill="var(--card)"
+              stroke="var(--border)"
+              strokeWidth="0.5"
             />
           </svg>
 
-          {/* Nav items row — absolutely positioned over the SVG */}
-          <div className="absolute inset-x-0 bottom-0 flex items-center justify-around"
-            style={{ height: NAV_H + 20, paddingBottom: 4 }}>
+          {/* Nav items container */}
+          <div className="absolute inset-x-0 bottom-0 flex items-center justify-around px-2"
+            style={{ height: NAV_H + 16 }}>
 
             {navItems.map(({ label, icon: Icon, href, badge }) => {
               const isActive = location === href || (href !== "/" && location.startsWith(href));
@@ -97,24 +87,24 @@ export default function MobileBottomNav() {
                 return (
                   <Link key={href} href={href}>
                     <button
-                      className="flex flex-col items-center gap-1"
-                      style={{ marginTop: -(BUMP_R + 10) }} /* lift the button above the bar */
+                      className="flex flex-col items-center gap-1.5 transition-all duration-200"
+                      style={{ marginTop: -(CIRCLE_R + 12) }}
                     >
-                      {/* Teal circle */}
+                      {/* Circular Pay button */}
                       <div
-                        className="flex items-center justify-center rounded-full transition-all duration-200"
+                        className="flex items-center justify-center rounded-full transition-all duration-200 shadow-lg"
                         style={{
-                          width: BUMP_R * 2,
-                          height: BUMP_R * 2,
-                          background: `linear-gradient(145deg, ${TEAL} 0%, #1a9e95 100%)`,
-                          boxShadow: `0 6px 20px rgba(39,185,175,0.45)`,
+                          width: CIRCLE_R * 2,
+                          height: CIRCLE_R * 2,
+                          background: "var(--kryros-primary)",
+                          boxShadow: "0 8px 24px rgba(39, 185, 175, 0.4)",
                         }}
                       >
-                        <Icon className="w-5 h-5 text-white" strokeWidth={2} />
+                        <Icon className="w-6 h-6 text-white" strokeWidth={2.5} />
                       </div>
                       <span
-                        className="text-[10px] font-semibold leading-tight"
-                        style={{ color: isPayActive ? TEAL : "#9ca3af", marginTop: 2 }}
+                        className="text-xs font-bold leading-tight transition-colors duration-200"
+                        style={{ color: "var(--kryros-primary)" }}
                       >
                         {label}
                       </span>
@@ -125,25 +115,25 @@ export default function MobileBottomNav() {
 
               return (
                 <Link key={href} href={href}>
-                  <button className="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-all duration-200 relative">
-                    <div className="relative p-1.5 rounded-xl transition-all duration-200">
+                  <button className="flex flex-col items-center gap-1 px-2 py-1.5 rounded-lg transition-all duration-200 relative">
+                    <div className="relative p-2 rounded-lg transition-all duration-200">
                       <Icon
-                        className="w-5 h-5 transition-all duration-200"
-                        style={{ color: isActive ? TEAL : "#9ca3af" }}
+                        className="w-6 h-6 transition-all duration-200"
+                        style={{ color: isActive ? "var(--kryros-primary)" : "var(--muted-foreground)" }}
                         strokeWidth={isActive ? 2.5 : 2}
                       />
                       {badge != null && badge > 0 && (
                         <span
-                          className="absolute -top-1 -right-1 min-w-[16px] h-4 text-white text-[9px] font-bold rounded-full flex items-center justify-center px-0.5 leading-none"
-                          style={{ background: TEAL }}
+                          className="absolute -top-0.5 -right-0.5 min-w-[18px] h-5 text-white text-[9px] font-bold rounded-full flex items-center justify-center px-0.5 leading-none"
+                          style={{ background: "var(--kryros-primary)" }}
                         >
                           {badge > 99 ? "99+" : badge}
                         </span>
                       )}
                     </div>
                     <span
-                      className="text-[10px] font-medium transition-colors duration-200 leading-tight"
-                      style={{ color: isActive ? TEAL : "#9ca3af" }}
+                      className="text-[11px] font-semibold transition-colors duration-200 leading-tight"
+                      style={{ color: isActive ? "var(--kryros-primary)" : "var(--muted-foreground)" }}
                     >
                       {label}
                     </span>

@@ -353,30 +353,31 @@ export default function PayPage() {
             <p className="text-sm font-bold text-foreground">Amount</p>
 
             {/* Currency + Amount row - REDESIGNED */}
-            <div className="flex rounded-3xl overflow-hidden border bg-card border-border">
-              {/* Currency selector */}
-              <button
-                onClick={() => setShowCurrencyDrop(!showCurrencyDrop)}
-                className="flex items-center gap-1.5 px-5 py-4 border-r font-bold text-sm text-foreground hover:bg-muted transition-colors flex-shrink-0 border-border"
-              >
-                {currency}
-                <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${showCurrencyDrop ? "rotate-180" : ""}`} />
-              </button>
-              {/* Amount input */}
-              <input
-                value={rawAmount}
-                onChange={(e) => { if (!isLinkedPayment) setRawAmount(e.target.value.replace(/[^0-9.]/g, "")); }}
-                onFocus={() => setShowCurrencyDrop(false)}
-                readOnly={isLinkedPayment}
-                placeholder="0.00"
-                inputMode="decimal"
-                className="flex-1 px-5 py-4 text-2xl font-black text-foreground outline-none bg-transparent text-right"
-              />
-            </div>
+            <div className="relative">
+              <div className="flex rounded-3xl overflow-hidden border bg-card border-border">
+                {/* Currency selector */}
+                <button
+                  onClick={() => setShowCurrencyDrop(!showCurrencyDrop)}
+                  className="flex items-center gap-1.5 px-5 py-4 border-r font-bold text-sm text-foreground hover:bg-muted transition-colors flex-shrink-0 border-border"
+                >
+                  {currency}
+                  <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${showCurrencyDrop ? "rotate-180" : ""}`} />
+                </button>
+                {/* Amount input */}
+                <input
+                  value={rawAmount}
+                  onChange={(e) => { if (!isLinkedPayment) setRawAmount(e.target.value.replace(/[^0-9.]/g, "")); }}
+                  onFocus={() => setShowCurrencyDrop(false)}
+                  readOnly={isLinkedPayment}
+                  placeholder="0.00"
+                  inputMode="decimal"
+                  className="flex-1 px-5 py-4 text-2xl font-black text-foreground outline-none bg-transparent text-right"
+                />
+              </div>
 
-            {/* Currency dropdown */}
-            {showCurrencyDrop && (
-              <div className="border rounded-2xl bg-card shadow-lg overflow-hidden border-border">
+              {/* Currency dropdown */}
+              {showCurrencyDrop && (
+              <div className="absolute top-full left-0 right-0 mt-2 border rounded-2xl bg-card shadow-lg overflow-hidden border-border z-50">
                 {CURRENCIES.map((c) => (
                   <button key={c.code} onClick={() => { setCurrency(c.code); setShowCurrencyDrop(false); }}
                     className="w-full flex items-center gap-2.5 px-4 py-3 text-left hover:bg-muted transition-colors text-sm border-b last:border-0 border-border"
@@ -384,9 +385,10 @@ export default function PayPage() {
                     <span>{c.code}</span>
                     {currency === c.code && <span className="ml-auto text-xs text-[var(--kryros-primary)]">✓</span>}
                   </button>
-                ))}
+                ))}  
               </div>
             )}
+            </div>
 
             {isLinkedPayment && (
               <div className="rounded-xl px-4 py-3 text-sm border bg-green-50 border-green-300 text-green-900 dark:bg-green-900/20 dark:border-green-800 dark:text-green-200">
