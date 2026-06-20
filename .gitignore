@@ -1,43 +1,8 @@
-# Node/Nest/Next common ignores
 node_modules/
-.next/
+.env
+.env.local
+.env.production
 dist/
 build/
-coverage/
-.turbo/
-.cache/
-
-# Env and local config
-.env
-.env.*
-.npmrc
-yarn.lock.tmp
-
-# Logs
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# OS
 .DS_Store
-Thumbs.db
-
-# Trae/IDE
-.trae/
-.vscode/
-
-# Misc
-*.local
-*.swp
-*.swo
-
-# ── Firebase / Mobile secrets (NEVER commit these) ─────────────────────────
-# These files contain Firebase API keys and must be provided via CI/CD secrets
-google-services.json
-GoogleService-Info.plist
-firebase-env.js
-.firebase/
-backend/
-frontend/
-backup.sql
-frontend-dist.zip
+*.log
