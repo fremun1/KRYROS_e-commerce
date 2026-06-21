@@ -107,38 +107,3 @@ export default function MobileBottomNav() {
     </div>
   );
 }
-
-              return (
-                <Link key={href} href={href}>
-                  <button className="flex flex-col items-center gap-1 px-2 py-1.5 rounded-lg transition-all duration-200 relative">
-                    <div className="relative p-2 rounded-lg transition-all duration-200">
-                      <Icon
-                        className="w-6 h-6 transition-all duration-200"
-                        style={{ color: isActive ? "var(--kryros-primary)" : "var(--muted-foreground)" }}
-                        strokeWidth={isActive ? 2.5 : 2}
-                      />
-                      {badge != null && badge > 0 && (
-                        <span
-                          className="absolute -top-0.5 -right-0.5 min-w-[18px] h-5 text-white text-[9px] font-bold rounded-full flex items-center justify-center px-0.5 leading-none"
-                          style={{ background: "var(--kryros-primary)" }}
-                        >
-                          {badge > 99 ? "99+" : badge}
-                        </span>
-                      )}
-                    </div>
-                    <span
-                      className="text-[11px] font-semibold transition-colors duration-200 leading-tight"
-                      style={{ color: isActive ? "var(--kryros-primary)" : "var(--muted-foreground)" }}
-                    >
-                      {label}
-                    </span>
-                  </button>
-                </Link>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-    </nav>
-  );
-}
