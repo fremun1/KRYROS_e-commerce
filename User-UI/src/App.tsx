@@ -61,7 +61,7 @@ const WHATSAPP_NUMBER = import.meta.env.VITE_WHATSAPP_NUMBER || "260969597029";
 function WhatsAppFloatingButton() {
   const [hovered, setHovered] = useState(false);
   const [location] = useLocation();
-  const hide = ["/login", "/register", "/pay"].includes(location);
+  const hide = ["/login", "/register", "/forgot-password", "/pay"].includes(location);
   if (hide) return null;
 
   const message = encodeURIComponent("Hi KRYROS! I need some help 👋");
