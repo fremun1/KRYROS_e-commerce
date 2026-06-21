@@ -60,28 +60,28 @@ export default function BottomNav({
           <div
             key={item.id}
             className={cn(
-              "flex flex-col items-center gap-1 cursor-pointer user-select-none relative z-30 flex-1",
+              "flex flex-col items-center gap-0.5 cursor-pointer user-select-none relative z-30 flex-1",
               item.active && "active"
             )}
             onClick={() => handleTabChange(item.id)}
             data-tab={item.id}
           >
-            <div className="relative inline-flex items-center justify-center w-3.5 h-3.5">
+            <div className="relative inline-flex items-center justify-center w-3 h-3">
               <item.icon
                 className={cn(
-                  "w-3.5 h-3.5 transition-all duration-200",
+                  "w-3 h-3 transition-all duration-200",
                   item.active ? "text-[hsl(var(--kryros-primary))]" : "text-[hsl(var(--muted-foreground))]"
                 )}
               />
               {item.id === "cart" && item.hasBadge && (
-                <span className="absolute top-[-3px] right-[-3px] min-w-[10px] h-[10px] bg-[hsl(var(--kryros-primary))] rounded-[5px] flex items-center justify-center text-[6px] font-bold text-white px-0.5">
+                <span className="absolute top-[-2px] right-[-2px] min-w-[9px] h-[9px] bg-[hsl(var(--kryros-primary))] rounded-[4px] flex items-center justify-center text-[5px] font-bold text-white px-0.5">
                   {item.badgeCount}
                 </span>
               )}
             </div>
             <span
               className={cn(
-                "text-xs font-medium transition-all duration-200 tracking-[0.2px]",
+                "text-[9px] font-medium transition-all duration-200 tracking-[0.2px]",
                 item.active ? "text-[hsl(var(--kryros-primary))]" : "text-[hsl(var(--muted-foreground))]"
               )}
             >
