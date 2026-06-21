@@ -61,26 +61,26 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-background">
       <div className="w-full max-w-md">
         {/* FIX #1: Card corner radius — rounded-3xl → rounded-2xl */}
-        <div className="bg-card rounded-2xl shadow-lg overflow-hidden border border-border">
+        <div className="bg-card rounded-3xl shadow-lg overflow-hidden border border-border">
 
           {/* Logo */}
           <div className="pt-10 pb-6 flex justify-center">
             <div className="text-4xl font-black tracking-tighter">
               <span className="text-foreground">KRY</span>
-              <span className="text-[#27B9AF]">ROS</span>
+              <span className="text-primary">ROS</span>
             </div>
           </div>
 
           {/* Tabs */}
           <div className="px-8 -mt-2 mb-8">
-            <div className="flex bg-secondary dark:bg-secondary rounded-2xl p-1">
+            <div className="flex bg-secondary dark:bg-secondary rounded-2xl p-1.5">
               {["Login", "Register", "Forgot"].map((tab) => (
                 <Link
                   key={tab}
                   href={tab === "Register" ? "/register" : tab === "Forgot" ? "/forgot-password" : "#"}
                   className={`flex-1 py-3 text-sm font-semibold rounded-xl transition-all text-center ${
                     tab === "Login"
-                      ? "bg-[#27B9AF] text-white shadow-sm"
+                      ? "bg-primary text-primary-foreground shadow-sm"
                       : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
@@ -100,18 +100,15 @@ export default function LoginPage() {
 
             {/* Email or Phone */}
             <div>
-              {/* FIX #5 + #6: Label — text-sm font-semibold → text-base font-bold text-foreground */}
               <label className="block text-base font-bold text-foreground mb-2">Email or Phone</label>
               <div className="relative">
-                {/* FIX #2: Icon color — text-slate-400 → text-[#27B9AF] */}
-                <Mail className="absolute left-4 top-4 w-5 h-5 text-[#27B9AF]" />
-                {/* FIX #3 + #4: Input — rounded-2xl → rounded-xl, bg-slate-50 → bg-card */}
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary" />
                 <input
                   type="text"
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
                   placeholder="Enter your email or phone number"
-                  className="w-full pl-12 pr-4 py-4 bg-card border border-border rounded-xl focus:outline-none focus:border-[#27B9AF] focus:ring-1 focus:ring-[#27B9AF]/30 text-base text-foreground placeholder:text-muted-foreground transition-colors"
+                  className="w-full pl-12 pr-4 py-4 bg-card border border-border rounded-xl focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/30 text-base text-foreground placeholder:text-muted-foreground transition-colors"
                   required
                 />
               </div>
@@ -121,20 +118,19 @@ export default function LoginPage() {
             <div>
               <label className="block text-base font-bold text-foreground mb-2">Password</label>
               <div className="relative">
-                {/* FIX #2: Icon color — text-slate-400 → text-[#27B9AF] */}
-                <Lock className="absolute left-4 top-4 w-5 h-5 text-[#27B9AF]" />
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary" />
                 <input
                   type={showPw ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter your password"
-                  className="w-full pl-12 pr-12 py-4 bg-card border border-border rounded-xl focus:outline-none focus:border-[#27B9AF] focus:ring-1 focus:ring-[#27B9AF]/30 text-base text-foreground placeholder:text-muted-foreground transition-colors"
+                  className="w-full pl-12 pr-12 py-4 bg-card border border-border rounded-xl focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/30 text-base text-foreground placeholder:text-muted-foreground transition-colors"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPw(!showPw)}
-                  className="absolute right-4 top-4 text-[#27B9AF] hover:text-[#1f9e95] transition-colors"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-primary hover:text-primary/80 transition-colors"
                 >
                   {showPw ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
@@ -142,10 +138,9 @@ export default function LoginPage() {
             </div>
 
             {/* Cloudflare Turnstile Verify */}
-            {/* FIX #8: Captcha box radius — rounded-2xl → rounded-xl */}
             <div className="flex items-center justify-between bg-card border border-border rounded-xl p-4">
               <div className="flex items-center gap-3">
-                <input type="checkbox" className="w-5 h-5 accent-[#27B9AF] rounded" />
+                <input type="checkbox" className="w-5 h-5 accent-primary rounded" />
                 <span className="text-sm text-foreground">Verify you are human</span>
               </div>
               <div className="flex items-center gap-2">
@@ -160,11 +155,10 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* FIX #8: Button radius — rounded-2xl → rounded-xl */}
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-4 bg-[#27B9AF] hover:bg-[#1f9e95] text-white font-bold text-base rounded-xl transition-all active:scale-[0.985] disabled:opacity-70 flex items-center justify-center gap-2"
+              className="w-full py-4 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-base rounded-xl transition-all active:scale-[0.985] disabled:opacity-70 flex items-center justify-center gap-2"
             >
               {isLoading ? <Loader2 className="animate-spin" size={20} /> : "Login"}
             </button>
