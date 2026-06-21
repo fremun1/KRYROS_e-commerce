@@ -7,6 +7,7 @@ import { lazy, Suspense, useEffect, useState, useRef } from "react";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
+import AuthPage from "@/components/auth/AuthPage";
 
 // ── Route-based code splitting ─────────────────────────────────────────────────
 const HomePage          = lazy(() => import("@/pages/HomePage"));
@@ -19,16 +20,13 @@ const TrackOrderPage    = lazy(() => import("@/pages/TrackOrderPage"));
 const PickupStationsPage = lazy(() => import("@/pages/PickupStationsPage"));
 const WholesalePage     = lazy(() => import("@/pages/WholesalePage"));
 const DashboardPage     = lazy(() => import("@/pages/DashboardPage"));
-const LoginPage         = lazy(() => import("@/pages/LoginPage"));
-const RegisterPage      = lazy(() => import("@/pages/RegisterPage"));
-const ForgotPasswordPage = lazy(() => import("@/pages/ForgotPasswordPage"));
 const AboutPage         = lazy(() => import("@/pages/AboutPage"));
 const ContactPage       = lazy(() => import("@/pages/ContactPage"));
 const PrivacyPage       = lazy(() => import("@/pages/PrivacyPage"));
 const TermsPage         = lazy(() => import("@/pages/TermsPage"));
 const RefundPage        = lazy(() => import("@/pages/RefundPage"));
 const HelpPage          = lazy(() => import("@/pages/HelpPage"));
-const FaqPage           = lazy(() => import("@/pages/FaqPage"));
+const FaqPage          = lazy(() => import("@/pages/FaqPage"));
 const ReturnsPage       = lazy(() => import("@/pages/ReturnsPage"));
 const ShippingPage      = lazy(() => import("@/pages/ShippingPage"));
 const SecurityPage      = lazy(() => import("@/pages/SecurityPage"));
@@ -255,7 +253,7 @@ function AppRoutes() {
     };
   }, [location]);
 
-  const hideShell = ["/pay", "/checkout", "/dashboard", "/cart", "/get-now", "/apply-credit", "/wholesale-checkout"].includes(location);
+  const hideShell = ["/pay", "/checkout", "/dashboard", "/cart", "/get-now", "/apply-credit", "/wholesale-checkout", "/login", "/register", "/forgot-password"].includes(location);
 
   return (
     <>
@@ -274,9 +272,9 @@ function AppRoutes() {
           <Route path="/pickup-stations" component={PickupStationsPage} />
           <Route path="/wholesale" component={WholesalePage} />
           <Route path="/dashboard" component={DashboardPage} />
-          <Route path="/login" component={LoginPage} />
-          <Route path="/register" component={RegisterPage} />
-          <Route path="/forgot-password" component={ForgotPasswordPage} />
+          <Route path="/login" component={() => <AuthPage initialTab="login" />} />
+          <Route path="/register" component={() => <AuthPage initialTab="register" />} />
+          <Route path="/forgot-password" component={() => <AuthPage initialTab="forgot" />} />
           <Route path="/about" component={AboutPage} />
           <Route path="/contact" component={ContactPage} />
           <Route path="/privacy" component={PrivacyPage} />
