@@ -7,6 +7,7 @@ import { lazy, Suspense, useEffect, useState, useRef } from "react";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
+import BottomNav from "@/components/BottomNav";
 import AuthPage from "@/components/auth/AuthPage";
 
 // ── Route-based code splitting ─────────────────────────────────────────────────
@@ -253,7 +254,7 @@ function AppRoutes() {
     };
   }, [location]);
 
-  const hideShell = ["/pay", "/checkout", "/dashboard", "/cart", "/get-now", "/apply-credit", "/wholesale-checkout", "/login", "/register", "/forgot-password"].includes(location);
+  const hideShell = ["/pay", "/checkout", "/dashboard", "/cart", "/get-now", "/apply-credit", "/wholesale-checkout", "/login", "/register", "/forgot-password", "/track-order", "/track", "/pickup-stations", "/wholesale", "/wishlist", "/apply-credit", "/wholesale-checkout"].includes(location);
 
   return (
     <>
@@ -294,6 +295,7 @@ function AppRoutes() {
       </Suspense>
       {!hideShell && <Footer />}
       {!hideShell && <MobileBottomNav />}
+      {!hideShell && <BottomNav activeTab="home" />}
       <WhatsAppFloatingButton />
     </>
   );
