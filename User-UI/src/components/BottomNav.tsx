@@ -51,9 +51,9 @@ export default function BottomNav({
 
   return (
     <div className="relative w-full max-w-[460px] mx-auto px-3">
-      <div className="relative h-12 bg-white rounded-[22px] shadow-[0_6px_20px_rgba(0,0,0,0.06),_0_1px_4px_rgba(0,0,0,0.04)] flex items-center justify-around px-2 z-10">
-        <div className="absolute top-[-18px] left-1/2 transform -translate-x-1/2 w-9 h-9 bg-[#eef3f7] rounded-full z-10"></div>
-        <button className="absolute top-[-14px] left-1/2 transform -translate-x-1/2 w-10 h-10 bg-[#1dbcb8] rounded-full flex items-center justify-center z-20 border-none outline-none cursor-pointer" aria-label="Pay">
+      <div className="relative h-12 bg-[hsl(var(--background))] rounded-[22px] shadow-[0_6px_20px_rgba(0,0,0,0.06),_0_1px_4px_rgba(0,0,0,0.04)] flex items-center justify-around px-2 z-10 border border-[hsl(var(--border))] dark:border-[hsl(var(--border))] dark:bg-[hsl(var(--background))]">
+        <div className="absolute top-[-18px] left-1/2 transform -translate-x-1/2 w-9 h-9 bg-[hsl(var(--muted))] rounded-full z-10"></div>
+        <button className="absolute top-[-14px] left-1/2 transform -translate-x-1/2 w-10 h-10 bg-[hsl(var(--kryros-primary))] rounded-full flex items-center justify-center z-20 border-none outline-none cursor-pointer" aria-label="Pay">
           <CreditCard className="w-4 h-4 text-white" />
         </button>
         {navItems.map((item) => (
@@ -70,11 +70,11 @@ export default function BottomNav({
               <item.icon
                 className={cn(
                   "w-3.5 h-3.5 transition-all duration-200",
-                  item.active ? "text-[#1dbcb8] stroke-[#1dbcb8]" : "text-[#8a96a3] stroke-[#8a96a3]"
+                  item.active ? "text-[hsl(var(--kryros-primary))]" : "text-[hsl(var(--muted-foreground))]"
                 )}
               />
               {item.id === "cart" && item.hasBadge && (
-                <span className="absolute top-[-3px] right-[-3px] min-w-[10px] h-[10px] bg-[#1dbcb8] rounded-[5px] flex items-center justify-center text-[6px] font-bold text-white px-0.5">
+                <span className="absolute top-[-3px] right-[-3px] min-w-[10px] h-[10px] bg-[hsl(var(--kryros-primary))] rounded-[5px] flex items-center justify-center text-[6px] font-bold text-white px-0.5">
                   {item.badgeCount}
                 </span>
               )}
@@ -82,7 +82,7 @@ export default function BottomNav({
             <span
               className={cn(
                 "text-xs font-medium transition-all duration-200 tracking-[0.2px]",
-                item.active ? "text-[#1dbcb8]" : "text-[#8a96a3]"
+                item.active ? "text-[hsl(var(--kryros-primary))]" : "text-[hsl(var(--muted-foreground))]"
               )}
             >
               {item.label}
