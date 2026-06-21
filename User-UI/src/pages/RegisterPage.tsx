@@ -1,12 +1,14 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
-import { User, Mail, Lock, Eye, EyeOff, AlertCircle, Loader2 } from "lucide-react";
+import { User, Mail, Lock, Eye, EyeOff, ArrowLeft, ShieldCheck, AlertCircle, Loader2, Phone } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import { useWishlistStore } from "@/store/wishlistStore";
 import { API_BASE } from "@/lib/api";
 
+// reCAPTCHA v3 site key (baked in at build time via VITE_RECAPTCHA_SITE_KEY)
 const RECAPTCHA_SITE_KEY = (import.meta as unknown as { env: Record<string, string> }).env?.VITE_RECAPTCHA_SITE_KEY ?? "";
 
+/** Execute reCAPTCHA v3 silently and return a token. Returns "" if not configured. */
 async function getCaptchaToken(action: string): Promise<string> {
   if (!RECAPTCHA_SITE_KEY) return "";
   const w = window as unknown as {
@@ -40,7 +42,10 @@ async function syncLocalWishlistToServer(token: string, localIds: string[]) {
 
 export default function RegisterPage() {
   const [showPw, setShowPw] = useState(false);
-  const [form, setForm] = useState({ fullName: "", emailOrPhone: "", password: "" });
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [agreed, setAgreed] = useState(false);
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [form, setForm] = useState({ firstName: "", lastName: "", email: "", phone: "", password: "" });
   const [validationError, setValidationError] = useState<string | null>(null);
   const [, setLocation] = useLocation();
 
@@ -55,16 +60,31 @@ export default function RegisterPage() {
     return () => clearError();
   }, []);
 
+  // Load reCAPTCHA v3 script on mount; remove badge on unmount
+  useEffect(() => {
+    if (!RECAPTCHA_SITE_KEY) return;
+    if (!document.querySelector(`script[src*="recaptcha"]`)) {
+      const script = document.createElement("script");
+      const recaptchaUrl = (import.meta as unknown as { env: Record<string, string> }).env?.VITE_RECAPTCHA_URL || "https://www.google.com/recaptcha/api.js";
+      script.src = `${recaptchaUrl}?render=${RECAPTCHA_SITE_KEY}`;
+      script.async = true;
+      document.head.appendChild(script);
+    }
+    return () => {
+      document.querySelectorAll(".grecaptcha-badge").forEach((el) => el.remove());
+    };
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setValidationError(null);
 
-    if (!form.fullName.trim()) {
-      setValidationError("Please enter your full name.");
+    if (!form.firstName.trim() || !form.lastName.trim()) {
+      setValidationError("Please enter your first and last name.");
       return;
     }
-    if (!form.emailOrPhone.trim()) {
-      setValidationError("Please provide an email address or phone number.");
+    if (!form.email.trim() && !form.phone.trim()) {
+      setValidationError("Please provide at least an email address or phone number.");
       return;
     }
     if (form.password.length < 8) {
@@ -75,24 +95,26 @@ export default function RegisterPage() {
       setValidationError("Password must contain at least one uppercase letter, one lowercase letter, and one number.");
       return;
     }
+    if (form.password !== confirmPassword) {
+      setValidationError("Passwords do not match.");
+      return;
+    }
+    if (!agreed) {
+      setValidationError("Please agree to the Terms & Conditions to continue.");
+      return;
+    }
 
     const localIds = [...localWishlistIds];
+
+    // Get reCAPTCHA token silently before submitting
     const captchaToken = await getCaptchaToken("register");
 
-    const isEmail = form.emailOrPhone.includes("@");
-    const email = isEmail ? form.emailOrPhone.trim() : "";
-    const phone = !isEmail ? form.emailOrPhone.trim() : "";
-
-    const nameParts = form.fullName.trim().split(/\s+/);
-    const firstName = nameParts[0] || "";
-    const lastName = nameParts.slice(1).join(" ") || "";
-
     const result = await register({
-      email,
+      email: form.email.trim(),
       password: form.password,
-      firstName,
-      lastName,
-      ...(phone ? { phone } : {}),
+      firstName: form.firstName.trim(),
+      lastName: form.lastName.trim(),
+      ...(form.phone.trim() ? { phone: form.phone.trim() } : {}),
     }, captchaToken || undefined);
 
     if (result.success) {
@@ -108,128 +130,155 @@ export default function RegisterPage() {
   const displayError = validationError || error;
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-background">
-      <div className="w-full max-w-md">
-        <div className="bg-card rounded-3xl shadow-lg overflow-hidden border border-border">
+    <div className="min-h-screen bg-background flex items-center justify-center px-4 py-10">
+      <div className="w-full max-w-sm">
+        <div className="bg-card border border-border rounded-3xl overflow-hidden shadow-xl">
 
-          {/* Logo */}
-          <div className="pt-10 pb-6 flex justify-center">
-            <div className="text-4xl font-black tracking-tighter">
-              <span className="text-foreground">KRY</span>
-              <span className="text-primary">ROS</span>
+          <div className="relative bg-card px-6 pt-5 pb-4 overflow-hidden border-b border-border">
+            <div className="flex items-center justify-between mb-4">
+              <Link href="/login">
+                <button className="w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors">
+                  <ArrowLeft className="w-4 h-4 text-foreground" />
+                </button>
+              </Link>
+              <span className="text-lg font-black text-foreground">KRY<span className="text-primary">ROS</span></span>
+              <Link href="/login">
+                <span className="text-sm text-primary font-semibold cursor-pointer hover:underline">Login</span>
+              </Link>
+            </div>
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <h1 className="text-2xl font-black text-foreground mb-1">Create Account</h1>
+                <p className="text-xs text-muted-foreground leading-snug">Join KRYROS and enjoy premium shopping experience</p>
+              </div>
+              <div className="flex-shrink-0 ml-2">
+                <img src="/kryros-logo.png" alt="KRYROS" className="w-16 h-16 rounded-2xl shadow-lg" onError={(e) => { (e.target as HTMLImageElement).src = '/kryros-logo.svg'; }} />
+              </div>
             </div>
           </div>
 
-          {/* Tabs */}
-          <div className="px-8 -mt-2 mb-8">
-            <div className="flex bg-secondary dark:bg-secondary rounded-2xl p-1.5">
-              {["Login", "Register", "Forgot"].map((tab) => (
-                <Link
-                  key={tab}
-                  href={tab === "Login" ? "/login" : tab === "Forgot" ? "/forgot-password" : "#"}
-                  className={`flex-1 py-3 text-sm font-semibold rounded-xl transition-all text-center ${
-                    tab === "Register"
-                      ? "bg-primary text-primary-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {tab}
-                </Link>
-              ))}
-            </div>
-          </div>
-
-          <form onSubmit={handleSubmit} className="px-8 pb-10 space-y-6">
+          <form onSubmit={handleSubmit} className="px-6 pb-6 space-y-3.5 bg-card">
             {displayError && (
-              <div className="flex gap-3 bg-destructive/10 border border-destructive/20 p-4 rounded-xl">
-                <AlertCircle className="w-5 h-5 text-destructive mt-0.5 flex-shrink-0" />
-                <p className="text-sm text-destructive">{displayError}</p>
+              <div className="mt-4 flex items-start gap-2.5 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl">
+                <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
+                <p className="text-xs text-red-700 dark:text-red-400 font-medium">{displayError}</p>
               </div>
             )}
 
-            {/* Full Name */}
-            <div>
-              <label className="block text-base font-bold text-foreground mb-2">Full Name</label>
-              <div className="relative">
-                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary" />
-                <input
-                  type="text"
-                  value={form.fullName}
-                  onChange={(e) => setForm({ ...form, fullName: e.target.value })}
-                  placeholder="Enter your full name"
-                  className="w-full pl-12 pr-4 py-4 bg-card border border-border rounded-xl focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/30 text-base text-foreground placeholder:text-muted-foreground transition-colors"
+            <div className="pt-4 grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-semibold text-foreground mb-1.5">First Name</label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <input type="text" value={form.firstName} onChange={(e) => setForm({ ...form, firstName: e.target.value })} placeholder="First name"
+                    required
+                    className="w-full pl-9 pr-3 py-3 bg-background border border-border rounded-xl text-sm text-foreground outline-none focus:ring-2 focus:ring-primary/30 placeholder:text-muted-foreground/50" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-foreground mb-1.5">Last Name</label>
+                <input type="text" value={form.lastName} onChange={(e) => setForm({ ...form, lastName: e.target.value })} placeholder="Last name"
                   required
-                />
+                  className="w-full px-3 py-3 bg-background border border-border rounded-xl text-sm text-foreground outline-none focus:ring-2 focus:ring-primary/30 placeholder:text-muted-foreground/50" />
               </div>
             </div>
 
-            {/* Email or Phone */}
             <div>
-              <label className="block text-base font-bold text-foreground mb-2">Email or Phone</label>
+              <label className="block text-xs font-semibold text-foreground mb-1.5">
+                Email Address
+              </label>
               <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary" />
-                <input
-                  type="text"
-                  value={form.emailOrPhone}
-                  onChange={(e) => setForm({ ...form, emailOrPhone: e.target.value })}
-                  placeholder="Enter your email or phone number"
-                  className="w-full pl-12 pr-4 py-4 bg-card border border-border rounded-xl focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/30 text-base text-foreground placeholder:text-muted-foreground transition-colors"
-                  required
-                />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })}
+                  placeholder="Enter your email address"
+                  autoComplete="email"
+                  className="w-full pl-10 pr-4 py-3 bg-background border border-border rounded-xl text-sm text-foreground outline-none focus:ring-2 focus:ring-primary/30 placeholder:text-muted-foreground/50"
+                  data-testid="input-email" />
               </div>
             </div>
 
-            {/* Password */}
             <div>
-              <label className="block text-base font-bold text-foreground mb-2">Password</label>
+              <label className="block text-xs font-semibold text-foreground mb-1.5">
+                Phone Number
+              </label>
               <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary" />
-                <input
-                  type={showPw ? "text" : "password"}
-                  value={form.password}
-                  onChange={(e) => setForm({ ...form, password: e.target.value })}
-                  placeholder="Create a password"
-                  className="w-full pl-12 pr-12 py-4 bg-card border border-border rounded-xl focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/30 text-base text-foreground placeholder:text-muted-foreground transition-colors"
-                  required
-                  minLength={8}
-                  maxLength={128}
-                  autoComplete="new-password"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPw(!showPw)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-primary hover:text-primary/80 transition-colors"
-                >
-                  {showPw ? <EyeOff size={20} /> : <Eye size={20} />}
+                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <input type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                  placeholder="Enter your phone number"
+                  autoComplete="tel"
+                  className="w-full pl-10 pr-4 py-3 bg-background border border-border rounded-xl text-sm text-foreground outline-none focus:ring-2 focus:ring-primary/30 placeholder:text-muted-foreground/50" />
+              </div>
+            </div>
+
+            {!form.email.trim() && !form.phone.trim() && (
+              <p className="text-[11px] text-amber-500 font-medium flex items-center gap-1.5">
+                <span>⚠</span> At least one of email or phone number is required for order notifications.
+              </p>
+            )}
+
+            <div>
+              <label className="block text-xs font-semibold text-foreground mb-1.5">Password</label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <input type={showPw ? "text" : "password"} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder="Create a password"
+                  required minLength={8} maxLength={128} autoComplete="new-password"
+                  className="w-full pl-10 pr-10 py-3 bg-background border border-border rounded-xl text-sm text-foreground outline-none focus:ring-2 focus:ring-primary/30 placeholder:text-muted-foreground/50"
+                  data-testid="input-password" />
+                <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                  {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+              <div className="flex items-center gap-1 mt-1">
+                <ShieldCheck className="w-3 h-3 text-green-500" />
+                <p className="text-[9px] text-muted-foreground">8+ chars · must include uppercase, lowercase &amp; a number</p>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-foreground mb-1.5">Confirm Password</label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <input type={showConfirm ? "text" : "password"} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Confirm your password"
+                  required autoComplete="new-password"
+                  className="w-full pl-10 pr-10 py-3 bg-background border border-border rounded-xl text-sm text-foreground outline-none focus:ring-2 focus:ring-primary/30 placeholder:text-muted-foreground/50"
+                  data-testid="input-confirm-password" />
+                <button type="button" onClick={() => setShowConfirm(!showConfirm)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                  {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
             </div>
 
-            {/* Cloudflare Turnstile Verify */}
-            <div className="flex items-center justify-between bg-card border border-border rounded-xl p-4">
-              <div className="flex items-center gap-3">
-                <input type="checkbox" className="w-5 h-5 accent-primary rounded" />
-                <span className="text-sm text-foreground">Verify you are human</span>
+            <label className="flex items-start gap-2 cursor-pointer" onClick={() => setAgreed(!agreed)}>
+              <div className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-all flex-shrink-0 mt-0.5 ${agreed ? "bg-primary border-primary" : "border-border"}`}>
+                {agreed && <svg viewBox="0 0 24 24" className="w-3 h-3 fill-none stroke-white stroke-2"><polyline points="20 6 9 17 4 12" /></svg>}
               </div>
-              <div className="flex items-center gap-2">
-                <svg width="28" height="18" viewBox="0 0 28 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M14 0C10.686 0 7.686 1.343 5.515 3.515L0 9l5.515 5.485C7.686 16.657 10.686 18 14 18s6.314-1.343 8.485-3.515L28 9l-5.515-5.485C20.314 1.343 17.314 0 14 0z" fill="#F6821F"/>
-                  <path d="M14 4.5C10.962 4.5 8.5 6.962 8.5 10S10.962 15.5 14 15.5 19.5 13.038 19.5 10 17.038 4.5 14 4.5z" fill="#FBAD41"/>
-                </svg>
-                <div>
-                  <p className="text-xs font-bold text-orange-500 leading-none">CLOUDFLARE</p>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">Privacy · Terms</p>
-                </div>
-              </div>
-            </div>
+              <span className="text-xs text-foreground">
+                I agree to the{" "}
+                <Link href="/terms"><span className="text-primary cursor-pointer hover:underline">Terms & Conditions</span></Link>
+                {" "}and{" "}
+                <Link href="/privacy"><span className="text-primary cursor-pointer hover:underline">Privacy Policy</span></Link>
+              </span>
+            </label>
 
             <button
               type="submit"
-              disabled={isLoading}
-              className="w-full py-4 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-base rounded-xl transition-all active:scale-[0.985] disabled:opacity-70 flex items-center justify-center gap-2"
+              disabled={isLoading || !agreed}
+              data-testid="btn-register"
+              className="w-full py-3.5 bg-primary text-white rounded-2xl font-bold text-sm hover:opacity-90 transition-opacity active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              {isLoading ? <Loader2 className="animate-spin" size={20} /> : "Create account"}
+              {isLoading ? (
+                <><Loader2 className="w-4 h-4 animate-spin" /> Creating Account...</>
+              ) : (
+                "Create Account"
+              )}
             </button>
+
+            <p className="text-center text-xs text-muted-foreground pb-1">
+              Already have an account?{" "}
+              <Link href="/login">
+                <span className="text-primary font-semibold cursor-pointer hover:underline">Login Now</span>
+              </Link>
+            </p>
           </form>
         </div>
       </div>
