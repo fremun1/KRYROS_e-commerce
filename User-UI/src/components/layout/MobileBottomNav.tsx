@@ -34,7 +34,7 @@ export default function MobileBottomNav() {
   return (
     <nav
       className="fixed bottom-0 left-0 right-0 z-50 md:hidden transition-transform duration-300"
-      style={{ transform: visible && !sidebarOpen ? "translateY(0)" : "translateY(110%)" }}
+      style={{ transform: visible && !sidebarOpen ? "translateY(0)" : "translateY(calc(100% + env(safe-area-inset-bottom)))" }}
     >
       <div style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
         <div className="nav-wrapper">
@@ -46,16 +46,6 @@ export default function MobileBottomNav() {
             {navItems.map(({ label, icon: Icon, href, badge }) => {
               const isActive = location === href || (href !== "/" && location.startsWith(href));
               const isPay = href === "/pay";
-
-              if (isPay) {
-                return (
-                  <Link key={href} href={href}>
-                    <div className="pay-label-item">
-                      <span className="pay-label">{label}</span>
-                    </div>
-                  </Link>
-                );
-              }
 
               return (
                 <Link key={href} href={href}>
