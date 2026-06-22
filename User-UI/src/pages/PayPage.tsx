@@ -344,146 +344,177 @@ export default function PayPage() {
         </div>
 
         {/* ══════════════════════════════════════════════════════════════════
-            STEP 1 — Amount entry (matches Image 1)
+            STEP 1 — Amount entry (matches HTML reference)
         ════════════════════════════════════════════════════════════════════ */}
         {step === 1 && (
           <div className="px-4 space-y-5">
 
             {/* Amount label */}
-            <p className="text-sm font-bold text-foreground">Amount</p>
+            <p className="label" style={{ margin: "6px 0 8px", color: "var(--muted-foreground)", fontWeight: 700, fontSize: "13px" }}>Amount</p>
 
-            {/* Currency + Amount row - REDESIGNED */}
+            {/* Currency + Amount pill */}
             <div className="relative">
-              <div className="flex rounded-3xl overflow-hidden border bg-card border-border">
+              <div className="amount-pill" style={{ display: "flex", height: "52px", borderRadius: "10px", background: "var(--card)", boxShadow: "0 6px 14px rgba(6,35,45,0.06)", overflow: "hidden", border: "1px solid var(--border)" }}>
                 {/* Currency selector */}
-                <button
-                  onClick={() => setShowCurrencyDrop(!showCurrencyDrop)}
-                  className="flex items-center gap-1.5 px-5 py-4 border-r font-bold text-sm text-foreground hover:bg-muted transition-colors flex-shrink-0 border-border"
-                >
-                  {currency}
-                  <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${showCurrencyDrop ? "rotate-180" : ""}`} />
-                </button>
+                <div className="currency" style={{ minWidth: "98px", display: "flex", alignItems: "center", justifyContent: "center", borderRight: "1px solid var(--border)", fontWeight: 700, color: "var(--kryros-primary)", fontSize: "14px", gap: "6px" }}>
+                  <select
+                    id="currency"
+                    value={currency}
+                    onChange={(e) => { setCurrency(e.target.value); setShowCurrencyDrop(false); }}
+                    aria-label="Currency"
+                    style={{ border: 0, background: "transparent", fontWeight: 700, color: "var(--kryros-primary)", fontSize: "13px", appearance: "none", WebkitAppearance: "none", outline: "none", cursor: "pointer" }}
+                  >
+                    {CURRENCIES.map((c) => (
+                      <option key={c.code} value={c.code}>{c.code}</option>
+                    ))}
+                  </select>
+                  <ChevronDown className="w-3 h-3" style={{ color: "var(--kryros-primary)" }} />
+                </div>
                 {/* Amount input */}
-                <input
-                  value={rawAmount}
-                  onChange={(e) => { if (!isLinkedPayment) setRawAmount(e.target.value.replace(/[^0-9.]/g, "")); }}
-                  onFocus={() => setShowCurrencyDrop(false)}
-                  readOnly={isLinkedPayment}
-                  placeholder="0.00"
-                  inputMode="decimal"
-                  className="flex-1 px-5 py-4 text-2xl font-black text-foreground outline-none bg-transparent text-right"
-                />
+                <div className="amount-input" style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "flex-end", paddingRight: "12px", fontWeight: 800, fontSize: "20px", color: "var(--foreground)" }}>
+                  <input
+                    id="amount"
+                    value={rawAmount}
+                    onChange={(e) => { if (!isLinkedPayment) setRawAmount(e.target.value.replace(/[^0-9.]/g, "")); }}
+                    readOnly={isLinkedPayment}
+                    placeholder="0.00"
+                    inputMode="decimal"
+                    aria-label="Amount"
+                    style={{ border: 0, outline: "none", fontWeight: 800, fontSize: "20px", textAlign: "right", width: "100%", background: "transparent", padding: "6px 0", color: "var(--foreground)" }}
+                  />
+                </div>
               </div>
-
-              {/* Currency dropdown */}
-              {showCurrencyDrop && (
-              <div className="absolute top-full left-0 right-0 mt-2 border rounded-2xl bg-card shadow-lg overflow-hidden border-border z-50">
-                {CURRENCIES.map((c) => (
-                  <button key={c.code} onClick={() => { setCurrency(c.code); setShowCurrencyDrop(false); }}
-                    className="w-full flex items-center gap-2.5 px-4 py-3 text-left hover:bg-muted transition-colors text-sm border-b last:border-0 border-border"
-                    style={{ color: currency === c.code ? "var(--kryros-primary)" : "var(--foreground)", fontWeight: currency === c.code ? 700 : 500 }}>
-                    <span>{c.code}</span>
-                    {currency === c.code && <span className="ml-auto text-xs text-[var(--kryros-primary)]">✓</span>}
-                  </button>
-                ))}  
-              </div>
-            )}
             </div>
 
             {isLinkedPayment && (
-              <div className="rounded-xl px-4 py-3 text-sm border bg-green-50 border-green-300 text-green-900 dark:bg-green-900/20 dark:border-green-800 dark:text-green-200">
+              <div className="rounded-xl px-4 py-3 text-sm border" style={{ background: "rgba(39,185,175,0.08)", borderColor: "var(--kryros-primary)", color: "var(--foreground)" }}>
                 <span className="font-bold">Payment Link</span> — Amount pre-filled: <strong>{currency} {rawAmount}</strong>
                 {urlNote ? <span className="text-muted-foreground ml-1">· {urlNote}</span> : null}
               </div>
             )}
 
             {/* Reference (Optional) */}
-            <div>
-              <label className="block text-sm font-bold mb-2 text-foreground">
-                Reference <span className="text-muted-foreground font-normal text-xs">(Optional)</span>
-              </label>
-              <div className="flex items-center gap-3 border rounded-2xl px-4 py-3.5 bg-card border-border">
-                {/* Tag icon */}
-                <svg viewBox="0 0 24 24" className="w-4 h-4 flex-shrink-0 text-muted-foreground" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/>
-                </svg>
+            <div className="field" style={{ marginTop: "14px" }}>
+              <p className="label" style={{ margin: "6px 0 8px", color: "var(--muted-foreground)", fontWeight: 700, fontSize: "13px" }}>
+                Reference <span style={{ fontWeight: 600, color: "var(--muted-foreground)", fontSize: "11px" }}>(Optional)</span>
+              </p>
+              <div className="input-rect" style={{ height: "44px", borderRadius: "10px", background: "var(--card)", boxShadow: "0 6px 14px rgba(6,35,45,0.06)", display: "flex", alignItems: "center", gap: "10px", padding: "0 10px", border: "1px solid var(--border)" }}>
+                <div className="icon" aria-hidden="true" style={{ width: "20px", height: "20px", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--kryros-primary)", flex: "0 0 20px" }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4"><path d="M20 10v7a2 2 0 0 1-2 2H6l-4-4V4a2 2 0 0 1 2-2h9"/></svg>
+                </div>
                 <input
+                  id="reference"
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
                   placeholder="Enter reference"
-                  className="flex-1 text-sm outline-none bg-transparent text-foreground placeholder-muted-foreground"
+                  aria-label="Reference (optional)"
+                  maxLength={64}
+                  style={{ border: 0, outline: "none", fontSize: "13px", color: "var(--muted-foreground)", width: "100%", padding: "8px 0", background: "transparent" }}
                 />
               </div>
             </div>
 
-            {/* Phone or Email (Optional) */}
-            <div>
-              <label className="block text-sm font-bold mb-2 text-foreground">
-                Phone or Email <span className="text-muted-foreground font-normal text-xs">(Optional)</span>
-              </label>
-              <div className="flex items-center gap-3 border rounded-2xl px-4 py-3.5 bg-card border-border">
-                {/* Person icon */}
-                <svg viewBox="0 0 24 24" className="w-4 h-4 flex-shrink-0" fill="none" stroke="var(--kryros-primary)" strokeWidth="2">
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
-                </svg>
-                <input
-                  value={receiptContact}
-                  onChange={(e) => {
-                    setReceiptContact(e.target.value);
-                    if (e.target.value.includes("@")) {
-                      setReceiptEmail(e.target.value); setReceiptPhone("");
-                    } else {
-                      setReceiptPhone(e.target.value); setReceiptEmail("");
-                    }
-                  }}
-                  placeholder="Enter phone number or email"
-                  className="flex-1 text-sm outline-none bg-transparent text-foreground placeholder-muted-foreground"
-                />
-              </div>
-              <p className="text-xs text-muted-foreground mt-2 px-1">We'll send your receipt after payment.</p>
-            </div>
-
-            {/* Payment Summary card - REDESIGNED */}
-            <div className="border rounded-2xl bg-card px-5 py-5 space-y-4 border-border">
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Amount</span>
-                <span className="font-semibold text-foreground">{currency}{amount.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between text-sm items-center">
-                <span className="text-muted-foreground flex items-center gap-1">
-                  Fee <Info className="w-3.5 h-3.5 text-muted-foreground" />
-                </span>
-                <span className="font-semibold text-foreground">{currency}{fee.toFixed(2)}</span>
-              </div>
-              <div className="border-t pt-4 border-border">
-                <div className="flex justify-between">
-                  <span className="text-sm font-black text-foreground">Total Payable</span>
-                  <span className="text-sm font-black text-[var(--kryros-primary)]">{currency}{total.toFixed(2)}</span>
+            {/* Phone (Optional) */}
+            <div className="field" style={{ marginTop: "14px" }}>
+              <p className="label" style={{ margin: "6px 0 8px", color: "var(--muted-foreground)", fontWeight: 700, fontSize: "13px" }}>
+                Phone <span style={{ fontWeight: 600, color: "var(--muted-foreground)", fontSize: "11px" }}>(Optional)</span>
+              </p>
+              <div className="input-rect" id="phoneRect" style={{ height: "44px", borderRadius: "10px", background: "var(--card)", boxShadow: "0 6px 14px rgba(6,35,45,0.06)", display: "flex", alignItems: "center", gap: "10px", padding: "0 10px", border: "1px solid var(--border)" }}>
+                <div className="icon" aria-hidden="true" style={{ width: "20px", height: "20px", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--kryros-primary)", flex: "0 0 20px" }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4"><path d="M21 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                 </div>
+                <input
+                  id="phone"
+                  value={receiptPhone}
+                  onChange={(e) => setReceiptPhone(e.target.value.replace(/[^0-9+()\-\s]/g, ""))}
+                  placeholder="Enter phone number"
+                  aria-label="Phone (optional)"
+                  type="tel"
+                  inputMode="tel"
+                  maxLength={20}
+                  pattern="^[0-9+()\-\\s]*$"
+                  style={{ border: 0, outline: "none", fontSize: "13px", color: "var(--muted-foreground)", width: "100%", padding: "8px 0", background: "transparent" }}
+                />
+              </div>
+            </div>
+
+            {/* Email (Optional) */}
+            <div className="field" style={{ marginTop: "14px" }}>
+              <p className="label" style={{ margin: "6px 0 8px", color: "var(--muted-foreground)", fontWeight: 700, fontSize: "13px" }}>
+                Email <span style={{ fontWeight: 600, color: "var(--muted-foreground)", fontSize: "11px" }}>(Optional)</span>
+              </p>
+              <div className="input-rect" id="emailRect" style={{ height: "44px", borderRadius: "10px", background: "var(--card)", boxShadow: "0 6px 14px rgba(6,35,45,0.06)", display: "flex", alignItems: "center", gap: "10px", padding: "0 10px", border: "1px solid var(--border)" }}>
+                <div className="icon" aria-hidden="true" style={{ width: "20px", height: "20px", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--kryros-primary)", flex: "0 0 20px" }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4"><path d="M4 4h16v16H4z"/><path d="M22,6 L12,13 L2,6"/></svg>
+                </div>
+                <input
+                  id="email"
+                  value={receiptEmail}
+                  onChange={(e) => setReceiptEmail(e.target.value)}
+                  placeholder="Enter email address"
+                  aria-label="Email (optional)"
+                  type="email"
+                  inputMode="email"
+                  maxLength={254}
+                  style={{ border: 0, outline: "none", fontSize: "13px", color: "var(--muted-foreground)", width: "100%", padding: "8px 0", background: "transparent" }}
+                />
+              </div>
+              <div className="muted-help" style={{ color: "var(--muted-foreground)", fontSize: "12px", marginTop: "8px", opacity: 0.7 }}>We'll send your receipt after payment.</div>
+            </div>
+
+            {/* Payment Summary card */}
+            <div className="summary" style={{ marginTop: "12px", background: "var(--card)", borderRadius: "10px", boxShadow: "0 6px 14px rgba(6,35,45,0.06)", padding: "10px", border: "1px solid var(--border)" }}>
+              <div className="row" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 4px" }}>
+                <span className="k" style={{ color: "var(--muted-foreground)", fontWeight: 600, fontSize: "13px" }}>Amount</span>
+                <span className="v" style={{ fontWeight: 700, color: "var(--foreground)" }}>{currency}{amount.toFixed(2)}</span>
+              </div>
+              <div className="row" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 4px" }}>
+                <span className="k" style={{ color: "var(--muted-foreground)", fontWeight: 600, fontSize: "13px" }}>
+                  Fee <Info className="w-3 h-3" style={{ display: "inline", verticalAlign: "middle", color: "var(--muted-foreground)" }} />
+                </span>
+                <span className="v" style={{ fontWeight: 700, color: "var(--foreground)" }}>{currency}{fee.toFixed(2)}</span>
+              </div>
+              <div className="divider" role="separator" style={{ height: "1px", background: "var(--border)", margin: "6px 0" }}></div>
+              <div className="total" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: "4px", fontWeight: 800 }}>
+                <span style={{ fontWeight: 800, color: "var(--muted-foreground)", fontSize: "13px" }}>Total Payable</span>
+                <span style={{ color: "var(--kryros-primary)", fontSize: "15px", fontWeight: 900 }}>{currency}{total.toFixed(2)}</span>
               </div>
             </div>
 
             {/* Pay Now button */}
-            <button
-              onClick={() => amount > 0 && setStep(2)}
-              disabled={amount <= 0}
-              className="w-full py-4 rounded-2xl font-bold text-sm text-white flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed bg-[var(--kryros-primary)] hover:bg-[var(--kryros-primary-hover)]"
-            >
-              <Lock className="w-4 h-4" /> Pay Now
-            </button>
+            <div className="pay-wrap" style={{ marginTop: "12px" }}>
+              <button
+                onClick={() => amount > 0 && setStep(2)}
+                disabled={amount <= 0}
+                className="pay-btn"
+                style={{
+                  width: "100%",
+                  height: "48px",
+                  borderRadius: "10px",
+                  border: 0,
+                  color: "#fff",
+                  fontWeight: 800,
+                  fontSize: "14px",
+                  cursor: amount > 0 ? "pointer" : "not-allowed",
+                  background: "linear-gradient(90deg, var(--kryros-primary-hover), var(--kryros-primary))",
+                  boxShadow: amount > 0 ? "0 10px 18px rgba(6,35,45,0.12)" : "none",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "10px",
+                  opacity: amount > 0 ? 1 : 0.5,
+                }}
+                aria-label="Pay Now"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V8a5 5 0 0 1 10 0v3"/></svg>
+                Pay Now
+              </button>
+            </div>
 
-            {/* 100% Secure footer */}
-            <div className="flex flex-col items-center gap-1 pt-2">
-              <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
-                {/* Shield check icon */}
-                <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="var(--kryros-primary)" strokeWidth="2">
-                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/>
-                </svg>
-                100% Secure Payment
-              </div>
-              <p className="text-[11px] text-muted-foreground">
-                Your payment is safe with <span className="font-bold text-[var(--kryros-primary)]">KRYROS</span>.
-              </p>
+            {/* Secure note */}
+            <div className="secure-note" style={{ marginTop: "10px", textAlign: "center", color: "var(--muted-foreground)", fontSize: "12px", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true"><path d="M12 1l3 5 5 1-4 4 1 5-5-2-5 2 1-5L4 7l5-1z"/></svg>
+              <div>Your payment is safe with <strong style={{ color: "var(--kryros-primary)", fontWeight: 700 }}>KRYROS</strong>.</div>
             </div>
           </div>
         )}

@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { Mail, Lock, User, Eye, EyeOff, ArrowRight } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 interface AuthPageProps {
   initialTab?: "login" | "register" | "forgot";
@@ -15,6 +14,7 @@ export default function AuthPage({ initialTab = "login" }: AuthPageProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [captchaChecked, setCaptchaChecked] = useState(false);
   const [termsChecked, setTermsChecked] = useState(false);
+  const [forgotStep, setForgotStep] = useState(1);
 
   const handleTabChange = (tab: "login" | "register" | "forgot") => {
     setActiveTab(tab);
@@ -91,63 +91,64 @@ export default function AuthPage({ initialTab = "login" }: AuthPageProps) {
   const renderLoginForm = () => (
     <form onSubmit={handleLogin} className="space-y-6">
       <div>
-        <label className="block text-sm font-semibold text-gray-900 mb-2">Email or Phone</label>
+        <label style={{ display: "block", fontSize: "13px", fontWeight: 700, color: "var(--muted-foreground)", marginBottom: "8px" }}>Email or Phone</label>
         <div className="relative">
-          <Mail className="fas fa-envelope absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-teal-600" />
+          <Mail style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", width: "18px", height: "18px", color: "var(--kryros-primary)" }} />
           <input
             type="text"
             placeholder="Enter your email or phone number"
-            className="w-full pl-12 h-12 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-600 focus:border-transparent outline-none"
+            style={{ width: "100%", paddingLeft: "44px", height: "48px", border: "1px solid var(--border)", borderRadius: "10px", background: "var(--card)", color: "var(--foreground)", outline: "none", fontSize: "13px" }}
             required
           />
         </div>
       </div>
 
       <div>
-        <label className="block text-sm font-semibold text-gray-900 mb-2">Password</label>
+        <label style={{ display: "block", fontSize: "13px", fontWeight: 700, color: "var(--muted-foreground)", marginBottom: "8px" }}>Password</label>
         <div className="relative">
-          <Lock className="fas fa-lock absolute left-4 top-1/2 transform -translate-y-1/2 text-teal-600" />
+          <Lock style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", width: "18px", height: "18px", color: "var(--kryros-primary)" }} />
           <input
             type={showPassword ? "text" : "password"}
             placeholder="Enter your password"
-            className="w-full pl-12 pr-12 h-12 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-600 focus:border-transparent outline-none"
+            style={{ width: "100%", paddingLeft: "44px", paddingRight: "44px", height: "48px", border: "1px solid var(--border)", borderRadius: "10px", background: "var(--card)", color: "var(--foreground)", outline: "none", fontSize: "13px" }}
             required
           />
           <button
             type="button"
             onClick={togglePasswordVisibility}
-            className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+            style={{ position: "absolute", right: "14px", top: "50%", transform: "translateY(-50%)", color: "var(--muted-foreground)", background: "none", border: 0, cursor: "pointer" }}
           >
-            {showPassword ? (
-              <EyeOff className="fas fa-eye-slash" />
-            ) : (
-              <Eye className="fas fa-eye" />
-            )}
+            {showPassword ? <EyeOff style={{ width: "18px", height: "18px" }} /> : <Eye style={{ width: "18px", height: "18px" }} />}
           </button>
         </div>
       </div>
 
-      <div className="flex items-center justify-between">
-        <label className="flex items-center">
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <label style={{ display: "flex", alignItems: "center", cursor: "pointer" }}>
           <input
             type="checkbox"
-            className="w-4 h-4 rounded border-gray-300 text-teal-600 focus:ring-teal-600"
+            style={{ width: "16px", height: "16px", accentColor: "var(--kryros-primary)" }}
           />
-          <span className="ml-2 text-sm text-gray-600">Remember me</span>
+          <span style={{ marginLeft: "8px", fontSize: "13px", color: "var(--muted-foreground)" }}>Remember me</span>
         </label>
-        <a href="#" className="text-sm text-teal-600 hover:underline">Forgot password</a>
+        <button onClick={() => handleTabChange("forgot")} style={{ fontSize: "13px", color: "var(--kryros-primary)", background: "none", border: 0, cursor: "pointer" }}>Forgot password</button>
       </div>
 
       <button
         type="submit"
         disabled={isLoading}
-        className="w-full h-12 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        style={{
+          width: "100%", height: "48px", border: 0, borderRadius: "10px", fontWeight: 800, fontSize: "14px",
+          cursor: isLoading ? "not-allowed" : "pointer", opacity: isLoading ? 0.5 : 1,
+          background: "linear-gradient(90deg, var(--kryros-primary-hover), var(--kryros-primary))",
+          color: "#fff"
+        }}
       >
         {isLoading ? "Logging in..." : "Login"}
       </button>
 
-      <div className="text-center text-sm text-gray-600">
-        <p>Don't have an account? <button onClick={() => handleTabChange("register")} className="text-teal-600 font-semibold hover:underline">Register here</button></p>
+      <div style={{ textAlign: "center", fontSize: "13px", color: "var(--muted-foreground)" }}>
+        <p>Don't have an account? <button onClick={() => handleTabChange("register")} style={{ color: "var(--kryros-primary)", fontWeight: 700, background: "none", border: 0, cursor: "pointer" }}>Register here</button></p>
       </div>
     </form>
   );
@@ -155,138 +156,134 @@ export default function AuthPage({ initialTab = "login" }: AuthPageProps) {
   const renderRegisterForm = () => (
     <form onSubmit={handleRegister} className="space-y-5">
       <div>
-        <label className="block text-sm font-semibold text-gray-900 mb-2">Full Name</label>
+        <label style={{ display: "block", fontSize: "13px", fontWeight: 700, color: "var(--muted-foreground)", marginBottom: "8px" }}>Full Name</label>
         <div className="relative">
-          <User className="fas fa-user absolute left-4 top-1/2 transform -translate-y-1/2 text-teal-600" />
+          <User style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", width: "18px", height: "18px", color: "var(--kryros-primary)" }} />
           <input
             type="text"
             placeholder="Enter your full name"
-            className="w-full pl-12 h-12 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-600 focus:border-transparent outline-none"
+            style={{ width: "100%", paddingLeft: "44px", height: "48px", border: "1px solid var(--border)", borderRadius: "10px", background: "var(--card)", color: "var(--foreground)", outline: "none", fontSize: "13px" }}
             required
           />
         </div>
       </div>
 
       <div>
-        <label className="block text-sm font-semibold text-gray-900 mb-2">Email or Phone</label>
+        <label style={{ display: "block", fontSize: "13px", fontWeight: 700, color: "var(--muted-foreground)", marginBottom: "8px" }}>Email or Phone</label>
         <div className="relative">
-          <Mail className="fas fa-envelope absolute left-4 top-1/2 transform -translate-y-1/2 text-teal-600" />
+          <Mail style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", width: "18px", height: "18px", color: "var(--kryros-primary)" }} />
           <input
             type="text"
             placeholder="Enter your email or phone number"
-            className="w-full pl-12 h-12 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-600 focus:border-transparent outline-none"
+            style={{ width: "100%", paddingLeft: "44px", height: "48px", border: "1px solid var(--border)", borderRadius: "10px", background: "var(--card)", color: "var(--foreground)", outline: "none", fontSize: "13px" }}
             required
           />
         </div>
       </div>
 
       <div>
-        <label className="block text-sm font-semibold text-gray-900 mb-2">Password</label>
+        <label style={{ display: "block", fontSize: "13px", fontWeight: 700, color: "var(--muted-foreground)", marginBottom: "8px" }}>Password</label>
         <div className="relative">
-          <Lock className="fas fa-lock absolute left-4 top-1/2 transform -translate-y-1/2 text-teal-600" />
+          <Lock style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", width: "18px", height: "18px", color: "var(--kryros-primary)" }} />
           <input
             type={showConfirmPassword ? "text" : "password"}
             placeholder="Create a password"
-            className="w-full pl-12 pr-12 h-12 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-600 focus:border-transparent outline-none"
+            style={{ width: "100%", paddingLeft: "44px", paddingRight: "44px", height: "48px", border: "1px solid var(--border)", borderRadius: "10px", background: "var(--card)", color: "var(--foreground)", outline: "none", fontSize: "13px" }}
             required
           />
           <button
             type="button"
             onClick={toggleConfirmPasswordVisibility}
-            className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+            style={{ position: "absolute", right: "14px", top: "50%", transform: "translateY(-50%)", color: "var(--muted-foreground)", background: "none", border: 0, cursor: "pointer" }}
           >
-            {showConfirmPassword ? (
-              <EyeOff className="fas fa-eye-slash" />
-            ) : (
-              <Eye className="fas fa-eye" />
-            )}
+            {showConfirmPassword ? <EyeOff style={{ width: "18px", height: "18px" }} /> : <Eye style={{ width: "18px", height: "18px" }} />}
           </button>
         </div>
       </div>
 
       <div>
-        <label className="block text-sm font-semibold text-gray-900 mb-2">Confirm Password</label>
+        <label style={{ display: "block", fontSize: "13px", fontWeight: 700, color: "var(--muted-foreground)", marginBottom: "8px" }}>Confirm Password</label>
         <div className="relative">
-          <Lock className="fas fa-lock absolute left-4 top-1/2 transform -translate-y-1/2 text-teal-600" />
+          <Lock style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", width: "18px", height: "18px", color: "var(--kryros-primary)" }} />
           <input
             type={showPassword ? "text" : "password"}
             placeholder="Confirm your password"
-            className="w-full pl-12 pr-12 h-12 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-600 focus:border-transparent outline-none"
+            style={{ width: "100%", paddingLeft: "44px", paddingRight: "44px", height: "48px", border: "1px solid var(--border)", borderRadius: "10px", background: "var(--card)", color: "var(--foreground)", outline: "none", fontSize: "13px" }}
             required
           />
           <button
             type="button"
             onClick={togglePasswordVisibility}
-            className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+            style={{ position: "absolute", right: "14px", top: "50%", transform: "translateY(-50%)", color: "var(--muted-foreground)", background: "none", border: 0, cursor: "pointer" }}
           >
-            {showPassword ? (
-              <EyeOff className="fas fa-eye-slash" />
-            ) : (
-              <Eye className="fas fa-eye" />
-            )}
+            {showPassword ? <EyeOff style={{ width: "18px", height: "18px" }} /> : <Eye style={{ width: "18px", height: "18px" }} />}
           </button>
         </div>
       </div>
 
-      <div className="border border-gray-300 rounded-lg p-4 bg-gray-50">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
+      <div style={{ border: "1px solid var(--border)", borderRadius: "10px", padding: "14px", background: "var(--muted)" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <input
               type="checkbox"
               id="captcha"
               checked={captchaChecked}
               onChange={(e) => setCaptchaChecked(e.target.checked)}
-              className="w-5 h-5 rounded border-gray-300 text-teal-600 cursor-pointer"
+              style={{ width: "20px", height: "20px", accentColor: "var(--kryros-primary)", cursor: "pointer" }}
             />
-            <label htmlFor="captcha" className="text-sm text-gray-700 font-medium cursor-pointer">Verify you are human</label>
+            <label htmlFor="captcha" style={{ fontSize: "13px", color: "var(--muted-foreground)", fontWeight: 600, cursor: "pointer" }}>Verify you are human</label>
           </div>
-          <div className="text-right text-xs">
-            <p className="font-semibold text-gray-900">CLOUDFLARE</p>
-            <div className="flex gap-1 text-gray-600 text-xs">
-              <a href="#" className="hover:underline">Privacy</a>
+          <div style={{ textAlign: "right", fontSize: "11px" }}>
+            <p style={{ fontWeight: 700, color: "var(--foreground)" }}>CLOUDFLARE</p>
+            <div style={{ display: "flex", gap: "4px", color: "var(--muted-foreground)" }}>
+              <a href="#" style={{ color: "var(--muted-foreground)" }}>Privacy</a>
               <span>•</span>
-              <a href="#" className="hover:underline">Terms</a>
+              <a href="#" style={{ color: "var(--muted-foreground)" }}>Terms</a>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="flex items-start">
+      <div style={{ display: "flex", alignItems: "flex-start" }}>
         <input
           type="checkbox"
           id="terms"
           checked={termsChecked}
           onChange={(e) => setTermsChecked(e.target.checked)}
-          className="w-4 h-4 rounded border-gray-300 text-teal-600 mt-1"
+          style={{ width: "16px", height: "16px", accentColor: "var(--kryros-primary)", marginTop: "2px" }}
         />
-        <label htmlFor="terms" className="ml-2 text-sm text-gray-600">
-          I agree to the <a href="#" className="text-teal-600 font-semibold hover:underline">Terms and Conditions</a>
+        <label htmlFor="terms" style={{ marginLeft: "8px", fontSize: "13px", color: "var(--muted-foreground)" }}>
+          I agree to the <a href="#" style={{ color: "var(--kryros-primary)", fontWeight: 700 }}>Terms and Conditions</a>
         </label>
       </div>
 
       <button
         type="submit"
         disabled={isLoading || !captchaChecked || !termsChecked}
-        className="w-full h-12 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        style={{
+          width: "100%", height: "48px", border: 0, borderRadius: "10px", fontWeight: 800, fontSize: "14px",
+          cursor: (isLoading || !captchaChecked || !termsChecked) ? "not-allowed" : "pointer",
+          opacity: (isLoading || !captchaChecked || !termsChecked) ? 0.5 : 1,
+          background: "linear-gradient(90deg, var(--kryros-primary-hover), var(--kryros-primary))",
+          color: "#fff"
+        }}
       >
         {isLoading ? "Creating account..." : "Create account"}
       </button>
 
-      <div className="text-center text-sm text-gray-600">
-        <p>Already have an account? <button onClick={() => handleTabChange("login")} className="text-teal-600 font-semibold hover:underline">Login here</button></p>
+      <div style={{ textAlign: "center", fontSize: "13px", color: "var(--muted-foreground)" }}>
+        <p>Already have an account? <button onClick={() => handleTabChange("login")} style={{ color: "var(--kryros-primary)", fontWeight: 700, background: "none", border: 0, cursor: "pointer" }}>Login here</button></p>
       </div>
     </form>
   );
 
   const renderForgotPasswordForm = () => {
-    const [step, setStep] = useState(1);
-
     const handleStep1Submit = async (e: React.FormEvent) => {
       e.preventDefault();
       setIsLoading(true);
       try {
         await new Promise(resolve => setTimeout(resolve, 1000));
-        setStep(2);
+        setForgotStep(2);
       } catch (error) {
         console.error("Step 1 error:", error);
       } finally {
@@ -309,21 +306,21 @@ export default function AuthPage({ initialTab = "login" }: AuthPageProps) {
 
     return (
       <div className="space-y-6">
-        {step === 1 ? (
+        {forgotStep === 1 ? (
           <div id="forgot-step-1">
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-              <p className="text-sm text-blue-800">Enter your email address and we'll send you a link to reset your password.</p>
+            <div style={{ background: "rgba(6,35,45,0.06)", borderRadius: "10px", padding: "14px", marginBottom: "20px", border: "1px solid var(--border)" }}>
+              <p style={{ fontSize: "13px", color: "var(--muted-foreground)" }}>Enter your email address and we'll send you a link to reset your password.</p>
             </div>
 
             <form onSubmit={handleStep1Submit} className="space-y-6">
               <div>
-                <label className="block text-sm font-semibold text-gray-900 mb-2">Email or Phone</label>
+                <label style={{ display: "block", fontSize: "13px", fontWeight: 700, color: "var(--muted-foreground)", marginBottom: "8px" }}>Email or Phone</label>
                 <div className="relative">
-                  <Mail className="fas fa-envelope absolute left-4 top-1/2 transform -translate-y-1/2 text-teal-600" />
+                  <Mail style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", width: "18px", height: "18px", color: "var(--kryros-primary)" }} />
                   <input
                     type="text"
                     placeholder="Enter your email or phone number"
-                    className="w-full pl-12 h-12 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-600 focus:border-transparent outline-none"
+                    style={{ width: "100%", paddingLeft: "44px", height: "48px", border: "1px solid var(--border)", borderRadius: "10px", background: "var(--card)", color: "var(--foreground)", outline: "none", fontSize: "13px" }}
                     required
                   />
                 </div>
@@ -332,79 +329,76 @@ export default function AuthPage({ initialTab = "login" }: AuthPageProps) {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full h-12 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                style={{
+                  width: "100%", height: "48px", border: 0, borderRadius: "10px", fontWeight: 800, fontSize: "14px",
+                  cursor: isLoading ? "not-allowed" : "pointer", opacity: isLoading ? 0.5 : 1,
+                  background: "linear-gradient(90deg, var(--kryros-primary-hover), var(--kryros-primary))",
+                  color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px"
+                }}
               >
                 {isLoading ? "Sending..." : "Send Reset Link"}
-                {!isLoading && <ArrowRight className="fas fa-arrow-right" />}
+                {!isLoading && <ArrowRight style={{ width: "16px", height: "16px" }} />}
               </button>
 
-              <div className="text-center text-sm text-gray-600">
-                <p>Remember your password? <button onClick={() => handleTabChange("login")} className="text-teal-600 font-semibold hover:underline">Login here</button></p>
+              <div style={{ textAlign: "center", fontSize: "13px", color: "var(--muted-foreground)" }}>
+                <p>Remember your password? <button onClick={() => handleTabChange("login")} style={{ color: "var(--kryros-primary)", fontWeight: 700, background: "none", border: 0, cursor: "pointer" }}>Login here</button></p>
               </div>
             </form>
           </div>
         ) : (
           <div id="forgot-step-2">
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
-              <p className="text-sm text-green-800">Check your email for the verification code and enter it below.</p>
+            <div style={{ background: "rgba(6,35,45,0.06)", borderRadius: "10px", padding: "14px", marginBottom: "20px", border: "1px solid var(--border)" }}>
+              <p style={{ fontSize: "13px", color: "var(--muted-foreground)" }}>Check your email for the verification code and enter it below.</p>
             </div>
 
             <form onSubmit={handleStep2Submit} className="space-y-6">
               <div>
-                <label className="block text-sm font-semibold text-gray-900 mb-2">Verification Code</label>
+                <label style={{ display: "block", fontSize: "13px", fontWeight: 700, color: "var(--muted-foreground)", marginBottom: "8px" }}>Verification Code</label>
                 <input
                   type="text"
                   maxLength={6}
                   placeholder="000000"
-                  className="w-full h-12 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-600 focus:border-transparent outline-none text-center text-lg tracking-widest"
+                  style={{ width: "100%", height: "48px", border: "1px solid var(--border)", borderRadius: "10px", background: "var(--card)", color: "var(--foreground)", outline: "none", textAlign: "center", fontSize: "18px", letterSpacing: "8px" }}
                   required
                 />
               </div>
 
-              <div className="mt-4">
-                <label className="block text-sm font-semibold text-gray-900 mb-2">New Password</label>
+              <div>
+                <label style={{ display: "block", fontSize: "13px", fontWeight: 700, color: "var(--muted-foreground)", marginBottom: "8px" }}>New Password</label>
                 <div className="relative">
-                  <Lock className="fas fa-lock absolute left-4 top-1/2 transform -translate-y-1/2 text-teal-600" />
+                  <Lock style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", width: "18px", height: "18px", color: "var(--kryros-primary)" }} />
                   <input
                     type={showForgotNewPassword ? "text" : "password"}
                     placeholder="Create new password"
-                    className="w-full pl-12 pr-12 h-12 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-600 focus:border-transparent outline-none"
+                    style={{ width: "100%", paddingLeft: "44px", paddingRight: "44px", height: "48px", border: "1px solid var(--border)", borderRadius: "10px", background: "var(--card)", color: "var(--foreground)", outline: "none", fontSize: "13px" }}
                     required
                   />
                   <button
                     type="button"
                     onClick={toggleForgotNewPasswordVisibility}
-                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    style={{ position: "absolute", right: "14px", top: "50%", transform: "translateY(-50%)", color: "var(--muted-foreground)", background: "none", border: 0, cursor: "pointer" }}
                   >
-                    {showForgotNewPassword ? (
-                      <EyeOff className="fas fa-eye-slash" />
-                    ) : (
-                      <Eye className="fas fa-eye" />
-                    )}
+                    {showForgotNewPassword ? <EyeOff style={{ width: "18px", height: "18px" }} /> : <Eye style={{ width: "18px", height: "18px" }} />}
                   </button>
                 </div>
               </div>
 
-              <div className="mt-4">
-                <label className="block text-sm font-semibold text-gray-900 mb-2">Confirm Password</label>
+              <div>
+                <label style={{ display: "block", fontSize: "13px", fontWeight: 700, color: "var(--muted-foreground)", marginBottom: "8px" }}>Confirm Password</label>
                 <div className="relative">
-                  <Lock className="fas fa-lock absolute left-4 top-1/2 transform -translate-y-1/2 text-teal-600" />
+                  <Lock style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", width: "18px", height: "18px", color: "var(--kryros-primary)" }} />
                   <input
                     type={showForgotConfirmPassword ? "text" : "password"}
                     placeholder="Confirm new password"
-                    className="w-full pl-12 pr-12 h-12 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-600 focus:border-transparent outline-none"
+                    style={{ width: "100%", paddingLeft: "44px", paddingRight: "44px", height: "48px", border: "1px solid var(--border)", borderRadius: "10px", background: "var(--card)", color: "var(--foreground)", outline: "none", fontSize: "13px" }}
                     required
                   />
                   <button
                     type="button"
                     onClick={toggleForgotConfirmPasswordVisibility}
-                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    style={{ position: "absolute", right: "14px", top: "50%", transform: "translateY(-50%)", color: "var(--muted-foreground)", background: "none", border: 0, cursor: "pointer" }}
                   >
-                    {showForgotConfirmPassword ? (
-                      <EyeOff className="fas fa-eye-slash" />
-                    ) : (
-                      <Eye className="fas fa-eye" />
-                    )}
+                    {showForgotConfirmPassword ? <EyeOff style={{ width: "18px", height: "18px" }} /> : <Eye style={{ width: "18px", height: "18px" }} />}
                   </button>
                 </div>
               </div>
@@ -412,15 +406,23 @@ export default function AuthPage({ initialTab = "login" }: AuthPageProps) {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full h-12 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed mt-6"
+                style={{
+                  width: "100%", height: "48px", border: 0, borderRadius: "10px", fontWeight: 800, fontSize: "14px",
+                  cursor: isLoading ? "not-allowed" : "pointer", opacity: isLoading ? 0.5 : 1,
+                  background: "linear-gradient(90deg, var(--kryros-primary-hover), var(--kryros-primary))",
+                  color: "#fff"
+                }}
               >
                 {isLoading ? "Resetting..." : "Reset Password"}
               </button>
 
               <button
                 type="button"
-                onClick={() => setStep(1)}
-                className="w-full h-12 border-2 border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 mt-3"
+                onClick={() => setForgotStep(1)}
+                style={{
+                  width: "100%", height: "48px", border: "2px solid var(--border)", borderRadius: "10px",
+                  color: "var(--foreground)", fontWeight: 700, fontSize: "13px", background: "transparent", cursor: "pointer"
+                }}
               >
                 Back
               </button>
@@ -432,45 +434,45 @@ export default function AuthPage({ initialTab = "login" }: AuthPageProps) {
   };
 
   return (
-    <div className="bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8">
+    <div style={{ background: "var(--background)", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: "16px" }}>
+      <div style={{ width: "100%", maxWidth: "420px", background: "var(--card)", borderRadius: "16px", boxShadow: "0 12px 24px rgba(0,0,0,0.08)", padding: "32px" }}>
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold">
-            <span className="text-gray-900">KRY</span><span className="text-teal-600">ROS</span>
+            <span style={{ color: "var(--foreground)" }}>KRY</span><span style={{ color: "var(--kryros-primary)" }}>ROS</span>
           </h1>
         </div>
 
-        <div className="bg-gray-100 rounded-lg p-1 mb-8 flex gap-1">
+        <div style={{ background: "var(--muted)", borderRadius: "10px", padding: "4px", marginBottom: "32px", display: "flex", gap: "4px" }}>
           <button
             onClick={() => handleTabChange("login")}
-            className={cn(
-              "flex-1 py-2 px-3 rounded-md font-medium transition-all",
-              activeTab === "login"
-                ? "bg-teal-600 text-white"
-                : "text-gray-600 hover:text-gray-900"
-            )}
+            style={{
+              flex: 1, padding: "8px 12px", borderRadius: "8px", fontWeight: 600, fontSize: "13px", transition: "all 0.2s", border: 0,
+              cursor: "pointer",
+              background: activeTab === "login" ? "var(--kryros-primary)" : "transparent",
+              color: activeTab === "login" ? "#fff" : "var(--muted-foreground)"
+            }}
           >
             Login
           </button>
           <button
             onClick={() => handleTabChange("register")}
-            className={cn(
-              "flex-1 py-2 px-3 rounded-md font-medium transition-all",
-              activeTab === "register"
-                ? "bg-teal-600 text-white"
-                : "text-gray-600 hover:text-gray-900"
-            )}
+            style={{
+              flex: 1, padding: "8px 12px", borderRadius: "8px", fontWeight: 600, fontSize: "13px", transition: "all 0.2s", border: 0,
+              cursor: "pointer",
+              background: activeTab === "register" ? "var(--kryros-primary)" : "transparent",
+              color: activeTab === "register" ? "#fff" : "var(--muted-foreground)"
+            }}
           >
             Register
           </button>
           <button
             onClick={() => handleTabChange("forgot")}
-            className={cn(
-              "flex-1 py-2 px-3 rounded-md font-medium transition-all",
-              activeTab === "forgot"
-                ? "bg-teal-600 text-white"
-                : "text-gray-600 hover:text-gray-900"
-            )}
+            style={{
+              flex: 1, padding: "8px 12px", borderRadius: "8px", fontWeight: 600, fontSize: "13px", transition: "all 0.2s", border: 0,
+              cursor: "pointer",
+              background: activeTab === "forgot" ? "var(--kryros-primary)" : "transparent",
+              color: activeTab === "forgot" ? "#fff" : "var(--muted-foreground)"
+            }}
           >
             Forgot
           </button>
