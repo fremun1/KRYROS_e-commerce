@@ -4,9 +4,6 @@ import { useCartStore } from "@/store/cartStore";
 import { useSidebarStore } from "@/store/sidebarStore";
 import { useEffect, useRef, useState } from "react";
 
-const NAV_H = 48; // px height of the bar (matching HTML)
-const CIRCLE_R = 20; // radius of the raised Pay circle (diameter = 40px)
-
 export default function MobileBottomNav() {
   const [location] = useLocation();
   const cartCount = useCartStore((s) => s.items.reduce((acc, i) => acc + i.qty, 0));
@@ -35,75 +32,56 @@ export default function MobileBottomNav() {
   ];
 
   return (
-    <div className="nav-wrapper">
-      <div className="nav-bar">
-        <div className="nav-notch"></div>
-        <button className="pay-btn" aria-label="Pay">
-          <CreditCard className="w-4 h-4 text-white" />
-        </button>
-        {navItems.map(({ label, icon: Icon, href, badge }) => {
-          const isActive = location === href || (href !== "/" && location.startsWith(href));
-          const isPay = href === "/pay";
+    <nav
+      className="fixed bottom-0 left-0 right-0 z-50 md:hidden transition-transform duration-300"
+      style={{ transform: visible && !sidebarOpen ? "translateY(0)" : "translateY(110%)" }}
+    >
+      <div style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
+        <div className="nav-wrapper">
+          <div className="nav-bar">
+            <div className="nav-notch"></div>
+            <button className="pay-btn" aria-label="Pay">
+              <CreditCard className="w-[10px] h-[10px] text-white" />
+            </button>
+            {navItems.map(({ label, icon: Icon, href, badge }) => {
+              const isActive = location === href || (href !== "/" && location.startsWith(href));
+              const isPay = href === "/pay";
 
-          if (isPay) {
-            return (
-              <Link key={href} href={href}>
-                <button
-                  className="nav-item"
-                  style={{ marginTop: -(CIRCLE_R + 6) }}
-                >
-                  <div
-                    className="flex items-center justify-center rounded-full transition-all duration-200 shadow-lg"
-                    style={{
-                      width: CIRCLE_R * 2,
-                      height: CIRCLE_R * 2,
-                      background: "var(--kryros-primary)",
-                      boxShadow: "0 6px 20px rgba(39, 185, 175, 0.3)",
-                    }}
-                  >
-                    <Icon className="w-5 h-5 text-white" strokeWidth={2.5} />
-                  </div>
-                  <span
-                    className="pay-label"
-                    style={{ color: "var(--kryros-primary)" }}
-                  >
-                    {label}
-                  </span>
-                </button>
-              </Link>
-            );
-          }
+              if (isPay) {
+                return (
+                  <Link key={href} href={href}>
+                    <div className="pay-label-item">
+                      <span className="pay-label">{label}</span>
+                    </div>
+                  </Link>
+                );
+              }
 
-          return (
-            <Link key={href} href={href}>
-              <button
-                className={`nav-item ${isActive ? 'active' : ''}`}
-              >
-                <div className="icon-wrapper">
-                  <Icon
-                    className="icon"
-                    style={{ 
-                      color: isActive ? "var(--kryros-primary)" : "var(--muted-foreground)",
-                      stroke: isActive ? "var(--kryros-primary)" : "var(--muted-foreground)"
-                    }}
-                  />
-                  {badge != null && badge > 0 && (
-                    <span className="cart-badge">
-                      {badge > 99 ? "99+" : badge}
-                    </span>
-                  )}
-                </div>
-                <span
-                  className="label"
-                  style={{ color: isActive ? "var(--kryros-primary)" : "var(--muted-foreground)" }}
-                >
-                  {label}
-                </span>
-              </button>
-            </Link>
-          );
-        })}
+              return (
+                <Link key={href} href={href}>
+                  <button className={`nav-item ${isActive ? 'active' : ''}`}>
+                    <div className="icon-wrapper">
+                      <Icon
+                        className="icon"
+                        style={{
+                          color: isActive ? "#1dbcb8" : "#8a96a3",
+                          stroke: isActive ? "#1dbcb8" : "#8a96a3"
+                        }}
+                      />
+                      {badge != null && badge > 0 && (
+                        <span className="cart-badge">
+                          {badge > 99 ? "99+" : badge}
+                        </span>
+                      )}
+                    </div>
+                    <span className="label">{label}</span>
+                  </button>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
       </div>
-    </div>
+    </nav>
   );
 }
