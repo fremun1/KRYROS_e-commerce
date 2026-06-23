@@ -31,7 +31,7 @@ export default function MobileBottomNav() {
       <div style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
         <div style={{
           position: "relative",
-          background: "white",
+          background: "var(--card)",
           borderRadius: "50px",
           boxShadow: "0 10px 30px rgba(0, 0, 0, 0.08)",
           display: "flex",
@@ -39,7 +39,7 @@ export default function MobileBottomNav() {
           padding: "12px 20px",
           width: "340px",
           height: "70px",
-          border: "1px solid rgba(0,0,0,0.05)",
+          border: "1px solid var(--border)",
           marginLeft: "auto",
           marginRight: "auto",
           marginBottom: "16px"
@@ -53,7 +53,7 @@ export default function MobileBottomNav() {
               alignItems: "center",
               justifyContent: "flex-end",
               gap: "6px",
-              color: location === "/" ? "var(--kryros-primary)" : "#0d9488",
+              color: location === "/" ? "var(--kryros-primary)" : "var(--muted-foreground)",
               textDecoration: "none",
               fontSize: "11px",
               fontWeight: 500,
@@ -74,7 +74,7 @@ export default function MobileBottomNav() {
               alignItems: "center",
               justifyContent: "flex-end",
               gap: "6px",
-              color: location === "/shop" ? "var(--kryros-primary)" : "#0d9488",
+              color: location === "/shop" ? "var(--kryros-primary)" : "var(--muted-foreground)",
               textDecoration: "none",
               fontSize: "11px",
               fontWeight: 500,
@@ -108,7 +108,7 @@ export default function MobileBottomNav() {
             </Link>
             <span style={{
               marginTop: "auto",
-              color: location === "/pay" ? "var(--kryros-primary)" : "#0d9488",
+              color: location === "/pay" ? "var(--kryros-primary)" : "var(--muted-foreground)",
               fontSize: "11px",
               fontWeight: 500,
               paddingBottom: "4px"
@@ -124,7 +124,7 @@ export default function MobileBottomNav() {
               alignItems: "center",
               justifyContent: "flex-end",
               gap: "6px",
-              color: location === "/track" ? "var(--kryros-primary)" : "#0d9488",
+              color: location === "/track" ? "var(--kryros-primary)" : "var(--muted-foreground)",
               textDecoration: "none",
               fontSize: "11px",
               fontWeight: 500,
@@ -145,7 +145,7 @@ export default function MobileBottomNav() {
               alignItems: "center",
               justifyContent: "flex-end",
               gap: "6px",
-              color: location === "/cart" ? "var(--kryros-primary)" : "#0d9488",
+              color: location === "/cart" ? "var(--kryros-primary)" : "var(--muted-foreground)",
               textDecoration: "none",
               fontSize: "11px",
               fontWeight: 500,
@@ -168,7 +168,7 @@ export default function MobileBottomNav() {
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    border: "2px solid white",
+                    border: "2px solid var(--card)",
                     fontWeight: "bold"
                   }}>
                     {cartCount > 99 ? "99+" : cartCount}
