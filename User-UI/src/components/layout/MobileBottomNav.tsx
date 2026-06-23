@@ -37,6 +37,7 @@ export default function MobileBottomNav() {
             boxShadow: "0 10px 30px rgba(0, 0, 0, 0.08)",
             display: "flex",
             alignItems: "flex-end",
+            justifyContent: "space-between",
             padding: "12px 16px",
             width: "100%",
             maxWidth: "380px",
@@ -46,7 +47,7 @@ export default function MobileBottomNav() {
             {/* Home */}
             <Link href="/">
               <a style={{
-                flex: 1,
+                width: "56px",
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
@@ -67,7 +68,7 @@ export default function MobileBottomNav() {
             {/* Shop */}
             <Link href="/shop">
               <a style={{
-                flex: 1,
+                width: "56px",
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
@@ -86,7 +87,7 @@ export default function MobileBottomNav() {
             </Link>
             
             {/* Pay (Central Floating) */}
-            <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", position: "relative", height: "100%" }}>
+            <div style={{ width: "56px", display: "flex", flexDirection: "column", alignItems: "center", position: "relative", height: "100%" }}>
               <Link href="/pay">
                 <a style={{
                   position: "absolute",
@@ -117,7 +118,7 @@ export default function MobileBottomNav() {
             {/* Track */}
             <Link href="/track">
               <a style={{
-                flex: 1,
+                width: "56px",
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
@@ -138,7 +139,7 @@ export default function MobileBottomNav() {
             {/* Cart */}
             <Link href="/cart">
               <a style={{
-                flex: 1,
+                width: "56px",
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
