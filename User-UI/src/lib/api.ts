@@ -35,6 +35,12 @@ export interface Product {
   isWholesaleOnly?: boolean;
   wholesalePrice?: number | null;
   wholesaleMoq?: number;
+  // New fields for this update
+  condition?: string;
+  shippingFee?: number;
+  estimatedDeliveryDays?: number;
+  popularItemText?: string;
+  easyReturnsText?: string;
 }
 
 export interface ApiBrand {
@@ -221,6 +227,12 @@ function normalizeProduct(p: any): Product {
     isWholesaleOnly: !!(p.isWholesaleOnly),
     wholesalePrice: p.wholesalePrice ? Number(p.wholesalePrice) : null,
     wholesaleMoq: p.wholesaleMoq ? Number(p.wholesaleMoq) : 1,
+    // New fields
+    condition: p.condition,
+    shippingFee: p.shippingFee ? Number(p.shippingFee) : undefined,
+    estimatedDeliveryDays: p.estimatedDeliveryDays ? Number(p.estimatedDeliveryDays) : undefined,
+    popularItemText: p.popularItemText,
+    easyReturnsText: p.easyReturnsText,
   };
 }
 

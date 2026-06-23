@@ -439,6 +439,39 @@ export default function ProductPage() {
           </button>
         </div>
 
+        {/* Shipping Info */}
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <Truck className="w-4 h-4 text-primary" />
+            <span className="text-sm font-semibold text-primary">
+              {product.shippingFee && product.shippingFee > 0
+                ? `${format(product.shippingFee)} delivery in ${product.estimatedDeliveryDays || 3}-${(product.estimatedDeliveryDays || 3) + 1} days`
+                : `Free delivery in ${product.estimatedDeliveryDays || 3}-${(product.estimatedDeliveryDays || 3) + 1} days`
+              }
+            </span>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Estimated between {(() => {
+              const today = new Date();
+              const start = new Date(today);
+              start.setDate(start.getDate() + (product.estimatedDeliveryDays || 3));
+              const end = new Date(today);
+              end.setDate(end.getDate() + ((product.estimatedDeliveryDays || 3) + 1));
+              const options: Intl.DateTimeFormatOptions = { weekday: 'short', month: 'short', day: 'numeric' };
+              return `${start.toLocaleDateString(undefined, options)} and ${end.toLocaleDateString(undefined, options)}`;
+            })()}
+          </p>
+        </div>
+
+        {/* Condition */}
+        <div className="flex items-center justify-between py-2">
+          <span className="text-sm font-semibold text-muted-foreground">Condition</span>
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-bold text-foreground">{product.condition || "New"}</span>
+            <Info className="w-4 h-4 text-muted-foreground" />
+          </div>
+        </div>
+
         {/* Store Closed Status */}
         {storeStatus?.isStoreClosed && (
           <div className="bg-secondary/50 border border-border rounded-xl shadow-sm overflow-hidden h-[50px] grid grid-cols-[35px_1fr_60px] items-center">
@@ -461,26 +494,10 @@ export default function ProductPage() {
           </div>
         )}
 
-        {/* Delivery row */}
-        <div className="grid grid-cols-3 gap-2">
-          {[
-            { icon: Truck, title: "Free Delivery", sub: "On orders above minimum", subColor: "text-primary" },
-            { icon: MapPin, title: "Pickup Available", sub: "at KRYROS Stations", subColor: "text-muted-foreground" },
-            { icon: Shield, title: "Delivery Protection", sub: "Cover against loss or damage", subColor: "text-muted-foreground", arrow: true },
-          ].map(({ icon: Icon, title, sub, subColor, arrow }) => (
-            <div key={title} className="border border-border rounded-xl p-2.5 cursor-pointer hover:border-primary/30 transition-all">
-              <Icon className="w-4 h-4 text-primary mb-1.5" />
-              <p className="text-[10px] font-bold text-foreground leading-tight">{title}</p>
-              <p className={`text-[9px] ${subColor} leading-snug mt-0.5`}>{sub}</p>
-              {arrow && <ChevronRight className="w-3 h-3 text-muted-foreground mt-1" />}
-            </div>
-          ))}
-        </div>
-
         {/* Expandable sections */}
         <div className="border border-border rounded-2xl overflow-hidden divide-y divide-border">
           {[
-            { id: "description", label: "Description", content: <div className="whitespace-pre-wrap">{product.description || "No description available."}</div> },
+            { id: "description", label: "About this item", content: <div className="whitespace-pre-wrap">{product.description || "No description available."}</div> },
             { id: "specs", label: "Specifications", content: renderSpecs(product.specs) },
             { id: "reviews", label: "Reviews", extra: product.rating > 0 ? String(product.rating) : undefined, stars: product.rating > 0, content: product.reviewCount > 0 ? `${product.reviewCount.toLocaleString()} verified reviews` : "No reviews yet." },
           ].map(({ id, label, extra, stars, content }) => (
@@ -504,6 +521,22 @@ export default function ProductPage() {
               )}
             </div>
           ))}
+        </div>
+
+        {/* Bottom options */}
+        <div className="mt-4 bg-secondary/30 rounded-2xl p-3 space-y-3">
+          <div className="flex items-center gap-3">
+            <Zap className="w-6 h-6 text-muted-foreground" />
+            <p className="text-sm font-semibold text-foreground">
+              {product.popularItemText || `${product.reviewCount || 0} have already sold`}
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <RefreshCcw className="w-6 h-6 text-muted-foreground" />
+            <p className="text-sm font-semibold text-foreground">
+              {product.easyReturnsText || "Returns accepted"}
+            </p>
+          </div>
         </div>
 
         {related.length > 0 && (

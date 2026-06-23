@@ -254,4 +254,28 @@ export class UpdateProductDto {
     return value;
   })
   variants?: { type: string; value: string; price?: string | number; stock?: string | number; sku?: string }[];
+
+  @IsString()
+  @IsOptional()
+  condition?: string;
+
+  @IsNumber()
+  @IsOptional()
+  @Min(0)
+  @Type(() => Number)
+  shippingFee?: number;
+
+  @IsNumber()
+  @IsOptional()
+  @Min(0)
+  @Type(() => Number)
+  estimatedDeliveryDays?: number;
+
+  @IsString()
+  @IsOptional()
+  popularItemText?: string;
+
+  @IsString()
+  @IsOptional()
+  easyReturnsText?: string;
 }

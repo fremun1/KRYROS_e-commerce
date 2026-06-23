@@ -230,6 +230,12 @@ model Product {
   isBestSeller           Boolean             @default(false)
   isHot                  Boolean             @default(false)
   isTrending             Boolean             @default(false)
+  // New fields for this update
+  condition              String?             @default("New") // e.g., New, Used, Refurbished
+  shippingFee            Decimal?            @db.Decimal(10, 2)
+  estimatedDeliveryDays  Int?                @default(3)
+  popularItemText        String?
+  easyReturnsText        String?
   creditAccounts         CreditAccount[]
   creditApplications     CreditApplication[]
   inventory              Inventory?

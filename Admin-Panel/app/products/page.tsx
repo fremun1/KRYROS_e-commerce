@@ -19,6 +19,11 @@ type Product = {
   showGuaranteeBadge: boolean; showReturnsBadge: boolean;
   tags: string; metaTitle: string; metaDescription: string; imageUrl: string; specifications: string;
   images: string[];
+  condition: string;
+  shippingFee: string;
+  estimatedDeliveryDays: string;
+  popularItemText: string;
+  easyReturnsText: string;
 };
 
 // Products loaded from API
@@ -29,6 +34,8 @@ const STATUSES = ['Active', 'Inactive', 'Low Stock', 'Out of Stock'];
 const BOOL_OPTS = ['No', 'Yes'];
 const toSlug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 
+const CONDITION_OPTIONS = ['New', 'Used', 'Refurbished'];
+
 const EMPTY_FORM = {
   name: '', slug: '', sku: '', description: '', category: 'Electronics', brand: 'Apple',
   price: '', salePrice: '', stock: '0', weight: '', status: 'Active',
@@ -36,6 +43,11 @@ const EMPTY_FORM = {
   isFlashSale: 'No', flashSalePrice: '', flashSaleEnd: '',
   showGuaranteeBadge: 'No', showReturnsBadge: 'No',
   tags: '', metaTitle: '', metaDescription: '', imageUrl: '', specifications: '',
+  condition: 'New',
+  shippingFee: '',
+  estimatedDeliveryDays: '3',
+  popularItemText: '',
+  easyReturnsText: '',
 };
 
 function ProductsContent() {
@@ -82,6 +94,11 @@ function ProductsContent() {
         imageUrl: p.images?.[0]?.url || p.images?.[0] || '',
         images: Array.isArray(p.images) ? p.images.map((img: any) => img?.url || img || '').filter(Boolean) : [],
         specifications: p.specifications || '',
+        condition: p.condition || 'New',
+        shippingFee: p.shippingFee != null ? String(Number(p.shippingFee)) : '',
+        estimatedDeliveryDays: p.estimatedDeliveryDays != null ? String(Number(p.estimatedDeliveryDays)) : '3',
+        popularItemText: p.popularItemText || '',
+        easyReturnsText: p.easyReturnsText || '',
       }));
       setData(normalized);
       // Update total from meta
@@ -124,6 +141,11 @@ function ProductsContent() {
       showReturnsBadge: boolToStr(r.showReturnsBadge),
       tags: r.tags || '', metaTitle: r.metaTitle || '', metaDescription: r.metaDescription || '',
       imageUrl: r.imageUrl || '', specifications: r.specifications || '',
+      condition: r.condition || 'New',
+      shippingFee: r.shippingFee || '',
+      estimatedDeliveryDays: r.estimatedDeliveryDays || '3',
+      popularItemText: r.popularItemText || '',
+      easyReturnsText: r.easyReturnsText || '',
     });
     setProductImages(r.images && r.images.length > 0 ? r.images : r.imageUrl ? [r.imageUrl] : []);
     setEditRow(r);
@@ -177,6 +199,11 @@ function ProductsContent() {
       brandSlug: toSlug(form.brand),
       metaTitle: form.metaTitle || undefined,
       metaDescription: form.metaDescription || undefined,
+      condition: form.condition,
+      shippingFee: form.shippingFee ? Number(form.shippingFee) : undefined,
+      estimatedDeliveryDays: form.estimatedDeliveryDays ? Number(form.estimatedDeliveryDays) : undefined,
+      popularItemText: form.popularItemText || undefined,
+      easyReturnsText: form.easyReturnsText || undefined,
     };
     if (productImages.length > 0) {
       payload.imageDataUrls = productImages;
@@ -368,6 +395,13 @@ function ProductsContent() {
       {sectionLabel('Trust & Guarantee Badges')}
       <FormField label="Show Guarantee Badge" value={form.showGuaranteeBadge} onChange={fp('showGuaranteeBadge')} options={BOOL_OPTS} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
       <FormField label="Show Free Returns Badge" value={form.showReturnsBadge} onChange={fp('showReturnsBadge')} options={BOOL_OPTS} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+
+      {sectionLabel('Product Condition & Shipping')}
+      <FormField label="Product Condition" value={form.condition} onChange={fp('condition')} options={CONDITION_OPTIONS} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+      <FormField label="Shipping Fee (USD, optional)" value={form.shippingFee} onChange={fp('shippingFee')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Leave blank for free shipping" />
+      <FormField label="Estimated Delivery Days" value={form.estimatedDeliveryDays} onChange={fp('estimatedDeliveryDays')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="3" />
+      <FormField label="Popular Item Text (optional)" value={form.popularItemText} onChange={fp('popularItemText')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g., Popular item - 10+ sold this week" />
+      <FormField label="Easy Returns Text (optional)" value={form.easyReturnsText} onChange={fp('easyReturnsText')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g., 30-day returns accepted" />
     </>
   );
 

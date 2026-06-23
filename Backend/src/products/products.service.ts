@@ -388,6 +388,12 @@ export class ProductsService {
           isFlashSale: dto.isFlashSale === true,
           flashSalePrice: dto.flashSalePrice ? Number(dto.flashSalePrice) : null,
           flashSaleEnd: (dto.flashSaleEnd && dto.flashSaleEnd.trim() && !isNaN(new Date(dto.flashSaleEnd).getTime())) ? new Date(dto.flashSaleEnd) : null,
+          // New fields
+          condition: dto.condition ?? 'New',
+          shippingFee: dto.shippingFee ? Number(dto.shippingFee) : null,
+          estimatedDeliveryDays: dto.estimatedDeliveryDays ? Number(dto.estimatedDeliveryDays) : 3,
+          popularItemText: dto.popularItemText ?? null,
+          easyReturnsText: dto.easyReturnsText ?? null,
           variants: {
             create: Array.isArray(dto.variants) ? dto.variants.map(v => ({
               name: v.value,
@@ -540,6 +546,12 @@ export class ProductsService {
           unitsPerPack: dto.unitsPerPack ? Number(dto.unitsPerPack) : 1,
           wholesaleMoq: dto.wholesaleMoq ? Number(dto.wholesaleMoq) : 1,
           specifications: dto.specifications ? (typeof dto.specifications === 'string' ? dto.specifications : JSON.stringify(dto.specifications)) : null,
+          // New fields
+          condition: dto.condition ?? 'New',
+          shippingFee: dto.shippingFee ? Number(dto.shippingFee) : null,
+          estimatedDeliveryDays: dto.estimatedDeliveryDays ? Number(dto.estimatedDeliveryDays) : 3,
+          popularItemText: dto.popularItemText ?? null,
+          easyReturnsText: dto.easyReturnsText ?? null,
           variants: {
             create: Array.isArray(dto.variants) ? dto.variants.map(v => ({
               name: v.value,
@@ -707,6 +719,12 @@ export class ProductsService {
         categoryId: categoryId ?? undefined,
         brandId: brandId,
         specifications: dto.specifications ? (typeof dto.specifications === 'string' ? dto.specifications : JSON.stringify(dto.specifications)) : undefined,
+        // New fields
+        condition: dto.condition !== undefined ? dto.condition : undefined,
+        shippingFee: dto.shippingFee !== undefined ? (isNaN(Number(dto.shippingFee)) ? null : Number(dto.shippingFee)) : undefined,
+        estimatedDeliveryDays: dto.estimatedDeliveryDays !== undefined ? (isNaN(Number(dto.estimatedDeliveryDays)) ? 3 : Number(dto.estimatedDeliveryDays)) : undefined,
+        popularItemText: dto.popularItemText !== undefined ? dto.popularItemText : undefined,
+        easyReturnsText: dto.easyReturnsText !== undefined ? dto.easyReturnsText : undefined,
         variants: Array.isArray(dto.variants) ? {
           deleteMany: {},
           create: dto.variants.map(v => ({
