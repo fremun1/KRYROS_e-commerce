@@ -347,140 +347,135 @@ export default function PayPage() {
             STEP 1 — Amount entry
         ════════════════════════════════════════════════════════════════════ */}
         {step === 1 && (
-          <>
-            <div className="px-4 space-y-6" style={{ paddingBottom: "120px" }}>
+          <div className="px-4 py-4 space-y-4">
+            {/* Amount label */}
+            <p className="text-sm font-bold text-foreground">Amount</p>
 
-              {/* Amount label */}
-              <p className="text-sm font-bold text-foreground mt-2">Amount</p>
-
-              {/* Currency + Amount pill */}
-              <div className="relative">
-                <div className="flex h-[60px] rounded-xl bg-card border border-border overflow-hidden shadow-sm">
-                  <div className="min-w-[110px] flex items-center justify-center border-r border-border font-bold text-kryros-primary text-base gap-2">
-                    <select
-                      id="currency"
-                      value={currency}
-                      onChange={(e) => { setCurrency(e.target.value); setShowCurrencyDrop(false); }}
-                      aria-label="Currency"
-                      className="border-0 bg-transparent font-bold text-kryros-primary text-base appearance-none outline-none cursor-pointer"
-                    >
-                      {CURRENCIES.map((c) => (
-                        <option key={c.code} value={c.code}>{c.code}</option>
-                      ))}
-                    </select>
-                    <ChevronDown className="w-4 h-4 text-kryros-primary" />
-                  </div>
-                  <div className="flex-1 flex items-center justify-end pr-4 font-extrabold text-3xl text-foreground">
-                    <input
-                      id="amount"
-                      value={rawAmount}
-                      onChange={(e) => { if (!isLinkedPayment) setRawAmount(e.target.value.replace(/[^0-9.]/g, "")); }}
-                      readOnly={isLinkedPayment}
-                      placeholder="0.00"
-                      inputMode="decimal"
-                      aria-label="Amount"
-                      className="border-0 outline-none font-extrabold text-3xl text-right w-full bg-transparent py-2 text-foreground"
-                    />
-                  </div>
+            {/* Currency + Amount pill */}
+            <div className="relative">
+              <div className="flex h-[52px] rounded-xl bg-card border border-border overflow-hidden shadow-sm">
+                <div className="min-w-[96px] flex items-center justify-center border-r border-border font-bold text-kryros-primary text-base gap-2">
+                  <select
+                    id="currency"
+                    value={currency}
+                    onChange={(e) => { setCurrency(e.target.value); setShowCurrencyDrop(false); }}
+                    aria-label="Currency"
+                    className="border-0 bg-transparent font-bold text-kryros-primary text-base appearance-none outline-none cursor-pointer"
+                  >
+                    {CURRENCIES.map((c) => (
+                      <option key={c.code} value={c.code}>{c.code}</option>
+                    ))}
+                  </select>
+                  <ChevronDown className="w-4 h-4 text-kryros-primary" />
                 </div>
-              </div>
-
-              {isLinkedPayment && (
-                <div className="rounded-xl px-4 py-3 text-sm border" style={{ background: "rgba(39,185,175,0.08)", borderColor: "var(--kryros-primary)", color: "var(--foreground)" }}>
-                  <span className="font-bold">Payment Link</span> — Amount pre-filled: <strong>{currency} {rawAmount}</strong>
-                  {urlNote ? <span className="text-muted-foreground ml-1">· {urlNote}</span> : null}
-                </div>
-              )}
-
-              {/* Reference (Optional) */}
-              <div>
-                <p className="text-sm font-bold text-foreground mb-2">
-                  Reference <span className="text-xs font-semibold text-muted-foreground">(Optional)</span>
-                </p>
-                <div className="h-[52px] rounded-xl bg-card border border-border flex items-center gap-3 px-4 shadow-sm">
-                  <div className="w-6 h-6 flex items-center justify-center text-kryros-primary flex-shrink-0">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M20 10v7a2 2 0 0 1-2 2H6l-4-4V4a2 2 0 0 1 2-2h9"/></svg>
-                  </div>
+                <div className="flex-1 flex items-center justify-end pr-3 font-extrabold text-2xl text-foreground">
                   <input
-                    id="reference"
-                    value={note}
-                    onChange={(e) => setNote(e.target.value)}
-                    placeholder="Enter reference"
-                    aria-label="Reference (optional)"
-                    maxLength={64}
-                    className="border-0 outline-none text-base text-muted-foreground w-full py-3 bg-transparent"
+                    id="amount"
+                    value={rawAmount}
+                    onChange={(e) => { if (!isLinkedPayment) setRawAmount(e.target.value.replace(/[^0-9.]/g, "")); }}
+                    readOnly={isLinkedPayment}
+                    placeholder="0.00"
+                    inputMode="decimal"
+                    aria-label="Amount"
+                    className="border-0 outline-none font-extrabold text-2xl text-right w-full bg-transparent py-2 text-foreground"
                   />
-                </div>
-              </div>
-
-              {/* Phone or Email (Optional) */}
-              <div>
-                <p className="text-sm font-bold text-foreground mb-2">
-                  Phone or Email <span className="text-xs font-semibold text-muted-foreground">(Optional)</span>
-                </p>
-                <div className="h-[52px] rounded-xl bg-card border border-border flex items-center gap-3 px-4 shadow-sm">
-                  <div className="w-6 h-6 flex items-center justify-center text-kryros-primary flex-shrink-0">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M21 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                  </div>
-                  <input
-                    id="phoneEmail"
-                    value={receiptContact}
-                    onChange={(e) => setReceiptContact(e.target.value)}
-                    placeholder="Enter phone number or email"
-                    aria-label="Phone or Email (optional)"
-                    className="border-0 outline-none text-base text-muted-foreground w-full py-3 bg-transparent"
-                  />
-                </div>
-                <p className="text-sm text-muted-foreground mt-2">We'll send your receipt after payment.</p>
-              </div>
-
-              {/* Payment Summary card */}
-              <div className="bg-card rounded-xl border border-border p-5 shadow-sm">
-                <div className="flex items-center justify-between py-2">
-                  <span className="text-sm font-semibold text-muted-foreground">Amount</span>
-                  <span className="text-base font-bold text-foreground">{currency} {amount.toFixed(2)}</span>
-                </div>
-                <div className="flex items-center justify-between py-2">
-                  <span className="text-sm font-semibold text-muted-foreground flex items-center gap-1">
-                    Fee <Info className="w-4 h-4" />
-                  </span>
-                  <span className="text-base font-bold text-foreground">{currency} {fee.toFixed(2)}</span>
-                </div>
-                <div className="h-px bg-border my-3"></div>
-                <div className="flex items-center justify-between pt-1">
-                  <span className="text-base font-extrabold text-foreground">Total Payable</span>
-                  <span className="text-xl font-black text-kryros-primary">{currency} {total.toFixed(2)}</span>
                 </div>
               </div>
             </div>
 
-            {/* Fixed bottom: Pay Now button */}
-            <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[460px] px-5 pb-7 pt-4 bg-background">
-              <button
-                onClick={() => amount > 0 && setStep(2)}
-                disabled={amount <= 0}
-                className="w-full h-[60px] rounded-xl border-0 text-white font-extrabold text-lg cursor-pointer flex items-center justify-center gap-3 transition-all active:scale-95"
-                style={{
-                  background: "linear-gradient(135deg, var(--kryros-primary-hover), var(--kryros-primary))",
-                  boxShadow: amount > 0 ? "0 12px 24px rgba(39,185,175,0.25)" : "none",
-                  opacity: amount > 0 ? 1 : 0.5,
-                }}
-                aria-label="Pay Now"
-              >
-                <Lock className="w-6 h-6" />
-                Pay Now
-              </button>
-
-              {/* Secure note below button */}
-              <div className="text-center text-sm text-muted-foreground mt-4 flex items-center justify-center gap-2">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="M12 1l3 5 5 1-4 4 1 5-5-2-5 2 1-5L4 7l5-1z"/></svg>
-                <div>100% Secure Payment</div>
+            {isLinkedPayment && (
+              <div className="rounded-xl px-3 py-2 text-sm border" style={{ background: "rgba(39,185,175,0.08)", borderColor: "var(--kryros-primary)", color: "var(--foreground)" }}>
+                <span className="font-bold">Payment Link</span> — Amount pre-filled: <strong>{currency} {rawAmount}</strong>
+                {urlNote ? <span className="text-muted-foreground ml-1">· {urlNote}</span> : null}
               </div>
-              <div className="text-center text-sm text-muted-foreground mt-1">
-                Your payment is safe with <strong className="text-kryros-primary font-bold">KRYROS</strong>.
+            )}
+
+            {/* Reference (Optional) */}
+            <div>
+              <p className="text-sm font-bold text-foreground mb-2">
+                Reference <span className="text-xs font-semibold text-muted-foreground">(Optional)</span>
+              </p>
+              <div className="h-[46px] rounded-xl bg-card border border-border flex items-center gap-2 px-3 shadow-sm">
+                <div className="w-5 h-5 flex items-center justify-center text-kryros-primary flex-shrink-0">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M20 10v7a2 2 0 0 1-2 2H6l-4-4V4a2 2 0 0 1 2-2h9"/></svg>
+                </div>
+                <input
+                  id="reference"
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  placeholder="Enter reference"
+                  aria-label="Reference (optional)"
+                  maxLength={64}
+                  className="border-0 outline-none text-sm text-muted-foreground w-full py-2 bg-transparent"
+                />
               </div>
             </div>
-          </>
+
+            {/* Phone or Email (Optional) */}
+            <div>
+              <p className="text-sm font-bold text-foreground mb-2">
+                Phone or Email <span className="text-xs font-semibold text-muted-foreground">(Optional)</span>
+              </p>
+              <div className="h-[46px] rounded-xl bg-card border border-border flex items-center gap-2 px-3 shadow-sm">
+                <div className="w-5 h-5 flex items-center justify-center text-kryros-primary flex-shrink-0">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M21 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                </div>
+                <input
+                  id="phoneEmail"
+                  value={receiptContact}
+                  onChange={(e) => setReceiptContact(e.target.value)}
+                  placeholder="Enter phone number or email"
+                  aria-label="Phone or Email (optional)"
+                  className="border-0 outline-none text-sm text-muted-foreground w-full py-2 bg-transparent"
+                />
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">We'll send your receipt after payment.</p>
+            </div>
+
+            {/* Payment Summary card */}
+            <div className="bg-card rounded-xl border border-border p-4 shadow-sm">
+              <div className="flex items-center justify-between py-1">
+                <span className="text-sm font-semibold text-muted-foreground">Amount</span>
+                <span className="text-base font-bold text-foreground">{currency} {amount.toFixed(2)}</span>
+              </div>
+              <div className="flex items-center justify-between py-1">
+                <span className="text-sm font-semibold text-muted-foreground flex items-center gap-1">
+                  Fee <Info className="w-3 h-3" />
+                </span>
+                <span className="text-base font-bold text-foreground">{currency} {fee.toFixed(2)}</span>
+              </div>
+              <div className="h-px bg-border my-2"></div>
+              <div className="flex items-center justify-between pt-0.5">
+                <span className="text-base font-extrabold text-foreground">Total Payable</span>
+                <span className="text-lg font-black text-kryros-primary">{currency} {total.toFixed(2)}</span>
+              </div>
+            </div>
+
+            {/* Pay Now button */}
+            <button
+              onClick={() => amount > 0 && setStep(2)}
+              disabled={amount <= 0}
+              className="w-full h-[52px] rounded-xl border-0 text-white font-extrabold text-base cursor-pointer flex items-center justify-center gap-2 transition-all active:scale-95"
+              style={{
+                background: "linear-gradient(135deg, var(--kryros-primary-hover), var(--kryros-primary))",
+                boxShadow: amount > 0 ? "0 8px 20px rgba(39,185,175,0.25)" : "none",
+                opacity: amount > 0 ? 1 : 0.5,
+              }}
+              aria-label="Pay Now"
+            >
+              <Lock className="w-5 h-5" />
+              Pay Now
+            </button>
+
+            {/* Secure note */}
+            <div className="text-center text-xs text-muted-foreground flex items-center justify-center gap-1.5">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="M12 1l3 5 5 1-4 4 1 5-5-2-5 2 1-5L4 7l5-1z"/></svg>
+              <div>100% Secure Payment</div>
+            </div>
+            <div className="text-center text-xs text-muted-foreground mt-0.5">
+              Your payment is safe with <strong className="text-kryros-primary font-bold">KRYROS</strong>.
+            </div>
+          </div>
         )}
 
         {/* ══════════════════════════════════════════════════════════════════
