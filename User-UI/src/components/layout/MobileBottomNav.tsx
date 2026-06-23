@@ -39,8 +39,15 @@ export default function MobileBottomNav() {
         <div className="relative">
           {/* Main nav container with U-notch */}
           <div className="mx-4 mb-4">
-            <div className="relative bg-white rounded-[32px] shadow-2xl py-3">
-              <div className="flex items-end justify-around px-4">
+            <div className="relative">
+              {/* Background with U-notch */}
+              <div className="absolute inset-0 bg-white rounded-[32px] shadow-2xl -z-10"></div>
+              
+              {/* Notch cutout */}
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-28 h-16 bg-[#f8fafc] rounded-b-full rounded-t-full -z-5"></div>
+              
+              {/* Nav items */}
+              <div className="flex items-end justify-around px-4 py-3">
                 {/* Left items */}
                 {[navItems[0], navItems[1]].map(({ label, icon: Icon, href, badge }) => {
                   const isActive = location === href || (href !== "/" && location.startsWith(href));
@@ -70,11 +77,8 @@ export default function MobileBottomNav() {
                   );
                 })}
 
-                {/* Notch area */}
-                <div className="w-28 h-20 relative">
-                  {/* U-notch cutout */}
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-16 bg-[#f8fafc] rounded-b-full rounded-t-full -mt-2"></div>
-                </div>
+                {/* Spacer */}
+                <div className="w-24 h-20"></div>
 
                 {/* Right items */}
                 {[navItems[2], navItems[3]].map(({ label, icon: Icon, href, badge }) => {
@@ -110,7 +114,7 @@ export default function MobileBottomNav() {
 
           {/* Floating Pay button + label */}
           <Link href="/pay">
-            <div className="absolute left-1/2 -translate-x-1/2 -top-12 flex flex-col items-center gap-1">
+            <div className="absolute left-1/2 -translate-x-1/2 -top-11 flex flex-col items-center gap-1">
               <button
                 className={`w-20 h-20 rounded-full flex items-center justify-center transition-all ${
                   location === "/pay" ? "bg-[var(--kryros-primary)] shadow-[0_10px_30px_rgba(39,185,175,0.4)]" : "bg-[var(--kryros-primary)] shadow-[0_10px_30px_rgba(39,185,175,0.25)]"
