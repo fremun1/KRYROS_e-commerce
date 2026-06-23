@@ -112,9 +112,9 @@ export default function MobileBottomNav() {
             </div>
           </div>
 
-          {/* Floating Pay button + label - sits mostly in notch */}
+          {/* Floating Pay button + label - text aligned with others */}
           <Link href="/pay">
-            <div className="absolute left-1/2 -translate-x-1/2 -top-1 flex flex-col items-center gap-0.5">
+            <div className="absolute left-1/2 -translate-x-1/2 top-0 flex flex-col items-center gap-0.5">
               <button
                 className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${
                   location === "/pay" ? "bg-[var(--kryros-primary)] shadow-[0_6px_18px_rgba(39,185,175,0.4)]" : "bg-[var(--kryros-primary)] shadow-[0_6px_18px_rgba(39,185,175,0.25)]"
