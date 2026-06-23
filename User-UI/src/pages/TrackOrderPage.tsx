@@ -9,7 +9,7 @@ import AccountLayout from "@/components/layout/AccountLayout";
 const statusColors: Record<string, string> = {
   "Pending":          "bg-yellow-500/10 text-yellow-600 border-yellow-500/20",
   "Processing":       "bg-blue-500/10 text-blue-600 border-blue-500/20",
-  "Confirmed":        "bg-indigo-500/10 text-indigo-600 border-indigo-500/20",
+  "Paid":             "bg-indigo-500/10 text-indigo-600 border-indigo-500/20",
   "Shipped":          "bg-sky-500/10 text-sky-600 border-sky-500/20",
   "In Transit":       "bg-primary/10 text-primary border-primary/20",
   "Delivered":        "bg-green-500/10 text-green-600 border-green-500/20",
@@ -19,12 +19,12 @@ const statusColors: Record<string, string> = {
   "Returned":         "bg-pink-500/10 text-pink-600 border-pink-500/20",
 };
 
-const filterTabs = ["All Orders", "Confirmed", "Shipped", "In Transit", "Delivered", "Collected", "Cancelled"];
+const filterTabs = ["All Orders", "Paid", "Shipped", "In Transit", "Delivered", "Collected", "Cancelled"];
 
 const STATUS_MAP: Record<string, string> = {
   PENDING:    "Pending",
   PROCESSING: "Processing",
-  CONFIRMED:  "Confirmed",
+  CONFIRMED:  "Paid",
   SHIPPED:    "Shipped",
   IN_TRANSIT: "In Transit",
   DELIVERED:  "Delivered",
@@ -41,8 +41,8 @@ function normalizeStatus(s: string): string {
 function getTimeline(status: string) {
   const norm = normalizeStatus(status);
   const steps = [
-    { label: "Pending",    threshold: ["Pending","Processing","Confirmed","Shipped","In Transit","Delivered","Collected"] },
-    { label: "Confirmed",  threshold: ["Confirmed","Shipped","In Transit","Delivered","Collected"] },
+    { label: "Pending",    threshold: ["Pending","Processing","Paid","Shipped","In Transit","Delivered","Collected"] },
+    { label: "Paid",       threshold: ["Paid","Shipped","In Transit","Delivered","Collected"] },
     { label: "Shipped",    threshold: ["Shipped","In Transit","Delivered","Collected"] },
     { label: "In Transit", threshold: ["In Transit","Delivered","Collected"] },
     { label: "Delivered",  threshold: ["Delivered","Collected"] },
@@ -53,7 +53,7 @@ function getTimeline(status: string) {
     norm === "Delivered"  ? 4 :
     norm === "In Transit" ? 3 :
     norm === "Shipped"    ? 2 :
-    norm === "Confirmed"  ? 1 : 0;
+    norm === "Paid"       ? 1 : 0;
   return steps.map((step, i) => ({
     label: step.label,
     done: step.threshold.includes(norm),
@@ -96,7 +96,7 @@ function normalizeOrder(o: ApiOrder): OrderRow {
 }
 
 const STATUS_FILTER_MAP: Record<string, string[]> = {
-  "Confirmed":  ["Confirmed"],
+  "Paid":       ["Paid"],
   "Shipped":    ["Shipped"],
   "In Transit": ["In Transit"],
   "Delivered":  ["Delivered"],
