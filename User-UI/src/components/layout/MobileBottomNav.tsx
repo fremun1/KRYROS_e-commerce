@@ -43,8 +43,8 @@ export default function MobileBottomNav() {
               {/* Background with U-notch */}
               <div className="absolute inset-0 bg-white rounded-[24px] shadow-2xl -z-10"></div>
               
-              {/* Notch cutout */}
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-20 h-12 bg-[#f8fafc] rounded-b-full rounded-t-full -z-5"></div>
+              {/* Notch cutout - deeper to let button sit in */}
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-16 bg-[#f8fafc] rounded-b-full rounded-t-full -z-5 -mt-1"></div>
               
               {/* Nav items */}
               <div className="flex items-end justify-around px-3 py-2">
@@ -78,7 +78,7 @@ export default function MobileBottomNav() {
                 })}
 
                 {/* Spacer */}
-                <div className="w-16 h-14"></div>
+                <div className="w-20 h-16"></div>
 
                 {/* Right items */}
                 {[navItems[2], navItems[3]].map(({ label, icon: Icon, href, badge }) => {
@@ -112,9 +112,9 @@ export default function MobileBottomNav() {
             </div>
           </div>
 
-          {/* Floating Pay button + label */}
+          {/* Floating Pay button + label - lower and aligned */}
           <Link href="/pay">
-            <div className="absolute left-1/2 -translate-x-1/2 -top-8 flex flex-col items-center gap-0.5">
+            <div className="absolute left-1/2 -translate-x-1/2 -top-5 flex flex-col items-center gap-0.5">
               <button
                 className={`w-14 h-14 rounded-full flex items-center justify-center transition-all ${
                   location === "/pay" ? "bg-[var(--kryros-primary)] shadow-[0_6px_18px_rgba(39,185,175,0.4)]" : "bg-[var(--kryros-primary)] shadow-[0_6px_18px_rgba(39,185,175,0.25)]"
