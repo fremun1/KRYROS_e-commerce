@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Home, ShoppingBag, CreditCard, Truck, Heart } from "lucide-react";
+import { Home, Grid, CreditCard, BoxSearch, ShoppingCart } from "lucide-react";
 import { useCartStore } from "@/store/cartStore";
 import { useSidebarStore } from "@/store/sidebarStore";
 import { useEffect, useRef, useState } from "react";
@@ -24,11 +24,11 @@ export default function MobileBottomNav() {
   }, []);
 
   const navItems = [
-    { label: "Home",  icon: Home,          href: "/" },
-    { label: "Shop",  icon: ShoppingBag,   href: "/shop" },
-    { label: "Pay",   icon: CreditCard,    href: "/pay" },
-    { label: "Track", icon: Truck,        href: "/track" },
-    { label: "Cart",  icon: Heart,        href: "/cart", badge: cartCount },
+    { label: "Home", icon: Home, href: "/" },
+    { label: "Shop", icon: Grid, href: "/shop" },
+    { label: "Pay", icon: CreditCard, href: "/pay", isPay: true },
+    { label: "Track", icon: BoxSearch, href: "/track" },
+    { label: "Cart", icon: ShoppingCart, href: "/cart", badge: cartCount },
   ];
 
   return (
@@ -37,34 +37,47 @@ export default function MobileBottomNav() {
       style={{ transform: visible && !sidebarOpen ? "translateY(0)" : "translateY(calc(100% + env(safe-area-inset-bottom)))" }}
     >
       <div style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
-        <div className="nav-wrapper">
-          <div className="nav-bar">
-            <div className="nav-notch"></div>
-            <button className="pay-btn" aria-label="Pay">
-              <CreditCard className="w-[10px] h-[10px] text-white" />
+        <div className="relative flex items-center justify-center mb-[-24px] z-10">
+          <Link href="/pay">
+            <button
+              className={`w-24 h-24 rounded-full flex items-center justify-center transition-all ${
+                location === "/pay" ? "bg-[var(--kryros-primary)] shadow-[0_8px_24px_rgba(39,185,175,0.35)]" : "bg-[var(--kryros-primary)] shadow-[0_8px_24px_rgba(39,185,175,0.25)]"
+              }`}
+            >
+              <CreditCard
+                className="w-12 h-12 text-white"
+              />
             </button>
-            {navItems.map(({ label, icon: Icon, href, badge }) => {
+          </Link>
+        </div>
+        
+        <div className="mx-4 mb-4">
+          <div className="bg-white rounded-[28px] shadow-2xl px-4 py-5 flex items-center justify-around">
+            {navItems.map(({ label, icon: Icon, href, badge, isPay }) => {
+              if (isPay) return null;
+              
               const isActive = location === href || (href !== "/" && location.startsWith(href));
-              const isPay = href === "/pay";
-
               return (
                 <Link key={href} href={href}>
-                  <button className={`nav-item ${isActive ? 'active' : ''}`}>
-                    <div className="icon-wrapper">
+                  <button className={`flex flex-col items-center gap-1 transition-all`}>
+                    <div className="relative">
                       <Icon
-                        className="icon"
-                        style={{
-                          color: isActive ? "#1dbcb8" : "#8a96a3",
-                          stroke: isActive ? "#1dbcb8" : "#8a96a3"
-                        }}
+                        className={`w-10 h-10 transition-colors ${
+                          isActive ? "text-[var(--kryros-primary)]" : "text-[#64748b]"
+                        }`}
+                        strokeWidth={1.8}
                       />
                       {badge != null && badge > 0 && (
-                        <span className="cart-badge">
+                        <span className="absolute -top-1 -right-1 bg-[var(--kryros-primary)] text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center">
                           {badge > 99 ? "99+" : badge}
                         </span>
                       )}
                     </div>
-                    <span className="label">{label}</span>
+                    <span className={`text-base font-semibold transition-colors ${
+                      isActive ? "text-[var(--kryros-primary)]" : "text-[#64748b]"
+                    }`}>
+                      {label}
+                    </span>
                   </button>
                 </Link>
               );
