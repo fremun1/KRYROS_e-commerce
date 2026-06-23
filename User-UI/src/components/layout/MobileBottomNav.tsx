@@ -41,33 +41,33 @@ export default function MobileBottomNav() {
           <div className="mx-4 mb-4">
             <div className="relative">
               {/* Background with U-notch */}
-              <div className="absolute inset-0 bg-white rounded-[32px] shadow-2xl -z-10"></div>
+              <div className="absolute inset-0 bg-white rounded-[24px] shadow-2xl -z-10"></div>
               
               {/* Notch cutout */}
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-28 h-16 bg-[#f8fafc] rounded-b-full rounded-t-full -z-5"></div>
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-20 h-12 bg-[#f8fafc] rounded-b-full rounded-t-full -z-5"></div>
               
               {/* Nav items */}
-              <div className="flex items-end justify-around px-4 py-3">
+              <div className="flex items-end justify-around px-3 py-2">
                 {/* Left items */}
                 {[navItems[0], navItems[1]].map(({ label, icon: Icon, href, badge }) => {
                   const isActive = location === href || (href !== "/" && location.startsWith(href));
                   return (
                     <Link key={href} href={href}>
-                      <button className={`flex flex-col items-center gap-1 transition-all`}>
+                      <button className={`flex flex-col items-center gap-0.5 transition-all`}>
                         <div className="relative">
                           <Icon
-                            className={`w-8 h-8 transition-colors ${
+                            className={`w-6 h-6 transition-colors ${
                               isActive ? "text-[var(--kryros-primary)]" : "text-[#64748b]"
                             }`}
                             strokeWidth={1.8}
                           />
                           {badge != null && badge > 0 && (
-                            <span className="absolute -top-0.5 -right-0.5 bg-[var(--kryros-primary)] text-white text-[10px] font-bold w-4.5 h-4.5 rounded-full flex items-center justify-center">
+                            <span className="absolute -top-0.5 -right-0.5 bg-[var(--kryros-primary)] text-white text-[8px] font-bold w-3.5 h-3.5 rounded-full flex items-center justify-center">
                               {badge > 99 ? "99+" : badge}
                             </span>
                           )}
                         </div>
-                        <span className={`text-base font-semibold transition-colors ${
+                        <span className={`text-xs font-semibold transition-colors ${
                           isActive ? "text-[var(--kryros-primary)]" : "text-[#64748b]"
                         }`}>
                           {label}
@@ -78,28 +78,28 @@ export default function MobileBottomNav() {
                 })}
 
                 {/* Spacer */}
-                <div className="w-24 h-20"></div>
+                <div className="w-16 h-14"></div>
 
                 {/* Right items */}
                 {[navItems[2], navItems[3]].map(({ label, icon: Icon, href, badge }) => {
                   const isActive = location === href || (href !== "/" && location.startsWith(href));
                   return (
                     <Link key={href} href={href}>
-                      <button className={`flex flex-col items-center gap-1 transition-all`}>
+                      <button className={`flex flex-col items-center gap-0.5 transition-all`}>
                         <div className="relative">
                           <Icon
-                            className={`w-8 h-8 transition-colors ${
+                            className={`w-6 h-6 transition-colors ${
                               isActive ? "text-[var(--kryros-primary)]" : "text-[#64748b]"
                             }`}
                             strokeWidth={1.8}
                           />
                           {badge != null && badge > 0 && (
-                            <span className="absolute -top-0.5 -right-0.5 bg-[var(--kryros-primary)] text-white text-[10px] font-bold w-4.5 h-4.5 rounded-full flex items-center justify-center">
+                            <span className="absolute -top-0.5 -right-0.5 bg-[var(--kryros-primary)] text-white text-[8px] font-bold w-3.5 h-3.5 rounded-full flex items-center justify-center">
                               {badge > 99 ? "99+" : badge}
                             </span>
                           )}
                         </div>
-                        <span className={`text-base font-semibold transition-colors ${
+                        <span className={`text-xs font-semibold transition-colors ${
                           isActive ? "text-[var(--kryros-primary)]" : "text-[#64748b]"
                         }`}>
                           {label}
@@ -114,17 +114,17 @@ export default function MobileBottomNav() {
 
           {/* Floating Pay button + label */}
           <Link href="/pay">
-            <div className="absolute left-1/2 -translate-x-1/2 -top-11 flex flex-col items-center gap-1">
+            <div className="absolute left-1/2 -translate-x-1/2 -top-8 flex flex-col items-center gap-0.5">
               <button
-                className={`w-20 h-20 rounded-full flex items-center justify-center transition-all ${
-                  location === "/pay" ? "bg-[var(--kryros-primary)] shadow-[0_10px_30px_rgba(39,185,175,0.4)]" : "bg-[var(--kryros-primary)] shadow-[0_10px_30px_rgba(39,185,175,0.25)]"
+                className={`w-14 h-14 rounded-full flex items-center justify-center transition-all ${
+                  location === "/pay" ? "bg-[var(--kryros-primary)] shadow-[0_6px_18px_rgba(39,185,175,0.4)]" : "bg-[var(--kryros-primary)] shadow-[0_6px_18px_rgba(39,185,175,0.25)]"
                 }`}
               >
                 <CreditCard
-                  className="w-10 h-10 text-white"
+                  className="w-7 h-7 text-white"
                 />
               </button>
-              <span className={`text-base font-semibold transition-colors ${
+              <span className={`text-xs font-semibold transition-colors ${
                 location === "/pay" ? "text-[var(--kryros-primary)]" : "text-[#64748b]"
               }`}>
                 Pay
