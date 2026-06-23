@@ -765,7 +765,7 @@ export default function CheckoutPage() {
           </div>
           <p className="flex items-start gap-1.5 text-[11px] text-muted-foreground mt-2">
             <MapPin className="w-3 h-3 mt-0.5 flex-shrink-0" />
-            {pickupStationId ? "Your order will be delivered to the selected pickup station." : "Leave unselected to have your order delivered to your address above."}
+            {"Your order will be delivered to the selected pickup station."}
           </p>
         </div>
 
@@ -992,7 +992,7 @@ export default function CheckoutPage() {
           <div className="border-t border-border mt-4 pt-3 space-y-1.5">
             <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Subtotal</span><span className="font-semibold text-foreground">{format(SUBTOTAL)}</span></div>
             <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Shipping</span><span className="font-semibold text-foreground">{shippingPrice === 0 ? "FREE" : format(shippingPrice)}</span></div>
-            <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Tax</span><span className="font-semibold text-foreground">{format(0)}</span></div>
+            <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Fee (2%)</span><span className="font-semibold text-foreground">{format(PROCESSING_FEE)}</span></div>
             <div className="pt-2 border-t border-border flex items-center justify-between text-base font-black">
               <span className="text-foreground">Total</span><span className="text-primary">{format(total)}</span>
             </div>
