@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Home, Grid, CreditCard, BoxSearch, ShoppingCart } from "lucide-react";
+import { Home, Grid, CreditCard, PackageSearch, ShoppingCart } from "lucide-react";
 import { useCartStore } from "@/store/cartStore";
 import { useSidebarStore } from "@/store/sidebarStore";
 import { useEffect, useRef, useState } from "react";
@@ -27,7 +27,7 @@ export default function MobileBottomNav() {
     { label: "Home", icon: Home, href: "/" },
     { label: "Shop", icon: Grid, href: "/shop" },
     { label: "Pay", icon: CreditCard, href: "/pay", isPay: true },
-    { label: "Track", icon: BoxSearch, href: "/track" },
+    { label: "Track", icon: PackageSearch, href: "/track" },
     { label: "Cart", icon: ShoppingCart, href: "/cart", badge: cartCount },
   ];
 
