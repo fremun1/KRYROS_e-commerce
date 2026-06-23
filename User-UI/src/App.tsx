@@ -1,4 +1,10 @@
-import { Switch, Route, Router as WouterRouter, useLocation, Redirect } from "wouter";
+import {
+  Switch,
+  Route,
+  Router as WouterRouter,
+  useLocation,
+  Redirect,
+} from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -10,31 +16,33 @@ import MobileBottomNav from "@/components/layout/MobileBottomNav";
 import AuthPage from "@/components/auth/AuthPage";
 
 // ── Route-based code splitting ─────────────────────────────────────────────────
-const HomePage          = lazy(() => import("@/pages/HomePage"));
-const ShopPage          = lazy(() => import("@/pages/ShopPage"));
-const ProductPage       = lazy(() => import("@/pages/ProductPage"));
-const CartPage          = lazy(() => import("@/pages/CartPage"));
-const CheckoutPage      = lazy(() => import("@/pages/CheckoutPage"));
-const GetNowPage        = lazy(() => import("@/pages/GetNowPage"));
-const TrackOrderPage    = lazy(() => import("@/pages/TrackOrderPage"));
+const HomePage = lazy(() => import("@/pages/HomePage"));
+const ShopPage = lazy(() => import("@/pages/ShopPage"));
+const ProductPage = lazy(() => import("@/pages/ProductPage"));
+const CartPage = lazy(() => import("@/pages/CartPage"));
+const CheckoutPage = lazy(() => import("@/pages/CheckoutPage"));
+const GetNowPage = lazy(() => import("@/pages/GetNowPage"));
+const TrackOrderPage = lazy(() => import("@/pages/TrackOrderPage"));
 const PickupStationsPage = lazy(() => import("@/pages/PickupStationsPage"));
-const WholesalePage     = lazy(() => import("@/pages/WholesalePage"));
-const DashboardPage     = lazy(() => import("@/pages/DashboardPage"));
-const AboutPage         = lazy(() => import("@/pages/AboutPage"));
-const ContactPage       = lazy(() => import("@/pages/ContactPage"));
-const PrivacyPage       = lazy(() => import("@/pages/PrivacyPage"));
-const TermsPage         = lazy(() => import("@/pages/TermsPage"));
-const RefundPage        = lazy(() => import("@/pages/RefundPage"));
-const HelpPage          = lazy(() => import("@/pages/HelpPage"));
-const FaqPage          = lazy(() => import("@/pages/FaqPage"));
-const ReturnsPage       = lazy(() => import("@/pages/ReturnsPage"));
-const ShippingPage      = lazy(() => import("@/pages/ShippingPage"));
-const SecurityPage      = lazy(() => import("@/pages/SecurityPage"));
-const PayPage           = lazy(() => import("@/pages/PayPage"));
-const WishlistPage      = lazy(() => import("@/pages/WishlistPage"));
-const ApplyCreditPage   = lazy(() => import("@/pages/ApplyCreditPage"));
-const WholesaleCheckoutPage = lazy(() => import("@/pages/WholesaleCheckoutPage"));
-const NotFound          = lazy(() => import("@/pages/not-found"));
+const WholesalePage = lazy(() => import("@/pages/WholesalePage"));
+const DashboardPage = lazy(() => import("@/pages/DashboardPage"));
+const AboutPage = lazy(() => import("@/pages/AboutPage"));
+const ContactPage = lazy(() => import("@/pages/ContactPage"));
+const PrivacyPage = lazy(() => import("@/pages/PrivacyPage"));
+const TermsPage = lazy(() => import("@/pages/TermsPage"));
+const RefundPage = lazy(() => import("@/pages/RefundPage"));
+const HelpPage = lazy(() => import("@/pages/HelpPage"));
+const FaqPage = lazy(() => import("@/pages/FaqPage"));
+const ReturnsPage = lazy(() => import("@/pages/ReturnsPage"));
+const ShippingPage = lazy(() => import("@/pages/ShippingPage"));
+const SecurityPage = lazy(() => import("@/pages/SecurityPage"));
+const PayPage = lazy(() => import("@/pages/PayPage"));
+const WishlistPage = lazy(() => import("@/pages/WishlistPage"));
+const ApplyCreditPage = lazy(() => import("@/pages/ApplyCreditPage"));
+const WholesaleCheckoutPage = lazy(
+  () => import("@/pages/WholesaleCheckoutPage"),
+);
+const NotFound = lazy(() => import("@/pages/not-found"));
 
 import SplashScreen from "@/components/SplashScreen";
 import PwaInstallPrompt from "@/components/PwaInstallPrompt";
@@ -59,7 +67,9 @@ const WHATSAPP_NUMBER = import.meta.env.VITE_WHATSAPP_NUMBER || "260969597029";
 function WhatsAppFloatingButton() {
   const [hovered, setHovered] = useState(false);
   const [location] = useLocation();
-  const hide = ["/login", "/register", "/forgot-password", "/pay"].includes(location);
+  const hide = ["/login", "/register", "/forgot-password", "/pay"].includes(
+    location,
+  );
   if (hide) return null;
 
   const message = encodeURIComponent("Hi KRYROS! I need some help 👋");
@@ -83,12 +93,13 @@ function WhatsAppFloatingButton() {
       <div
         className="w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-transform duration-200"
         style={{
-          background: "linear-gradient(135deg, var(--kryros-primary-hover) 0%, var(--kryros-primary) 100%)",
+          background:
+            "linear-gradient(135deg, var(--kryros-primary-hover) 0%, var(--kryros-primary) 100%)",
           transform: hovered ? "scale(1.1)" : "scale(1)",
         }}
       >
         <svg viewBox="0 0 24 24" width="16" height="16" fill="white">
-          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
         </svg>
       </div>
     </a>
@@ -126,14 +137,24 @@ function PageTransitionLoader({ visible }: { visible: boolean }) {
           top: 0,
           left: 0,
           height: 3,
-          background: "linear-gradient(90deg, var(--kryros-primary), var(--kryros-primary-hover))",
+          background:
+            "linear-gradient(90deg, var(--kryros-primary), var(--kryros-primary-hover))",
           borderRadius: "0 2px 2px 0",
           animation: visible ? "ktp-progress 1.3s ease-out forwards" : "none",
         }}
       />
 
       {/* Logo wrap with pulsing rings */}
-      <div style={{ position: "relative", width: 100, height: 100, display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div
+        style={{
+          position: "relative",
+          width: 100,
+          height: 100,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
         {[1, 2].map((i) => (
           <div
             key={i}
@@ -205,14 +226,24 @@ function PageTransitionLoader({ visible }: { visible: boolean }) {
 // ── Lightweight Suspense fallback (JS chunk loading) ──────────────────────────
 function PageLoader() {
   return (
-    <div style={{ minHeight: "60vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <div style={{
-        width: 32, height: 32,
-        border: "3px solid var(--kryros-light-border)",
-        borderTop: "3px solid var(--kryros-primary)",
-        borderRadius: "50%",
-        animation: "spin 0.7s linear infinite",
-      }} />
+    <div
+      style={{
+        minHeight: "60vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <div
+        style={{
+          width: 32,
+          height: 32,
+          border: "3px solid var(--kryros-light-border)",
+          borderTop: "3px solid var(--kryros-primary)",
+          borderRadius: "50%",
+          animation: "spin 0.7s linear infinite",
+        }}
+      />
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
@@ -253,7 +284,15 @@ function AppRoutes() {
     };
   }, [location]);
 
-  const hideShell = ["/pay", "/checkout", "/dashboard", "/cart", "/get-now", "/apply-credit", "/wholesale-checkout", "/login", "/register", "/forgot-password"].includes(location);
+  const hideShell = [
+    "/pay",
+    "/checkout",
+    "/dashboard",
+    "/cart",
+    "/get-now",
+    "/apply-credit",
+    "/wholesale-checkout",
+  ].includes(location);
 
   return (
     <>
@@ -272,9 +311,18 @@ function AppRoutes() {
           <Route path="/pickup-stations" component={PickupStationsPage} />
           <Route path="/wholesale" component={WholesalePage} />
           <Route path="/dashboard" component={DashboardPage} />
-          <Route path="/login" component={() => <AuthPage initialTab="login" />} />
-          <Route path="/register" component={() => <AuthPage initialTab="register" />} />
-          <Route path="/forgot-password" component={() => <AuthPage initialTab="forgot" />} />
+          <Route
+            path="/login"
+            component={() => <AuthPage initialTab="login" />}
+          />
+          <Route
+            path="/register"
+            component={() => <AuthPage initialTab="register" />}
+          />
+          <Route
+            path="/forgot-password"
+            component={() => <AuthPage initialTab="forgot" />}
+          />
           <Route path="/about" component={AboutPage} />
           <Route path="/contact" component={ContactPage} />
           <Route path="/privacy" component={PrivacyPage} />
