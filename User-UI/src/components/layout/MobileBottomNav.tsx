@@ -29,18 +29,19 @@ export default function MobileBottomNav() {
       style={{ transform: visible && !sidebarOpen ? "translateY(0)" : "translateY(calc(100% + env(safe-area-inset-bottom)))" }}
     >
       <div style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
-        <div className="flex justify-center pb-4">
+        <div className="flex justify-center pb-4 px-4">
           <div style={{
             position: "relative",
-            background: "white",
+            background: "var(--card)",
             borderRadius: "50px",
             boxShadow: "0 10px 30px rgba(0, 0, 0, 0.08)",
             display: "flex",
             alignItems: "flex-end",
-            padding: "12px 20px",
-            width: "340px",
+            padding: "12px 16px",
+            width: "100%",
+            maxWidth: "380px",
             height: "70px",
-            border: "1px solid rgba(0,0,0,0.05)"
+            border: "1px solid var(--border)"
           }}>
             {/* Home */}
             <Link href="/">
@@ -51,7 +52,7 @@ export default function MobileBottomNav() {
                 alignItems: "center",
                 justifyContent: "flex-end",
                 gap: "6px",
-                color: location === "/" ? "var(--kryros-primary)" : "#64748b",
+                color: location === "/" ? "var(--kryros-primary)" : "var(--muted-foreground)",
                 textDecoration: "none",
                 fontSize: "11px",
                 fontWeight: 500,
@@ -72,7 +73,7 @@ export default function MobileBottomNav() {
                 alignItems: "center",
                 justifyContent: "flex-end",
                 gap: "6px",
-                color: location === "/shop" ? "var(--kryros-primary)" : "#64748b",
+                color: location === "/shop" ? "var(--kryros-primary)" : "var(--muted-foreground)",
                 textDecoration: "none",
                 fontSize: "11px",
                 fontWeight: 500,
@@ -106,7 +107,7 @@ export default function MobileBottomNav() {
               </Link>
               <span style={{
                 marginTop: "auto",
-                color: location === "/pay" ? "var(--kryros-primary)" : "#64748b",
+                color: location === "/pay" ? "var(--kryros-primary)" : "var(--muted-foreground)",
                 fontSize: "11px",
                 fontWeight: 500,
                 paddingBottom: "4px"
@@ -122,7 +123,7 @@ export default function MobileBottomNav() {
                 alignItems: "center",
                 justifyContent: "flex-end",
                 gap: "6px",
-                color: location === "/track" ? "var(--kryros-primary)" : "#64748b",
+                color: location === "/track" ? "var(--kryros-primary)" : "var(--muted-foreground)",
                 textDecoration: "none",
                 fontSize: "11px",
                 fontWeight: 500,
@@ -143,7 +144,7 @@ export default function MobileBottomNav() {
                 alignItems: "center",
                 justifyContent: "flex-end",
                 gap: "6px",
-                color: location === "/cart" ? "var(--kryros-primary)" : "#64748b",
+                color: location === "/cart" ? "var(--kryros-primary)" : "var(--muted-foreground)",
                 textDecoration: "none",
                 fontSize: "11px",
                 fontWeight: 500,
@@ -166,7 +167,7 @@ export default function MobileBottomNav() {
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      border: "2px solid white",
+                      border: "2px solid var(--card)",
                       fontWeight: "bold"
                     }}>
                       {cartCount > 99 ? "99+" : cartCount}
