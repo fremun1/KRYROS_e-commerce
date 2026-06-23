@@ -5,20 +5,24 @@ interface AuthPageProps {
   initialTab?: "login" | "register" | "forgot";
 }
 
+const TEAL = "#26A69A";
+
 export default function AuthPage({ initialTab = "login" }: AuthPageProps) {
-  const [activeTab, setActiveTab] = useState(initialTab);
+  const [activeTab, setActiveTab] = useState<"login" | "register" | "forgot">(initialTab);
   const [showPassword, setShowPassword] = useState(false);
   const [showRegisterPassword, setShowRegisterPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [forgotStep, setForgotStep] = useState(1);
+  const [humanVerified, setHumanVerified] = useState(false);
 
-  // Refs for Turnstile widgets
   const loginWidgetRef = useRef<HTMLDivElement>(null);
   const registerWidgetRef = useRef<HTMLDivElement>(null);
-  const [loginVerified, setLoginVerified] = useState(false);
-  const [registerVerified, setRegisterVerified] = useState(false);
 
-  // Load Turnstile script
+  useEffect(() => {
+    setShowPassword(false);
+    setShowRegisterPassword(false);
+  }, [activeTab]);
+
   useEffect(() => {
     if (!document.getElementById("turnstile-script")) {
       const script = document.createElement("script");
@@ -30,323 +34,260 @@ export default function AuthPage({ initialTab = "login" }: AuthPageProps) {
     }
   }, []);
 
-  // Render Turnstile widgets when tab changes
   useEffect(() => {
+    setHumanVerified(false);
     const renderWidget = () => {
-      if (activeTab === "login" && loginWidgetRef.current && (window as any).turnstile) {
-        (window as any).turnstile.render(loginWidgetRef.current, {
-          sitekey: "1x00000000000000000000AA", // Demo sitekey
-          callback: (token: string) => setLoginVerified(true),
-        });
-      } else if (activeTab === "register" && registerWidgetRef.current && (window as any).turnstile) {
-        (window as any).turnstile.render(registerWidgetRef.current, {
-          sitekey: "1x00000000000000000000AA", // Demo sitekey
-          callback: (token: string) => setRegisterVerified(true),
+      const ref = activeTab === "login" ? loginWidgetRef.current : registerWidgetRef.current;
+      const id = activeTab === "login" ? "login-turnstile-inner" : "register-turnstile-inner";
+      const el = document.getElementById(id);
+      if (ref && el && (window as any).turnstile) {
+        el.innerHTML = "";
+        (window as any).turnstile.render(el, {
+          sitekey: "1x00000000000000000000AA",
+          callback: () => setHumanVerified(true),
         });
       }
     };
-
     if ((window as any).turnstile) {
       renderWidget();
     } else {
-      const checkTurnstile = setInterval(() => {
-        if ((window as any).turnstile) {
-          renderWidget();
-          clearInterval(checkTurnstile);
-        }
-      }, 100);
-      return () => clearInterval(checkTurnstile);
+      const timer = setInterval(() => {
+        if ((window as any).turnstile) { renderWidget(); clearInterval(timer); }
+      }, 200);
+      return () => clearInterval(timer);
     }
   }, [activeTab]);
 
-  const handleTabChange = (tab: "login" | "register" | "forgot") => {
-    setActiveTab(tab);
-  };
-
-  const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
-  };
-
-  const toggleRegisterPasswordVisibility = () => {
-    setShowRegisterPassword(!showRegisterPassword);
-  };
-
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent, action: string) => {
     e.preventDefault();
     setIsLoading(true);
-    try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      alert("Login submitted!");
-    } catch (error) {
-      console.error("Login error:", error);
-    } finally {
-      setIsLoading(false);
-    }
+    await new Promise(r => setTimeout(r, 900));
+    setIsLoading(false);
   };
 
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      alert("Account created!");
-    } catch (error) {
-      console.error("Registration error:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const inputClass = `
+    w-full h-[46px] border border-gray-200 rounded-xl bg-white text-gray-800
+    outline-none text-[14px] placeholder:text-gray-400
+    focus:border-[#26A69A] focus:ring-1 focus:ring-[#26A69A] transition-colors
+  `;
 
-  const renderLoginForm = () => (
-    <form onSubmit={handleLogin} className="space-y-6">
-      <div>
-        <label className="block text-xl font-bold text-slate-800 mb-3">Email or Phone</label>
-        <div className="relative">
-          <Mail className="absolute left-5 top-1/2 -translate-y-1/2 w-8 h-8 text-[var(--kryros-primary)] opacity-60" />
-          <input
-            type="text"
-            placeholder="Enter your email or phone number"
-            className="w-full pl-16 pr-4 h-[72px] border-2 border-slate-200 rounded-2xl bg-white text-slate-800 outline-none text-xl placeholder:text-slate-400 focus:border-[var(--kryros-primary)] transition-colors"
-            required
-          />
+  const TurnstileWidget = ({ widgetId }: { widgetId: string }) => (
+    <div
+      style={{
+        border: "1px solid #e5e7eb",
+        borderRadius: "10px",
+        padding: "10px 12px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        background: "#fff",
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+        <div
+          onClick={() => setHumanVerified(v => !v)}
+          style={{
+            width: "22px",
+            height: "22px",
+            border: humanVerified ? `2px solid ${TEAL}` : "2px solid #d1d5db",
+            borderRadius: "4px",
+            background: humanVerified ? TEAL : "#fff",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: "pointer",
+            flexShrink: 0,
+            transition: "all 0.2s",
+          }}
+        >
+          {humanVerified && (
+            <svg width="13" height="10" viewBox="0 0 13 10" fill="none">
+              <path d="M1.5 5L5 8.5L11.5 1.5" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          )}
+        </div>
+        <span style={{ fontSize: "14px", color: "#374151", fontWeight: 500 }}>Verify you are human</span>
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "1px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+          <svg width="28" height="22" viewBox="0 0 28 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <ellipse cx="14" cy="17" rx="13" ry="5" fill="#F6821F" opacity="0.18" />
+            <path d="M14 2C10 2 7 5 7 9c0 2.5 1.2 4.7 3 6l4 3 4-3c1.8-1.3 3-3.5 3-6 0-4-3-7-7-7z" fill="#F6821F" />
+            <path d="M10 9c0-2.2 1.8-4 4-4s4 1.8 4 4-1.8 4-4 4-4-1.8-4-4z" fill="#fff" opacity="0.5" />
+          </svg>
+          <span style={{ fontSize: "11px", fontWeight: 700, color: "#1a1a2e", letterSpacing: "0.04em" }}>CLOUDFLARE</span>
+        </div>
+        <div style={{ fontSize: "10px", color: "#6b7280" }}>
+          <span style={{ textDecoration: "underline", cursor: "pointer" }}>Privacy</span>
+          {" · "}
+          <span style={{ textDecoration: "underline", cursor: "pointer" }}>Terms</span>
         </div>
       </div>
+      <div ref={activeTab === "login" ? loginWidgetRef : registerWidgetRef} style={{ display: "none" }}>
+        <div id={widgetId} />
+      </div>
+    </div>
+  );
 
+  const SubmitButton = ({ label, loadingLabel }: { label: string; loadingLabel: string }) => (
+    <button
+      type="submit"
+      disabled={isLoading}
+      style={{
+        width: "100%",
+        height: "44px",
+        border: "none",
+        borderRadius: "10px",
+        background: TEAL,
+        color: "#fff",
+        fontSize: "14px",
+        fontWeight: 600,
+        cursor: isLoading ? "not-allowed" : "pointer",
+        opacity: isLoading ? 0.7 : 1,
+        transition: "opacity 0.2s, transform 0.1s",
+        letterSpacing: "0.01em",
+      }}
+    >
+      {isLoading ? loadingLabel : label}
+    </button>
+  );
+
+  const FieldLabel = ({ text }: { text: string }) => (
+    <label style={{ display: "block", fontSize: "13px", fontWeight: 700, color: "#1e293b", marginBottom: "6px" }}>
+      {text}
+    </label>
+  );
+
+  const renderLoginForm = () => (
+    <form onSubmit={e => handleSubmit(e, "login")} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
       <div>
-        <label className="block text-xl font-bold text-slate-800 mb-3">Password</label>
-        <div className="relative">
-          <Lock className="absolute left-5 top-1/2 -translate-y-1/2 w-8 h-8 text-[var(--kryros-primary)] opacity-60" />
-          <input
-            type={showPassword ? "text" : "password"}
-            placeholder="Enter your password"
-            className="w-full pl-16 pr-16 h-[72px] border-2 border-slate-200 rounded-2xl bg-white text-slate-800 outline-none text-xl placeholder:text-slate-400 focus:border-[var(--kryros-primary)] transition-colors"
-            required
-          />
-          <button
-            type="button"
-            onClick={togglePasswordVisibility}
-            className="absolute right-5 top-1/2 -translate-y-1/2 text-[var(--kryros-primary)] bg-transparent border-0 cursor-pointer"
-          >
-            {showPassword ? <EyeOff className="w-8 h-8" /> : <Eye className="w-8 h-8" />}
+        <FieldLabel text="Email or Phone" />
+        <div style={{ position: "relative" }}>
+          <Mail style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", width: "20px", height: "20px", color: TEAL, opacity: 0.7 }} />
+          <input type="text" placeholder="Enter your email or phone number" required style={{ paddingLeft: "44px", paddingRight: "14px" }} className={inputClass} />
+        </div>
+      </div>
+      <div>
+        <FieldLabel text="Password" />
+        <div style={{ position: "relative" }}>
+          <Lock style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", width: "20px", height: "20px", color: TEAL, opacity: 0.7 }} />
+          <input type={showPassword ? "text" : "password"} placeholder="Enter your password" required style={{ paddingLeft: "44px", paddingRight: "44px" }} className={inputClass} />
+          <button type="button" onClick={() => setShowPassword(v => !v)} style={{ position: "absolute", right: "14px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: TEAL, padding: 0, display: "flex" }}>
+            {showPassword ? <EyeOff style={{ width: "20px", height: "20px" }} /> : <Eye style={{ width: "20px", height: "20px" }} />}
           </button>
         </div>
       </div>
-
-      <div className="py-1">
-        <div ref={loginWidgetRef} id="login-turnstile" className="w-full" />
-      </div>
-
-      <button
-        type="submit"
-        disabled={isLoading}
-        className="w-full h-[72px] border-0 rounded-2xl font-extrabold text-2xl cursor-pointer transition-all active:scale-95"
-        style={{
-          background: "linear-gradient(135deg, var(--kryros-primary-hover), var(--kryros-primary))",
-          color: "#fff",
-          boxShadow: isLoading ? "none" : "0 8px 24px rgba(39,185,175,0.25)",
-          opacity: isLoading ? 0.5 : 1,
-        }}
-      >
-        {isLoading ? "Logging in..." : "Login"}
-      </button>
+      <TurnstileWidget widgetId="login-turnstile-inner" />
+      <SubmitButton label="Login" loadingLabel="Logging in..." />
     </form>
   );
 
   const renderRegisterForm = () => (
-    <form onSubmit={handleRegister} className="space-y-6">
+    <form onSubmit={e => handleSubmit(e, "register")} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
       <div>
-        <label className="block text-xl font-bold text-slate-800 mb-3">Full Name</label>
-        <div className="relative">
-          <User className="absolute left-5 top-1/2 -translate-y-1/2 w-8 h-8 text-[var(--kryros-primary)] opacity-60" />
-          <input
-            type="text"
-            placeholder="Enter your full name"
-            className="w-full pl-16 pr-4 h-[72px] border-2 border-slate-200 rounded-2xl bg-white text-slate-800 outline-none text-xl placeholder:text-slate-400 focus:border-[var(--kryros-primary)] transition-colors"
-            required
-          />
+        <FieldLabel text="Full Name" />
+        <div style={{ position: "relative" }}>
+          <User style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", width: "20px", height: "20px", color: TEAL, opacity: 0.7 }} />
+          <input type="text" placeholder="Enter your full name" required style={{ paddingLeft: "44px", paddingRight: "14px" }} className={inputClass} />
         </div>
       </div>
-
       <div>
-        <label className="block text-xl font-bold text-slate-800 mb-3">Email or Phone</label>
-        <div className="relative">
-          <Mail className="absolute left-5 top-1/2 -translate-y-1/2 w-8 h-8 text-[var(--kryros-primary)] opacity-60" />
-          <input
-            type="text"
-            placeholder="Enter your email or phone number"
-            className="w-full pl-16 pr-4 h-[72px] border-2 border-slate-200 rounded-2xl bg-white text-slate-800 outline-none text-xl placeholder:text-slate-400 focus:border-[var(--kryros-primary)] transition-colors"
-            required
-          />
+        <FieldLabel text="Email or Phone" />
+        <div style={{ position: "relative" }}>
+          <Mail style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", width: "20px", height: "20px", color: TEAL, opacity: 0.7 }} />
+          <input type="text" placeholder="Enter your email or phone number" required style={{ paddingLeft: "44px", paddingRight: "14px" }} className={inputClass} />
         </div>
       </div>
-
       <div>
-        <label className="block text-xl font-bold text-slate-800 mb-3">Password</label>
-        <div className="relative">
-          <Lock className="absolute left-5 top-1/2 -translate-y-1/2 w-8 h-8 text-[var(--kryros-primary)] opacity-60" />
-          <input
-            type={showRegisterPassword ? "text" : "password"}
-            placeholder="Create a password"
-            className="w-full pl-16 pr-16 h-[72px] border-2 border-slate-200 rounded-2xl bg-white text-slate-800 outline-none text-xl placeholder:text-slate-400 focus:border-[var(--kryros-primary)] transition-colors"
-            required
-          />
-          <button
-            type="button"
-            onClick={toggleRegisterPasswordVisibility}
-            className="absolute right-5 top-1/2 -translate-y-1/2 text-[var(--kryros-primary)] bg-transparent border-0 cursor-pointer"
-          >
-            {showRegisterPassword ? <EyeOff className="w-8 h-8" /> : <Eye className="w-8 h-8" />}
+        <FieldLabel text="Password" />
+        <div style={{ position: "relative" }}>
+          <Lock style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", width: "20px", height: "20px", color: TEAL, opacity: 0.7 }} />
+          <input type={showRegisterPassword ? "text" : "password"} placeholder="Create a password" required style={{ paddingLeft: "44px", paddingRight: "44px" }} className={inputClass} />
+          <button type="button" onClick={() => setShowRegisterPassword(v => !v)} style={{ position: "absolute", right: "14px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: TEAL, padding: 0, display: "flex" }}>
+            {showRegisterPassword ? <EyeOff style={{ width: "20px", height: "20px" }} /> : <Eye style={{ width: "20px", height: "20px" }} />}
           </button>
         </div>
       </div>
-
-      <div className="py-1">
-        <div ref={registerWidgetRef} id="register-turnstile" className="w-full" />
-      </div>
-
-      <button
-        type="submit"
-        disabled={isLoading}
-        className="w-full h-[72px] border-0 rounded-2xl font-extrabold text-2xl cursor-pointer transition-all active:scale-95"
-        style={{
-          background: "linear-gradient(135deg, var(--kryros-primary-hover), var(--kryros-primary))",
-          color: "#fff",
-          boxShadow: isLoading ? "none" : "0 8px 24px rgba(39,185,175,0.25)",
-          opacity: isLoading ? 0.5 : 1,
-        }}
-      >
-        {isLoading ? "Creating account..." : "Create account"}
-      </button>
+      <TurnstileWidget widgetId="register-turnstile-inner" />
+      <SubmitButton label="Create account" loadingLabel="Creating account..." />
     </form>
   );
 
-  const renderForgotPasswordForm = () => {
-    const handleStep1Submit = async (e: React.FormEvent) => {
-      e.preventDefault();
-      setIsLoading(true);
-      try {
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        setForgotStep(2);
-      } catch (error) {
-        console.error("Step 1 error:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    return (
-      <div className="space-y-6">
-        {forgotStep === 1 ? (
-          <div id="forgot-step-1">
-            <form onSubmit={handleStep1Submit} className="space-y-6">
-              <div>
-                <label className="block text-xl font-bold text-slate-800 mb-3">Email or Phone</label>
-                <div className="relative">
-                  <Mail className="absolute left-5 top-1/2 -translate-y-1/2 w-8 h-8 text-[var(--kryros-primary)] opacity-60" />
-                  <input
-                    type="text"
-                    placeholder="Enter your email or phone number"
-                    className="w-full pl-16 pr-4 h-[72px] border-2 border-slate-200 rounded-2xl bg-white text-slate-800 outline-none text-xl placeholder:text-slate-400 focus:border-[var(--kryros-primary)] transition-colors"
-                    required
-                  />
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full h-[72px] border-0 rounded-2xl font-extrabold text-2xl cursor-pointer transition-all active:scale-95"
-                style={{
-                  background: "linear-gradient(135deg, var(--kryros-primary-hover), var(--kryros-primary))",
-                  color: "#fff",
-                  boxShadow: isLoading ? "none" : "0 8px 24px rgba(39,185,175,0.25)",
-                  opacity: isLoading ? 0.5 : 1,
-                }}
-              >
-                {isLoading ? "Sending..." : "Send Reset Link"}
-              </button>
-            </form>
+  const renderForgotForm = () => (
+    <form onSubmit={e => handleSubmit(e, "forgot")} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+      {forgotStep === 1 ? (
+        <>
+          <div>
+            <FieldLabel text="Email or Phone" />
+            <div style={{ position: "relative" }}>
+              <Mail style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", width: "20px", height: "20px", color: TEAL, opacity: 0.7 }} />
+              <input type="text" placeholder="Enter your email or phone number" required style={{ paddingLeft: "44px", paddingRight: "14px" }} className={inputClass} />
+            </div>
           </div>
-        ) : (
-          <div id="forgot-step-2">
-            <form onSubmit={handleStep1Submit} className="space-y-6">
-              <div>
-                <label className="block text-xl font-bold text-slate-800 mb-3">Verification Code</label>
-                <input
-                  type="text"
-                  maxLength={6}
-                  placeholder="000000"
-                  className="w-full h-[72px] border-2 border-slate-200 rounded-2xl bg-white text-slate-800 outline-none text-center text-2xl tracking-[0.5em]"
-                  required
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full h-[72px] border-0 rounded-2xl font-extrabold text-2xl cursor-pointer transition-all active:scale-95"
-                style={{
-                  background: "linear-gradient(135deg, var(--kryros-primary-hover), var(--kryros-primary))",
-                  color: "#fff",
-                  boxShadow: isLoading ? "none" : "0 8px 24px rgba(39,185,175,0.25)",
-                  opacity: isLoading ? 0.5 : 1,
-                }}
-              >
-                {isLoading ? "Resetting..." : "Reset Password"}
-              </button>
-            </form>
+          <SubmitButton label="Send Reset Link" loadingLabel="Sending..." />
+        </>
+      ) : (
+        <>
+          <div>
+            <FieldLabel text="Verification Code" />
+            <input type="text" maxLength={6} placeholder="000000" required style={{ textAlign: "center", letterSpacing: "0.4em", fontSize: "20px", paddingLeft: "14px", paddingRight: "14px" }} className={inputClass} />
           </div>
-        )}
-      </div>
-    );
-  };
+          <div>
+            <FieldLabel text="New Password" />
+            <div style={{ position: "relative" }}>
+              <Lock style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", width: "20px", height: "20px", color: TEAL, opacity: 0.7 }} />
+              <input type={showPassword ? "text" : "password"} placeholder="Enter new password" required style={{ paddingLeft: "44px", paddingRight: "44px" }} className={inputClass} />
+              <button type="button" onClick={() => setShowPassword(v => !v)} style={{ position: "absolute", right: "14px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: TEAL, padding: 0, display: "flex" }}>
+                {showPassword ? <EyeOff style={{ width: "20px", height: "20px" }} /> : <Eye style={{ width: "20px", height: "20px" }} />}
+              </button>
+            </div>
+          </div>
+          <SubmitButton label="Reset Password" loadingLabel="Resetting..." />
+        </>
+      )}
+    </form>
+  );
 
   return (
-    <div className="bg-[#f8fafc] min-h-screen flex items-center justify-center p-4">
-      <div className="w-full max-w-[500px] bg-white rounded-[28px] shadow-2xl p-10">
-        <div className="text-center mb-10">
-          <h1 className="text-6xl font-black tracking-tight">
-            <span className="text-slate-800">KRY</span><span className="text-[var(--kryros-primary)]">ROS</span>
+    <div style={{ minHeight: "100dvh", background: "#f1f5f9", display: "flex", alignItems: "center", justifyContent: "center", padding: "12px" }}>
+      <div style={{ width: "100%", maxWidth: "390px", background: "#fff", borderRadius: "20px", boxShadow: "0 4px 24px rgba(0,0,0,0.09)", padding: "20px 16px 24px" }}>
+        {/* Logo */}
+        <div style={{ textAlign: "center", marginBottom: "16px" }}>
+          <h1 style={{ fontSize: "26px", fontWeight: 900, letterSpacing: "-0.3px", lineHeight: 1, margin: 0 }}>
+            <span style={{ color: "#1e293b" }}>KRY</span>
+            <span style={{ color: TEAL }}>ROS</span>
           </h1>
         </div>
 
-        <div className="bg-slate-100 rounded-2xl p-2 mb-10 flex gap-2">
-          <button
-            onClick={() => handleTabChange("login")}
-            className="flex-1 py-4 px-6 rounded-xl font-bold text-xl transition-all border-0 cursor-pointer"
-            style={{
-              background: activeTab === "login" ? "var(--kryros-primary)" : "transparent",
-              color: activeTab === "login" ? "#fff" : "#64748b",
-            }}
-          >
-            Login
-          </button>
-          <button
-            onClick={() => handleTabChange("register")}
-            className="flex-1 py-4 px-6 rounded-xl font-bold text-xl transition-all border-0 cursor-pointer"
-            style={{
-              background: activeTab === "register" ? "var(--kryros-primary)" : "transparent",
-              color: activeTab === "register" ? "#fff" : "#64748b",
-            }}
-          >
-            Register
-          </button>
-          <button
-            onClick={() => handleTabChange("forgot")}
-            className="flex-1 py-4 px-6 rounded-xl font-bold text-xl transition-all border-0 cursor-pointer"
-            style={{
-              background: activeTab === "forgot" ? "var(--kryros-primary)" : "transparent",
-              color: activeTab === "forgot" ? "#fff" : "#64748b",
-            }}
-          >
-            Forgot
-          </button>
+        {/* Tab switcher */}
+        <div style={{ background: "#f1f5f9", borderRadius: "12px", padding: "4px", display: "flex", gap: "3px", marginBottom: "18px" }}>
+          {(["login", "register", "forgot"] as const).map(tab => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              style={{
+                flex: 1,
+                padding: "8px 2px",
+                border: "none",
+                borderRadius: "9px",
+                fontWeight: activeTab === tab ? 600 : 500,
+                fontSize: "13px",
+                cursor: "pointer",
+                transition: "all 0.2s",
+                background: activeTab === tab ? TEAL : "transparent",
+                color: activeTab === tab ? "#fff" : "#64748b",
+              }}
+            >
+              {tab === "login" ? "Login" : tab === "register" ? "Register" : "Forgot"}
+            </button>
+          ))}
         </div>
 
-        <div className="min-h-[400px]">
+        {/* Form */}
+        <div>
           {activeTab === "login" && renderLoginForm()}
           {activeTab === "register" && renderRegisterForm()}
-          {activeTab === "forgot" && renderForgotPasswordForm()}
+          {activeTab === "forgot" && renderForgotForm()}
         </div>
       </div>
     </div>
