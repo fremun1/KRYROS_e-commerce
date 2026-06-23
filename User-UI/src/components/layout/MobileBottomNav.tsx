@@ -23,114 +23,160 @@ export default function MobileBottomNav() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const navItems = [
-    { label: "Home", icon: Home, href: "/" },
-    { label: "Shop", icon: Grid, href: "/shop" },
-    { label: "Track", icon: PackageSearch, href: "/track" },
-    { label: "Cart", icon: ShoppingCart, href: "/cart", badge: cartCount },
-  ];
-
   return (
     <nav
       className="fixed bottom-0 left-0 right-0 z-50 md:hidden transition-transform duration-300"
       style={{ transform: visible && !sidebarOpen ? "translateY(0)" : "translateY(calc(100% + env(safe-area-inset-bottom)))" }}
     >
       <div style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
-        <div className="relative">
-          {/* Main nav container with U-notch */}
-          <div className="mx-4 mb-4">
-            <div className="relative">
-              {/* Background with U-notch */}
-              <div className="absolute inset-0 bg-white rounded-[28px] shadow-2xl -z-10"></div>
-              
-              {/* Notch cutout - perfect size */}
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-28 h-18 bg-[#f8fafc] rounded-b-full rounded-t-full -z-5 -mt-2"></div>
-              
-              {/* Nav items */}
-              <div className="flex items-end justify-around px-4 py-3">
-                {/* Left items */}
-                {[navItems[0], navItems[1]].map(({ label, icon: Icon, href, badge }) => {
-                  const isActive = location === href || (href !== "/" && location.startsWith(href));
-                  return (
-                    <Link key={href} href={href}>
-                      <button className={`flex flex-col items-center gap-1 transition-all`}>
-                        <div className="relative">
-                          <Icon
-                            className={`w-7 h-7 transition-colors ${
-                              isActive ? "text-[var(--kryros-primary)]" : "text-[#64748b]"
-                            }`}
-                            strokeWidth={1.8}
-                          />
-                          {badge != null && badge > 0 && (
-                            <span className="absolute -top-0.5 -right-0.5 bg-[var(--kryros-primary)] text-white text-[8px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
-                              {badge > 99 ? "99+" : badge}
-                            </span>
-                          )}
-                        </div>
-                        <span className={`text-sm font-semibold transition-colors ${
-                          isActive ? "text-[var(--kryros-primary)]" : "text-[#64748b]"
-                        }`}>
-                          {label}
-                        </span>
-                      </button>
-                    </Link>
-                  );
-                })}
-
-                {/* Spacer */}
-                <div className="w-28 h-18"></div>
-
-                {/* Right items */}
-                {[navItems[2], navItems[3]].map(({ label, icon: Icon, href, badge }) => {
-                  const isActive = location === href || (href !== "/" && location.startsWith(href));
-                  return (
-                    <Link key={href} href={href}>
-                      <button className={`flex flex-col items-center gap-1 transition-all`}>
-                        <div className="relative">
-                          <Icon
-                            className={`w-7 h-7 transition-colors ${
-                              isActive ? "text-[var(--kryros-primary)]" : "text-[#64748b]"
-                            }`}
-                            strokeWidth={1.8}
-                          />
-                          {badge != null && badge > 0 && (
-                            <span className="absolute -top-0.5 -right-0.5 bg-[var(--kryros-primary)] text-white text-[8px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
-                              {badge > 99 ? "99+" : badge}
-                            </span>
-                          )}
-                        </div>
-                        <span className={`text-sm font-semibold transition-colors ${
-                          isActive ? "text-[var(--kryros-primary)]" : "text-[#64748b]"
-                        }`}>
-                          {label}
-                        </span>
-                      </button>
-                    </Link>
-                  );
-                })}
-              </div>
+        <div className="flex justify-center pb-4">
+          <div style={{
+            position: "relative",
+            background: "white",
+            borderRadius: "50px",
+            boxShadow: "0 10px 30px rgba(0, 0, 0, 0.08)",
+            display: "flex",
+            alignItems: "flex-end",
+            padding: "12px 20px",
+            width: "340px",
+            height: "70px",
+            border: "1px solid rgba(0,0,0,0.05)"
+          }}>
+            {/* Home */}
+            <Link href="/">
+              <a style={{
+                flex: 1,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "flex-end",
+                gap: "6px",
+                color: location === "/" ? "var(--kryros-primary)" : "#64748b",
+                textDecoration: "none",
+                fontSize: "11px",
+                fontWeight: 500,
+                height: "100%",
+                paddingBottom: "4px"
+              }}>
+                <Home strokeWidth={1.5} width={22} height={22} />
+                <span>Home</span>
+              </a>
+            </Link>
+            
+            {/* Shop */}
+            <Link href="/shop">
+              <a style={{
+                flex: 1,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "flex-end",
+                gap: "6px",
+                color: location === "/shop" ? "var(--kryros-primary)" : "#64748b",
+                textDecoration: "none",
+                fontSize: "11px",
+                fontWeight: 500,
+                height: "100%",
+                paddingBottom: "4px"
+              }}>
+                <Grid strokeWidth={1.5} width={22} height={22} />
+                <span>Shop</span>
+              </a>
+            </Link>
+            
+            {/* Pay (Central Floating) */}
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", position: "relative", height: "100%" }}>
+              <Link href="/pay">
+                <a style={{
+                  position: "absolute",
+                  top: "-28px",
+                  background: "var(--kryros-primary)",
+                  width: "48px",
+                  height: "48px",
+                  borderRadius: "50%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  boxShadow: "0 8px 16px rgba(38, 166, 154, 0.3)",
+                  transition: "transform 0.2s",
+                  zIndex: 10
+                }}>
+                  <CreditCard strokeWidth={2} width={24} height={24} color="white" />
+                </a>
+              </Link>
+              <span style={{
+                marginTop: "auto",
+                color: location === "/pay" ? "var(--kryros-primary)" : "#64748b",
+                fontSize: "11px",
+                fontWeight: 500,
+                paddingBottom: "4px"
+              }}>Pay</span>
             </div>
+            
+            {/* Track */}
+            <Link href="/track">
+              <a style={{
+                flex: 1,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "flex-end",
+                gap: "6px",
+                color: location === "/track" ? "var(--kryros-primary)" : "#64748b",
+                textDecoration: "none",
+                fontSize: "11px",
+                fontWeight: 500,
+                height: "100%",
+                paddingBottom: "4px"
+              }}>
+                <PackageSearch strokeWidth={1.5} width={22} height={22} />
+                <span>Track</span>
+              </a>
+            </Link>
+            
+            {/* Cart */}
+            <Link href="/cart">
+              <a style={{
+                flex: 1,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "flex-end",
+                gap: "6px",
+                color: location === "/cart" ? "var(--kryros-primary)" : "#64748b",
+                textDecoration: "none",
+                fontSize: "11px",
+                fontWeight: 500,
+                height: "100%",
+                paddingBottom: "4px"
+              }}>
+                <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <ShoppingCart strokeWidth={1.5} width={22} height={22} />
+                  {cartCount > 0 && (
+                    <div style={{
+                      position: "absolute",
+                      top: "-4px",
+                      right: "-4px",
+                      background: "var(--kryros-primary)",
+                      color: "white",
+                      fontSize: "9px",
+                      width: "15px",
+                      height: "15px",
+                      borderRadius: "50%",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      border: "2px solid white",
+                      fontWeight: "bold"
+                    }}>
+                      {cartCount > 99 ? "99+" : cartCount}
+                    </div>
+                  )}
+                </div>
+                <span>Cart</span>
+              </a>
+            </Link>
           </div>
-
-          {/* Floating Pay button + label - perfect position and size */}
-          <Link href="/pay">
-            <div className="absolute left-1/2 -translate-x-1/2 -top-4 flex flex-col items-center gap-1">
-              <button
-                className={`w-16 h-16 rounded-full flex items-center justify-center transition-all ${
-                  location === "/pay" ? "bg-[var(--kryros-primary)] shadow-[0_8px_24px_rgba(39,185,175,0.4)]" : "bg-[var(--kryros-primary)] shadow-[0_8px_24px_rgba(39,185,175,0.25)]"
-                }`}
-              >
-                <CreditCard
-                  className="w-8 h-8 text-white"
-                />
-              </button>
-              <span className={`text-sm font-semibold transition-colors ${
-                location === "/pay" ? "text-[var(--kryros-primary)]" : "text-[#64748b]"
-              }`}>
-                Pay
-              </span>
-            </div>
-          </Link>
         </div>
       </div>
     </nav>
