@@ -23,7 +23,8 @@ export default function CartPage() {
   const shippingUnlocked = qualifyingCount >= FREE_SHIPPING_TARGET;
   const itemsRemaining = FREE_SHIPPING_TARGET - qualifyingCount;
   const shipping = shippingUnlocked ? 0 : 9.99;
-  const total = subtotal + shipping;
+  const fee = subtotal * 0.02;
+  const total = subtotal + shipping + fee;
 
   const TopBar = () => (
     <div className="md:hidden sticky top-0 z-10 bg-background border-b border-border px-4 py-3 flex items-center gap-3">
@@ -133,6 +134,10 @@ export default function CartPage() {
                 <span className={`font-semibold ${shippingUnlocked ? "text-green-600" : "text-foreground"}`}>
                   {shippingUnlocked ? "Free" : format(shipping)}
                 </span>
+              </div>
+              <div className="flex justify-between text-sm lg:text-base">
+                <span className="text-muted-foreground">Fee (2%)</span>
+                <span className="font-semibold text-foreground">{format(fee)}</span>
               </div>
 
               {/* FREE_SHIPPING_UI: banner hidden. Restore by uncommenting the block below. */}
