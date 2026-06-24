@@ -1,9 +1,10 @@
 import { Link } from "wouter";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useEffect, useState } from "react";
 import { Minus, Plus, Trash2, ShoppingBag, ArrowRight, ChevronLeft, Info } from "lucide-react";
 import { toast } from "sonner";
 import { useCartStore } from "@/store/cartStore";
 import { useCurrencyStore } from "@/store/currencyStore";
+import { fetchSettings } from "@/lib/api";
 
 // Free shipping: 50 qualifying items, each individually worth >= $100 USD
 const FREE_SHIPPING_TARGET = 50;
@@ -14,17 +15,19 @@ export default function CartPage() {
   const format = useCurrencyStore((s) => s.format);
   const cartCount = items.reduce((t, i) => t + i.qty, 0);
   const subtotal = items.reduce((t, i) => t + i.price * i.qty, 0);
+  const [feeRate, setFeeRate] = useState(0.03); // default to 3%
 
-  // Qualifying items: only those whose UNIT price is >= $100 USD
-  // item.price is stored in USD (the currencyStore converts for display only)
-  const qualifyingCount = items
-    .filter((i) => i.price >= QUALIFYING_PRICE_USD)
-    .reduce((t, i) => t + i.qty, 0);
-  const shippingUnlocked = qualifyingCount >= FREE_SHIPPING_TARGET;
-  const itemsRemaining = FREE_SHIPPING_TARGET - qualifyingCount;
-  const shipping = shippingUnlocked ? 0 : 9.99;
-  const fee = subtotal * 0.02;
+  // Calculate shipping as sum of each product's shipping fee
+  const shipping = items.reduce((t, i) => t + (i.shippingFee || 0) * i.qty, 0);
+  const fee = subtotal * feeRate;
   const total = subtotal + shipping + fee;
+
+  useEffect(() => {
+    fetchSettings().then((settings) => {
+      const rate = settings.find((s: any) => s.key === 'processing_fee_rate')?.value;
+      if (rate) setFeeRate(Number(rate) / 100);
+    }).catch(() => {});
+  }, []);
 
   const TopBar = () => (
     <div className="md:hidden sticky top-0 z-10 bg-background border-b border-border px-4 py-3 flex items-center gap-3">
@@ -131,12 +134,10 @@ export default function CartPage() {
               </div>
               <div className="flex justify-between text-sm lg:text-base">
                 <span className="text-muted-foreground">Shipping</span>
-                <span className={`font-semibold ${shippingUnlocked ? "text-green-600" : "text-foreground"}`}>
-                  {shippingUnlocked ? "Free" : format(shipping)}
-                </span>
+                <span className="font-semibold text-foreground">{format(shipping)}</span>
               </div>
               <div className="flex justify-between text-sm lg:text-base">
-                <span className="text-muted-foreground">Fee (2%)</span>
+                <span className="text-muted-foreground">Fee</span>
                 <span className="font-semibold text-foreground">{format(fee)}</span>
               </div>
 

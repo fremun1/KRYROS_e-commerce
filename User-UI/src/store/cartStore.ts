@@ -7,6 +7,9 @@ export interface CartItem {
   price: number;
   qty: number;
   image: string;
+  shippingFee?: number;
+  estimatedDeliveryDays?: number;
+  condition?: string;
 }
 
 interface CartState {

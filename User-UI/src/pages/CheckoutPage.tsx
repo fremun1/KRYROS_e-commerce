@@ -3,7 +3,7 @@ import { Link, useLocation } from "wouter";
 import { useCartStore } from "@/store/cartStore";
 import { useAuthStore } from "@/store/authStore";
 import { useCurrencyStore } from "@/store/currencyStore";
-import { API_BASE, fetchMatchingShippingMethods, fetchSettings, ApiShippingMethod } from "@/lib/api";
+import { API_BASE, fetchSettings } from "@/lib/api";
 import { toast } from "sonner";
 import {
   Select,
@@ -189,17 +189,24 @@ export default function CheckoutPage() {
   const [loadingStations, setLoadingStations] = useState(false);
   const [showStationDrop, setShowStationDrop] = useState(false);
 
-  // Shipping Method (Section 3) & totals
-  const [shippingMethods, setShippingMethods] = useState<ApiShippingMethod[]>([]);
-  const [isLoadingShipping, setIsLoadingShipping] = useState(false);
-  const [shippingId, setShippingId] = useState("");
-  const selectedShipping = shippingMethods.find((m) => m.id === shippingId);
-  const shippingPrice = selectedShipping ? Number(selectedShipping.fee) : 0;
-
   const SUBTOTAL = cartItems.reduce((s, i) => s + i.price * i.qty, 0);
   const DISCOUNT = 0;
-  const [feeRate, setFeeRate] = useState(0);
+  const [feeRate, setFeeRate] = useState(0.03); // default 3%
   const PROCESSING_FEE = SUBTOTAL * feeRate;
+  // Calculate shipping as sum of each product's shipping fee
+  const shippingPrice = cartItems.reduce((t, i) => t + (i.shippingFee || 0) * i.qty, 0);
+  // Get estimated delivery days (use max or sum or first item's days, let's use max to be safe)
+  const maxDeliveryDays = cartItems.reduce((max, i) => Math.max(max, i.estimatedDeliveryDays || 3), 0);
+  // Calculate estimated delivery dates
+  const today = new Date();
+  const estimatedStart = new Date(today);
+  estimatedStart.setDate(today.getDate() + 1);
+  const estimatedEnd = new Date(today);
+  estimatedEnd.setDate(today.getDate() + maxDeliveryDays);
+  const formatDate = (date: Date) => {
+    const options: Intl.DateTimeFormatOptions = { weekday: 'short', month: 'short', day: 'numeric' };
+    return date.toLocaleDateString('en-US', options);
+  };
   const total = SUBTOTAL - DISCOUNT + PROCESSING_FEE + shippingPrice;
 
   // Payment Method (Section 4) — openMethod now controls inline expansion, not a bottom sheet
@@ -255,25 +262,6 @@ export default function CheckoutPage() {
       .finally(() => { if (!cancelled) setLoadingStations(false); });
     return () => { cancelled = true; };
   }, []);
-
-  // ── Dynamic shipping methods — now fetched as soon as we have a country/city instead of gated by step ──
-  useEffect(() => {
-    if (country) {
-      setIsLoadingShipping(true);
-      fetchMatchingShippingMethods({
-        stateName: state,
-        cityName: city,
-        manual: true,
-      })
-        .then((methods) => {
-          setShippingMethods(methods);
-          if (methods.length > 0 && !shippingId) {
-            setShippingId(methods[0].id);
-          }
-        })
-        .finally(() => setIsLoadingShipping(false));
-    }
-  }, [country, state, city]);
 
   // ── Dynamic payment config from admin panel ─────────────────────────────────
   const [bankProviders, setBankProviders]   = useState<{ name: string; config?: { accountName?: string; accountNumber?: string } }[]>([]);
@@ -569,13 +557,6 @@ export default function CheckoutPage() {
   const hasPaymentError = !!orderError || mmPhase === "failed_init" || mmPhase === "timed_out";
   const selectedStation = pickupStations.find((s) => s.id === pickupStationId);
 
-  // Icon used per shipping method id, matching reference (truck / truck / rocket)
-  const shippingIcon = (name: string) => {
-    const n = name.toLowerCase();
-    if (n.includes("express") || n.includes("same day") || n.includes("next day")) return Zap;
-    return Truck;
-  };
-
   return (
     <div className="max-w-lg mx-auto bg-background min-h-screen flex flex-col">
       {/* Header */}
@@ -769,40 +750,24 @@ export default function CheckoutPage() {
           </p>
         </div>
 
-        {/* ── SECTION 3: Shipping Method ── */}
+        {/* ── SECTION 3: Delivery Information ── */}
         <div className="bg-card border border-border rounded-2xl p-4">
-          <SectionHeader number={3} icon={Truck} title="Shipping Method" />
-          {isLoadingShipping ? (
-            <div className="py-8 flex flex-col items-center justify-center gap-2">
-              <div className="w-6 h-6 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
-              <p className="text-xs text-muted-foreground">Finding delivery options...</p>
+          <SectionHeader number={3} icon={Truck} title="Delivery" />
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <Truck className="w-6 h-6 text-primary" />
+              <div>
+                <p className="text-lg font-bold text-primary">{format(shippingPrice)} delivery in {maxDeliveryDays} days</p>
+                <p className="text-sm text-foreground">Estimated between {formatDate(estimatedStart)} and {formatDate(estimatedEnd)}</p>
+              </div>
             </div>
-          ) : shippingMethods.length > 0 ? (
-            <div className="grid grid-cols-3 gap-2">
-              {shippingMethods.map((option) => {
-                const isSelected = shippingId === option.id;
-                const Icon = shippingIcon(option.name);
-                return (
-                  <button
-                    key={option.id}
-                    onClick={() => setShippingId(option.id)}
-                    className={`flex flex-col items-start gap-1.5 px-3 py-3 rounded-xl border text-left transition-all ${isSelected ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"}`}
-                  >
-                    <Icon className={`w-4 h-4 ${isSelected ? "text-primary" : "text-muted-foreground"}`} />
-                    <p className="text-xs font-bold text-foreground leading-tight">{option.name}</p>
-                    <p className="text-[10px] text-muted-foreground leading-tight">{option.description || option.estimatedDays || ""}</p>
-                    <p className={`text-xs font-bold ${isSelected ? "text-primary" : "text-foreground"}`}>{Number(option.fee) === 0 ? "FREE" : format(Number(option.fee))}</p>
-                  </button>
-                );
-              })}
+            <div className="border-t border-border pt-3 flex items-center justify-between">
+              <span className="text-sm font-semibold text-muted-foreground">Condition</span>
+              <span className="text-sm font-semibold text-foreground">
+                {cartItems[0]?.condition || "New"}
+              </span>
             </div>
-          ) : (
-            <div className="py-8 px-4 flex flex-col items-center justify-center text-center gap-2 border-2 border-dashed border-border rounded-xl">
-              <MapPin className="w-6 h-6 text-muted-foreground/40" />
-              <p className="text-xs font-bold text-foreground">No shipping available</p>
-              <p className="text-[11px] text-muted-foreground">Enter your country and city above to see delivery options.</p>
-            </div>
-          )}
+          </div>
         </div>
 
         {/* ── SECTION 4: Payment Method ── */}
@@ -991,8 +956,8 @@ export default function CheckoutPage() {
 
           <div className="border-t border-border mt-4 pt-3 space-y-1.5">
             <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Subtotal</span><span className="font-semibold text-foreground">{format(SUBTOTAL)}</span></div>
-            <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Shipping</span><span className="font-semibold text-foreground">{shippingPrice === 0 ? "FREE" : format(shippingPrice)}</span></div>
-            <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Fee (2%)</span><span className="font-semibold text-foreground">{format(PROCESSING_FEE)}</span></div>
+            <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Shipping</span><span className="font-semibold text-foreground">{format(shippingPrice)}</span></div>
+            <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Fee</span><span className="font-semibold text-foreground">{format(PROCESSING_FEE)}</span></div>
             <div className="pt-2 border-t border-border flex items-center justify-between text-base font-black">
               <span className="text-foreground">Total</span><span className="text-primary">{format(total)}</span>
             </div>

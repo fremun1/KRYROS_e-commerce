@@ -142,7 +142,7 @@ export default function PayPage() {
   const [openMethod, setOpenMethod] = useState<string | null>(null);
 
   const amount = parseFloat(rawAmount) || 0;
-  const [feeRate, setFeeRate] = useState(0.01);
+  const [feeRate, setFeeRate] = useState(0.03); // default 3%
   const fee = Math.round(amount * feeRate * 100) / 100;
   const total = amount + fee;
 
@@ -167,7 +167,7 @@ export default function PayPage() {
     fetch(`${API_BASE}/api/payment-config/public`)
       .then(r => r.json())
       .then((data: any) => {
-        const arr: any[] = Array.isArray(data) ? data : (data?.data ?? []);
+        const arr: any[] = Array.isArray(data) ? data : data?.data ?? [];
         const bankMethod = arr.find((m: any) => m.type === "bank");
         if (bankMethod?.providers) setBankProviders(bankMethod.providers.filter((p: any) => p.isEnabled));
         const mobileMethod = arr.find((m: any) => m.type === "mobile_wallet");
