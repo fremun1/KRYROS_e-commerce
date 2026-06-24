@@ -1,5 +1,6 @@
 import { Link } from "wouter";
-import { motion, AnimatePresence, useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useEffect, useState } from "react";
 import { Minus, Plus, Trash2, ShoppingBag, ArrowRight, ChevronLeft, Info } from "lucide-react";
 import { toast } from "sonner";
 import { useCartStore } from "@/store/cartStore";
