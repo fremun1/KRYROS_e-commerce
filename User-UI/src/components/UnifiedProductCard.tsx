@@ -253,7 +253,18 @@ export default function UnifiedProductCard({
               onClick={(e) => {
                 e.stopPropagation();
                 if (!inStock) return;
-                addToCart({ id: product.id, name: product.name, price: product.price, qty: 1, image: product.image });
+                addToCart({
+                  id: product.id,
+                  name: product.name,
+                  price: product.price,
+                  qty: 1,
+                  image: product.image,
+                  shippingFee: product.shippingFee,
+                  estimatedDeliveryDays: product.estimatedDeliveryDays,
+                  estimatedDeliveryMinDays: product.estimatedDeliveryMinDays,
+                  estimatedDeliveryMaxDays: product.estimatedDeliveryMaxDays,
+                  condition: product.condition,
+                });
                 toast.success("Added to cart", { description: product.name });
               }}
               disabled={!inStock}

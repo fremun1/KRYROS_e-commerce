@@ -9,6 +9,8 @@ export interface CartItem {
   image: string;
   shippingFee?: number;
   estimatedDeliveryDays?: number;
+  estimatedDeliveryMinDays?: number;
+  estimatedDeliveryMaxDays?: number;
   condition?: string;
 }
 

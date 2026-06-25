@@ -207,6 +207,8 @@ export default function ProductPage() {
       image: product.image,
       shippingFee: product.shippingFee,
       estimatedDeliveryDays: product.estimatedDeliveryDays,
+      estimatedDeliveryMinDays: product.estimatedDeliveryMinDays,
+      estimatedDeliveryMaxDays: product.estimatedDeliveryMaxDays,
       condition: product.condition
     });
     toast.success(product.isWholesaleOnly ? "Added to wholesale request" : "Added to cart", { description: product.name });
@@ -225,6 +227,8 @@ export default function ProductPage() {
       image: product.image,
       shippingFee: product.shippingFee,
       estimatedDeliveryDays: product.estimatedDeliveryDays,
+      estimatedDeliveryMinDays: product.estimatedDeliveryMinDays,
+      estimatedDeliveryMaxDays: product.estimatedDeliveryMaxDays,
       condition: product.condition
     });
     if (product.allowCredit) {
@@ -237,15 +241,20 @@ export default function ProductPage() {
   };
 
   // Calculate estimated delivery dates
+  const deliveryMinDays = product.estimatedDeliveryMinDays || product.estimatedDeliveryDays || 2;
+  const deliveryMaxDays = product.estimatedDeliveryMaxDays || product.estimatedDeliveryDays || 7;
   const today = new Date();
   const estimatedStart = new Date(today);
-  estimatedStart.setDate(today.getDate() + (product.estimatedDeliveryMinDays || 2));
+  estimatedStart.setDate(today.getDate() + deliveryMinDays);
   const estimatedEnd = new Date(today);
-  estimatedEnd.setDate(today.getDate() + (product.estimatedDeliveryMaxDays || 7));
+  estimatedEnd.setDate(today.getDate() + deliveryMaxDays);
   const formatDate = (date: Date) => {
     const options: Intl.DateTimeFormatOptions = { weekday: 'short', month: 'short', day: 'numeric' };
     return date.toLocaleDateString('en-US', options);
   };
+  const deliveryRangeText = deliveryMinDays === deliveryMaxDays
+    ? `Delivery in ${deliveryMaxDays} day${deliveryMaxDays === 1 ? "" : "s"}`
+    : `Delivery in ${deliveryMinDays}-${deliveryMaxDays} days`;
 
   return (
     <div className="min-h-screen bg-background pb-10">
@@ -424,6 +433,9 @@ export default function ProductPage() {
               ? `${format(product.shippingFee)} shipping`
               : "Free shipping"}
           </span>
+          <p className="text-xs font-semibold text-foreground">
+            {deliveryRangeText}
+          </p>
           <p className="text-xs text-foreground">
             Estimated by {formatDate(estimatedStart)} - {formatDate(estimatedEnd)}
           </p>

@@ -195,18 +195,28 @@ export default function CheckoutPage() {
   const PROCESSING_FEE = SUBTOTAL * feeRate;
   // Calculate shipping as sum of each product's shipping fee
   const shippingPrice = cartItems.reduce((t, i) => t + (i.shippingFee || 0) * i.qty, 0);
-  // Get estimated delivery days (use max or sum or first item's days, let's use max to be safe)
-  const maxDeliveryDays = cartItems.reduce((max, i) => Math.max(max, i.estimatedDeliveryDays || 3), 0);
+  // Use the slowest item's delivery window so the checkout estimate stays accurate for the whole order
+  const deliveryMinDays = cartItems.reduce(
+    (max, i) => Math.max(max, i.estimatedDeliveryMinDays || i.estimatedDeliveryDays || 2),
+    0,
+  ) || 2;
+  const deliveryMaxDays = cartItems.reduce(
+    (max, i) => Math.max(max, i.estimatedDeliveryMaxDays || i.estimatedDeliveryDays || 7),
+    0,
+  ) || 7;
   // Calculate estimated delivery dates
   const today = new Date();
   const estimatedStart = new Date(today);
-  estimatedStart.setDate(today.getDate() + 1);
+  estimatedStart.setDate(today.getDate() + deliveryMinDays);
   const estimatedEnd = new Date(today);
-  estimatedEnd.setDate(today.getDate() + maxDeliveryDays);
+  estimatedEnd.setDate(today.getDate() + deliveryMaxDays);
   const formatDate = (date: Date) => {
     const options: Intl.DateTimeFormatOptions = { weekday: 'short', month: 'short', day: 'numeric' };
     return date.toLocaleDateString('en-US', options);
   };
+  const deliveryRangeText = deliveryMinDays === deliveryMaxDays
+    ? `delivery in ${deliveryMaxDays} day${deliveryMaxDays === 1 ? "" : "s"}`
+    : `delivery in ${deliveryMinDays}-${deliveryMaxDays} days`;
   const total = SUBTOTAL - DISCOUNT + PROCESSING_FEE + shippingPrice;
 
   // Payment Method (Section 4) — openMethod now controls inline expansion, not a bottom sheet
@@ -757,7 +767,7 @@ export default function CheckoutPage() {
             <div className="flex items-center gap-3">
               <Truck className="w-6 h-6 text-primary" />
               <div>
-                <p className="text-lg font-bold text-primary">{format(shippingPrice)} delivery in {maxDeliveryDays} days</p>
+                <p className="text-lg font-bold text-primary">{format(shippingPrice)} {deliveryRangeText}</p>
                 <p className="text-sm text-foreground">Estimated between {formatDate(estimatedStart)} and {formatDate(estimatedEnd)}</p>
               </div>
             </div>
