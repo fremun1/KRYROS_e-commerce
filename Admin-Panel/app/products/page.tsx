@@ -24,6 +24,8 @@ type Product = {
   estimatedDeliveryDays: string;
   popularItemText: string;
   easyReturnsText: string;
+  fiveYearGuaranteeText: string;
+  freeReturnsText: string;
 };
 
 // Products loaded from API
@@ -48,6 +50,8 @@ const EMPTY_FORM = {
   estimatedDeliveryDays: '3',
   popularItemText: '',
   easyReturnsText: '',
+  fiveYearGuaranteeText: '',
+  freeReturnsText: '',
 };
 
 function ProductsContent() {
@@ -99,6 +103,8 @@ function ProductsContent() {
         estimatedDeliveryDays: p.estimatedDeliveryDays != null ? String(Number(p.estimatedDeliveryDays)) : '3',
         popularItemText: p.popularItemText || '',
         easyReturnsText: p.easyReturnsText || '',
+        fiveYearGuaranteeText: p.fiveYearGuaranteeText || '',
+        freeReturnsText: p.freeReturnsText || '',
       }));
       setData(normalized);
       // Update total from meta
@@ -146,6 +152,8 @@ function ProductsContent() {
       estimatedDeliveryDays: r.estimatedDeliveryDays || '3',
       popularItemText: r.popularItemText || '',
       easyReturnsText: r.easyReturnsText || '',
+      fiveYearGuaranteeText: r.fiveYearGuaranteeText || '',
+      freeReturnsText: r.freeReturnsText || '',
     });
     setProductImages(r.images && r.images.length > 0 ? r.images : r.imageUrl ? [r.imageUrl] : []);
     setEditRow(r);
@@ -204,6 +212,8 @@ function ProductsContent() {
       estimatedDeliveryDays: form.estimatedDeliveryDays ? Number(form.estimatedDeliveryDays) : undefined,
       popularItemText: form.popularItemText || undefined,
       easyReturnsText: form.easyReturnsText || undefined,
+      fiveYearGuaranteeText: form.fiveYearGuaranteeText || undefined,
+      freeReturnsText: form.freeReturnsText || undefined,
     };
     if (productImages.length > 0) {
       payload.imageDataUrls = productImages;
@@ -402,6 +412,8 @@ function ProductsContent() {
       <FormField label="Estimated Delivery Days" value={form.estimatedDeliveryDays} onChange={fp('estimatedDeliveryDays')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="3" />
       <FormField label="Popular Item Text (optional)" value={form.popularItemText} onChange={fp('popularItemText')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g., Popular item - 10+ sold this week" />
       <FormField label="Easy Returns Text (optional)" value={form.easyReturnsText} onChange={fp('easyReturnsText')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g., 30-day returns accepted" />
+      <FormField label="Guarantee Text (optional)" value={form.fiveYearGuaranteeText} onChange={fp('fiveYearGuaranteeText')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g., Protected" />
+      <FormField label="Free Returns Text (optional)" value={form.freeReturnsText} onChange={fp('freeReturnsText')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g., Returns accepted" />
     </>
   );
 

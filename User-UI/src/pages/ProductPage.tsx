@@ -592,14 +592,15 @@ export default function ProductPage() {
           <div className="flex items-center gap-3">
             <RefreshCcw className="w-5 h-5 text-muted-foreground flex-shrink-0" />
             <p className="text-sm text-foreground">
-              <span className="font-bold">{product.easyReturnsText || "Breathe easy."} </span>
+              <span className="font-bold">{product.freeReturnsText || product.easyReturnsText || "Breathe easy."} </span>
               Returns accepted.
             </p>
           </div>
           <div className="flex items-center gap-3">
             <Shield className="w-5 h-5 text-muted-foreground flex-shrink-0" />
             <p className="text-sm text-foreground">
-              <span className="font-bold">Protected.</span> Delivery cover against loss or damage.
+              <span className="font-bold">{product.fiveYearGuaranteeText || "Protected."} </span>
+              Delivery cover against loss or damage.
             </p>
           </div>
         </div>

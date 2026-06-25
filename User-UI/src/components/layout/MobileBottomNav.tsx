@@ -4,9 +4,6 @@ import { useCartStore } from "@/store/cartStore";
 import { useSidebarStore } from "@/store/sidebarStore";
 import { useEffect, useRef, useState } from "react";
 
-const TEAL = "#26A69A";
-const GRAY = "#9CA3AF";
-
 export default function MobileBottomNav() {
   const [location] = useLocation();
   const cartCount = useCartStore((s) => s.items.reduce((acc, i) => acc + i.qty, 0));
@@ -40,82 +37,41 @@ export default function MobileBottomNav() {
       }}
     >
       <div
+        className="px-[14px]"
         style={{
           paddingBottom: "env(safe-area-inset-bottom)",
-          paddingLeft: "14px",
-          paddingRight: "14px",
         }}
       >
         {/* Wrapper — tall enough so the floating Pay circle has room above the bar */}
         <div
-          style={{
-            position: "relative",
-            marginBottom: "10px",
-            height: "76px",
-          }}
+          className="relative mb-[10px] h-[76px]"
         >
           {/* Glow behind Pay circle */}
           <div
+            className="absolute top-0 left-1/2 -translate-x-1/2 w-[68px] h-[68px] rounded-full pointer-events-none z-10"
             style={{
-              position: "absolute",
-              top: "0px",
-              left: "50%",
-              transform: "translateX(-50%)",
-              width: "68px",
-              height: "68px",
-              borderRadius: "50%",
               background:
-                "radial-gradient(circle, rgba(38,166,154,0.30) 0%, rgba(38,166,154,0.12) 50%, transparent 72%)",
-              pointerEvents: "none",
-              zIndex: 2,
+                "radial-gradient(circle, rgba(39,185,175,0.30) 0%, rgba(39,185,175,0.12) 50%, transparent 72%)",
             }}
           />
 
           {/* Rectangular bar with gently rounded corners */}
           <div
-            style={{
-              position: "absolute",
-              bottom: 0,
-              left: 0,
-              right: 0,
-              height: "54px",
-              background: "#ffffff",
-              borderRadius: "16px",
-              boxShadow:
-                "0 4px 24px rgba(0,0,0,0.08), 0 1px 6px rgba(0,0,0,0.04)",
-              display: "flex",
-              alignItems: "stretch",
-              zIndex: 1,
-              overflow: "visible",
-            }}
+            className="absolute bottom-0 left-0 right-0 h-[54px] bg-card rounded-[16px] shadow-lg flex items-stretch z-0 overflow-visible dark:shadow-xl dark:shadow-black/20"
           >
             {/* Home */}
             <Link
               href="/"
-              style={{
-                flex: 1,
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "flex-end",
-                gap: "4px",
-                paddingBottom: "6px",
-                textDecoration: "none",
-              }}
+              className="flex-1 flex flex-col items-center justify-end gap-1 pb-[6px] no-underline"
             >
               <Home
                 strokeWidth={1.6}
                 width={24}
                 height={24}
-                color={active("/") ? TEAL : GRAY}
+                className={active("/") ? "text-primary" : "text-muted-foreground"}
               />
               <span
-                style={{
-                  fontSize: "11px",
-                  fontWeight: 500,
-                  color: active("/") ? TEAL : GRAY,
-                  lineHeight: 1,
-                }}
+                className={`text-[11px] font-medium leading-none ${active("/") ? "text-primary" : "text-muted-foreground"}`}
               >
                 Home
               </span>
@@ -124,30 +80,16 @@ export default function MobileBottomNav() {
             {/* Shop */}
             <Link
               href="/shop"
-              style={{
-                flex: 1,
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "flex-end",
-                gap: "4px",
-                paddingBottom: "6px",
-                textDecoration: "none",
-              }}
+              className="flex-1 flex flex-col items-center justify-end gap-1 pb-[6px] no-underline"
             >
               <Grid
                 strokeWidth={1.6}
                 width={24}
                 height={24}
-                color={active("/shop") ? TEAL : GRAY}
+                className={active("/shop") ? "text-primary" : "text-muted-foreground"}
               />
               <span
-                style={{
-                  fontSize: "11px",
-                  fontWeight: 500,
-                  color: active("/shop") ? TEAL : GRAY,
-                  lineHeight: 1,
-                }}
+                className={`text-[11px] font-medium leading-none ${active("/shop") ? "text-primary" : "text-muted-foreground"}`}
               >
                 Shop
               </span>
@@ -155,22 +97,10 @@ export default function MobileBottomNav() {
 
             {/* Pay — centre slot, only label visible in bar; circle floats above */}
             <div
-              style={{
-                flex: 1,
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "flex-end",
-                paddingBottom: "6px",
-              }}
+              className="flex-1 flex flex-col items-center justify-end pb-[6px]"
             >
               <span
-                style={{
-                  fontSize: "11px",
-                  fontWeight: 500,
-                  color: TEAL,
-                  lineHeight: 1,
-                }}
+                className="text-[11px] font-medium leading-none text-primary"
               >
                 Pay
               </span>
@@ -179,30 +109,16 @@ export default function MobileBottomNav() {
             {/* Track */}
             <Link
               href="/track"
-              style={{
-                flex: 1,
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "flex-end",
-                gap: "4px",
-                paddingBottom: "6px",
-                textDecoration: "none",
-              }}
+              className="flex-1 flex flex-col items-center justify-end gap-1 pb-[6px] no-underline"
             >
               <PackageSearch
                 strokeWidth={1.6}
                 width={24}
                 height={24}
-                color={active("/track") ? TEAL : GRAY}
+                className={active("/track") ? "text-primary" : "text-muted-foreground"}
               />
               <span
-                style={{
-                  fontSize: "11px",
-                  fontWeight: 500,
-                  color: active("/track") ? TEAL : GRAY,
-                  lineHeight: 1,
-                }}
+                className={`text-[11px] font-medium leading-none ${active("/track") ? "text-primary" : "text-muted-foreground"}`}
               >
                 Track
               </span>
@@ -211,55 +127,25 @@ export default function MobileBottomNav() {
             {/* Cart */}
             <Link
               href="/cart"
-              style={{
-                flex: 1,
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "flex-end",
-                gap: "4px",
-                paddingBottom: "6px",
-                textDecoration: "none",
-              }}
+              className="flex-1 flex flex-col items-center justify-end gap-1 pb-[6px] no-underline"
             >
-              <div style={{ position: "relative" }}>
+              <div className="relative">
                 <ShoppingCart
                   strokeWidth={1.6}
                   width={24}
                   height={24}
-                  color={active("/cart") ? TEAL : GRAY}
+                  className={active("/cart") ? "text-primary" : "text-muted-foreground"}
                 />
                 {cartCount > 0 && (
                   <span
-                    style={{
-                      position: "absolute",
-                      top: "-5px",
-                      right: "-7px",
-                      background: TEAL,
-                      color: "#fff",
-                      fontSize: "9px",
-                      fontWeight: 700,
-                      minWidth: "16px",
-                      height: "16px",
-                      borderRadius: "8px",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      padding: "0 3px",
-                      border: "2px solid #fff",
-                    }}
+                    className="absolute -top-[5px] -right-[7px] bg-primary text-white text-[9px] font-bold min-w-[16px] h-[16px] rounded-full flex items-center justify-center px-0.5 border-2 border-card"
                   >
                     {cartCount > 9 ? "9+" : cartCount}
                   </span>
                 )}
               </div>
               <span
-                style={{
-                  fontSize: "11px",
-                  fontWeight: 500,
-                  color: active("/cart") ? TEAL : GRAY,
-                  lineHeight: 1,
-                }}
+                className={`text-[11px] font-medium leading-none ${active("/cart") ? "text-primary" : "text-muted-foreground"}`}
               >
                 Cart
               </span>
@@ -269,21 +155,9 @@ export default function MobileBottomNav() {
           {/* Floating Pay circle — 40px, same as WhatsApp button */}
           <Link
             href="/pay"
+            className="absolute top-[14px] left-1/2 -translate-x-1/2 w-10 h-10 rounded-full bg-primary flex items-center justify-center shadow-lg z-20 no-underline"
             style={{
-              position: "absolute",
-              top: "14px",
-              left: "50%",
-              transform: "translateX(-50%)",
-              width: "40px",
-              height: "40px",
-              borderRadius: "50%",
-              background: TEAL,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              boxShadow: "0 4px 14px rgba(38,166,154,0.45), 0 2px 6px rgba(38,166,154,0.25)",
-              zIndex: 3,
-              textDecoration: "none",
+              boxShadow: "0 4px 14px rgba(39,185,175,0.45), 0 2px 6px rgba(39,185,175,0.25)",
             }}
           >
             <CreditCard strokeWidth={2} width={20} height={20} color="#fff" />

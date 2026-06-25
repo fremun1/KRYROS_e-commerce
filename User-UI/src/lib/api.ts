@@ -41,6 +41,8 @@ export interface Product {
   estimatedDeliveryDays?: number;
   popularItemText?: string;
   easyReturnsText?: string;
+  fiveYearGuaranteeText?: string;
+  freeReturnsText?: string;
 }
 
 export interface ApiBrand {
@@ -233,6 +235,8 @@ function normalizeProduct(p: any): Product {
     estimatedDeliveryDays: p.estimatedDeliveryDays ? Number(p.estimatedDeliveryDays) : undefined,
     popularItemText: p.popularItemText,
     easyReturnsText: p.easyReturnsText,
+    fiveYearGuaranteeText: p.fiveYearGuaranteeText,
+    freeReturnsText: p.freeReturnsText,
   };
 }
 
