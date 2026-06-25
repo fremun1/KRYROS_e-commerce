@@ -238,6 +238,8 @@ model Product {
   estimatedDeliveryMaxDays Int?              @default(7)
   popularItemText        String?
   easyReturnsText        String?
+  fiveYearGuaranteeText  String?
+  freeReturnsText        String?
   freeReturnsDescription String? // Description for returns
   protectionDescription  String? // Description for protection
   creditAccounts         CreditAccount[]

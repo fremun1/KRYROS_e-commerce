@@ -398,6 +398,8 @@ export class ProductsService {
           estimatedDeliveryMaxDays: dto.estimatedDeliveryMaxDays ? Number(dto.estimatedDeliveryMaxDays) : 7,
           popularItemText: dto.popularItemText ?? null,
           easyReturnsText: dto.easyReturnsText ?? null,
+          fiveYearGuaranteeText: dto.fiveYearGuaranteeText ?? null,
+          freeReturnsText: dto.freeReturnsText ?? null,
           variants: {
             create: Array.isArray(dto.variants) ? dto.variants.map(v => ({
               name: v.value,
@@ -560,6 +562,8 @@ export class ProductsService {
           estimatedDeliveryMaxDays: dto.estimatedDeliveryMaxDays ? Number(dto.estimatedDeliveryMaxDays) : 7,
           popularItemText: dto.popularItemText ?? null,
           easyReturnsText: dto.easyReturnsText ?? null,
+          fiveYearGuaranteeText: dto.fiveYearGuaranteeText ?? null,
+          freeReturnsText: dto.freeReturnsText ?? null,
           variants: {
             create: Array.isArray(dto.variants) ? dto.variants.map(v => ({
               name: v.value,
@@ -735,6 +739,8 @@ export class ProductsService {
         estimatedDeliveryMaxDays: dto.estimatedDeliveryMaxDays !== undefined ? (isNaN(Number(dto.estimatedDeliveryMaxDays)) ? 7 : Number(dto.estimatedDeliveryMaxDays)) : undefined,
         popularItemText: dto.popularItemText !== undefined ? dto.popularItemText : undefined,
         easyReturnsText: dto.easyReturnsText !== undefined ? dto.easyReturnsText : undefined,
+        fiveYearGuaranteeText: dto.fiveYearGuaranteeText !== undefined ? dto.fiveYearGuaranteeText : undefined,
+        freeReturnsText: dto.freeReturnsText !== undefined ? dto.freeReturnsText : undefined,
         freeReturnsDescription: dto.freeReturnsDescription !== undefined ? dto.freeReturnsDescription : undefined,
         protectionDescription: dto.protectionDescription !== undefined ? dto.protectionDescription : undefined,
         variants: Array.isArray(dto.variants) ? {
