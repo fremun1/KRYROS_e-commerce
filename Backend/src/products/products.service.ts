@@ -735,8 +735,6 @@ export class ProductsService {
         estimatedDeliveryMaxDays: dto.estimatedDeliveryMaxDays !== undefined ? (isNaN(Number(dto.estimatedDeliveryMaxDays)) ? 7 : Number(dto.estimatedDeliveryMaxDays)) : undefined,
         popularItemText: dto.popularItemText !== undefined ? dto.popularItemText : undefined,
         easyReturnsText: dto.easyReturnsText !== undefined ? dto.easyReturnsText : undefined,
-        fiveYearGuaranteeText: dto.fiveYearGuaranteeText !== undefined ? dto.fiveYearGuaranteeText : undefined,
-        freeReturnsText: dto.freeReturnsText !== undefined ? dto.freeReturnsText : undefined,
         freeReturnsDescription: dto.freeReturnsDescription !== undefined ? dto.freeReturnsDescription : undefined,
         protectionDescription: dto.protectionDescription !== undefined ? dto.protectionDescription : undefined,
         variants: Array.isArray(dto.variants) ? {
