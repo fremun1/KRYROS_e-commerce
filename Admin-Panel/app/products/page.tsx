@@ -122,7 +122,14 @@ function ProductsContent() {
       // Update total from meta
       const meta = r.data?.meta;
       if (meta?.total !== undefined) setTotalCount(meta.total);
-    }).catch(() => {}).finally(() => setIsLoading(false));
+    }).catch((err: any) => {
+      console.error('Failed to load products', err);
+      setData([]);
+      setTotalCount(0);
+      const msg = err?.response?.data?.message;
+      const detail = Array.isArray(msg) ? msg.join(', ') : (msg || 'check backend logs for the products endpoint');
+      toast.error(`Failed to load products — ${detail}`);
+    }).finally(() => setIsLoading(false));
   };
 
   useEffect(() => {

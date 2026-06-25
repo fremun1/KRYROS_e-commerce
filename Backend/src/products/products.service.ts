@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, Inject } from '@nestjs/common';
+import { Injectable, NotFoundException, Inject, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
@@ -11,6 +11,8 @@ import { Cache } from 'cache-manager';
 
 @Injectable()
 export class ProductsService {
+  private readonly logger = new Logger(ProductsService.name);
+
   constructor(
     private prisma: PrismaService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
@@ -94,6 +96,24 @@ export class ProductsService {
       orderBy = { createdAt: 'desc' };
     }
 
+    const sanitizeProducts = (products: any[]) => products.map((p) => {
+      const product = p as any;
+      return {
+        ...product,
+        price: product.price ? Number(product.price) : 0,
+        salePrice: product.salePrice ? Number(product.salePrice) : null,
+        flashSalePrice: product.flashSalePrice ? Number(product.flashSalePrice) : null,
+        wholesalePrice: product.wholesalePrice ? Number(product.wholesalePrice) : null,
+        isBestSeller: product.isBestSeller || (product._count?.orderItems || 0) > 5,
+        isHot: product.isHot || (product._count?.wishlists || 0) > 5,
+        isTrending: product.isTrending || (product._count?.orderItems || 0) > 3,
+        variants: (product.variants || []).map((v: any) => ({
+          ...v,
+          price: v.price ? Number(v.price) : null,
+        })),
+      };
+    });
+
     try {
       const [products, total] = await Promise.all([
         this.prisma.product.findMany({
@@ -103,10 +123,10 @@ export class ProductsService {
           include: {
             category: { select: { id: true, name: true, slug: true } },
             brand: { select: { id: true, name: true, slug: true } },
-            images: { 
-              orderBy: { sortOrder: 'asc' }, 
+            images: {
+              orderBy: { sortOrder: 'asc' },
               take: 1,
-              select: { url: true } 
+              select: { url: true }
             },
             inventory: true,
             variants: {
@@ -125,27 +145,37 @@ export class ProductsService {
         this.prisma.product.count({ where }),
       ]);
 
-      const sanitizedProducts = products.map(p => {
-        const product = p as any;
-        return {
-          ...product,
-          price: product.price ? Number(product.price) : 0,
-          salePrice: product.salePrice ? Number(product.salePrice) : null,
-          flashSalePrice: product.flashSalePrice ? Number(product.flashSalePrice) : null,
-          wholesalePrice: product.wholesalePrice ? Number(product.wholesalePrice) : null,
-          isBestSeller: product.isBestSeller || (product._count?.orderItems || 0) > 5,
-          isHot: product.isHot || (product._count?.wishlists || 0) > 5,
-          isTrending: product.isTrending || (product._count?.orderItems || 0) > 3,
-          variants: (product.variants || []).map((v: any) => ({
-            ...v,
-            price: v.price ? Number(v.price) : null,
-          })),
-        };
-      });
+      return { data: sanitizeProducts(products), meta: { total, skip, take } };
+    } catch (error: any) {
+      this.logger.error(`Full product query failed, retrying with fallback query: ${error?.message || error}`);
 
-      return { data: sanitizedProducts, meta: { total, skip, take } };
-    } catch {
-      return { data: [], meta: { total: 0, skip, take } };
+      try {
+        const [products, total] = await Promise.all([
+          this.prisma.product.findMany({
+            where,
+            skip,
+            take,
+            include: {
+              category: { select: { id: true, name: true, slug: true } },
+              brand: { select: { id: true, name: true, slug: true } },
+              images: {
+                orderBy: { sortOrder: 'asc' },
+                take: 1,
+                select: { url: true }
+              },
+              inventory: true,
+            },
+            orderBy: { createdAt: 'desc' },
+          }),
+          this.prisma.product.count({ where }),
+        ]);
+
+        this.logger.warn('Returned products using fallback query without counts, variants, or relations.');
+        return { data: sanitizeProducts(products), meta: { total, skip, take, degraded: true } };
+      } catch (fallbackError: any) {
+        this.logger.error(`Fallback product query also failed: ${fallbackError?.message || fallbackError}`);
+        return { data: [], meta: { total: 0, skip, take } };
+      }
     }
   }
 
