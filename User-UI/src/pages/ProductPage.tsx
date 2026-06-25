@@ -204,7 +204,10 @@ export default function ProductPage() {
       name: product.name,
       price: product.isWholesaleOnly ? (product.wholesalePrice || product.price) : product.price,
       qty,
-      image: product.image
+      image: product.image,
+      shippingFee: product.shippingFee,
+      estimatedDeliveryDays: product.estimatedDeliveryDays,
+      condition: product.condition
     });
     toast.success(product.isWholesaleOnly ? "Added to wholesale request" : "Added to cart", { description: product.name });
   };
@@ -219,7 +222,10 @@ export default function ProductPage() {
       name: product.name,
       price: product.isWholesaleOnly ? (product.wholesalePrice || product.price) : product.price,
       qty,
-      image: product.image
+      image: product.image,
+      shippingFee: product.shippingFee,
+      estimatedDeliveryDays: product.estimatedDeliveryDays,
+      condition: product.condition
     });
     if (product.allowCredit) {
       window.location.href = `/apply-credit?productId=${product.id}`;
@@ -228,6 +234,17 @@ export default function ProductPage() {
     } else {
       window.location.href = "/checkout";
     }
+  };
+
+  // Calculate estimated delivery dates
+  const today = new Date();
+  const estimatedStart = new Date(today);
+  estimatedStart.setDate(today.getDate() + 1);
+  const estimatedEnd = new Date(today);
+  estimatedEnd.setDate(today.getDate() + (product.estimatedDeliveryDays || 3));
+  const formatDate = (date: Date) => {
+    const options: Intl.DateTimeFormatOptions = { weekday: 'short', month: 'short', day: 'numeric' };
+    return date.toLocaleDateString('en-US', options);
   };
 
   return (
@@ -401,15 +418,25 @@ export default function ProductPage() {
         </div>
 
         {/* Delivery info */}
-        <div className="space-y-1">
+        <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <Truck className="w-4 h-4 text-primary flex-shrink-0" />
-            <span className="text-sm font-semibold text-primary">Free delivery on qualifying orders</span>
+            <Truck className="w-5 h-5 text-primary flex-shrink-0" />
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-bold text-primary">
+                {product.shippingFee && product.shippingFee > 0 
+                  ? `${format(product.shippingFee)} delivery`
+                  : "Free delivery"
+                }
+              </span>
+              <span className="text-sm font-bold text-primary">
+                in {product.estimatedDeliveryDays || 3} days
+              </span>
+            </div>
           </div>
-          <p className="text-xs text-foreground pl-6">
-            Estimated delivery: <span className="font-semibold">2–5 business days</span>
+          <p className="text-xs text-foreground pl-7">
+            Estimated between {formatDate(estimatedStart)} and {formatDate(estimatedEnd)}
           </p>
-          <div className="flex items-center gap-2 pl-6">
+          <div className="flex items-center gap-2 pl-7">
             <MapPin className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
             <span className="text-xs text-muted-foreground">Pickup available at KRYROS Stations</span>
           </div>
@@ -419,7 +446,7 @@ export default function ProductPage() {
         <div className="flex items-center gap-3 py-1 border-t border-border">
           <span className="text-sm text-muted-foreground">Condition</span>
           <div className="flex items-center gap-1">
-            <span className="text-sm font-bold text-foreground">New</span>
+            <span className="text-sm font-bold text-foreground">{product.condition || "New"}</span>
             <Info className="w-3.5 h-3.5 text-muted-foreground" />
           </div>
         </div>
@@ -557,14 +584,16 @@ export default function ProductPage() {
             <div className="flex items-center gap-3">
               <Zap className="w-5 h-5 text-muted-foreground flex-shrink-0" />
               <p className="text-sm text-foreground">
-                <span className="font-bold">Popular item.</span> {(product as any).soldCount} have already sold.
+                <span className="font-bold">{product.popularItemText || "Popular item."} </span>
+                {(product as any).soldCount ? `${(product as any).soldCount} have already sold.` : ""}
               </p>
             </div>
           )}
           <div className="flex items-center gap-3">
             <RefreshCcw className="w-5 h-5 text-muted-foreground flex-shrink-0" />
             <p className="text-sm text-foreground">
-              <span className="font-bold">Breathe easy.</span> Returns accepted.
+              <span className="font-bold">{product.easyReturnsText || "Breathe easy."} </span>
+              Returns accepted.
             </p>
           </div>
           <div className="flex items-center gap-3">
