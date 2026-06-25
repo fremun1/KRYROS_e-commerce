@@ -250,10 +250,6 @@ export class CreateProductDto {
   easyReturnsText?: string;
 
   @IsOptional()
-  @IsString()
-  shippingTitle?: string;
-
-  @IsOptional()
   @IsInt()
   @Type(() => Number)
   estimatedDeliveryMinDays?: number;
@@ -262,4 +258,12 @@ export class CreateProductDto {
   @IsInt()
   @Type(() => Number)
   estimatedDeliveryMaxDays?: number;
+
+  @IsOptional()
+  @IsString()
+  freeReturnsDescription?: string;
+
+  @IsOptional()
+  @IsString()
+  protectionDescription?: string;
 }

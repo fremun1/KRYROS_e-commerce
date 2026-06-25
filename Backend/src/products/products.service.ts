@@ -391,12 +391,15 @@ export class ProductsService {
           // New fields
           condition: dto.condition ?? 'New',
           shippingFee: dto.shippingFee ? Number(dto.shippingFee) : null,
-          shippingTitle: dto.shippingTitle ?? null,
+          freeReturnsDescription: dto.freeReturnsDescription ?? null,
+          protectionDescription: dto.protectionDescription ?? null,
           estimatedDeliveryDays: dto.estimatedDeliveryDays ? Number(dto.estimatedDeliveryDays) : 3,
           estimatedDeliveryMinDays: dto.estimatedDeliveryMinDays ? Number(dto.estimatedDeliveryMinDays) : 2,
           estimatedDeliveryMaxDays: dto.estimatedDeliveryMaxDays ? Number(dto.estimatedDeliveryMaxDays) : 7,
           popularItemText: dto.popularItemText ?? null,
           easyReturnsText: dto.easyReturnsText ?? null,
+          fiveYearGuaranteeText: dto.fiveYearGuaranteeText ?? null,
+          freeReturnsText: dto.freeReturnsText ?? null,
           variants: {
             create: Array.isArray(dto.variants) ? dto.variants.map(v => ({
               name: v.value,
@@ -552,12 +555,15 @@ export class ProductsService {
           // New fields
           condition: dto.condition ?? 'New',
           shippingFee: dto.shippingFee ? Number(dto.shippingFee) : null,
-          shippingTitle: dto.shippingTitle ?? null,
+          freeReturnsDescription: dto.freeReturnsDescription ?? null,
+          protectionDescription: dto.protectionDescription ?? null,
           estimatedDeliveryDays: dto.estimatedDeliveryDays ? Number(dto.estimatedDeliveryDays) : 3,
           estimatedDeliveryMinDays: dto.estimatedDeliveryMinDays ? Number(dto.estimatedDeliveryMinDays) : 2,
           estimatedDeliveryMaxDays: dto.estimatedDeliveryMaxDays ? Number(dto.estimatedDeliveryMaxDays) : 7,
           popularItemText: dto.popularItemText ?? null,
           easyReturnsText: dto.easyReturnsText ?? null,
+          fiveYearGuaranteeText: dto.fiveYearGuaranteeText ?? null,
+          freeReturnsText: dto.freeReturnsText ?? null,
           variants: {
             create: Array.isArray(dto.variants) ? dto.variants.map(v => ({
               name: v.value,

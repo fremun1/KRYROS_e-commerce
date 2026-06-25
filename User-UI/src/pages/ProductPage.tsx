@@ -419,15 +419,12 @@ export default function ProductPage() {
 
         {/* Delivery info */}
         <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <Truck className="w-5 h-5 text-primary flex-shrink-0" />
-            <span className="text-sm font-bold text-primary">
-              {product.shippingTitle || (product.shippingFee && product.shippingFee > 0 
-                ? `${format(product.shippingFee)} delivery`
-                : "Free shipping")}
-            </span>
-          </div>
-          <p className="text-xs text-foreground pl-7">
+          <span className="text-sm font-bold text-primary">
+            {product.shippingFee && product.shippingFee > 0 
+              ? `${format(product.shippingFee)} shipping`
+              : "Free shipping"}
+          </span>
+          <p className="text-xs text-foreground">
             Estimated by {formatDate(estimatedStart)} - {formatDate(estimatedEnd)}
           </p>
         </div>
@@ -572,25 +569,22 @@ export default function ProductPage() {
         <div className="space-y-3 pt-1">
           {(product as any).soldCount > 0 && (
             <div className="flex items-center gap-3">
-              <Zap className="w-5 h-5 text-muted-foreground flex-shrink-0" />
               <p className="text-sm text-foreground">
                 <span className="font-bold">{product.popularItemText || "Popular item."} </span>
                 {(product as any).soldCount ? `${(product as any).soldCount} have already sold.` : ""}
               </p>
             </div>
           )}
-          <div className="flex items-center gap-3">
-            <RefreshCcw className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+          <div>
             <p className="text-sm text-foreground">
               <span className="font-bold">{product.freeReturnsText || product.easyReturnsText || "Breathe easy."} </span>
-              Returns accepted.
+              {product.freeReturnsDescription || "Returns accepted."}
             </p>
           </div>
-          <div className="flex items-center gap-3">
-            <Shield className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+          <div>
             <p className="text-sm text-foreground">
               <span className="font-bold">{product.fiveYearGuaranteeText || "Protected."} </span>
-              Delivery cover against loss or damage.
+              {product.protectionDescription || "Delivery cover against loss or damage."}
             </p>
           </div>
         </div>

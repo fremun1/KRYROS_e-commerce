@@ -21,7 +21,6 @@ type Product = {
   images: string[];
   condition: string;
   shippingFee: string;
-  shippingTitle: string;
   estimatedDeliveryDays: string;
   estimatedDeliveryMinDays: string;
   estimatedDeliveryMaxDays: string;
@@ -29,6 +28,8 @@ type Product = {
   easyReturnsText: string;
   fiveYearGuaranteeText: string;
   freeReturnsText: string;
+  freeReturnsDescription: string;
+  protectionDescription: string;
 };
 
 // Products loaded from API
@@ -50,7 +51,6 @@ const EMPTY_FORM = {
   tags: '', metaTitle: '', metaDescription: '', imageUrl: '', specifications: '',
   condition: 'New',
   shippingFee: '',
-  shippingTitle: '',
   estimatedDeliveryDays: '3',
   estimatedDeliveryMinDays: '2',
   estimatedDeliveryMaxDays: '7',
@@ -58,6 +58,8 @@ const EMPTY_FORM = {
   easyReturnsText: '',
   fiveYearGuaranteeText: '',
   freeReturnsText: '',
+  freeReturnsDescription: '',
+  protectionDescription: '',
 };
 
 function ProductsContent() {
@@ -106,7 +108,6 @@ function ProductsContent() {
         specifications: p.specifications || '',
         condition: p.condition || 'New',
         shippingFee: p.shippingFee != null ? String(Number(p.shippingFee)) : '',
-        shippingTitle: p.shippingTitle || '',
         estimatedDeliveryDays: p.estimatedDeliveryDays != null ? String(Number(p.estimatedDeliveryDays)) : '3',
         estimatedDeliveryMinDays: p.estimatedDeliveryMinDays != null ? String(Number(p.estimatedDeliveryMinDays)) : '2',
         estimatedDeliveryMaxDays: p.estimatedDeliveryMaxDays != null ? String(Number(p.estimatedDeliveryMaxDays)) : '7',
@@ -114,6 +115,8 @@ function ProductsContent() {
         easyReturnsText: p.easyReturnsText || '',
         fiveYearGuaranteeText: p.fiveYearGuaranteeText || '',
         freeReturnsText: p.freeReturnsText || '',
+        freeReturnsDescription: p.freeReturnsDescription || '',
+        protectionDescription: p.protectionDescription || '',
       }));
       setData(normalized);
       // Update total from meta
@@ -158,7 +161,6 @@ function ProductsContent() {
       imageUrl: r.imageUrl || '', specifications: r.specifications || '',
       condition: r.condition || 'New',
       shippingFee: r.shippingFee || '',
-      shippingTitle: r.shippingTitle || '',
       estimatedDeliveryDays: r.estimatedDeliveryDays || '3',
       estimatedDeliveryMinDays: r.estimatedDeliveryMinDays || '2',
       estimatedDeliveryMaxDays: r.estimatedDeliveryMaxDays || '7',
@@ -166,6 +168,8 @@ function ProductsContent() {
       easyReturnsText: r.easyReturnsText || '',
       fiveYearGuaranteeText: r.fiveYearGuaranteeText || '',
       freeReturnsText: r.freeReturnsText || '',
+      freeReturnsDescription: r.freeReturnsDescription || '',
+      protectionDescription: r.protectionDescription || '',
     });
     setProductImages(r.images && r.images.length > 0 ? r.images : r.imageUrl ? [r.imageUrl] : []);
     setEditRow(r);
@@ -221,7 +225,6 @@ function ProductsContent() {
       metaDescription: form.metaDescription || undefined,
       condition: form.condition,
       shippingFee: form.shippingFee ? Number(form.shippingFee) : undefined,
-      shippingTitle: form.shippingTitle || undefined,
       estimatedDeliveryDays: form.estimatedDeliveryDays ? Number(form.estimatedDeliveryDays) : undefined,
       estimatedDeliveryMinDays: form.estimatedDeliveryMinDays ? Number(form.estimatedDeliveryMinDays) : undefined,
       estimatedDeliveryMaxDays: form.estimatedDeliveryMaxDays ? Number(form.estimatedDeliveryMaxDays) : undefined,
@@ -229,6 +232,8 @@ function ProductsContent() {
       easyReturnsText: form.easyReturnsText || undefined,
       fiveYearGuaranteeText: form.fiveYearGuaranteeText || undefined,
       freeReturnsText: form.freeReturnsText || undefined,
+      freeReturnsDescription: form.freeReturnsDescription || undefined,
+      protectionDescription: form.protectionDescription || undefined,
     };
     if (productImages.length > 0) {
       payload.imageDataUrls = productImages;
@@ -423,7 +428,6 @@ function ProductsContent() {
 
       {sectionLabel('Product Condition & Shipping')}
       <FormField label="Product Condition" value={form.condition} onChange={fp('condition')} options={CONDITION_OPTIONS} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-      <FormField label="Shipping Title (optional)" value={form.shippingTitle} onChange={fp('shippingTitle')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g., Free Shipping, Standard Shipping, Express Shipping" />
       <FormField label="Shipping Fee (USD, optional)" value={form.shippingFee} onChange={fp('shippingFee')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Leave blank for free shipping" />
       <FormField label="Estimated Delivery Days (Min)" value={form.estimatedDeliveryMinDays} onChange={fp('estimatedDeliveryMinDays')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="2" />
       <FormField label="Estimated Delivery Days (Max)" value={form.estimatedDeliveryMaxDays} onChange={fp('estimatedDeliveryMaxDays')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="7" />
@@ -431,6 +435,8 @@ function ProductsContent() {
       <FormField label="Easy Returns Text (optional)" value={form.easyReturnsText} onChange={fp('easyReturnsText')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g., 30-day returns accepted" />
       <FormField label="Guarantee Text (optional)" value={form.fiveYearGuaranteeText} onChange={fp('fiveYearGuaranteeText')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g., Protected" />
       <FormField label="Free Returns Text (optional)" value={form.freeReturnsText} onChange={fp('freeReturnsText')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g., Returns accepted" />
+      <FormField label="Free Returns Description (optional)" value={form.freeReturnsDescription} onChange={fp('freeReturnsDescription')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g., Easy 30-day returns" />
+      <FormField label="Protection Description (optional)" value={form.protectionDescription} onChange={fp('protectionDescription')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g., Delivery cover against loss or damage" />
     </>
   );
 

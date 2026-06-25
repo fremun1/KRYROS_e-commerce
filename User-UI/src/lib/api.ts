@@ -38,7 +38,6 @@ export interface Product {
   // New fields for this update
   condition?: string;
   shippingFee?: number;
-  shippingTitle?: string;
   estimatedDeliveryDays?: number;
   estimatedDeliveryMinDays?: number;
   estimatedDeliveryMaxDays?: number;
@@ -46,6 +45,8 @@ export interface Product {
   easyReturnsText?: string;
   fiveYearGuaranteeText?: string;
   freeReturnsText?: string;
+  freeReturnsDescription?: string;
+  protectionDescription?: string;
 }
 
 export interface ApiBrand {
@@ -235,7 +236,6 @@ function normalizeProduct(p: any): Product {
     // New fields
     condition: p.condition,
     shippingFee: p.shippingFee ? Number(p.shippingFee) : undefined,
-    shippingTitle: p.shippingTitle,
     estimatedDeliveryDays: p.estimatedDeliveryDays ? Number(p.estimatedDeliveryDays) : undefined,
     estimatedDeliveryMinDays: p.estimatedDeliveryMinDays ? Number(p.estimatedDeliveryMinDays) : undefined,
     estimatedDeliveryMaxDays: p.estimatedDeliveryMaxDays ? Number(p.estimatedDeliveryMaxDays) : undefined,
@@ -243,6 +243,8 @@ function normalizeProduct(p: any): Product {
     easyReturnsText: p.easyReturnsText,
     fiveYearGuaranteeText: p.fiveYearGuaranteeText,
     freeReturnsText: p.freeReturnsText,
+    freeReturnsDescription: p.freeReturnsDescription,
+    protectionDescription: p.protectionDescription,
   };
 }
 
