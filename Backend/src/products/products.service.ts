@@ -398,8 +398,6 @@ export class ProductsService {
           estimatedDeliveryMaxDays: dto.estimatedDeliveryMaxDays ? Number(dto.estimatedDeliveryMaxDays) : 7,
           popularItemText: dto.popularItemText ?? null,
           easyReturnsText: dto.easyReturnsText ?? null,
-          fiveYearGuaranteeText: dto.fiveYearGuaranteeText ?? null,
-          freeReturnsText: dto.freeReturnsText ?? null,
           variants: {
             create: Array.isArray(dto.variants) ? dto.variants.map(v => ({
               name: v.value,
@@ -562,8 +560,6 @@ export class ProductsService {
           estimatedDeliveryMaxDays: dto.estimatedDeliveryMaxDays ? Number(dto.estimatedDeliveryMaxDays) : 7,
           popularItemText: dto.popularItemText ?? null,
           easyReturnsText: dto.easyReturnsText ?? null,
-          fiveYearGuaranteeText: dto.fiveYearGuaranteeText ?? null,
-          freeReturnsText: dto.freeReturnsText ?? null,
           variants: {
             create: Array.isArray(dto.variants) ? dto.variants.map(v => ({
               name: v.value,
