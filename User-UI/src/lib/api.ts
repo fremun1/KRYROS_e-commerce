@@ -38,7 +38,10 @@ export interface Product {
   // New fields for this update
   condition?: string;
   shippingFee?: number;
+  shippingTitle?: string;
   estimatedDeliveryDays?: number;
+  estimatedDeliveryMinDays?: number;
+  estimatedDeliveryMaxDays?: number;
   popularItemText?: string;
   easyReturnsText?: string;
   fiveYearGuaranteeText?: string;
@@ -232,7 +235,10 @@ function normalizeProduct(p: any): Product {
     // New fields
     condition: p.condition,
     shippingFee: p.shippingFee ? Number(p.shippingFee) : undefined,
+    shippingTitle: p.shippingTitle,
     estimatedDeliveryDays: p.estimatedDeliveryDays ? Number(p.estimatedDeliveryDays) : undefined,
+    estimatedDeliveryMinDays: p.estimatedDeliveryMinDays ? Number(p.estimatedDeliveryMinDays) : undefined,
+    estimatedDeliveryMaxDays: p.estimatedDeliveryMaxDays ? Number(p.estimatedDeliveryMaxDays) : undefined,
     popularItemText: p.popularItemText,
     easyReturnsText: p.easyReturnsText,
     fiveYearGuaranteeText: p.fiveYearGuaranteeText,

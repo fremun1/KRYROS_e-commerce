@@ -239,9 +239,9 @@ export default function ProductPage() {
   // Calculate estimated delivery dates
   const today = new Date();
   const estimatedStart = new Date(today);
-  estimatedStart.setDate(today.getDate() + 1);
+  estimatedStart.setDate(today.getDate() + (product.estimatedDeliveryMinDays || 2));
   const estimatedEnd = new Date(today);
-  estimatedEnd.setDate(today.getDate() + (product.estimatedDeliveryDays || 3));
+  estimatedEnd.setDate(today.getDate() + (product.estimatedDeliveryMaxDays || 7));
   const formatDate = (date: Date) => {
     const options: Intl.DateTimeFormatOptions = { weekday: 'short', month: 'short', day: 'numeric' };
     return date.toLocaleDateString('en-US', options);
@@ -421,25 +421,15 @@ export default function ProductPage() {
         <div className="space-y-2">
           <div className="flex items-center gap-2">
             <Truck className="w-5 h-5 text-primary flex-shrink-0" />
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-bold text-primary">
-                {product.shippingFee && product.shippingFee > 0 
-                  ? `${format(product.shippingFee)} delivery`
-                  : "Free delivery"
-                }
-              </span>
-              <span className="text-sm font-bold text-primary">
-                in {product.estimatedDeliveryDays || 3} days
-              </span>
-            </div>
+            <span className="text-sm font-bold text-primary">
+              {product.shippingTitle || (product.shippingFee && product.shippingFee > 0 
+                ? `${format(product.shippingFee)} delivery`
+                : "Free shipping")}
+            </span>
           </div>
           <p className="text-xs text-foreground pl-7">
-            Estimated between {formatDate(estimatedStart)} and {formatDate(estimatedEnd)}
+            Estimated by {formatDate(estimatedStart)} - {formatDate(estimatedEnd)}
           </p>
-          <div className="flex items-center gap-2 pl-7">
-            <MapPin className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
-            <span className="text-xs text-muted-foreground">Pickup available at KRYROS Stations</span>
-          </div>
         </div>
 
         {/* Condition row */}

@@ -233,7 +233,10 @@ model Product {
   // New fields for this update
   condition              String?             @default("New") // e.g., New, Used, Refurbished
   shippingFee            Decimal?            @db.Decimal(10, 2)
+  shippingTitle          String?
   estimatedDeliveryDays  Int?                @default(3)
+  estimatedDeliveryMinDays Int?              @default(2)
+  estimatedDeliveryMaxDays Int?              @default(7)
   popularItemText        String?
   easyReturnsText        String?
   creditAccounts         CreditAccount[]

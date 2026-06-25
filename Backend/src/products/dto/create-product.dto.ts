@@ -242,9 +242,22 @@ export class CreateProductDto {
 
   @IsString()
   @IsOptional()
+  @IsString()
   popularItemText?: string;
 
-  @IsString()
   @IsOptional()
+  @IsString()
   easyReturnsText?: string;
+
+  @IsOptional()
+  @IsString()
+  shippingTitle?: string;
+
+  @IsOptional()
+  @IsInt()
+  estimatedDeliveryMinDays?: number;
+
+  @IsOptional()
+  @IsInt()
+  estimatedDeliveryMaxDays?: number;
 }
