@@ -1,4 +1,4 @@
-import { IsArray, IsBoolean, IsNumber, IsOptional, IsString, Min, ValidateIf } from 'class-validator';
+import { IsArray, IsBoolean, IsInt, IsNumber, IsOptional, IsString, Min, ValidateIf } from 'class-validator';
 import { Type, Transform } from 'class-transformer';
 
 export class CreateProductDto {
@@ -255,9 +255,11 @@ export class CreateProductDto {
 
   @IsOptional()
   @IsInt()
+  @Type(() => Number)
   estimatedDeliveryMinDays?: number;
 
   @IsOptional()
   @IsInt()
+  @Type(() => Number)
   estimatedDeliveryMaxDays?: number;
 }
