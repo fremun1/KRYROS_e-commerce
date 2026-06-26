@@ -1,7 +1,7 @@
 import { Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useState } from "react";
-import { Minus, Plus, Trash2, ShoppingBag, ArrowRight, ChevronLeft, Info } from "lucide-react";
+import { Minus, Plus, Trash2, ShoppingBag, ArrowRight, ChevronLeft, Info, Truck } from "lucide-react";
 import { toast } from "sonner";
 import { useCartStore } from "@/store/cartStore";
 import { useCurrencyStore } from "@/store/currencyStore";
@@ -22,6 +22,32 @@ export default function CartPage() {
   const shipping = items.reduce((t, i) => t + (i.shippingFee || 0) * i.qty, 0);
   const fee = subtotal * feeRate;
   const total = subtotal + shipping + fee;
+
+  // Calculate delivery range: use the slowest item's delivery window
+  const deliveryMinDays = items.reduce(
+    (max, i) => Math.max(max, i.estimatedDeliveryMinDays || i.estimatedDeliveryDays || 2),
+    0,
+  ) || 2;
+  const deliveryMaxDays = items.reduce(
+    (max, i) => Math.max(max, i.estimatedDeliveryMaxDays || i.estimatedDeliveryDays || 7),
+    0,
+  ) || 7;
+
+  // Calculate estimated delivery dates
+  const today = new Date();
+  const estimatedStart = new Date(today);
+  estimatedStart.setDate(today.getDate() + deliveryMinDays);
+  const estimatedEnd = new Date(today);
+  estimatedEnd.setDate(today.getDate() + deliveryMaxDays);
+
+  const formatDate = (date: Date) => {
+    const options: Intl.DateTimeFormatOptions = { weekday: 'short', month: 'short', day: 'numeric' };
+    return date.toLocaleDateString('en-US', options);
+  };
+
+  const deliveryRangeText = deliveryMinDays === deliveryMaxDays
+    ? `delivery in ${deliveryMaxDays} day${deliveryMaxDays === 1 ? "" : "s"}`
+    : `delivery in ${deliveryMinDays}-${deliveryMaxDays} days`;
 
   useEffect(() => {
     fetchSettings().then((settings) => {
@@ -140,6 +166,17 @@ export default function CartPage() {
               <div className="flex justify-between text-sm lg:text-base">
                 <span className="text-muted-foreground">Fee</span>
                 <span className="font-semibold text-foreground">{format(fee)}</span>
+              </div>
+
+              {/* Delivery Information */}
+              <div className="bg-primary/5 border border-primary/10 rounded-xl p-3 mt-3">
+                <div className="flex items-start gap-2">
+                  <Truck className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-foreground capitalize">{deliveryRangeText}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Estimated by {formatDate(estimatedStart)} - {formatDate(estimatedEnd)}</p>
+                  </div>
+                </div>
               </div>
 
               {/* FREE_SHIPPING_UI: banner hidden. Restore by uncommenting the block below. */}
