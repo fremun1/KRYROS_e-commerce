@@ -196,6 +196,11 @@ export class CreateProductDto {
   @IsOptional()
   upsellProductId?: string;
 
+  @IsBoolean()
+  @IsOptional()
+  @Transform(({ value }) => value === 'true' || value === true)
+  replaceImages?: boolean;
+
   @IsArray()
   @ValidateIf((o) => Array.isArray(o.imageDataUrls))
   @IsOptional()
