@@ -35,8 +35,9 @@ export class UpdateProductDto {
   shortDescription?: string;
 
   @IsOptional()
-  @IsString()
-  weight?: string;
+  @IsNumber()
+  @Type(() => Number)
+  weight?: number;
 
   @IsOptional()
   @IsString()

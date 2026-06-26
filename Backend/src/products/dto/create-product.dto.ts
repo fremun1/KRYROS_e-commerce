@@ -20,6 +20,11 @@ export class CreateProductDto {
   @IsOptional()
   shortDescription?: string;
 
+  @IsNumber()
+  @IsOptional()
+  @Type(() => Number)
+  weight?: number;
+
   @IsString()
   @IsOptional()
   categorySlug?: string;
