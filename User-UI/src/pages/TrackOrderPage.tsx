@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Search, ChevronRight, Headphones, CheckCircle, Truck, MapPin, Loader2, Package } from "lucide-react";
 import { motion } from "framer-motion";
 import { useAuthStore } from "@/store/authStore";
@@ -105,6 +105,7 @@ const STATUS_FILTER_MAP: Record<string, string[]> = {
 };
 
 export default function TrackOrderPage() {
+  const [location] = useLocation();
   const { token } = useAuthStore();
   const [searchQ, setSearchQ] = useState("");
   const [activeFilter, setActiveFilter] = useState("All Orders");
@@ -119,6 +120,13 @@ export default function TrackOrderPage() {
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [token]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const query = params.get("q") || params.get("order") || params.get("ref") || "";
+    if (query) setSearchQ(query.trim());
+  }, [location]);
 
   const recentOrder = orders[0] ?? null;
 

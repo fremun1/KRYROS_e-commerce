@@ -1,8 +1,8 @@
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { Link, useLocation } from "wouter";
 import {
   ChevronLeft, Lock, ChevronDown, X,
-  Smartphone, CreditCard, Building2, Check, Upload, AlertCircle, Download, Info,
+  Smartphone, CreditCard, Building2, Check, AlertCircle, Download, Info, ExternalLink,
 } from "lucide-react";
 import { API_BASE, fetchSettings } from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
@@ -47,6 +47,36 @@ function CopyBtn({ text }: { text: string }) {
       {copied ? "Copied" : "Copy"}
     </button>
   );
+}
+
+function sanitizeText(value: string | null | undefined, maxLength = 140) {
+  if (!value) return "";
+  return value
+    .replace(/[\r\n]+/g, " ")
+    .replace(/[>*_~#`]/g, "")
+    .replace(/\s{2,}/g, " ")
+    .trim()
+    .slice(0, maxLength);
+}
+
+function sanitizeReference(value: string | null | undefined) {
+  const clean = sanitizeText(value, 48).replace(/[^a-zA-Z0-9-]/g, "");
+  return clean ? clean.toUpperCase() : "";
+}
+
+function formatMoney(amount: number, currency: string) {
+  return `${currency} ${amount.toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+}
+
+function normalizeZambianPhone(raw: string) {
+  const digits = raw.replace(/\D/g, "");
+  if (!digits) return "";
+  if (digits.startsWith("260")) return digits;
+  if (digits.startsWith("0")) return `260${digits.slice(1)}`;
+  return `260${digits}`;
 }
 
 interface ReceiptData {
@@ -131,12 +161,17 @@ function ReceiptScreen({ receipt, onClose }: { receipt: ReceiptData; onClose: ()
 export default function PayPage() {
   const [, navigate] = useLocation();
   const [step, setStep] = useState<1 | 2>(1);
-  const { selected: selectedCurrency, currencies: allCurrencies, format, setCurrency: setGlobalCurrency } = useCurrencyStore();
+  const { selected: selectedCurrency, currencies: allCurrencies, setCurrency: setGlobalCurrency } = useCurrencyStore();
 
   const urlParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : new URLSearchParams();
   const urlAmount = urlParams.get("amount") || "";
   const urlCurrency = urlParams.get("currency")?.toUpperCase();
-  const urlNote = urlParams.get("note") || "";
+  const urlNote = sanitizeText(urlParams.get("note"), 120);
+  const urlReference = sanitizeReference(urlParams.get("ref") || urlParams.get("reference"));
+  const urlOrderNumber = sanitizeReference(urlParams.get("order") || urlParams.get("orderNumber"));
+  const urlCustomerName = sanitizeText(urlParams.get("customerName") || urlParams.get("name"), 80);
+  const urlCustomerPhone = sanitizeText(urlParams.get("customerPhone") || urlParams.get("phone"), 40);
+  const urlCustomerEmail = sanitizeText(urlParams.get("customerEmail") || urlParams.get("email"), 80);
   const isLinkedPayment = !!urlAmount;
 
   useEffect(() => {
@@ -144,7 +179,6 @@ export default function PayPage() {
   }, [urlCurrency, allCurrencies, setGlobalCurrency]);
 
   const [rawAmount, setRawAmount] = useState(urlAmount);
-  const [showCurrencyDrop, setShowCurrencyDrop] = useState(false);
   const [note, setNote] = useState(urlNote);
   const [receiptContact, setReceiptContact] = useState("");
   const [openMethod, setOpenMethod] = useState<string | null>(null);
@@ -161,13 +195,12 @@ export default function PayPage() {
   const [mmProvider, setMmProvider] = useState("MTN");
   const [mmPhone, setMmPhone] = useState("");
   const [showProviderDrop, setShowProviderDrop] = useState(false);
-  const fileRef = useRef<HTMLInputElement>(null);
-  const [proofFile, setProofFile] = useState<string | null>(null);
 
-  const whatsappNumber = (import.meta as any).env?.VITE_WHATSAPP_NUMBER || "260969597029";
-  const [payRef, setPayRef] = useState(() => "PAY-" + Date.now().toString(36).toUpperCase().slice(-8));
+  const [whatsappNumber, setWhatsappNumber] = useState((import.meta as any).env?.VITE_WHATSAPP_NUMBER || "260969597029");
+  const [payRef] = useState(() => urlReference || "PAY-" + Date.now().toString(36).toUpperCase().slice(-8));
 
-  const [bankProviders, setBankProviders] = useState<{ name: string; config?: { accountName?: string; accountNumber?: string } }[]>([]);
+  const [bankProviders, setBankProviders] = useState<{ name: string; description?: string; config?: { accountName?: string; accountNumber?: string; bankName?: string } }[]>([]);
+  const [cardProviders, setCardProviders] = useState<{ name: string; description?: string }[]>([]);
   const [mobileNetworks, setMobileNetworks] = useState<string[]>(["MTN", "Airtel", "Zamtel"]);
   const [apiMethodTypes, setApiMethodTypes] = useState<string[]>([]);
 
@@ -178,6 +211,13 @@ export default function PayPage() {
         const arr: any[] = Array.isArray(data) ? data : data?.data ?? [];
         const bankMethod = arr.find((m: any) => m.type === "bank");
         if (bankMethod?.providers) setBankProviders(bankMethod.providers.filter((p: any) => p.isEnabled));
+        const cardMethod = arr.find((m: any) => m.type === "card");
+        if (cardMethod?.providers) {
+          setCardProviders(cardMethod.providers.filter((p: any) => p.isEnabled).map((p: any) => ({
+            name: p.name,
+            description: sanitizeText(p.description, 100),
+          })));
+        }
         const mobileMethod = arr.find((m: any) => m.type === "mobile_wallet");
         if (mobileMethod?.providers?.length > 0) {
           const nets: string[] = mobileMethod.providers
@@ -194,6 +234,8 @@ export default function PayPage() {
       .then((settings) => {
         const rate = settings.find((s: any) => s.key === "processing_fee_rate")?.value;
         if (rate) setFeeRate(Number(rate) / 100);
+        const wa = sanitizeText(settings.find((s: any) => s.key === "whatsapp_number")?.value, 24);
+        if (wa) setWhatsappNumber(wa.replace(/\D/g, ""));
       })
       .catch(() => {});
   }, []);
@@ -206,13 +248,80 @@ export default function PayPage() {
     ? (apiMethodTypes.map((t) => DEFAULT_METHODS.find((m) => m.id === (TYPE_TO_ID[t] ?? t))).filter(Boolean) as typeof DEFAULT_METHODS)
     : [...DEFAULT_METHODS];
 
+  const getExchangeRate = useCallback((code: string) => {
+    return allCurrencies.find((c) => c.code === code)?.exchangeRate ?? (code === "USD" ? 1 : undefined);
+  }, [allCurrencies]);
+
+  const mobileMoneyAmountZMW = useMemo(() => {
+    const fromRate = getExchangeRate(currency) ?? 1;
+    const toRate = getExchangeRate("ZMW") ?? 1;
+    const amountUsd = total / fromRate;
+    const rawZmw = amountUsd * toRate;
+    const rounded = currency === "ZMW" ? total : rawZmw;
+    return Math.round(rounded * 100) / 100;
+  }, [currency, total, getExchangeRate]);
+  const mobileMoneyFeeZMW = useMemo(() => {
+    if (total <= 0) return 0;
+    return Math.round((mobileMoneyAmountZMW * (fee / total)) * 100) / 100;
+  }, [mobileMoneyAmountZMW, fee, total]);
+
+  const isMobileMoneyCurrencyDifferent = currency !== "ZMW";
+  const normalizedMmPhone = useMemo(() => normalizeZambianPhone(mmPhone), [mmPhone]);
+  const isValidMmPhone = /^260\d{9}$/.test(normalizedMmPhone);
+  const [orderNumber, setOrderNumber] = useState<string>(urlOrderNumber);
+  const customerPhone = sanitizeText(receiptContact || urlCustomerPhone, 40);
+  const customerEmail = sanitizeText((receiptContact.includes("@") ? receiptContact : "") || urlCustomerEmail, 80);
+  const customerName = urlCustomerName;
+  const trackLookupValue = orderNumber || payRef;
+  const trackLink = useMemo(() => {
+    const params = new URLSearchParams();
+    params.set("q", trackLookupValue);
+    const path = `/track-order?${params.toString()}`;
+    if (typeof window === "undefined") return path;
+    return `${window.location.origin}${path}`;
+  }, [trackLookupValue]);
+  const sanitizedNote = sanitizeText(note, 100);
+  const whatsappMessage = useMemo(() => {
+    const lines = [
+      "Hello KRYROS,",
+      "",
+      "I want to complete this payment.",
+      "",
+      `Payment reference: ${payRef}`,
+      orderNumber ? `Order number: ${orderNumber}` : null,
+      isLinkedPayment ? "Payment source: Payment link" : "Payment source: Direct pay page",
+      `Amount due: ${formatMoney(total, currency)}`,
+      isMobileMoneyCurrencyDifferent ? `Mobile money charge amount: ${formatMoney(mobileMoneyAmountZMW, "ZMW")}` : null,
+      sanitizedNote ? `Payment note: ${sanitizedNote}` : null,
+      customerName ? `Customer name: ${customerName}` : null,
+      customerPhone ? `Customer phone: ${customerPhone}` : null,
+      customerEmail ? `Customer email: ${customerEmail}` : null,
+      `Tracking link: ${trackLink}`,
+      "Status: Pending confirmation",
+      "",
+      "Please confirm the correct payment instructions for this payment.",
+      `After payment, I will send proof of payment and transaction details using reference ${payRef}.`,
+    ];
+    return lines.filter(Boolean).join("\n");
+  }, [
+    payRef,
+    orderNumber,
+    isLinkedPayment,
+    total,
+    currency,
+    isMobileMoneyCurrencyDifferent,
+    mobileMoneyAmountZMW,
+    sanitizedNote,
+    customerName,
+    customerPhone,
+    customerEmail,
+    trackLink,
+  ]);
+
   const [payError, setPayError] = useState<string | null>(null);
   const [payLoading, setPayLoading] = useState(false);
   const [payStatus, setPayStatus] = useState<"idle" | "sending" | "waiting" | "paid" | "failed">("idle");
-  const [orderId, setOrderId] = useState<string | null>(null);
   const [receipt, setReceipt] = useState<ReceiptData | null>(null);
-  const [receiptPhone, setReceiptPhone] = useState("");
-  const [receiptEmail, setReceiptEmail] = useState("");
 
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const token = useAuthStore((s) => s.token);
@@ -231,35 +340,48 @@ export default function PayPage() {
     return {
       recipientNumber: "966629719", recipientName: "KRYROS MOBILE TECH LIMITED",
       operatorName: providerName, transactionId: data.reference || data.orderId || payRef,
-      dateTime: dateStr, convenienceCharges: fee, amount: total, currency, reference: payRef,
+      dateTime: dateStr, convenienceCharges: mobileMoneyFeeZMW, amount: mobileMoneyAmountZMW, currency: "ZMW", reference: payRef,
     } as ReceiptData;
-  }, [mmProvider, fee, total, currency, payRef]);
+  }, [mmProvider, mobileMoneyFeeZMW, mobileMoneyAmountZMW, payRef]);
 
   const sendReceiptNotification = useCallback((receiptData: ReceiptData) => {
-    const phone = receiptPhone.trim(); const email = receiptEmail.trim();
+    const phone = customerPhone.trim();
+    const email = customerEmail.trim();
     if (!phone && !email) return;
     fetch(`${API_BASE}/api/notifications/send-receipt`, {
       method: "POST",
       headers: { "Content-Type": "application/json", ...(token && { Authorization: `Bearer ${token}` }) },
       body: JSON.stringify({ phone, email, receipt: receiptData }),
     }).catch(() => {});
-  }, [receiptPhone, receiptEmail, token]);
+  }, [customerPhone, customerEmail, token]);
 
   const handlePaymentRequest = useCallback(async () => {
     if (!mmPhone) { setPayError("Please enter your phone number"); return; }
+    if (!isValidMmPhone) { setPayError("Enter a valid Zambian mobile money number"); return; }
     setPayLoading(true); setPayError(null); setPayStatus("sending");
     try {
-      const res = await fetch(`${API_BASE}/api/payments/initiate`, {
+      const paymentNote = [
+        sanitizedNote ? `Payment note: ${sanitizedNote}` : null,
+        `Reference: ${payRef}`,
+        orderNumber ? `Order number: ${orderNumber}` : null,
+        `Displayed total: ${formatMoney(total, currency)}`,
+      ].filter(Boolean).join(" | ");
+      const res = await fetch(`${API_BASE}/api/payments/direct`, {
         method: "POST",
         headers: { "Content-Type": "application/json", ...(token && { Authorization: `Bearer ${token}` }) },
         body: JSON.stringify({
-          amount, currency, reference: payRef, method: "mobile_wallet", provider: mmProvider,
-          phone: mmPhone, note, receiptContact, proofFile,
+          amount: mobileMoneyAmountZMW,
+          currency: "ZMW",
+          phone: normalizedMmPhone,
+          note: paymentNote,
         }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Payment initiation failed");
-      setOrderId(data.orderId);
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const message = Array.isArray(data?.message) ? data.message.join(", ") : data?.message;
+        throw new Error(message || "Payment initiation failed");
+      }
+      if (data.orderNumber) setOrderNumber(data.orderNumber);
       setPayStatus("waiting");
       let attempts = 0;
       pollRef.current = setInterval(async () => {
@@ -269,11 +391,12 @@ export default function PayPage() {
           const statusRes = await fetch(`${API_BASE}/api/payments/${data.orderId}/status`, {
             headers: { ...(token && { Authorization: `Bearer ${token}` }) },
           });
-          const statusData = await statusRes.json();
-          if (statusData.status === "paid") {
+          const statusData = await statusRes.json().catch(() => null);
+          const status = String(statusData?.status || "").toLowerCase();
+          if (status === "paid") {
             stopPolling(); const receiptData = buildReceipt(statusData);
             setReceipt(receiptData); setPayStatus("paid"); sendReceiptNotification(receiptData);
-          } else if (statusData.status === "failed") {
+          } else if (status === "failed") {
             stopPolling(); setPayStatus("failed"); setPayError(statusData.message || "Payment failed");
           }
         } catch (err) {
@@ -286,7 +409,7 @@ export default function PayPage() {
     } finally {
       setPayLoading(false);
     }
-  }, [mmPhone, amount, currency, payRef, note, receiptContact, proofFile, token, stopPolling, buildReceipt, sendReceiptNotification]);
+  }, [mmPhone, isValidMmPhone, sanitizedNote, payRef, orderNumber, total, currency, token, mobileMoneyAmountZMW, normalizedMmPhone, stopPolling, buildReceipt, sendReceiptNotification]);
 
   const isPaid = payStatus === "paid";
   const isFailed = payStatus === "failed";
@@ -310,9 +433,9 @@ export default function PayPage() {
                 </div>
               )}
               <h2 className="text-xl font-black text-white mb-1">{isFailed ? "Payment Failed" : "Waiting for Approval"}</h2>
-              <p className="text-white/60 text-sm mb-6">{isFailed ? (payError || "The payment was not completed. Please try again.") : `A payment prompt has been sent to ${mmPhone || "your phone"}. Please open your ${mmProvider} app and approve to complete payment.`}</p>
+              <p className="text-white/60 text-sm mb-6">{isFailed ? (payError || "The payment was not completed. Please try again.") : `A payment prompt has been sent to ${normalizedMmPhone || "your phone"}. Please open your ${mmProvider} app and approve to complete payment.`}</p>
               <div className="rounded-2xl p-4 text-left space-y-2.5 mb-6" style={{ background: "rgba(255,255,255,0.1)" }}>
-                {[["Reference", payRef], ["Amount", `${currency} ${total.toFixed(2)}`], ["Phone", mmPhone || "—"], ["Status", isFailed ? "❌ Failed" : "⏳ Awaiting Approval"]].map(([label, val]) => (
+                {[["Reference", payRef], ["Amount", formatMoney(mobileMoneyAmountZMW, "ZMW")], ["Phone", normalizedMmPhone || "—"], ["Status", isFailed ? "Failed" : "Awaiting approval"]].map(([label, val]) => (
                   <div key={label} className="flex items-center justify-between">
                     <span className="text-white/60 text-xs">{label}</span>
                     <span className="text-white text-xs font-bold">{val}</span>
@@ -320,7 +443,7 @@ export default function PayPage() {
                 ))}
               </div>
               {isFailed ? (
-                <button onClick={() => { setPayStatus("idle"); setPayError(null); setOrderId(null); setOpenMethod("mobile"); }} className="w-full py-3.5 bg-red-500 text-white rounded-2xl font-bold text-sm hover:bg-red-400 transition-colors">Try Again</button>
+                <button onClick={() => { setPayStatus("idle"); setPayError(null); setOpenMethod("mobile"); }} className="w-full py-3.5 bg-red-500 text-white rounded-2xl font-bold text-sm hover:bg-red-400 transition-colors">Try Again</button>
               ) : (
                 <p className="text-white/40 text-xs">Checking status automatically every 5 seconds…</p>
               )}
@@ -335,8 +458,10 @@ export default function PayPage() {
   const handlePayNow = () => {
     if (openMethod === "mobile") handlePaymentRequest();
     else if (openMethod === "whatsapp") {
-      const msg = encodeURIComponent(`I want to pay ${currency} ${total.toFixed(2)} for reference ${payRef}`);
-      window.open(`https://wa.me/${whatsappNumber}?text=${msg}`, "_blank");
+      const msg = encodeURIComponent(whatsappMessage);
+      window.open(`https://wa.me/${whatsappNumber}?text=${msg}`, "_blank", "noopener,noreferrer");
+    } else if (openMethod === "bank") {
+      navigator.clipboard?.writeText(payRef).catch(() => {});
     }
   };
 
@@ -372,7 +497,7 @@ export default function PayPage() {
                   <select
                     id="currency"
                     value={currency}
-                    onChange={(e) => { setCurrency(e.target.value); setShowCurrencyDrop(false); }}
+                    onChange={(e) => { setCurrency(e.target.value); }}
                     aria-label="Currency"
                     className="border-0 bg-transparent font-bold text-kryros-primary text-base appearance-none outline-none cursor-pointer"
                   >
@@ -401,12 +526,13 @@ export default function PayPage() {
               <div className="rounded-xl px-3 py-2 text-sm border" style={{ background: "rgba(39,185,175,0.08)", borderColor: "var(--kryros-primary)", color: "var(--foreground)" }}>
                 <span className="font-bold">Payment Link</span> — Amount pre-filled: <strong>{currency} {rawAmount}</strong>
                 {urlNote ? <span className="text-muted-foreground ml-1">· {urlNote}</span> : null}
+                {urlReference ? <span className="text-muted-foreground ml-1">· Ref: <strong>{urlReference}</strong></span> : null}
               </div>
             )}
 
             <div>
               <p className="text-sm font-bold text-foreground mb-2">
-                Reference <span className="text-xs font-semibold text-muted-foreground">(Optional)</span>
+                Payment Note <span className="text-xs font-semibold text-muted-foreground">(Optional)</span>
               </p>
               <div className="h-[46px] rounded-xl bg-card border border-border flex items-center gap-2 px-3 shadow-sm">
                 <div className="w-5 h-5 flex items-center justify-center text-kryros-primary flex-shrink-0">
@@ -416,8 +542,8 @@ export default function PayPage() {
                   id="reference"
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
-                  placeholder="Enter reference"
-                  aria-label="Reference (optional)"
+                  placeholder="Enter payment note"
+                  aria-label="Payment note (optional)"
                   maxLength={64}
                   className="border-0 outline-none text-sm text-muted-foreground w-full py-2 bg-transparent"
                 />
@@ -506,6 +632,43 @@ export default function PayPage() {
 
             {/* Divider */}
             <div className="border-t border-border" />
+
+            <div className="rounded-2xl border bg-card p-4 space-y-3" style={{ borderColor: "hsl(var(--border))" }}>
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs text-muted-foreground">Payment reference</p>
+                  <p className="text-sm font-black text-foreground break-all">{payRef}</p>
+                </div>
+                <CopyBtn text={payRef} />
+              </div>
+              {orderNumber && (
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Order number</p>
+                    <p className="text-sm font-bold text-foreground break-all">{orderNumber}</p>
+                  </div>
+                  <CopyBtn text={orderNumber} />
+                </div>
+              )}
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs text-muted-foreground">Tracking link</p>
+                  <p className="text-xs font-medium text-foreground break-all">{trackLink}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CopyBtn text={trackLink} />
+                  <a
+                    href={trackLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs font-semibold border px-3 py-1 rounded-lg transition-colors text-[var(--kryros-primary)]"
+                    style={{ borderColor: "var(--kryros-primary)" }}
+                  >
+                    <span className="inline-flex items-center gap-1"><ExternalLink className="w-3 h-3" /> Track</span>
+                  </a>
+                </div>
+              </div>
+            </div>
 
             {/* ── Choose Payment Method ── */}
             <div>
@@ -634,12 +797,16 @@ export default function PayPage() {
                     <input
                       value={mmPhone}
                       onChange={(e) => setMmPhone(e.target.value.replace(/[^0-9]/g, ""))}
-                      placeholder=""
+                      placeholder="97XXXXXXX"
                       inputMode="tel"
                       autoComplete="tel"
                       className="flex-1 px-4 h-full text-sm outline-none bg-transparent text-foreground"
                     />
                   </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Enter the number that will receive the {mmProvider} payment prompt.
+                    {isMobileMoneyCurrencyDifferent ? ` The charge will be sent in ${formatMoney(mobileMoneyAmountZMW, "ZMW")}.` : ""}
+                  </p>
                 </div>
 
                 {payError && (
@@ -653,16 +820,43 @@ export default function PayPage() {
 
             {/* ── Card Payment Panel ── */}
             {openMethod === "card" && (
-              <div className="rounded-xl border bg-card p-5 text-center space-y-3" style={{ borderColor: "hsl(var(--border))" }}>
-                <CreditCard className="w-8 h-8 mx-auto text-blue-500" />
-                <p className="text-sm font-semibold text-foreground">Card Payment</p>
-                <p className="text-sm text-muted-foreground">Card payment integration coming soon.</p>
+              <div className="rounded-xl border bg-card p-5 space-y-3" style={{ borderColor: "hsl(var(--border))" }}>
+                <div className="text-center space-y-2">
+                  <CreditCard className="w-8 h-8 mx-auto text-blue-500" />
+                  <p className="text-sm font-semibold text-foreground">Card Payment</p>
+                  <p className="text-sm text-muted-foreground">
+                    Card checkout is not yet active on this pay page. Please use Mobile Money, Bank Transfer, or WhatsApp for this payment.
+                  </p>
+                </div>
+                {cardProviders.length > 0 && (
+                  <div className="rounded-xl border p-3 bg-background/70 space-y-2" style={{ borderColor: "hsl(var(--border))" }}>
+                    <p className="text-xs font-bold text-foreground">Configured card providers</p>
+                    {cardProviders.map((provider) => (
+                      <div key={provider.name} className="text-xs text-muted-foreground">
+                        <span className="font-semibold text-foreground">{provider.name}</span>
+                        {provider.description ? <span>{` · ${provider.description}`}</span> : null}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
             {/* ── Bank Transfer Panel ── */}
             {openMethod === "bank" && (
               <div className="space-y-3">
+                <div className="rounded-xl border bg-card p-4 space-y-2" style={{ borderColor: "hsl(var(--border))" }}>
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-xs text-muted-foreground">Transfer reference</p>
+                      <p className="text-sm font-bold text-foreground break-all">{payRef}</p>
+                    </div>
+                    <CopyBtn text={payRef} />
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Use this exact reference in your bank transfer note, then send your proof of payment using the same reference so the team can match your payment quickly.
+                  </p>
+                </div>
                 {bankProviders.length > 0 ? (
                   <>
                     <p className="text-sm font-bold text-foreground">Transfer Details:</p>
@@ -690,19 +884,46 @@ export default function PayPage() {
 
             {/* ── WhatsApp Panel ── */}
             {openMethod === "whatsapp" && (
-              <div className="rounded-xl border bg-card p-5 text-center space-y-2" style={{ borderColor: "hsl(var(--border))" }}>
-                <div className="w-12 h-12 rounded-full mx-auto flex items-center justify-center" style={{ background: ICON_BG["whatsapp"] }}>
-                  <MethodIconInner type="whatsapp" />
+              <div className="rounded-xl border bg-card p-5 space-y-4" style={{ borderColor: "hsl(var(--border))" }}>
+                <div className="text-center space-y-2">
+                  <div className="w-12 h-12 rounded-full mx-auto flex items-center justify-center" style={{ background: ICON_BG["whatsapp"] }}>
+                    <MethodIconInner type="whatsapp" />
+                  </div>
+                  <p className="text-sm font-semibold text-foreground">Pay via WhatsApp</p>
+                  <p className="text-sm text-muted-foreground">We will open WhatsApp with a complete payment summary so your payment can be matched correctly.</p>
                 </div>
-                <p className="text-sm font-semibold text-foreground">Pay via WhatsApp</p>
-                <p className="text-sm text-muted-foreground">Tap "Pay Now" to open WhatsApp and complete your payment.</p>
+                <div className="rounded-xl border p-4 space-y-2 bg-background/70" style={{ borderColor: "hsl(var(--border))" }}>
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-xs text-muted-foreground">Reference</span>
+                    <span className="text-xs font-bold text-foreground text-right break-all">{payRef}</span>
+                  </div>
+                  {orderNumber && (
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-xs text-muted-foreground">Order</span>
+                      <span className="text-xs font-bold text-foreground text-right break-all">{orderNumber}</span>
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-xs text-muted-foreground">Amount</span>
+                    <span className="text-xs font-bold text-foreground text-right">{formatMoney(total, currency)}</span>
+                  </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-xs text-muted-foreground">Tracking</span>
+                    <span className="text-xs font-bold text-foreground text-right break-all">{trackLookupValue}</span>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <CopyBtn text={payRef} />
+                  <CopyBtn text={whatsappMessage} />
+                  <CopyBtn text={trackLink} />
+                </div>
               </div>
             )}
 
             {/* ── Pay Now button — always visible ── */}
             <button
               onClick={handlePayNow}
-              disabled={payLoading || (openMethod === "mobile" && !mmPhone)}
+              disabled={payLoading || !openMethod || openMethod === "card" || (openMethod === "mobile" && !isValidMmPhone)}
               className="w-full h-[56px] rounded-2xl text-white font-bold text-base flex items-center justify-between px-6 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
               style={{
                 background: "linear-gradient(135deg, var(--kryros-primary-hover) 0%, var(--kryros-primary) 100%)",
@@ -711,7 +932,7 @@ export default function PayPage() {
             >
               <Lock className="w-5 h-5 flex-shrink-0" />
               <span className="flex-1 text-center">
-                {payLoading ? "Processing…" : "Pay Now"}
+                {payLoading ? "Processing…" : openMethod === "whatsapp" ? "Open WhatsApp" : openMethod === "bank" ? "Copy Reference" : openMethod === "card" ? "Card Unavailable" : "Pay Now"}
               </span>
               <ChevronDown className="w-5 h-5 flex-shrink-0" />
             </button>
