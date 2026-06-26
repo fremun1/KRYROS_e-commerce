@@ -16,12 +16,20 @@ const DEFAULT_METHODS = [
   { id: "bank",     label: "Bank",     sub: "Bank Transfer",       icon: "bank",      comingSoon: false },
 ];
 
-function MethodIcon({ type }: { type: string }) {
-  if (type === "phone") return <Smartphone className="w-5 h-5 text-[var(--kryros-primary)]" />;
-  if (type === "card") return <CreditCard className="w-5 h-5 text-blue-500" />;
-  if (type === "bank") return <Building2 className="w-5 h-5 text-slate-500" />;
+// Icon circle background per method type
+const ICON_BG: Record<string, string> = {
+  phone:    "rgba(39, 185, 175, 0.12)",
+  card:     "rgba(59, 130, 246, 0.10)",
+  whatsapp: "rgba(37, 211, 102, 0.12)",
+  bank:     "rgba(100, 116, 139, 0.10)",
+};
+
+function MethodIconInner({ type }: { type: string }) {
+  if (type === "phone") return <Smartphone className="w-6 h-6" style={{ color: "var(--kryros-primary)" }} />;
+  if (type === "card")  return <CreditCard  className="w-6 h-6 text-blue-500" />;
+  if (type === "bank")  return <Building2   className="w-6 h-6 text-slate-500" />;
   if (type === "whatsapp") return (
-    <svg viewBox="0 0 24 24" className="w-5 h-5" fill="#25D366">
+    <svg viewBox="0 0 24 24" className="w-6 h-6" fill="#25D366">
       <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
     </svg>
   );
@@ -142,7 +150,7 @@ export default function PayPage() {
   const [openMethod, setOpenMethod] = useState<string | null>(null);
 
   const amount = parseFloat(rawAmount) || 0;
-  const [feeRate, setFeeRate] = useState(0.03); // default 3%
+  const [feeRate, setFeeRate] = useState(0.03);
   const fee = Math.round(amount * feeRate * 100) / 100;
   const total = amount + fee;
 
@@ -286,7 +294,6 @@ export default function PayPage() {
 
   if (isPaid && receipt) return <ReceiptScreen receipt={receipt} onClose={() => { setPayStatus("idle"); setReceipt(null); }} />;
 
-  // Waiting / failed screen
   if (isWaiting || isFailed) {
     return (
       <div className="min-h-screen flex items-center justify-center px-4 py-10 bg-background">
@@ -324,22 +331,31 @@ export default function PayPage() {
     );
   }
 
+  // ─── Pay Now button handler ───────────────────────────────────────────────
+  const handlePayNow = () => {
+    if (openMethod === "mobile") handlePaymentRequest();
+    else if (openMethod === "whatsapp") {
+      const msg = encodeURIComponent(`I want to pay ${currency} ${total.toFixed(2)} for reference ${payRef}`);
+      window.open(`https://wa.me/${whatsappNumber}?text=${msg}`, "_blank");
+    }
+  };
+
   // ─── Main UI ────────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-md mx-auto px-0 pb-24">
+      <div className="max-w-md mx-auto px-0 pb-10">
 
         {/* ── TOP BAR ── */}
-        <div className="flex items-center justify-between px-4 pt-4 pb-3">
+        <div className="flex items-center justify-between px-5 pt-5 pb-4">
           <button
             onClick={() => (step === 2 ? setStep(1) : navigate("/"))}
-            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-muted transition-colors"
+            className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-muted transition-colors"
           >
-            <ChevronLeft className="w-5 h-5 text-foreground" />
+            <ChevronLeft className="w-5 h-5 text-foreground" strokeWidth={2.5} />
           </button>
-          <h1 className="text-base font-black text-foreground">Payment</h1>
-          <div className="flex items-center gap-1 text-xs font-semibold text-[var(--kryros-primary)]">
-            <Lock className="w-3 h-3" /> Secure Payment
+          <h1 className="text-base font-bold text-foreground">Payment</h1>
+          <div className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: "var(--kryros-primary)" }}>
+            <Lock className="w-3.5 h-3.5" /> Secure Payment
           </div>
         </div>
 
@@ -348,10 +364,8 @@ export default function PayPage() {
         ════════════════════════════════════════════════════════════════════ */}
         {step === 1 && (
           <div className="px-4 py-4 space-y-4">
-            {/* Amount label */}
             <p className="text-sm font-bold text-foreground">Amount</p>
 
-            {/* Currency + Amount pill */}
             <div className="relative">
               <div className="flex h-[52px] rounded-xl bg-card border border-border overflow-hidden shadow-sm">
                 <div className="min-w-[96px] flex items-center justify-center border-r border-border font-bold text-kryros-primary text-base gap-2">
@@ -390,7 +404,6 @@ export default function PayPage() {
               </div>
             )}
 
-            {/* Reference (Optional) */}
             <div>
               <p className="text-sm font-bold text-foreground mb-2">
                 Reference <span className="text-xs font-semibold text-muted-foreground">(Optional)</span>
@@ -411,7 +424,6 @@ export default function PayPage() {
               </div>
             </div>
 
-            {/* Phone or Email (Optional) */}
             <div>
               <p className="text-sm font-bold text-foreground mb-2">
                 Phone or Email <span className="text-xs font-semibold text-muted-foreground">(Optional)</span>
@@ -432,7 +444,6 @@ export default function PayPage() {
               <p className="text-xs text-muted-foreground mt-1">We'll send your receipt after payment.</p>
             </div>
 
-            {/* Payment Summary card */}
             <div className="bg-card rounded-xl border border-border p-4 shadow-sm">
               <div className="flex items-center justify-between py-1">
                 <span className="text-sm font-semibold text-muted-foreground">Amount</span>
@@ -444,14 +455,13 @@ export default function PayPage() {
                 </span>
                 <span className="text-base font-bold text-foreground">{currency} {fee.toFixed(2)}</span>
               </div>
-              <div className="h-px bg-border my-2"></div>
+              <div className="h-px bg-border my-2" />
               <div className="flex items-center justify-between pt-0.5">
                 <span className="text-base font-extrabold text-foreground">Total Payable</span>
-                <span className="text-lg font-black text-kryros-primary">{currency} {total.toFixed(2)}</span>
+                <span className="text-lg font-black" style={{ color: "var(--kryros-primary)" }}>{currency} {total.toFixed(2)}</span>
               </div>
             </div>
 
-            {/* Pay Now button */}
             <button
               onClick={() => amount > 0 && setStep(2)}
               disabled={amount <= 0}
@@ -467,180 +477,245 @@ export default function PayPage() {
               Pay Now
             </button>
 
-            {/* Secure note */}
             <div className="text-center text-xs text-muted-foreground flex items-center justify-center gap-1.5">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="M12 1l3 5 5 1-4 4 1 5-5-2-5 2 1-5L4 7l5-1z"/></svg>
               <div>100% Secure Payment</div>
             </div>
             <div className="text-center text-xs text-muted-foreground mt-0.5">
-              Your payment is safe with <strong className="text-kryros-primary font-bold">KRYROS</strong>.
+              Your payment is safe with <strong style={{ color: "var(--kryros-primary)" }}>KRYROS</strong>.
             </div>
           </div>
         )}
 
         {/* ══════════════════════════════════════════════════════════════════
-            STEP 2 — Choose payment method (matches Image 3)
+            STEP 2 — Choose payment method
         ════════════════════════════════════════════════════════════════════ */}
         {step === 2 && (
-          <div className="px-4 space-y-5">
+          <div className="px-4 space-y-5 pb-6">
 
             {/* "You are sending" header */}
-            <div className="text-center pt-2 pb-1">
+            <div className="text-center pt-3 pb-1">
               <p className="text-sm text-muted-foreground">You are sending</p>
-              <p className="text-4xl font-black mt-1 text-[var(--kryros-primary)]">{currency} {total.toFixed(2)}</p>
+              <p
+                className="text-4xl font-black mt-1 tracking-tight"
+                style={{ color: "var(--kryros-primary)" }}
+              >
+                {currency} {total.toFixed(2)}
+              </p>
             </div>
 
+            {/* Divider */}
             <div className="border-t border-border" />
 
-            {/* Choose Payment Method */}
+            {/* ── Choose Payment Method ── */}
             <div>
-              <p className="text-base font-black text-foreground text-center mb-4">Choose Payment Method</p>
+              <p className="text-base font-bold text-foreground text-center mb-4">
+                Choose Payment Method
+              </p>
+
+              {/* First 3 methods as cards */}
               <div className="grid grid-cols-3 gap-3">
-                {activeMethods.slice(0, 3).map((m) => (
-                  <button
-                    key={m.id}
-                    onClick={() => setOpenMethod(m.id)}
-                    className="flex flex-col items-center gap-2 py-5 rounded-2xl border bg-card transition-all active:scale-95 hover:border-[var(--kryros-primary)]"
-                    style={{ borderColor: openMethod === m.id ? "var(--kryros-primary)" : "var(--border)" }}
-                  >
-                    <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[rgba(39,185,175,0.1)]">
-                      <MethodIcon type={m.icon} />
-                    </div>
-                    <span className="text-xs font-semibold text-foreground">{m.label}</span>
-                  </button>
-                ))}
+                {activeMethods.slice(0, 3).map((m) => {
+                  const isSelected = openMethod === m.id;
+                  return (
+                    <button
+                      key={m.id}
+                      onClick={() => setOpenMethod(isSelected ? null : m.id)}
+                      className="flex flex-col items-center justify-center gap-2.5 py-5 px-2 rounded-2xl border bg-card transition-all active:scale-95"
+                      style={{
+                        borderColor: isSelected ? "var(--kryros-primary)" : "hsl(var(--border))",
+                        boxShadow: isSelected ? "0 0 0 1px var(--kryros-primary)" : undefined,
+                      }}
+                    >
+                      {/* Icon circle */}
+                      <div
+                        className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
+                        style={{ background: ICON_BG[m.icon] ?? "rgba(39,185,175,0.10)" }}
+                      >
+                        <MethodIconInner type={m.icon} />
+                      </div>
+                      <span className="text-xs font-semibold text-foreground">{m.label}</span>
+                    </button>
+                  );
+                })}
               </div>
-              {/* Additional methods as list if more than 3 */}
+
+              {/* Extra methods (4th+) as list rows */}
               {activeMethods.length > 3 && (
                 <div className="mt-3 space-y-2">
-                  {activeMethods.slice(3).map((m) => (
-                    <button key={m.id} onClick={() => setOpenMethod(m.id)}
-                      className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl border bg-card hover:border-[var(--kryros-primary)] transition-all active:scale-[0.99] border-border"
-                    >
-                      <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-[rgba(39,185,175,0.1)]">
-                        <MethodIcon type={m.icon} />
-                      </div>
-                      <div className="flex-1 text-left">
-                        <p className="text-sm font-semibold text-foreground">{m.label}</p>
-                        <p className="text-xs text-muted-foreground">{m.sub}</p>
-                      </div>
-                      {m.comingSoon && <span className="text-xs px-2 py-1 rounded-full bg-gray-200 text-gray-600">Coming Soon</span>}
-                    </button>
-                  ))}
+                  {activeMethods.slice(3).map((m) => {
+                    const isSelected = openMethod === m.id;
+                    return (
+                      <button
+                        key={m.id}
+                        onClick={() => setOpenMethod(isSelected ? null : m.id)}
+                        className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl border bg-card transition-all active:scale-[0.99]"
+                        style={{ borderColor: isSelected ? "var(--kryros-primary)" : "hsl(var(--border))" }}
+                      >
+                        <div
+                          className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                          style={{ background: ICON_BG[m.icon] ?? "rgba(39,185,175,0.10)" }}
+                        >
+                          <MethodIconInner type={m.icon} />
+                        </div>
+                        <div className="flex-1 text-left">
+                          <p className="text-sm font-semibold text-foreground">{m.label}</p>
+                          <p className="text-xs text-muted-foreground">{m.sub}</p>
+                        </div>
+                        {m.comingSoon && (
+                          <span className="text-xs px-2 py-1 rounded-full bg-muted text-muted-foreground">
+                            Coming Soon
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               )}
             </div>
 
-            {/* Mobile Money Details */}
+            {/* ── Mobile Money Panel ── */}
             {openMethod === "mobile" && (
-              <div className="space-y-4 border-t pt-4 border-border">
+              <div className="space-y-4">
+                {/* Network dropdown */}
                 <div>
-                  <label className="block text-sm font-bold mb-2 text-foreground">Select Provider</label>
+                  <label className="block text-sm font-bold mb-2 text-foreground">Network</label>
                   <button
                     onClick={() => setShowProviderDrop(!showProviderDrop)}
-                    className="w-full flex items-center justify-between px-4 py-3 rounded-2xl border bg-card border-border hover:bg-muted transition-colors"
+                    className="w-full flex items-center justify-between px-4 h-[52px] rounded-xl border bg-card transition-colors hover:bg-muted"
+                    style={{ borderColor: "hsl(var(--border))" }}
                   >
-                    <span className="text-sm font-semibold text-foreground">{mmProvider}</span>
-                    <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${showProviderDrop ? "rotate-180" : ""}`} />
+                    <span className="text-sm font-medium text-foreground">{mmProvider}</span>
+                    <ChevronDown
+                      className="w-5 h-5 text-muted-foreground transition-transform"
+                      style={{ transform: showProviderDrop ? "rotate(180deg)" : "rotate(0deg)" }}
+                    />
                   </button>
                   {showProviderDrop && (
-                    <div className="mt-2 border rounded-2xl bg-card shadow-lg overflow-hidden border-border">
+                    <div className="mt-1 border rounded-xl bg-card shadow-lg overflow-hidden" style={{ borderColor: "hsl(var(--border))" }}>
                       {mobileNetworks.map((net) => (
-                        <button key={net} onClick={() => { setMmProvider(net); setShowProviderDrop(false); }}
-                          className="w-full flex items-center gap-2.5 px-4 py-3 text-left hover:bg-muted transition-colors text-sm border-b last:border-0 border-border"
-                          style={{ color: mmProvider === net ? "var(--kryros-primary)" : "var(--foreground)", fontWeight: mmProvider === net ? 700 : 500 }}>
+                        <button
+                          key={net}
+                          onClick={() => { setMmProvider(net); setShowProviderDrop(false); }}
+                          className="w-full flex items-center justify-between px-4 py-3.5 text-left transition-colors text-sm border-b last:border-0"
+                          style={{
+                            borderColor: "hsl(var(--border))",
+                            color: mmProvider === net ? "var(--kryros-primary)" : "hsl(var(--foreground))",
+                            fontWeight: mmProvider === net ? 700 : 500,
+                            background: "transparent",
+                          }}
+                          onMouseEnter={e => (e.currentTarget.style.background = "hsl(var(--muted))")}
+                          onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                        >
                           <span>{net}</span>
-                          {mmProvider === net && <span className="ml-auto text-xs text-[var(--kryros-primary)]">✓</span>}
+                          {mmProvider === net && <Check className="w-4 h-4" style={{ color: "var(--kryros-primary)" }} />}
                         </button>
                       ))}
                     </div>
                   )}
                 </div>
+
+                {/* Phone Number input */}
                 <div>
                   <label className="block text-sm font-bold mb-2 text-foreground">Phone Number</label>
-                  <div className="flex items-center gap-3 border rounded-2xl px-4 py-3.5 bg-card border-border">
-                    <Smartphone className="w-4 h-4 flex-shrink-0 text-[var(--kryros-primary)]" />
+                  <div
+                    className="flex h-[52px] items-center rounded-xl border bg-card overflow-hidden"
+                    style={{ borderColor: "hsl(var(--border))" }}
+                  >
+                    {/* Country code prefix */}
+                    <div
+                      className="px-4 h-full flex items-center border-r flex-shrink-0"
+                      style={{ borderColor: "hsl(var(--border))" }}
+                    >
+                      <span className="text-sm font-semibold" style={{ color: "var(--kryros-primary)" }}>
+                        +260
+                      </span>
+                    </div>
                     <input
                       value={mmPhone}
-                      onChange={(e) => setMmPhone(e.target.value.replace(/[^0-9+]/g, ""))}
-                      placeholder="Enter phone number"
-                      className="flex-1 text-sm outline-none bg-transparent text-foreground placeholder-muted-foreground"
+                      onChange={(e) => setMmPhone(e.target.value.replace(/[^0-9]/g, ""))}
+                      placeholder=""
+                      inputMode="tel"
+                      autoComplete="tel"
+                      className="flex-1 px-4 h-full text-sm outline-none bg-transparent text-foreground"
                     />
                   </div>
                 </div>
-                {payError && <div className="flex items-center gap-2 px-4 py-3 rounded-lg bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-200 text-sm"><AlertCircle className="w-4 h-4" /> {payError}</div>}
-                <button
-                  onClick={handlePaymentRequest}
-                  disabled={payLoading || !mmPhone}
-                  className="w-full py-4 rounded-2xl font-bold text-sm text-white flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed bg-[var(--kryros-primary)] hover:bg-[var(--kryros-primary-hover)]"
-                >
-                  {payLoading ? "Processing..." : "Confirm Payment"}
-                </button>
+
+                {payError && (
+                  <div className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm"
+                    style={{ background: "rgba(185,28,28,0.08)", color: "var(--kryros-danger)" }}>
+                    <AlertCircle className="w-4 h-4 flex-shrink-0" /> {payError}
+                  </div>
+                )}
               </div>
             )}
 
-            {/* Card Payment */}
+            {/* ── Card Payment Panel ── */}
             {openMethod === "card" && (
-              <div className="space-y-4 border-t pt-4 border-border">
-                <p className="text-sm text-muted-foreground text-center">Card payment integration coming soon</p>
-                <button
-                  onClick={() => setOpenMethod(null)}
-                  className="w-full py-3 rounded-2xl font-semibold text-sm border bg-background text-foreground hover:bg-muted transition-colors border-border"
-                >
-                  Back
-                </button>
+              <div className="rounded-xl border bg-card p-5 text-center space-y-3" style={{ borderColor: "hsl(var(--border))" }}>
+                <CreditCard className="w-8 h-8 mx-auto text-blue-500" />
+                <p className="text-sm font-semibold text-foreground">Card Payment</p>
+                <p className="text-sm text-muted-foreground">Card payment integration coming soon.</p>
               </div>
             )}
 
-            {/* Bank Transfer */}
+            {/* ── Bank Transfer Panel ── */}
             {openMethod === "bank" && (
-              <div className="space-y-4 border-t pt-4 border-border">
+              <div className="space-y-3">
                 {bankProviders.length > 0 ? (
                   <>
-                    <p className="text-sm font-semibold text-foreground">Transfer Details:</p>
+                    <p className="text-sm font-bold text-foreground">Transfer Details:</p>
                     {bankProviders.map((provider) => (
-                      <div key={provider.name} className="border rounded-2xl bg-card p-4 border-border">
-                        <p className="text-sm font-bold text-foreground mb-2">{provider.name}</p>
+                      <div key={provider.name} className="border rounded-xl bg-card p-4" style={{ borderColor: "hsl(var(--border))" }}>
+                        <p className="text-sm font-bold text-foreground mb-1">{provider.name}</p>
                         {provider.config?.accountName && <p className="text-xs text-muted-foreground">Account: {provider.config.accountName}</p>}
-                        {provider.config?.accountNumber && <p className="text-xs text-muted-foreground">Number: {provider.config.accountNumber}</p>}
+                        {provider.config?.accountNumber && (
+                          <div className="flex items-center justify-between mt-1">
+                            <p className="text-xs text-muted-foreground">Number: {provider.config.accountNumber}</p>
+                            <CopyBtn text={provider.config.accountNumber} />
+                          </div>
+                        )}
                       </div>
                     ))}
                   </>
                 ) : (
-                  <p className="text-sm text-muted-foreground text-center">Bank transfer not available</p>
+                  <div className="rounded-xl border bg-card p-5 text-center" style={{ borderColor: "hsl(var(--border))" }}>
+                    <Building2 className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
+                    <p className="text-sm text-muted-foreground">Bank transfer not available</p>
+                  </div>
                 )}
-                <button
-                  onClick={() => setOpenMethod(null)}
-                  className="w-full py-3 rounded-2xl font-semibold text-sm border bg-background text-foreground hover:bg-muted transition-colors border-border"
-                >
-                  Back
-                </button>
               </div>
             )}
 
-            {/* WhatsApp Payment */}
+            {/* ── WhatsApp Panel ── */}
             {openMethod === "whatsapp" && (
-              <div className="space-y-4 border-t pt-4 border-border">
-                <p className="text-sm text-muted-foreground text-center">Click the button below to pay via WhatsApp</p>
-                <a
-                  href={`https://wa.me/${whatsappNumber}?text=I%20want%20to%20pay%20${currency}%20${total.toFixed(2)}%20for%20reference%20${payRef}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full py-4 rounded-2xl font-bold text-sm text-white flex items-center justify-center gap-2 transition-all active:scale-95 bg-[#25D366] hover:bg-[#20ba5a]"
-                >
-                  <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor">
-                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
-                  </svg>
-                  Pay via WhatsApp
-                </a>
-                <button
-                  onClick={() => setOpenMethod(null)}
-                  className="w-full py-3 rounded-2xl font-semibold text-sm border bg-background text-foreground hover:bg-muted transition-colors border-border"
-                >
-                  Back
-                </button>
+              <div className="rounded-xl border bg-card p-5 text-center space-y-2" style={{ borderColor: "hsl(var(--border))" }}>
+                <div className="w-12 h-12 rounded-full mx-auto flex items-center justify-center" style={{ background: ICON_BG["whatsapp"] }}>
+                  <MethodIconInner type="whatsapp" />
+                </div>
+                <p className="text-sm font-semibold text-foreground">Pay via WhatsApp</p>
+                <p className="text-sm text-muted-foreground">Tap "Pay Now" to open WhatsApp and complete your payment.</p>
               </div>
             )}
+
+            {/* ── Pay Now button — always visible ── */}
+            <button
+              onClick={handlePayNow}
+              disabled={payLoading || (openMethod === "mobile" && !mmPhone)}
+              className="w-full h-[56px] rounded-2xl text-white font-bold text-base flex items-center justify-between px-6 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{
+                background: "linear-gradient(135deg, var(--kryros-primary-hover) 0%, var(--kryros-primary) 100%)",
+                boxShadow: "0 4px 16px rgba(39,185,175,0.30)",
+              }}
+            >
+              <Lock className="w-5 h-5 flex-shrink-0" />
+              <span className="flex-1 text-center">
+                {payLoading ? "Processing…" : "Pay Now"}
+              </span>
+              <ChevronDown className="w-5 h-5 flex-shrink-0" />
+            </button>
+
           </div>
         )}
       </div>
