@@ -1,6 +1,25 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { API_BASE } from '@/lib/api';
+import { initFirebase, requestNotificationPermission } from '@/lib/firebase';
+
+let messagingInstance: ReturnType<typeof initFirebase>['messaging'] | null = null;
+
+async function registerFcmToken(authToken: string | null, fcmToken: string | null) {
+  if (!fcmToken || !authToken) return;
+  try {
+    await fetch(`${API_BASE}/api/notifications/token`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${authToken}`,
+      },
+      body: JSON.stringify({ token: fcmToken, platform: 'web' }),
+    });
+  } catch {
+    // silent
+  }
+}
 
 export interface AuthUser {
   id: string;
@@ -70,6 +89,10 @@ export const useAuthStore = create<AuthState>()(
             isLoading: false,
             error: null,
           });
+          const { messaging } = initFirebase();
+          messagingInstance = messaging;
+          const fcmToken = await requestNotificationPermission(messagingInstance);
+          registerFcmToken(data.accessToken, fcmToken);
           return { success: true };
         } catch {
           const msg = 'Network error. Please check your connection.';
@@ -110,6 +133,10 @@ export const useAuthStore = create<AuthState>()(
               isLoading: false,
               error: null,
             });
+            const { messaging } = initFirebase();
+            messagingInstance = messaging;
+            const fcmToken = await requestNotificationPermission(messagingInstance);
+            registerFcmToken(json.accessToken, fcmToken);
             return { success: true };
           }
           set({ isLoading: false, error: null });
@@ -163,6 +190,10 @@ export const useAuthStore = create<AuthState>()(
                 if (retryRes.ok) {
                   const user = await retryRes.json();
                   set({ user });
+                  const { messaging } = initFirebase();
+                  messagingInstance = messaging;
+                  const fcmToken = await requestNotificationPermission(messagingInstance);
+                  registerFcmToken(newAccess, fcmToken);
                   return;
                 }
               }
@@ -178,6 +209,10 @@ export const useAuthStore = create<AuthState>()(
           }
           const user = await res.json();
           set({ user });
+          const { messaging } = initFirebase();
+          messagingInstance = messaging;
+          const fcmToken = await requestNotificationPermission(messagingInstance);
+          registerFcmToken(token, fcmToken);
         } catch {
           /* silent */
         }

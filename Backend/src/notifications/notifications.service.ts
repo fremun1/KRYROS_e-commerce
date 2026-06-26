@@ -5,6 +5,8 @@ import { PrismaService } from '../prisma/prisma.service';
 import * as admin from 'firebase-admin';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import axios from 'axios';
+import { readFileSync } from 'fs';
+import { resolve } from 'path';
 
 @Injectable()
 export class NotificationsService implements OnModuleInit {
@@ -26,9 +28,15 @@ export class NotificationsService implements OnModuleInit {
     }
 
     try {
-      const config = JSON.parse(serviceAccountJson);
+      let config: any;
+      try {
+        config = JSON.parse(serviceAccountJson);
+      } catch {
+        const filePath = resolve(process.cwd(), serviceAccountJson);
+        const fileContent = readFileSync(filePath, 'utf-8');
+        config = JSON.parse(fileContent);
+      }
       
-      // Safety check: Ensure it's an Admin SDK JSON, not a Client JSON
       if (!config.private_key || !config.client_email) {
         this.logger.error('The FIREBASE_SERVICE_ACCOUNT_JSON appears to be a client config (google-services.json) instead of an Admin SDK key. Push notifications will be disabled to prevent crashes.');
         return;
@@ -40,7 +48,14 @@ export class NotificationsService implements OnModuleInit {
       this.logger.log('Firebase Admin initialized successfully');
     } catch (error) {
       this.logger.error('Failed to initialize Firebase Admin. The JSON format might be invalid.', error.message);
-      // We DO NOT throw the error here, so the rest of the app (like SMS) keeps working
+    }
+  }
+
+  get isPushConfigured(): boolean {
+    try {
+      return admin.apps.length > 0;
+    } catch {
+      return false;
     }
   }
 

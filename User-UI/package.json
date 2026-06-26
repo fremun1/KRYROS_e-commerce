@@ -76,6 +76,7 @@
   "dependencies": {
     "@sentry/react": "^10.53.1",
     "axios": "^1.16.1",
+    "firebase": "^11.10.0",
     "swiper": "^12.1.4",
     "zustand": "^5.0.13"
   }

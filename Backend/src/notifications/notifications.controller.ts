@@ -85,9 +85,9 @@ export class NotificationsController {
         coverage: 'Zambia (ZM) + International',
       },
       push: {
-        configured: false,
+        configured: this.notificationsService.isPushConfigured,
         provider: 'Firebase FCM',
-        note: 'Configure FIREBASE_SERVICE_ACCOUNT_JSON to enable push notifications',
+        note: this.notificationsService.isPushConfigured ? 'Push notifications are active' : 'Configure FIREBASE_SERVICE_ACCOUNT_JSON to enable push notifications',
       },
     };
   }

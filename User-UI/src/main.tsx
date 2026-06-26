@@ -1,7 +1,10 @@
 import * as Sentry from "@sentry/react";
 import { createRoot } from "react-dom/client";
 import App from "./App";
+import { initFirebase } from "@/lib/firebase";
 import "./index.css";
+
+initFirebase().catch(() => undefined);
 
 const SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN as string | undefined;
 
