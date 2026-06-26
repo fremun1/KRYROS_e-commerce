@@ -65,51 +65,16 @@ export class UpdateProductDto {
   @IsOptional()
   @IsBoolean()
   @Transform(({ value }) => value === 'true' || value === true)
-  allowCredit?: boolean;
+  isFlashSale?: boolean;
 
   @IsOptional()
   @IsNumber()
-  @Min(0)
   @Type(() => Number)
-  creditMinimum?: number;
+  flashSalePrice?: number;
 
   @IsOptional()
   @IsString()
-  creditMessage?: string;
-
-  @IsOptional()
-  @IsString()
-  deliveryInfo?: string;
-
-  @IsOptional()
-  @IsString()
-  warrantyInfo?: string;
-
-  @IsOptional()
-  @IsBoolean()
-  @Transform(({ value }) => value === 'true' || value === true)
-  isNew?: boolean;
-
-  @IsOptional()
-  @IsBoolean()
-  @Transform(({ value }) => value === 'true' || value === true)
-  isTrending?: boolean;
-
-  @IsOptional()
-  @IsBoolean()
-  @Transform(({ value }) => value === 'true' || value === true)
-  isHot?: boolean;
-
-  @IsOptional()
-  @IsBoolean()
-  @Transform(({ value }) => value === 'true' || value === true)
-  isBestSeller?: boolean;
-
-  @IsOptional()
-  @IsNumber()
-  @Min(0)
-  @Type(() => Number)
-  discountPercentage?: number;
+  flashSaleEnd?: string;
 
   @IsOptional()
   @IsNumber()
@@ -131,20 +96,6 @@ export class UpdateProductDto {
   @IsOptional()
   @IsString()
   fiveYearGuaranteeText?: string;
-
-  @IsOptional()
-  @IsBoolean()
-  @Transform(({ value }) => value === 'true' || value === true)
-  isFlashSale?: boolean;
-
-  @IsOptional()
-  @IsNumber()
-  @Type(() => Number)
-  flashSalePrice?: number;
-
-  @IsOptional()
-  @IsString()
-  flashSaleEnd?: string;
 
   @IsOptional()
   @IsBoolean()
@@ -174,37 +125,46 @@ export class UpdateProductDto {
   fullyTestedText?: string;
 
   @IsOptional()
-  @IsNumber()
-  @Min(0)
-  @Type(() => Number)
-  rating?: number;
+  @IsString()
+  condition?: string;
 
   @IsOptional()
   @IsNumber()
   @Min(0)
   @Type(() => Number)
-  reviewCount?: number;
-
-  @IsOptional()
-  @IsBoolean()
-  @Transform(({ value }) => value === 'true' || value === true)
-  isWholesaleOnly?: boolean;
-
-  @IsOptional()
-  @IsNumber()
-  @Type(() => Number)
-  unitsPerPack?: number;
-
-  @IsOptional()
-  @IsNumber()
-  @Type(() => Number)
-  wholesaleMoq?: number;
+  shippingFee?: number;
 
   @IsOptional()
   @IsNumber()
   @Min(0)
   @Type(() => Number)
-  wholesalePrice?: number;
+  estimatedDeliveryDays?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Type(() => Number)
+  estimatedDeliveryMinDays?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Type(() => Number)
+  estimatedDeliveryMaxDays?: number;
+
+  @IsOptional()
+  @IsString()
+  popularItemText?: string;
+
+  @IsOptional()
+  @IsString()
+  easyReturnsText?: string;
+
+  @IsOptional()
+  @IsString()
+  freeReturnsDescription?: string;
+
+  @IsOptional()
+  @IsString()
+  protectionDescription?: string;
 
   @IsOptional()
   @IsString()
@@ -228,8 +188,8 @@ export class UpdateProductDto {
   @ValidateIf((o) => Array.isArray(o.imageDataUrls))
   imageDataUrls?: string[];
 
-  @IsArray()
   @IsOptional()
+  @IsArray()
   @Transform(({ value }) => {
     if (typeof value === 'string') {
       try {
@@ -242,8 +202,8 @@ export class UpdateProductDto {
   })
   specifications?: { key: string; value: string }[];
 
-  @IsArray()
   @IsOptional()
+  @IsArray()
   @Transform(({ value }) => {
     if (typeof value === 'string') {
       try {
@@ -255,47 +215,4 @@ export class UpdateProductDto {
     return value;
   })
   variants?: { type: string; value: string; price?: string | number; stock?: string | number; sku?: string }[];
-
-  @IsString()
-  @IsOptional()
-  condition?: string;
-
-  @IsNumber()
-  @IsOptional()
-  @Min(0)
-  @Type(() => Number)
-  shippingFee?: number;
-
-  @IsNumber()
-  @IsOptional()
-  @Min(0)
-  @Type(() => Number)
-  estimatedDeliveryDays?: number;
-
-  @IsString()
-  @IsOptional()
-  @IsString()
-  popularItemText?: string;
-
-  @IsOptional()
-  @IsString()
-  easyReturnsText?: string;
-
-  @IsOptional()
-  @IsString()
-  freeReturnsDescription?: string;
-
-  @IsOptional()
-  @IsString()
-  protectionDescription?: string;
-
-  @IsOptional()
-  @IsInt()
-  @Type(() => Number)
-  estimatedDeliveryMinDays?: number;
-
-  @IsOptional()
-  @IsInt()
-  @Type(() => Number)
-  estimatedDeliveryMaxDays?: number;
 }

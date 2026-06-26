@@ -6,6 +6,10 @@ export class CreateProductDto {
   name!: string;
 
   @IsString()
+  @IsOptional()
+  slug?: string;
+
+  @IsString()
   sku!: string;
 
   @IsNumber()
@@ -52,51 +56,16 @@ export class CreateProductDto {
   @IsBoolean()
   @IsOptional()
   @Transform(({ value }) => value === 'true' || value === true)
-  allowCredit?: boolean;
+  isFlashSale?: boolean;
 
   @IsNumber()
   @IsOptional()
-  @Min(0)
   @Type(() => Number)
-  creditMinimum?: number;
+  flashSalePrice?: number;
 
   @IsString()
   @IsOptional()
-  creditMessage?: string;
-
-  @IsString()
-  @IsOptional()
-  deliveryInfo?: string;
-
-  @IsString()
-  @IsOptional()
-  warrantyInfo?: string;
-
-  @IsBoolean()
-  @IsOptional()
-  @Transform(({ value }) => value === 'true' || value === true)
-  isNew?: boolean;
-
-  @IsBoolean()
-  @IsOptional()
-  @Transform(({ value }) => value === 'true' || value === true)
-  isTrending?: boolean;
-
-  @IsBoolean()
-  @IsOptional()
-  @Transform(({ value }) => value === 'true' || value === true)
-  isHot?: boolean;
-
-  @IsBoolean()
-  @IsOptional()
-  @Transform(({ value }) => value === 'true' || value === true)
-  isBestSeller?: boolean;
-
-  @IsNumber()
-  @IsOptional()
-  @Min(0)
-  @Type(() => Number)
-  discountPercentage?: number;
+  flashSaleEnd?: string;
 
   @IsNumber()
   @IsOptional()
@@ -118,20 +87,6 @@ export class CreateProductDto {
   @IsString()
   @IsOptional()
   fiveYearGuaranteeText?: string;
-
-  @IsBoolean()
-  @IsOptional()
-  @Transform(({ value }) => value === 'true' || value === true)
-  isFlashSale?: boolean;
-
-  @IsNumber()
-  @IsOptional()
-  @Type(() => Number)
-  flashSalePrice?: number;
-
-  @IsString()
-  @IsOptional()
-  flashSaleEnd?: string;
 
   @IsBoolean()
   @IsOptional()
@@ -160,38 +115,55 @@ export class CreateProductDto {
   @IsOptional()
   fullyTestedText?: string;
 
-  @IsNumber()
+  @IsString()
   @IsOptional()
-  @Min(0)
-  @Type(() => Number)
-  rating?: number;
+  condition?: string;
 
   @IsNumber()
   @IsOptional()
   @Min(0)
   @Type(() => Number)
-  reviewCount?: number;
-
-  @IsBoolean()
-  @IsOptional()
-  @Transform(({ value }) => value === 'true' || value === true)
-  isWholesaleOnly?: boolean;
-
-  @IsNumber()
-  @IsOptional()
-  @Type(() => Number)
-  unitsPerPack?: number;
-
-  @IsNumber()
-  @IsOptional()
-  @Type(() => Number)
-  wholesaleMoq?: number;
+  shippingFee?: number;
 
   @IsNumber()
   @IsOptional()
   @Min(0)
   @Type(() => Number)
-  wholesalePrice?: number;
+  estimatedDeliveryDays?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Type(() => Number)
+  estimatedDeliveryMinDays?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Type(() => Number)
+  estimatedDeliveryMaxDays?: number;
+
+  @IsString()
+  @IsOptional()
+  popularItemText?: string;
+
+  @IsOptional()
+  @IsString()
+  easyReturnsText?: string;
+
+  @IsOptional()
+  @IsString()
+  freeReturnsDescription?: string;
+
+  @IsOptional()
+  @IsString()
+  protectionDescription?: string;
+
+  @IsString()
+  @IsOptional()
+  metaTitle?: string;
+
+  @IsString()
+  @IsOptional()
+  metaDescription?: string;
 
   @IsString()
   @IsOptional()
@@ -234,47 +206,4 @@ export class CreateProductDto {
     return value;
   })
   variants?: { type: string; value: string; price?: string | number; stock?: string | number; sku?: string }[];
-
-  @IsString()
-  @IsOptional()
-  condition?: string;
-
-  @IsNumber()
-  @IsOptional()
-  @Min(0)
-  @Type(() => Number)
-  shippingFee?: number;
-
-  @IsNumber()
-  @IsOptional()
-  @Min(0)
-  @Type(() => Number)
-  estimatedDeliveryDays?: number;
-
-  @IsString()
-  @IsOptional()
-  @IsString()
-  popularItemText?: string;
-
-  @IsOptional()
-  @IsString()
-  easyReturnsText?: string;
-
-  @IsOptional()
-  @IsString()
-  freeReturnsDescription?: string;
-
-  @IsOptional()
-  @IsString()
-  protectionDescription?: string;
-
-  @IsOptional()
-  @IsInt()
-  @Type(() => Number)
-  estimatedDeliveryMinDays?: number;
-
-  @IsOptional()
-  @IsInt()
-  @Type(() => Number)
-  estimatedDeliveryMaxDays?: number;
 }
