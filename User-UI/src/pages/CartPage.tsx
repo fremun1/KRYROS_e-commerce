@@ -46,8 +46,8 @@ export default function CartPage() {
   };
 
   const deliveryRangeText = deliveryMinDays === deliveryMaxDays
-    ? `delivery in ${deliveryMaxDays} day${deliveryMaxDays === 1 ? "" : "s"}`
-    : `delivery in ${deliveryMinDays}-${deliveryMaxDays} days`;
+    ? `Delivery in ${deliveryMaxDays} day${deliveryMaxDays === 1 ? "" : "s"}`
+    : `Delivery in ${deliveryMinDays}-${deliveryMaxDays} days`;
 
   useEffect(() => {
     fetchSettings().then((settings) => {
@@ -169,13 +169,17 @@ export default function CartPage() {
               </div>
 
               {/* Delivery Information */}
-              <div className="bg-primary/5 border border-primary/10 rounded-xl p-3 mt-3">
-                <div className="flex items-start gap-2">
+              <div className="space-y-2 mt-3">
+                <div className="flex items-start gap-2 bg-primary/5 border border-primary/10 rounded-xl p-3">
                   <Truck className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold text-foreground capitalize">{deliveryRangeText}</p>
+                    <p className="text-xs font-semibold text-foreground">{deliveryRangeText}</p>
                     <p className="text-xs text-muted-foreground mt-0.5">Estimated by {formatDate(estimatedStart)} - {formatDate(estimatedEnd)}</p>
                   </div>
+                </div>
+                <div className="flex items-center gap-3 py-1 border-t border-border pt-3">
+                  <span className="text-sm text-muted-foreground">Condition</span>
+                  <span className="text-sm font-bold text-foreground">{items[0]?.condition || "New"}</span>
                 </div>
               </div>
 

@@ -215,8 +215,8 @@ export default function CheckoutPage() {
     return date.toLocaleDateString('en-US', options);
   };
   const deliveryRangeText = deliveryMinDays === deliveryMaxDays
-    ? `delivery in ${deliveryMaxDays} day${deliveryMaxDays === 1 ? "" : "s"}`
-    : `delivery in ${deliveryMinDays}-${deliveryMaxDays} days`;
+    ? `Delivery in ${deliveryMaxDays} day${deliveryMaxDays === 1 ? "" : "s"}`
+    : `Delivery in ${deliveryMinDays}-${deliveryMaxDays} days`;
   const total = SUBTOTAL - DISCOUNT + PROCESSING_FEE + shippingPrice;
 
   // Payment Method (Section 4) — openMethod now controls inline expansion, not a bottom sheet
@@ -764,11 +764,12 @@ export default function CheckoutPage() {
         <div className="bg-card border border-border rounded-2xl p-4">
           <SectionHeader number={3} icon={Truck} title="Delivery" />
           <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <Truck className="w-6 h-6 text-primary" />
-              <div>
-                <p className="text-lg font-bold text-primary">{format(shippingPrice)} {deliveryRangeText}</p>
-                <p className="text-sm text-foreground">Estimated between {formatDate(estimatedStart)} and {formatDate(estimatedEnd)}</p>
+            <div className="flex items-start gap-3">
+              <Truck className="w-6 h-6 text-primary flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-sm font-bold text-primary">{format(shippingPrice)} shipping</p>
+                <p className="text-xs font-semibold text-foreground mt-1">{deliveryRangeText}</p>
+                <p className="text-xs text-foreground mt-0.5">Estimated by {formatDate(estimatedStart)} - {formatDate(estimatedEnd)}</p>
               </div>
             </div>
             <div className="border-t border-border pt-3 flex items-center justify-between">
