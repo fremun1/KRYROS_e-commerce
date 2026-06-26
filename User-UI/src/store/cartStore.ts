@@ -31,7 +31,22 @@ export const useCartStore = create<CartState>()(
       addToCart: (item) => set((state) => {
         const existing = state.items.find(i => i.id === item.id);
         if (existing) {
-          return { items: state.items.map(i => i.id === item.id ? { ...i, qty: i.qty + item.qty } : i) };
+          return {
+            items: state.items.map(i =>
+              i.id === item.id
+                ? {
+                    ...i,
+                    qty: i.qty + item.qty,
+                    // Ensure we update shipping and delivery info if it was missing in the old version
+                    shippingFee: item.shippingFee ?? i.shippingFee,
+                    estimatedDeliveryDays: item.estimatedDeliveryDays ?? i.estimatedDeliveryDays,
+                    estimatedDeliveryMinDays: item.estimatedDeliveryMinDays ?? i.estimatedDeliveryMinDays,
+                    estimatedDeliveryMaxDays: item.estimatedDeliveryMaxDays ?? i.estimatedDeliveryMaxDays,
+                    condition: item.condition ?? i.condition,
+                  }
+                : i
+            ),
+          };
         }
         return { items: [...state.items, item] };
       }),
