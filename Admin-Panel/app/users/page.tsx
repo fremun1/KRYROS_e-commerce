@@ -31,7 +31,7 @@ function UsersContent() {
   const surface = isDark ? '#101826' : '#F1F5F9';
 
   const { user: currentUser, loading: authLoading } = useAuth();
-  const isSuperAdmin = (currentUser?.role || '').toUpperCase() === 'SUPER_ADMIN';
+  const isSuperAdmin = (currentUser?.role || '').toUpperCase().replace(/[\s_]+/g, '') === 'SUPERADMIN';
 
   const [data, setData] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
