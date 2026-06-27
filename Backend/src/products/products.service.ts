@@ -125,7 +125,6 @@ export class ProductsService {
             brand: { select: { id: true, name: true, slug: true } },
             images: {
               orderBy: { sortOrder: 'asc' },
-              take: 1,
               select: { url: true }
             },
             inventory: true,
@@ -160,7 +159,6 @@ export class ProductsService {
               brand: { select: { id: true, name: true, slug: true } },
               images: {
                 orderBy: { sortOrder: 'asc' },
-                take: 1,
                 select: { url: true }
               },
               inventory: true,
