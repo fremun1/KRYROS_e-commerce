@@ -36,11 +36,17 @@ export class UsersService {
     });
   }
 
-  async findAll(params: { skip?: number; take?: number; search?: string } = {}) {
-    const { skip = 0, take: rawTake = 20, search } = params;
+  async findAll(params: { skip?: number; take?: number; search?: string; showInactive?: boolean } = {}) {
+    const { skip = 0, take: rawTake = 20, search, showInactive = false } = params;
     const take = Math.min(Math.max(1, Number(rawTake) || 20), 100);
     
     const where: any = {};
+    
+    // Default to only showing active users
+    if (!showInactive) {
+      where.isActive = true;
+    }
+
     if (search) {
       where.OR = [
         { email: { contains: search, mode: 'insensitive' } },

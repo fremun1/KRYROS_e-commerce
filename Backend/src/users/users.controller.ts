@@ -20,15 +20,18 @@ export class UsersController {
   @ApiQuery({ name: 'skip', required: false, type: Number })
   @ApiQuery({ name: 'take', required: false, type: Number })
   @ApiQuery({ name: 'search', required: false, type: String })
+  @ApiQuery({ name: 'showInactive', required: false, type: Boolean })
   findAll(
     @Query('skip') skip?: number,
     @Query('take') take?: number,
     @Query('search') search?: string,
+    @Query('showInactive') showInactive?: string,
   ) {
     return this.usersService.findAll({
       skip: skip ? Number(skip) : undefined,
       take: take ? Number(take) : undefined,
       search,
+      showInactive: showInactive === 'true',
     });
   }
 
