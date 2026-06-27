@@ -31,27 +31,49 @@ function InvoicingContent() {
   const surface = isDark ? '#101826' : '#F1F5F9';
   const [data, setData] = useState<Invoice[]>(INITIAL);
   useEffect(() => {
-    getOrders({ limit: 200 }).then((r: any) => {
-      const raw: any[] = Array.isArray(r.data?.data) ? r.data.data : Array.isArray(r.data) ? r.data : [];
-      if (raw.length === 0) return;
-      const normalized: Invoice[] = raw.map((o: any) => {
-        const amt = Number(o.total ?? o.subtotal ?? o.amount ?? 0);
-        const processingFees = Number(o.tax ?? o.taxAmount ?? 0);
-        const total = amt + processingFees;
-        const d = o.createdAt ? o.createdAt.split('T')[0] : '';
-        const due = o.createdAt ? new Date(new Date(o.createdAt).getTime() + 30*24*60*60*1000).toISOString().split('T')[0] : '';
-        return {
-          id: `INV-${(o.orderNumber || o.id || '').toString().slice(-8)}`,
-          client: o.user ? (`${o.user.firstName||''} ${o.user.lastName||''}`.trim() || o.user.email || 'Customer') : 'Customer',
-          amount: `$${amt.toLocaleString()}`,
-          processingFees: `$${processingFees.toLocaleString()}`,
-          total: `$${total.toLocaleString()}`,
-          date: d,
-          due: due,
-          status: o.paymentStatus==='PAID'||o.status==='DELIVERED' ? 'Paid' : o.paymentStatus==='PENDING' ? 'Unpaid' : o.status==='CANCELLED' ? 'Draft' : 'Unpaid',
-        };
-      });
-      setData(normalized);
+    Promise.all([
+      getOrders({ limit: 200 }).catch(() => ({ data: [] })),
+      getDirectPayments({ limit: 200 }).catch(() => ({ data: [] })),
+    ]).then(([oRes, dRes]: any[]) => {
+      const oRaw: any[] = Array.isArray(oRes.data?.data) ? oRes.data.data : Array.isArray(oRes.data) ? oRes.data : [];
+      const dRaw: any[] = Array.isArray(dRes.data?.data) ? dRes.data.data : Array.isArray(dRes.data) ? dRes.data : [];
+      
+      const combined = [
+        ...oRaw.map((o: any) => {
+          const amt = Number(o.total ?? o.subtotal ?? o.amount ?? 0);
+          const processingFees = Number(o.tax ?? o.taxAmount ?? 0);
+          const total = amt + processingFees;
+          const d = o.createdAt ? o.createdAt.split('T')[0] : '';
+          const due = o.createdAt ? new Date(new Date(o.createdAt).getTime() + 30*24*60*60*1000).toISOString().split('T')[0] : '';
+          return {
+            id: `INV-${(o.orderNumber || o.id || '').toString().slice(-8)}`,
+            client: o.user ? (`${o.user.firstName||''} ${o.user.lastName||''}`.trim() || o.user.email || 'Customer') : 'Customer',
+            amount: `$${amt.toLocaleString()}`,
+            processingFees: `$${processingFees.toLocaleString()}`,
+            total: `$${total.toLocaleString()}`,
+            date: d,
+            due: due,
+            status: o.paymentStatus==='PAID'||o.status==='DELIVERED' ? 'Paid' : o.paymentStatus==='PENDING' ? 'Unpaid' : o.status==='CANCELLED' ? 'Draft' : 'Unpaid',
+          };
+        }),
+        ...dRaw.map((d: any) => {
+          const amt = Number(d.amount || 0);
+          const total = amt;
+          const dt = d.createdAt ? d.createdAt.split('T')[0] : '';
+          const due = d.createdAt ? new Date(new Date(d.createdAt).getTime() + 30*24*60*60*1000).toISOString().split('T')[0] : '';
+          return {
+            id: `INV-${(d.paymentNumber || d.id || '').toString().slice(-8)}`,
+            client: d.user ? (`${d.user.firstName||''} ${d.user.lastName||''}`.trim() || d.user.email || 'Customer') : 'Customer',
+            amount: `$${amt.toLocaleString()}`,
+            processingFees: '$0',
+            total: `$${total.toLocaleString()}`,
+            date: dt,
+            due: due,
+            status: d.status==='PAID'||d.status==='COMPLETED' ? 'Paid' : 'Unpaid',
+          };
+        })
+      ];
+      setData(combined);
     }).catch(() => {});
   }, []);
   const [addOpen, setAddOpen] = useState(false);

@@ -359,6 +359,8 @@ export const deletePaymentLink = (id: string) =>
 // ── Direct Payment ─────────────────────────────────────────
 export const initiateDirectPayment = (data: Record<string, unknown>) =>
   api.post("/api/payments/direct", data);
+export const getDirectPayments = (params?: Record<string, unknown>) =>
+  api.get("/api/payments/direct-all", { params });
 
 
 // ── Payment Config ──────────────────────────────────────────────────────────

@@ -40,11 +40,11 @@ export class PaymentsController {
     return this.paymentsService.processWhatsAppPayment(userId, body.phone, body.amount, body.currency, body.note, body.reference);
   }
 
-  @Post('verify')
-  @UseGuards(JwtAuthGuard)
-  @ApiOperation({ summary: 'Check and sync payment status for an order' })
-  verify(@Body('orderId') orderId: string) {
-    return this.paymentsService.checkStatus(orderId);
+  @Get('direct-status/:paymentId')
+  @UseGuards(OptionalJwtAuthGuard)
+  @ApiOperation({ summary: 'Get current status for a direct payment' })
+  getDirectStatus(@Param('paymentId') paymentId: string) {
+    return this.paymentsService.checkDirectStatus(paymentId);
   }
 
   @Get('status/:orderId')
@@ -54,11 +54,11 @@ export class PaymentsController {
     return this.paymentsService.checkStatus(orderId);
   }
 
-  @Get('all')
+  @Get('direct-all')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER)
-  @ApiOperation({ summary: 'List all payments (Admin only)' })
-  findAll() {
-    return this.paymentsService.findAll();
+  @ApiOperation({ summary: 'List all direct payments (Admin only)' })
+  findAllDirect() {
+    return this.paymentsService.findAllDirect();
   }
 }

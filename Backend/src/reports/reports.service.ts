@@ -24,7 +24,7 @@ export class ReportsService {
   async summary(range = 'year') {
     const { start, end } = this.getRange(range);
 
-    const [orderStats, usersCount, creditStats] = await Promise.all([
+    const [orderStats, directStats, usersCount, creditStats] = await Promise.all([
       this.prisma.order.aggregate({
         where: {
           createdAt: { gte: start, lte: end },
@@ -33,6 +33,14 @@ export class ReportsService {
         _sum: { total: true },
         _count: { id: true },
       }),
+      this.prisma.directPayment.aggregate({
+        where: {
+          createdAt: { gte: start, lte: end },
+          status: 'PAID',
+        },
+        _sum: { amount: true },
+        _count: { id: true },
+      }).catch(() => ({ _sum: { amount: 0 }, _count: { id: 0 } })),
       this.prisma.user.count(),
       this.prisma.creditAccount.aggregate({
         _sum: { amount: true, remainingAmount: true },
@@ -40,8 +48,8 @@ export class ReportsService {
       }).catch(() => ({ _sum: { amount: 0, remainingAmount: 0 }, _count: { id: 0 } })),
     ]);
 
-    const totalRevenue = Number(orderStats._sum.total || 0);
-    const totalOrders = orderStats._count.id; // Count of paid orders only
+    const totalRevenue = Number(orderStats._sum.total || 0) + Number(directStats._sum.amount || 0);
+    const totalOrders = orderStats._count.id + directStats._count.id; // Count of paid orders + direct payments
     const activeUsers = usersCount;
     const creditDisbursed = Number(creditStats._sum.amount || 0);
 

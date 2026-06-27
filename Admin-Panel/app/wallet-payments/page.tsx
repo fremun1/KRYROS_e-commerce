@@ -152,9 +152,12 @@ function WalletContent() {
     Promise.all([
       getWalletTransactions({ limit: 200 }).catch(() => ({ data: [] })),
       getPayments({ limit: 200 }).catch(() => ({ data: [] })),
-    ]).then(([wRes, pRes]: any[]) => {
+      getDirectPayments({ limit: 200 }).catch(() => ({ data: [] })),
+    ]).then(([wRes, pRes, dRes]: any[]) => {
       const wRaw: any[] = Array.isArray(wRes.data?.data) ? wRes.data.data : Array.isArray(wRes.data) ? wRes.data : [];
       const pRaw: any[] = Array.isArray(pRes.data?.data) ? pRes.data.data : Array.isArray(pRes.data) ? pRes.data : [];
+      const dRaw: any[] = Array.isArray(dRes.data?.data) ? dRes.data.data : Array.isArray(dRes.data) ? dRes.data : [];
+      
       const combined: Tx[] = [
         ...wRaw.map((t: any) => ({
           id: t.id?.slice(-8) || `W${Date.now().toString().slice(-5)}`,
@@ -169,11 +172,20 @@ function WalletContent() {
         ...pRaw.map((p: any) => ({
           id: p.id?.slice(-8) || `P${Date.now().toString().slice(-5)}`,
           user: p.user ? (`${p.user.firstName||''} ${p.user.lastName||''}`.trim() || p.user.email || 'Customer') : 'Customer',
-          type: 'Payment', method: p.provider || p.method || 'Mobile Money',
+          type: 'Order Payment', method: p.provider || p.method || 'Mobile Money',
           amount: p.amount ? `$${Number(p.amount).toLocaleString()}` : '$0', fee: '$0',
           date: p.createdAt ? p.createdAt.split('T')[0] : '',
           status: p.status==='PAID'||p.status==='COMPLETED' ? 'Completed' : p.status==='PENDING' ? 'Pending' : p.status==='FAILED' ? 'Failed' : (p.status||'Pending'),
           ref: p.reference || p.id || '',
+        })),
+        ...dRaw.map((d: any) => ({
+          id: d.paymentNumber || d.id?.slice(-8) || `D${Date.now().toString().slice(-5)}`,
+          user: d.user ? (`${d.user.firstName||''} ${d.user.lastName||''}`.trim() || d.user.email || 'Customer') : 'Customer',
+          type: 'Direct Payment', method: d.paymentMethod || 'Mobile Money',
+          amount: d.amount ? `$${Number(d.amount).toLocaleString()}` : '$0', fee: '$0',
+          date: d.createdAt ? d.createdAt.split('T')[0] : '',
+          status: d.status==='PAID'||d.status==='COMPLETED' ? 'Completed' : d.status==='PENDING' ? 'Pending' : d.status==='FAILED' ? 'Failed' : (d.status||'Pending'),
+          ref: d.paymentReference || d.id || '',
         })),
       ];
       setTxData(combined);

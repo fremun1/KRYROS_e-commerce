@@ -28,6 +28,12 @@ export class OrdersService {
     const take = Math.min(Math.max(1, Number(rawTake) || 20), 500); // Admin can fetch up to 500 orders
     const where: any = userId ? { userId } : {};
     if (status) where.status = status;
+    // Exclude direct/whatsapp placeholder orders from main order list
+    where.orderNumber = { not: { startsWith: 'DIR-' } };
+    where.AND = [
+      ...(where.AND || []),
+      { orderNumber: { not: { startsWith: 'WA-' } } }
+    ];
 
     const [orders, total] = await Promise.all([
       this.prisma.order.findMany({

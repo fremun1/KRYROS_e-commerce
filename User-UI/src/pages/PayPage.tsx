@@ -247,10 +247,18 @@ export default function PayPage() {
   const sendReceiptNotification = useCallback((receiptData: ReceiptData) => {
     const phone = receiptPhone.trim(); const email = receiptEmail.trim();
     if (!phone && !email) return;
-    fetch(`${API_BASE}/api/notifications/send-receipt`, {
+    fetch(`${API_BASE}/api/notifications/receipt`, {
       method: "POST",
       headers: { "Content-Type": "application/json", ...(token && { Authorization: `Bearer ${token}` }) },
-      body: JSON.stringify({ phone, email, receipt: receiptData }),
+      body: JSON.stringify({
+        phone,
+        email,
+        orderRef: receiptData.transactionId,
+        amount: receiptData.amount,
+        currency: receiptData.currency,
+        customerName: mmName || "Customer",
+        paymentMethod: receiptData.operatorName || "Mobile Money",
+      }),
     }).catch(() => {});
   }, [receiptPhone, receiptEmail, token]);
 
@@ -272,14 +280,14 @@ export default function PayPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Payment initiation failed");
-      setOrderId(data.orderId);
+      setOrderId(data.paymentId); // paymentId from DirectPayment model
       setPayStatus("waiting");
       let attempts = 0;
       pollRef.current = setInterval(async () => {
         attempts++;
         if (attempts > 24) { stopPolling(); setPayStatus("failed"); setPayError("Payment timeout. Please try again."); return; }
         try {
-          const statusRes = await fetch(`${API_BASE}/api/payments/status/${data.orderId}`, {
+          const statusRes = await fetch(`${API_BASE}/api/payments/direct-status/${data.paymentId}`, {
             headers: { ...(token && { Authorization: `Bearer ${token}` }) },
           });
           const statusData = await statusRes.json();

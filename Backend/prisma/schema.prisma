@@ -44,6 +44,7 @@ model User {
   wholesaleAccount         WholesaleAccount?
   wholesaleApplications    WholesaleApplication[]
   wishlists                WishlistItem[]
+  directPayments           DirectPayment[]
 
   @@map("users")
 }
@@ -1339,17 +1340,39 @@ enum SymbolPosition {
 }
 
 model PaymentLink {
-  id                String    @id @default(uuid())
+  id                String           @id @default(uuid())
   name              String?
-  amount            Decimal   @db.Decimal(10, 2)
-  currency          String    @default("ZMW")
+  amount            Decimal          @db.Decimal(10, 2)
+  currency          String           @default("ZMW")
   note              String?
-  createdBy         String?   // Admin user ID who created the link
+  createdBy         String? // Admin user ID who created the link
   expiresAt         DateTime?
-  isActive          Boolean   @default(true)
-  clicks            Int       @default(0)
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-  
+  isActive          Boolean          @default(true)
+  clicks            Int              @default(0)
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  directPayments    DirectPayment[]
+
   @@map("payment_links")
+}
+
+model DirectPayment {
+  id               String        @id @default(uuid())
+  paymentNumber    String        @unique // e.g., PAY-12345
+  userId           String?
+  paymentLinkId    String?
+  amount           Decimal       @db.Decimal(10, 2)
+  currency         String        @default("ZMW")
+  status           PaymentStatus @default(PENDING)
+  paymentMethod    String? // MOBILE_MONEY, WHATSAPP, etc.
+  paymentReference String? // External reference from gateway
+  paymentPhone     String?
+  note             String?
+  metadata         Json?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  user             User?         @relation(fields: [userId], references: [id])
+  paymentLink      PaymentLink?  @relation(fields: [paymentLinkId], references: [id])
+
+  @@map("direct_payments")
 }
