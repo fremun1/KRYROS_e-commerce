@@ -126,18 +126,18 @@ export class OrdersController {
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Delete a single order (Admin/Super Admin only)' })
+  @ApiOperation({ summary: 'Delete a single order (Admin/Manager only)' })
   async deleteOrder(@Param('id') id: string) {
     return this.ordersService.deleteOrder(id);
   }
 
   @Post('bulk-delete')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Bulk delete orders (Admin/Super Admin only)' })
+  @ApiOperation({ summary: 'Bulk delete orders (Admin/Manager only)' })
   async bulkDeleteOrders(@Body('ids') ids: string[]) {
     if (!ids || !ids.length) {
       throw new BadRequestException('At least one order ID is required');

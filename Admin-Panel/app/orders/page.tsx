@@ -141,8 +141,8 @@ function OrdersContent() {
     input:   dark ? '#0D1523' : '#FFFFFF',
   };
 
-  // Check if user is Admin or Super Admin
-  const isAdminOrSuperAdmin = user?.role === 'Admin' || user?.role === 'Super Admin';
+  // Check if user has permission to delete (Admin, Super Admin, or Manager)
+  const canDelete = user?.role === 'Admin' || user?.role === 'Super Admin' || user?.role === 'Manager';
 
   const [orders, setOrders]             = useState<OrderListItem[]>([]);
   const [loading, setLoading]           = useState(true);
@@ -414,7 +414,7 @@ function OrdersContent() {
               }}
             />
           </div>
-          {selectedIds.size > 0 && isAdminOrSuperAdmin && (
+          {selectedIds.size > 0 && canDelete && (
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               <button
                 onClick={() => setDeleteConfirm('bulk')}
@@ -481,7 +481,7 @@ function OrdersContent() {
               <thead>
                 <tr style={{ borderBottom: `1px solid ${T.border}`, background: T.surface }}>
                   <th style={{ padding: '0.75rem 1rem', width: '30px' }}>
-                    {isAdminOrSuperAdmin && (
+                    {canDelete && (
                       <input
                         type="checkbox"
                         checked={selectedIds.size === shown.length && shown.length > 0}
@@ -526,7 +526,7 @@ function OrdersContent() {
                       onMouseLeave={(e) => { (e.currentTarget as any).style.background = selectedIds.has(o.id) ? 'rgba(0,212,170,0.08)' : 'transparent'; }}
                     >
                       <td style={{ padding: '0.75rem 1rem' }} onClick={(e) => e.stopPropagation()}>
-                        {isAdminOrSuperAdmin && (
+                        {canDelete && (
                           <input
                             type="checkbox"
                             checked={selectedIds.has(o.id)}
@@ -568,7 +568,20 @@ function OrdersContent() {
                       <td style={{ padding: '0.75rem 1rem' }}>
                         <span style={{ background: sc.bg, color: sc.color, fontSize: '0.68rem', fontWeight: 700, padding: '2px 7px', borderRadius: '4px', whiteSpace: 'nowrap' as const }}>{sc.label}</span>
                       </td>
-                      <td style={{ padding: '0.75rem 1rem' }}><ChevronRight size={13} color={T.muted} /></td>
+                      <td style={{ padding: '0.75rem 1rem' }} onClick={(e) => e.stopPropagation()}>
+                        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                          {canDelete && (
+                            <button
+                              onClick={() => { setDetail(o as any); setDeleteConfirm('single'); }}
+                              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#F87171', padding: '0.25rem' }}
+                              title="Delete Order"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          )}
+                          <ChevronRight size={13} color={T.muted} />
+                        </div>
+                      </td>
                     </tr>
                   );
                 })}
@@ -595,7 +608,7 @@ function OrdersContent() {
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                     <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                      {isAdminOrSuperAdmin && (
+                      {canDelete && (
                         <div onClick={(e) => e.stopPropagation()}>
                           <input
                             type="checkbox"
@@ -622,9 +635,19 @@ function OrdersContent() {
                     </div>
                     <div style={{ textAlign: 'right' }}>
                       <div style={{ fontWeight: 800, color: T.text, fontSize: '1.05rem', marginBottom: '0.5rem' }}>{fmtMoney(o.total, o.currencySymbol)}</div>
-                      <div style={{ display: 'flex', gap: '4px', justifyContent: 'flex-end' }}>
-                        <span style={{ background: psc.bg, color: psc.color, fontSize: '0.65rem', fontWeight: 800, padding: '3px 7px', borderRadius: '5px' }}>{psc.label}</span>
-                        <span style={{ background: sc.bg, color: sc.color, fontSize: '0.65rem', fontWeight: 800, padding: '3px 7px', borderRadius: '5px' }}>{sc.label}</span>
+                      <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', alignItems: 'center' }}>
+                        <div style={{ display: 'flex', gap: '4px' }}>
+                          <span style={{ background: psc.bg, color: psc.color, fontSize: '0.65rem', fontWeight: 800, padding: '3px 7px', borderRadius: '5px' }}>{psc.label}</span>
+                          <span style={{ background: sc.bg, color: sc.color, fontSize: '0.65rem', fontWeight: 800, padding: '3px 7px', borderRadius: '5px' }}>{sc.label}</span>
+                        </div>
+                        {canDelete && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setDetail(o as any); setDeleteConfirm('single'); }}
+                            style={{ background: 'rgba(248,113,113,0.1)', border: 'none', cursor: 'pointer', color: '#F87171', padding: '5px', borderRadius: '6px' }}
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -969,7 +992,7 @@ function OrdersContent() {
                       >
                         {actionLoading ? 'Updating…' : 'Update Status'}
                       </button>
-                      {isAdminOrSuperAdmin && (
+                      {canDelete && (
                         <button
                           onClick={() => setDeleteConfirm('single')}
                           disabled={actionLoading}
