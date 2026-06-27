@@ -182,7 +182,7 @@ export class PaymentsService {
     }
   }
 
-  async processDirectPayment(userId: string | null, phone: string, amountZMW: number, currency = 'ZMW', note?: string) {
+  async processDirectPayment(userId: string | null, phone: string | undefined, amountZMW: number, currency = 'ZMW', note?: string) {
     this.logger.log(`=== Direct Payment (no order) for user: ${userId} ===`);
 
     const orderNumber = `DIR-${Date.now().toString(36).toUpperCase()}`;

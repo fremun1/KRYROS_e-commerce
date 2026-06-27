@@ -602,6 +602,13 @@ export default function PayPage() {
               )}
             </div>
 
+            {payError && (
+              <div className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm"
+                style={{ background: "rgba(185,28,28,0.08)", color: "var(--kryros-danger)" }}>
+                <AlertCircle className="w-4 h-4 flex-shrink-0" /> {payError}
+              </div>
+            )}
+
             {/* ── Mobile Money Panel ── */}
             {openMethod === "mobile" && (
               <div className="space-y-4">
@@ -669,13 +676,6 @@ export default function PayPage() {
                     />
                   </div>
                 </div>
-
-                {payError && (
-                  <div className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm"
-                    style={{ background: "rgba(185,28,28,0.08)", color: "var(--kryros-danger)" }}>
-                    <AlertCircle className="w-4 h-4 flex-shrink-0" /> {payError}
-                  </div>
-                )}
               </div>
             )}
 

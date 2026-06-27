@@ -6,7 +6,7 @@ import PageHeader from '@/components/admin/page-header';
 import { Modal, ConfirmDialog, FormField, ModalFooter } from '@/components/admin/modal';
 import { useTheme } from '@/contexts/theme-context';
 import { Package } from 'lucide-react';
-import { createProduct, updateProduct, deleteProduct, getProducts } from '@/lib/api';
+import { createProduct, updateProduct, deleteProduct, getProducts, getCategories, getBrands } from '@/lib/api';
 import toast from 'react-hot-toast';
 import CloudinaryUpload from '@/components/ui/file-upload';
 
@@ -78,7 +78,7 @@ function ProductsContent() {
 
   const loadProducts = (page: number) => {
     setIsLoading(true);
-    getProducts({ take: PAGE_SIZE, skip: page * PAGE_SIZE, showInactive: 'true' }).then(r => {
+    getProducts({ take: PAGE_SIZE, skip: page * PAGE_SIZE }).then(r => {
       const raw: any[] = Array.isArray(r.data?.data) ? r.data.data : Array.isArray(r.data) ? r.data : [];
       const normalized: Product[] = raw.map((p: any) => ({
         id: p.id || '',
@@ -134,6 +134,16 @@ function ProductsContent() {
 
   useEffect(() => {
     loadProducts(currentPage);
+    getCategories().then(r => {
+      const data = r?.data ?? r ?? [];
+      const names = data.map((c: any) => c.name || c).filter(Boolean);
+      if (names.length > 0) setCategories(names);
+    }).catch(() => {});
+    getBrands().then(r => {
+      const data = r?.data ?? r ?? [];
+      const names = data.map((b: any) => b.name || b).filter(Boolean);
+      if (names.length > 0) setBrands(names);
+    }).catch(() => {});
   }, [currentPage]);
   const [addOpen, setAddOpen] = useState(false);
   const [editRow, setEditRow] = useState<Product | null>(null);
@@ -142,6 +152,8 @@ function ProductsContent() {
   const [form, setForm] = useState({ ...EMPTY_FORM });
   const [loading, setLoading] = useState(false);
   const [productImages, setProductImages] = useState<string[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [brands, setBrands] = useState<string[]>([]);
 
   const fp = (k: string) => (v: string) => setForm(f => {
     const updated = { ...f, [k]: v };
@@ -374,8 +386,8 @@ function ProductsContent() {
       <FormField label="Weight (KG)" value={form.weight} onChange={fp('weight')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 0.5" />
 
       {sectionLabel('Categorization')}
-      <FormField label="Category" value={form.category} onChange={fp('category')} options={CATEGORIES} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-      <FormField label="Brand" value={form.brand} onChange={fp('brand')} options={BRANDS} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+      <FormField label="Category" value={form.category} onChange={fp('category')} options={categories.length > 0 ? categories : ['Electronics', 'Audio', 'Wearables', 'Clothing', 'Food & Beverages', 'Sports']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+      <FormField label="Brand" value={form.brand} onChange={fp('brand')} options={brands.length > 0 ? brands : ['Apple', 'Samsung', 'Sony', 'Beats', 'Bose', 'Dell', 'LG', 'Huawei', 'Other']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
 
       {sectionLabel('Product Images')}
       <div>

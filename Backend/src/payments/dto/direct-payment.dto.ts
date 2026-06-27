@@ -3,10 +3,11 @@ import { Transform, Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class DirectPaymentDto {
-  @ApiProperty({ description: 'Customer mobile number (07XXXXXXXX or 09XXXXXXXX)', example: '0971234567' })
-  @Transform(({ value }) => value?.trim())
+  @ApiProperty({ description: 'Customer mobile number (07XXXXXXXX or 09XXXXXXXX)', example: '0971234567', required: false })
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : ''))
   @IsString()
-  phone: string;
+  @IsOptional()
+  phone?: string;
 
   @ApiProperty({ description: 'Payment amount in ZMW', example: 500 })
   @IsNumber()
@@ -15,13 +16,13 @@ export class DirectPaymentDto {
   amount: number;
 
   @ApiProperty({ description: 'Currency code', example: 'ZMW', required: false })
-  @Transform(({ value }) => value?.trim())
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : ''))
   @IsString()
   @IsOptional()
   currency?: string;
 
   @ApiProperty({ description: 'Optional note or reference', required: false })
-  @Transform(({ value }) => value?.trim())
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : ''))
   @IsString()
   @IsOptional()
   note?: string;

@@ -31,7 +31,7 @@ function UsersContent() {
   const surface = isDark ? '#101826' : '#F1F5F9';
 
   const { user: currentUser } = useAuth();
-  const isSuperAdmin = currentUser?.role === 'Super Admin';
+  const isSuperAdmin = currentUser?.role === 'SUPER_ADMIN' || currentUser?.role === 'Super Admin';
 
   const [data, setData] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -68,7 +68,7 @@ function UsersContent() {
   const openDelete = (row: Record<string, unknown>) => {
     const r = row as unknown as User;
     if (!isSuperAdmin) { toast.error('Only Super Admin can delete users'); return; }
-    if (r.role === 'Admin' || r.role === 'Super Admin') { toast.error('Admin accounts cannot be deleted'); return; }
+    if (r.role === 'ADMIN' || r.role === 'Admin' || r.role === 'SUPER_ADMIN' || r.role === 'Super Admin') { toast.error('Admin accounts cannot be deleted'); return; }
     setDeleteRow(r);
   };
   const openView = (row: Record<string, unknown>) => setViewRow(row as unknown as User);
@@ -133,7 +133,7 @@ function UsersContent() {
 
   const handleDelete = async () => {
     if (!deleteRow || !isSuperAdmin) return;
-    if (deleteRow.role === 'Admin' || deleteRow.role === 'Super Admin') {
+    if (deleteRow.role === 'ADMIN' || deleteRow.role === 'Admin' || deleteRow.role === 'SUPER_ADMIN' || deleteRow.role === 'Super Admin') {
       toast.error('Admin accounts cannot be deleted'); setDeleteRow(null); return;
     }
     setLoading(true);
