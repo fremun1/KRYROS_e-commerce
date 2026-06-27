@@ -11,7 +11,7 @@ const PRODUCTION_ALLOWED_ORIGINS = [
 
 const DEV_ONLY_SUFFIXES = [".ngrok.app", ".ngrok.dev"];
 
-function isAllowedOrigin(origin: string | null): boolean {
+const isAllowedOrigin = (origin: string | null): boolean => {
   if (!origin) return false;
   if (PRODUCTION_ALLOWED_ORIGINS.includes(origin)) return true;
   if (origin.endsWith(".codewords.run")) return true;
@@ -21,7 +21,7 @@ function isAllowedOrigin(origin: string | null): boolean {
     if (origin === "http://localhost:3001") return true;
   }
   return false;
-}
+};
 
 const FRAME_ANCESTORS = IS_PROD
   ? "'self' *.agemo.ai *.codewords.run *.codewords.click"
@@ -69,26 +69,6 @@ function isTokenExpired(token: string): boolean {
   }
 }
 
-function getRoleFromToken(token: string): string | null {
-  try {
-    const parts = token.split(".");
-    if (parts.length !== 3) return null;
-    const b64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
-    const padded = b64 + "=".repeat((4 - (b64.length % 4)) % 4);
-    const payload = JSON.parse(atob(padded));
-    return (payload.role as string | undefined)?.toUpperCase().replace(/[\s_]+/g, "") || null;
-  } catch {
-    return null;
-  }
-}
-
-const ADMIN_ROLES = new Set(["SUPERADMIN", "ADMIN", "MANAGER", "STAFF", "WHOLESALER", "WHOLESALE"]);
-
-function isAdminRole(role: string | null): boolean {
-  if (!role) return false;
-  return ADMIN_ROLES.has(role.toUpperCase().replace(/[\s_]+/g, ""));
-}
-
 // Helper to inject Authorization header if a token cookie exists
 function injectAuthHeader(request: NextRequest, response: NextResponse): NextResponse {
   const httpOnlyToken = request.cookies.get("kryros_token")?.value;
@@ -126,14 +106,6 @@ export function middleware(request: NextRequest) {
     if (!adminToken || isTokenExpired(adminToken)) {
       const loginUrl = new URL("/login", request.url);
       loginUrl.searchParams.set("from", encodeURIComponent(pathname));
-      return NextResponse.redirect(loginUrl);
-    }
-
-    const role = getRoleFromToken(adminToken);
-    if (!isAdminRole(role)) {
-      const loginUrl = new URL("/login", request.url);
-      loginUrl.searchParams.set("from", encodeURIComponent(pathname));
-      loginUrl.searchParams.set("error", "no_admin_access");
       return NextResponse.redirect(loginUrl);
     }
   }

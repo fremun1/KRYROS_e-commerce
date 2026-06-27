@@ -8,7 +8,6 @@ import { Roles } from '../common/decorators/roles.decorator';
 import { UserRole } from '@prisma/client';
 
 const ADMIN_ROLES = [UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER];
-const PROTECTED_ROLES = [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.MANAGER];
 
 @ApiTags('Users')
 @Controller('users')
@@ -55,7 +54,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Update user' })
   async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto, @Request() req) {
     const isSuperAdmin = req.user.role === UserRole.SUPER_ADMIN;
-    const isAdmin = ADMIN_ROLES.includes(req.user.role);
+    const isAdmin = req.user.role === UserRole.ADMIN || req.user.role === UserRole.SUPER_ADMIN || req.user.role === UserRole.MANAGER;
 
     if (!isAdmin) {
       throw new ForbiddenException('You do not have permission to update users');
