@@ -70,7 +70,7 @@ export class UsersController {
       return this.usersService.update(id, { firstName, lastName, email, phone, avatar });
     }
 
-    if (!isSuperAdmin && updateUserDto.role && PROTECTED_ROLES.includes(updateUserDto.role)) {
+    if (!isSuperAdmin && updateUserDto.role && [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.MANAGER].includes(updateUserDto.role as UserRole)) {
       throw new ForbiddenException('Only Super Admins can assign protected roles (Admin, Manager, Super Admin)');
     }
 
@@ -88,7 +88,7 @@ export class UsersController {
     }
 
     const isSuperAdmin = req.user.role === UserRole.SUPER_ADMIN;
-    if (!isSuperAdmin && PROTECTED_ROLES.includes(targetUser.role)) {
+    if (!isSuperAdmin && [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.MANAGER].includes(targetUser.role as UserRole)) {
       throw new ForbiddenException('Only Super Admins can delete users with protected roles (Admin, Manager, Super Admin)');
     }
 
