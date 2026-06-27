@@ -270,7 +270,7 @@ export default function Topbar({ collapsed, sidebarW, onMenuToggle, onMobileMenu
               </div>
               <div style={{ minWidth: 0 }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: textMain, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user?.name || "Admin"}</div>
-                <div style={{ fontSize: 11, color: textMuted }}>{user?.role || "Super Admin"}</div>
+                <div style={{ fontSize: 11, color: textMuted }}>{user?.role || "No role assigned"}</div>
               </div>
             </div>
           </div>
