@@ -276,6 +276,7 @@ export default function PayPage() {
           amount: totalZMW,
           currency: "ZMW",
           note: note || payRef,
+          paymentLinkId: paymentLinkId || undefined,
         }),
       });
       const data = await res.json();
@@ -369,6 +370,7 @@ export default function PayPage() {
             currency: "ZMW",
             note: note || `WhatsApp payment for ${currency} ${total.toFixed(2)}`,
             reference: payRef,
+            paymentLinkId: paymentLinkId || undefined,
           }),
         });
         const data = await res.json();

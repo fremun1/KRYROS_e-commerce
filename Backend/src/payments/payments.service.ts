@@ -215,10 +215,12 @@ export class PaymentsService {
 
   async findAllDirect() {
     return this.prisma.directPayment.findMany({
-      where: { status: { not: 'PENDING' } },
-      include: { user: { select: { firstName: true, lastName: true, email: true } } },
+      include: {
+        user: { select: { firstName: true, lastName: true, email: true } },
+        paymentLink: { select: { name: true } },
+      },
       orderBy: { createdAt: 'desc' },
-      take: 100,
+      take: 200,
     });
   }
 
