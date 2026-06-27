@@ -29,9 +29,9 @@ export class OrdersService {
     const where: any = userId ? { userId } : {};
     if (status) where.status = status;
     // Exclude direct/whatsapp placeholder orders from main order list
-    where.orderNumber = { not: { startsWith: 'DIR-' } };
     where.AND = [
       ...(where.AND || []),
+      { orderNumber: { not: { startsWith: 'DIR-' } } },
       { orderNumber: { not: { startsWith: 'WA-' } } }
     ];
 

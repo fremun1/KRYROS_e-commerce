@@ -114,10 +114,10 @@ const ALL_ORDER_STATUSES: OrderStatus[] = ['PENDING', 'PROCESSING', 'CONFIRMED',
 const ALL_PAYMENT_STATUSES: PaymentStatus[] = ['PENDING', 'PAID', 'FAILED', 'REFUNDED', 'PARTIALLY_PAID'];
 
 // ─── Helpers ──────────────────────────────────────────────
-const fmtDate = (iso: string) => {
-  if (!iso) return '-';
-  return new Date(iso).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-};
+  const fmtDate = (iso: string) => {
+    if (!iso) return '-';
+    return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  };
 const fmtTime = (iso: string) => {
   if (!iso) return '';
   return new Date(iso).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
@@ -154,7 +154,7 @@ function OrdersContent() {
   const [tracking, setTracking]         = useState('');
   const [selectedIds, setSelectedIds]   = useState<Set<string>>(new Set());
   const [bulkLoading, setBulkLoading]   = useState(false);
-  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null); // 'single' or 'bulk'
+  const [deleteConfirm, setDeleteConfirm] = useState<'single' | 'bulk' | null>(null);
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const [showPaymentDropdown, setShowPaymentDropdown] = useState(false);
   const [selectedOrderStatus, setSelectedOrderStatus] = useState<OrderStatus | ''>('');
@@ -440,8 +440,8 @@ function OrdersContent() {
               <h3 style={{ color: T.text, fontWeight: 700, fontSize: '1rem', margin: '0 0 0.5rem 0' }}>
                 {deleteConfirm === 'single' ? 'Delete Order?' : `Delete ${selectedIds.size} Orders?`}
               </h3>
-              <p style={{ color: T.muted, fontSize: '0.85rem', margin: '0 0 1.5rem 0' }}>
-                This action cannot be undone. All order data will be permanently deleted.
+              <p style={{ color: T.muted, fontSize: '0.85rem', margin: '0 0 1.5rem 0', lineHeight: 1.5 }}>
+                This action cannot be undone. All order data will be <strong>permanently deleted</strong> and will not appear again.
               </p>
               <div style={{ display: 'flex', gap: '0.8rem', justifyContent: 'flex-end' }}>
                 <button
@@ -474,17 +474,13 @@ function OrdersContent() {
           </div>
         )}
 
-        {/* ── Orders Table ── */}
-        {loading ? (
-          <div style={{ textAlign: 'center', padding: '2rem', color: T.muted }}>Loading orders…</div>
-        ) : shown.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '2rem', color: T.muted }}>No orders found.</div>
-        ) : (
-          <div style={{ background: T.card, borderRadius: '12px', overflow: 'hidden', border: `1px solid ${T.border}` }}>
+        {/* ── Desktop Table View ── */}
+        {!loading && orders.length > 0 && (
+          <div className="desktop-only" style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: '12px', overflow: 'hidden', overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ borderBottom: `1px solid ${T.border}`, background: T.surface }}>
-                  <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontSize: '0.7rem', fontWeight: 700, color: T.muted, textTransform: 'uppercase' }}>
+                  <th style={{ padding: '0.75rem 1rem', width: '30px' }}>
                     {isAdminOrSuperAdmin && (
                       <input
                         type="checkbox"
@@ -579,6 +575,114 @@ function OrdersContent() {
               </tbody>
             </table>
           </div>
+        )}
+
+        {/* ── Mobile List View ── */}
+        {!loading && orders.length > 0 && (
+          <div className="mobile-only" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            {shown.map((o) => {
+              const sc  = STATUS_CFG[o.status]       || STATUS_CFG.PENDING;
+              const psc = PAY_CFG[o.paymentStatus]   || PAY_CFG.PENDING;
+              const customer = o.user ? `${o.user.firstName} ${o.user.lastName}` : 'Guest';
+              return (
+                <div
+                  key={o.id}
+                  onClick={() => openDetail(o.id)}
+                  style={{
+                    background: T.card, border: `1px solid ${selectedIds.has(o.id) ? '#00D4AA' : T.border}`,
+                    borderRadius: '12px', padding: '1rem', cursor: 'pointer', position: 'relative'
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                      {isAdminOrSuperAdmin && (
+                        <div onClick={(e) => e.stopPropagation()}>
+                          <input
+                            type="checkbox"
+                            checked={selectedIds.has(o.id)}
+                            onChange={(e) => {
+                              const newIds = new Set(selectedIds);
+                              if (e.target.checked) newIds.add(o.id);
+                              else newIds.delete(o.id);
+                              setSelectedIds(newIds);
+                            }}
+                          />
+                        </div>
+                      )}
+                      <span style={{ fontWeight: 700, color: T.text, fontSize: '0.9rem' }}>#{o.orderNumber}</span>
+                    </div>
+                    <span style={{ color: T.muted, fontSize: '0.75rem', fontWeight: 600 }}>{fmtDate(o.createdAt)}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: 700, color: T.text, fontSize: '0.95rem', marginBottom: '4px' }}>{customer}</div>
+                      <div style={{ color: T.muted, fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <Package size={12} /> {o._count.items} items • {METHOD_LABEL[o.paymentMethod?.toUpperCase()] || o.paymentMethod}
+                      </div>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <div style={{ fontWeight: 800, color: T.text, fontSize: '1.05rem', marginBottom: '0.5rem' }}>{fmtMoney(o.total, o.currencySymbol)}</div>
+                      <div style={{ display: 'flex', gap: '4px', justifyContent: 'flex-end' }}>
+                        <span style={{ background: psc.bg, color: psc.color, fontSize: '0.65rem', fontWeight: 800, padding: '3px 7px', borderRadius: '5px' }}>{psc.label}</span>
+                        <span style={{ background: sc.bg, color: sc.color, fontSize: '0.65rem', fontWeight: 800, padding: '3px 7px', borderRadius: '5px' }}>{sc.label}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        <style jsx>{`
+          @media (max-width: 768px) {
+            .desktop-only { display: none !important; }
+            .mobile-only { display: flex !important; }
+          }
+          @media (min-width: 769px) {
+            .desktop-only { display: block !important; }
+            .mobile-only { display: none !important; }
+          }
+        `}</style>
+
+        {/* ── Delete Confirmation Modal ── */}
+        {deleteConfirm && (
+          <>
+            <div
+              onClick={() => setDeleteConfirm(null)}
+              style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 100, backdropFilter: 'blur(4px)' }}
+            />
+            <div style={{
+              position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+              width: '320px', background: T.panel, border: `1px solid ${T.border}`, borderRadius: '16px',
+              padding: '1.5rem', zIndex: 101, textAlign: 'center'
+            }}>
+              <div style={{ background: 'rgba(248,113,113,0.1)', color: '#F87171', width: '48px', height: '48px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem' }}>
+                <Trash2 size={24} />
+              </div>
+              <h3 style={{ color: T.text, margin: '0 0 0.5rem', fontSize: '1.1rem' }}>Permanently Delete?</h3>
+              <p style={{ color: T.muted, fontSize: '0.85rem', margin: '0 0 1.5rem', lineHeight: 1.5 }}>
+                {deleteConfirm === 'single'
+                  ? `Are you sure you want to delete order #${detail?.orderNumber}? This action cannot be undone.`
+                  : `Are you sure you want to delete ${selectedIds.size} selected orders? This action cannot be undone.`}
+              </p>
+              <div style={{ display: 'flex', gap: '0.75rem' }}>
+                <button
+                  onClick={() => setDeleteConfirm(null)}
+                  style={{ flex: 1, padding: '0.6rem', borderRadius: '8px', border: `1px solid ${T.border}`, background: 'transparent', color: T.text, fontWeight: 600, cursor: 'pointer' }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={deleteConfirm === 'single' ? doDeleteOrder : doBulkDelete}
+                  disabled={actionLoading || bulkLoading}
+                  style={{ flex: 1, padding: '0.6rem', borderRadius: '8px', border: 'none', background: '#F87171', color: '#fff', fontWeight: 600, cursor: 'pointer', opacity: (actionLoading || bulkLoading) ? 0.6 : 1 }}
+                >
+                  {(actionLoading || bulkLoading) ? 'Deleting…' : 'Delete Now'}
+                </button>
+              </div>
+            </div>
+          </>
         )}
 
         {/* ── Detail Panel ── */}
