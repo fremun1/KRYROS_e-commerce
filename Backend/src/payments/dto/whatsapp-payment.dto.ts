@@ -3,9 +3,10 @@ import { Transform, Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class WhatsAppPaymentDto {
-  @ApiProperty({ description: 'Customer phone number', example: '0971234567' })
+  @ApiProperty({ description: 'Customer phone number', example: '0971234567', required: false })
   @Transform(({ value }) => value?.trim())
   @IsString()
+  @IsOptional()
   phone?: string;
 
   @ApiProperty({ description: 'Payment amount', example: 500 })

@@ -356,7 +356,7 @@ export default function PayPage() {
           method: "POST",
           headers: { "Content-Type": "application/json", ...(token && { Authorization: `Bearer ${token}` }) },
           body: JSON.stringify({
-            phone: receiptContact || undefined,
+            phone: receiptContact ? String(receiptContact) : undefined,
             amount: totalZMW,
             currency: "ZMW",
             note: note || `WhatsApp payment for ${currency} ${total.toFixed(2)}`,
