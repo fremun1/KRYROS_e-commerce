@@ -6,7 +6,7 @@ import PageHeader from '@/components/admin/page-header';
 import { Modal, ConfirmDialog, FormField, ModalFooter } from '@/components/admin/modal';
 import { useTheme } from '@/contexts/theme-context';
 import { FileText } from 'lucide-react';
-import { getOrders } from '@/lib/api';
+import { getOrders, getDirectPayments } from '@/lib/api';
 import toast from 'react-hot-toast';
 
 type Invoice = { id:string; client:string; amount:string; processingFees:string; total:string; date:string; due:string; status:string };

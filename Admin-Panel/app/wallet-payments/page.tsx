@@ -10,7 +10,7 @@ import {
   ExternalLink, Settings, Trash2, Edit2, ArrowUp, ArrowDown,
 } from 'lucide-react';
 import {
-  getWalletTransactions, getPayments,
+  getWalletTransactions, getPayments, getDirectPayments,
   getPaymentMethods, createPaymentMethod, updatePaymentMethod, deletePaymentMethod, reorderPaymentMethods,
   createPaymentProvider, updatePaymentProvider, deletePaymentProvider,
   createPaymentNetwork, updatePaymentNetwork, deletePaymentNetwork,
