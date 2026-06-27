@@ -33,21 +33,47 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUserState] = useState<AdminUser | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // On mount: restore user from localStorage (token lives in httpOnly cookie)
-  useEffect(() => {
-    const storedUser = getUser();
-    if (storedUser) setUserState(storedUser);
-    setLoading(false);
-  }, []);
-
   const buildUserObj = (raw: any, emailFallback: string): AdminUser => ({
-    id: raw?.id || raw?._id || "1",
+    id: raw?.id || raw?._id || raw?.sub || "1",
     name: [raw?.firstName, raw?.lastName].filter(Boolean).join(" ") ||
-          raw?.name || raw?.fullName || emailFallback.split("@")[0],
+          raw?.name || raw?.fullName || emailFallback.split("@")[0] || "Admin",
     email: raw?.email || emailFallback,
     role: (raw?.role || "SUPER_ADMIN").replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase()),
     avatar: raw?.avatar || raw?.profileImage,
   });
+
+  // On mount: restore cached user, then re-hydrate from the server-side session
+  // so authenticated users do not lose permissions when localStorage is stale.
+  useEffect(() => {
+    let cancelled = false;
+
+    const hydrateUser = async () => {
+      const storedUser = getUser();
+      if (storedUser && !cancelled) {
+        setUserState(storedUser);
+      }
+
+      try {
+        const res = await axios.get("/api/bff/me");
+        if (res.data?.authenticated && res.data?.user && !cancelled) {
+          const freshUser = buildUserObj(res.data.user, res.data.user?.email || storedUser?.email || "");
+          setUser(freshUser);
+          setUserState(freshUser);
+          return;
+        }
+      } catch {
+        // No valid cookie-backed session. Fall back to stored user if present.
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    hydrateUser();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // ── Login ──────────────────────────────────────────────────────────────────
   // Calls the BFF route which sets httpOnly access + refresh cookies server-side.
