@@ -840,14 +840,15 @@ export class ProductsService {
 
   async remove(id: string) {
     try {
-      await this.prisma.product.delete({ where: { id } });
-      await this.cacheManager.reset();
-      return { success: true, id };
-    } catch (e: any) {
-      // Fallback to soft delete if constrained by foreign keys
-      await this.prisma.product.update({ where: { id }, data: { isActive: false } });
+      // Always use soft delete for safety and to prevent orphan references in orders/reviews
+      await this.prisma.product.update({ 
+        where: { id }, 
+        data: { isActive: false } 
+      });
       await this.cacheManager.reset();
       return { success: true, id, softDeleted: true };
+    } catch (e: any) {
+      throw new Error(`Failed to delete product: ${e.message}`);
     }
   }
 

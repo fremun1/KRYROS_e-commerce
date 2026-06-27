@@ -69,7 +69,17 @@ function UsersContent() {
     const r = row as unknown as User;
     if (authLoading) { toast.error('Loading user session...'); return; }
     if (!isSuperAdmin) { toast.error('Only Super Admin can delete users'); return; }
-    if ((r.role || '').toUpperCase() === 'ADMIN' || (r.role || '').toUpperCase() === 'SUPER_ADMIN') { toast.error('Admin accounts cannot be deleted'); return; }
+    
+    // Prevent deleting self
+    if (r.id === currentUser?.id) { toast.error('You cannot delete your own account'); return; }
+    
+    // Super Admins can delete anyone else, but let's keep a safety check for other Super Admins if desired
+    // For now, just allow deleting Admins as requested.
+    if ((r.role || '').toUpperCase() === 'SUPER_ADMIN' && r.id !== currentUser?.id) {
+       toast.error('Super Admin accounts cannot be deleted via dashboard for safety'); 
+       return; 
+    }
+    
     setDeleteRow(r);
   };
   const openView = (row: Record<string, unknown>) => setViewRow(row as unknown as User);
@@ -134,9 +144,6 @@ function UsersContent() {
 
   const handleDelete = async () => {
     if (!deleteRow || !isSuperAdmin || authLoading) return;
-    if ((deleteRow.role || '').toUpperCase() === 'ADMIN' || (deleteRow.role || '').toUpperCase() === 'SUPER_ADMIN') {
-      toast.error('Admin accounts cannot be deleted'); setDeleteRow(null); return;
-    }
     setLoading(true);
     try {
       await deleteUser(deleteRow.id);

@@ -37,6 +37,7 @@ function SettingsContent() {
   const [pushNotif, setPushNotif] = useState(true);
   const [orderNotif, setOrderNotif] = useState(true);
   const [processingFeeRate, setProcessingFeeRate] = useState('10');
+  const [whatsappNumber, setWhatsappNumber] = useState('');
   
   // ── 2FA state ──────────────────────────────────────────────────────────────
   type TwoFAStep = 'loading' | 'disabled' | 'setup' | 'enabled' | 'disabling';
@@ -78,6 +79,7 @@ function SettingsContent() {
       if (sMap.push_notifications) setPushNotif(sMap.push_notifications === 'true');
       if (sMap.order_notifications) setOrderNotif(sMap.order_notifications === 'true');
       if (sMap.processing_fee_rate) setProcessingFeeRate(sMap.processing_fee_rate);
+      if (sMap.whatsapp_number) setWhatsappNumber(sMap.whatsapp_number);
       
       setStoreSettings({
         isStoreClosed: sMap.is_store_closed_manual === 'true',
@@ -117,6 +119,7 @@ function SettingsContent() {
         next_opening_time: storeSettings.nextOpeningTime,
         next_opening_day: String(storeSettings.nextOpeningDay),
         processing_fee_rate: processingFeeRate,
+        whatsapp_number: whatsappNumber,
       });
       toast.success('Settings saved successfully');
     } catch { toast.error('Failed to save settings — check connection'); }
@@ -235,7 +238,8 @@ function SettingsContent() {
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0 20px' }} className="fg">
             <Field label="Store Name"><input style={inputStyle} value={storeName} onChange={e=>setStoreName(e.target.value)} /></Field>
             <Field label="Store Email"><input style={inputStyle} value={storeEmail} onChange={e=>setStoreEmail(e.target.value)} /></Field>
-            <Field label="Phone Number"><input style={inputStyle} value={storePhone} onChange={e=>setStorePhone(e.target.value)} /></Field>
+            <Field label="Store Phone Number"><input style={inputStyle} value={storePhone} onChange={e=>setStorePhone(e.target.value)} /></Field>
+            <Field label="WhatsApp Number (Payment)"><input style={inputStyle} value={whatsappNumber} onChange={e=>setWhatsappNumber(e.target.value)} placeholder="e.g. 260969597029" /></Field>
             <Field label="Default Currency">
               <select style={inputStyle} value={currency} onChange={e=>setCurrency(e.target.value)}>
                 {['USD'].map(c=><option key={c}>{c}</option>)}

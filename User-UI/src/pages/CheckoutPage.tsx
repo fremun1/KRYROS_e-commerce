@@ -166,7 +166,7 @@ export default function CheckoutPage() {
   const [waMessage,        setWaMessage]         = useState<string>("");
   const [savedCartItems,   setSavedCartItems]    = useState<typeof cartItems>([]);
   const pollRef     = useRef<ReturnType<typeof setInterval> | null>(null);
-  const whatsappNumber = import.meta.env.VITE_WHATSAPP_NUMBER || "260969597029";
+  const [whatsappNumber, setWhatsappNumber] = useState(import.meta.env.VITE_WHATSAPP_NUMBER || "260969597029");
 
   // Shipping Information (Section 1)
   const [firstName,     setFirstName]     = useState(authUser?.firstName ?? "");
@@ -305,8 +305,11 @@ export default function CheckoutPage() {
 
     fetchSettings()
       .then((settings) => {
-        const rate = settings.find((s: any) => s.key === 'processing_fee_rate')?.value;
+        const arr = Array.isArray(settings) ? settings : (settings as any)?.data || [];
+        const rate = arr.find((s: any) => s.key === 'processing_fee_rate')?.value;
         if (rate) setFeeRate(Number(rate) / 100);
+        const wa = arr.find((s: any) => s.key === 'whatsapp_number')?.value;
+        if (wa && wa.trim()) setWhatsappNumber(wa.replace(/[^0-9]/g, ""));
       })
       .catch(() => {});
   }, []);

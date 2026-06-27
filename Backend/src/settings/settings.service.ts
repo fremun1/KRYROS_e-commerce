@@ -74,6 +74,24 @@ export class SettingsService implements OnModuleInit {
     return result;
   }
 
+  async updateMany(settings: Record<string, string>) {
+    const updates = Object.entries(settings).map(([key, value]) => 
+      this.prisma.setting.upsert({
+        where: { key },
+        update: { value },
+        create: {
+          key,
+          value,
+          type: 'string',
+          category: 'general'
+        },
+      })
+    );
+    const results = await Promise.all(updates);
+    await this.invalidateSettingsCache();
+    return results;
+  }
+
   async getShippingConfig() {
     const cached = await this.cacheManager.get<any>('settings:shipping');
     if (cached) return cached;

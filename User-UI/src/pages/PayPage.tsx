@@ -194,11 +194,14 @@ export default function PayPage() {
       })
       .catch(() => {});
 
-    fetchSettings()
-      .then((settings) => {
-        const rate = settings.find((s: any) => s.key === "processing_fee_rate")?.value;
+    // Fetch global settings for WhatsApp number and fee rate
+    fetch(`${API_BASE}/api/settings`)
+      .then(r => r.json())
+      .then((settings: any) => {
+        const arr = Array.isArray(settings) ? settings : settings?.data || [];
+        const rate = arr.find((s: any) => s.key === "processing_fee_rate")?.value;
         if (rate) setFeeRate(Number(rate) / 100);
-        const wa = settings.find((s: any) => s.key === "whatsapp_number")?.value;
+        const wa = arr.find((s: any) => s.key === "whatsapp_number")?.value;
         if (wa && wa.trim()) setWhatsappNumber(wa.replace(/[^0-9]/g, ""));
       })
       .catch(() => {});
