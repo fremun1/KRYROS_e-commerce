@@ -120,7 +120,7 @@ export class PaymentLinksService {
       throw new BadRequestException('Payment link has expired');
     }
 
-    if (paymentLink.amount !== expectedAmount) {
+    if (Number(paymentLink.amount) !== expectedAmount) {
       throw new BadRequestException('Payment amount does not match the link');
     }
 
