@@ -142,7 +142,9 @@ function OrdersContent() {
   };
 
   // Check if user has permission to delete (Admin, Super Admin, or Manager)
-  const canDelete = user?.role === 'Admin' || user?.role === 'Super Admin' || user?.role === 'Manager';
+  // Matching both capitalized and uppercase versions for robustness
+  const r = user?.role?.toUpperCase();
+  const canDelete = r === 'ADMIN' || r === 'SUPER_ADMIN' || r === 'MANAGER';
 
   const [orders, setOrders]             = useState<OrderListItem[]>([]);
   const [loading, setLoading]           = useState(true);
