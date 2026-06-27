@@ -130,6 +130,7 @@ const nextConfig: NextConfig = {
       ...proxy("newsletter"),
       ...proxy("payments"),
       ...proxy("payment-config"),
+      ...proxy("pay-links"),
       ...proxy("cloudinary"),
     ];
   },
