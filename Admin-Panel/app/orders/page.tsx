@@ -142,9 +142,9 @@ function OrdersContent() {
   };
 
   // Check if user has permission to delete (Admin, Super Admin, or Manager)
-  // Matching both capitalized and uppercase versions for robustness
-  const r = user?.role?.toUpperCase();
-  const canDelete = r === 'ADMIN' || r === 'SUPER_ADMIN' || r === 'MANAGER';
+  // We normalize the role by removing spaces and underscores to handle "Super Admin", "SUPER_ADMIN", etc.
+  const r = (user?.role || '').toUpperCase().replace(/[\s_]+/g, '');
+  const canDelete = r === 'ADMIN' || r === 'SUPERADMIN' || r === 'MANAGER';
 
   const [orders, setOrders]             = useState<OrderListItem[]>([]);
   const [loading, setLoading]           = useState(true);
