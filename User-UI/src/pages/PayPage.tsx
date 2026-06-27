@@ -164,7 +164,11 @@ export default function PayPage() {
   const fileRef = useRef<HTMLInputElement>(null);
   const [proofFile, setProofFile] = useState<string | null>(null);
 
-  const [whatsappNumber, setWhatsappNumber] = useState("260969597029");
+  const [whatsappNumber, setWhatsappNumber] = useState(() => {
+    const envWa = (import.meta as any).env?.VITE_WHATSAPP_NUMBER;
+    if (envWa && envWa.trim()) return envWa.replace(/[^0-9]/g, "");
+    return "260969597029";
+  });
   const [payRef, setPayRef] = useState(() => "PAY-" + Date.now().toString(36).toUpperCase().slice(-8));
 
   const [bankProviders, setBankProviders] = useState<{ name: string; config?: { accountName?: string; accountNumber?: string } }[]>([]);
@@ -195,7 +199,7 @@ export default function PayPage() {
         const rate = settings.find((s: any) => s.key === "processing_fee_rate")?.value;
         if (rate) setFeeRate(Number(rate) / 100);
         const wa = settings.find((s: any) => s.key === "whatsapp_number")?.value;
-        if (wa) setWhatsappNumber(wa.replace(/[^0-9]/g, ""));
+        if (wa && wa.trim()) setWhatsappNumber(wa.replace(/[^0-9]/g, ""));
       })
       .catch(() => {});
   }, []);
