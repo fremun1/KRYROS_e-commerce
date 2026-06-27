@@ -31,6 +31,7 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { ReviewsModule } from './reviews/reviews.module';
 import { NewsletterModule } from './newsletter/newsletter.module';
 import { PaymentConfigModule } from './payment-config/payment-config.module';
+import { PaymentLinksModule } from './payment-links/payment-links.module';
 
 const logger = new Logger('AppModule');
 
@@ -122,6 +123,7 @@ function buildThrottlerConfig() {
     ReviewsModule,
     NewsletterModule,
     PaymentConfigModule,
+    PaymentLinksModule,
   ],
   providers: [
     {

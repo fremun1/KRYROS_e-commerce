@@ -190,7 +190,7 @@ function WalletContent() {
     const params = new URLSearchParams({ amount: genForm.amount, currency: genForm.currency, ref, ...(genForm.note ? { note: genForm.note } : {}) });
     const link = `${FRONTEND_PAYMENT_URL}?${params.toString()}`;
     setGeneratedLink(link);
-    const newLink: PayLink = { id: ref, name: genForm.name || `Payment - $${Number(genForm.amount).toLocaleString()}`, url: link, amount: `$${Number(genForm.amount).toLocaleString()}`, currency: 'USD', note: genForm.note, clicks: '0', status: 'Active', created: new Date().toISOString().split('T')[0] };
+    const newLink: PayLink = { id: ref, name: genForm.name || `Payment - ${genForm.currency}${Number(genForm.amount).toLocaleString()}`, url: link, amount: `${genForm.currency}${Number(genForm.amount).toLocaleString()}`, currency: genForm.currency, note: genForm.note, clicks: '0', status: 'Active', created: new Date().toISOString().split('T')[0] };
     setPayLinks(d => [newLink, ...d]);
     toast.success('Payment link generated!');
     setGenLoading(false);

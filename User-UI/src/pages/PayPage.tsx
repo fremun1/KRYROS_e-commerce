@@ -408,8 +408,9 @@ export default function PayPage() {
                     id="currency"
                     value={currency}
                     onChange={(e) => { setCurrency(e.target.value); setShowCurrencyDrop(false); }}
+                    disabled={isLinkedPayment}
                     aria-label="Currency"
-                    className="border-0 bg-transparent font-bold text-kryros-primary text-base appearance-none outline-none cursor-pointer"
+                    className="border-0 bg-transparent font-bold text-kryros-primary text-base appearance-none outline-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {CURRENCIES.map((c) => (
                       <option key={c.code} value={c.code}>{c.code}</option>

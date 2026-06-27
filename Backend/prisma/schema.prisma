@@ -1337,3 +1337,19 @@ enum SymbolPosition {
   BEFORE
   AFTER
 }
+
+model PaymentLink {
+  id                String    @id @default(uuid())
+  name              String?
+  amount            Decimal   @db.Decimal(10, 2)
+  currency          String    @default("ZMW")
+  note              String?
+  createdBy         String?   // Admin user ID who created the link
+  expiresAt         DateTime?
+  isActive          Boolean   @default(true)
+  clicks            Int       @default(0)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  @@map("payment_links")
+}
