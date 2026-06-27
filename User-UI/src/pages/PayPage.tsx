@@ -164,7 +164,7 @@ export default function PayPage() {
   const fileRef = useRef<HTMLInputElement>(null);
   const [proofFile, setProofFile] = useState<string | null>(null);
 
-  const whatsappNumber = (import.meta as any).env?.VITE_WHATSAPP_NUMBER || "260969597029";
+  const [whatsappNumber, setWhatsappNumber] = useState("260969597029");
   const [payRef, setPayRef] = useState(() => "PAY-" + Date.now().toString(36).toUpperCase().slice(-8));
 
   const [bankProviders, setBankProviders] = useState<{ name: string; config?: { accountName?: string; accountNumber?: string } }[]>([]);
@@ -194,6 +194,8 @@ export default function PayPage() {
       .then((settings) => {
         const rate = settings.find((s: any) => s.key === "processing_fee_rate")?.value;
         if (rate) setFeeRate(Number(rate) / 100);
+        const wa = settings.find((s: any) => s.key === "whatsapp_number")?.value;
+        if (wa) setWhatsappNumber(wa.replace(/[^0-9]/g, ""));
       })
       .catch(() => {});
   }, []);
@@ -249,12 +251,16 @@ export default function PayPage() {
     if (!mmPhone) { setPayError("Please enter your phone number"); return; }
     setPayLoading(true); setPayError(null); setPayStatus("sending");
     try {
-      const res = await fetch(`${API_BASE}/api/payments/initiate`, {
+      const exchangeRate = selectedCurrency.exchangeRate || 1;
+      const totalZMW = total * exchangeRate;
+      const res = await fetch(`${API_BASE}/api/payments/direct`, {
         method: "POST",
         headers: { "Content-Type": "application/json", ...(token && { Authorization: `Bearer ${token}` }) },
         body: JSON.stringify({
-          amount, currency, reference: payRef, method: "mobile_wallet", provider: mmProvider,
-          phone: mmPhone, note, receiptContact, proofFile,
+          phone: mmPhone,
+          amount: totalZMW,
+          currency: "ZMW",
+          note: note || payRef,
         }),
       });
       const data = await res.json();
@@ -266,7 +272,7 @@ export default function PayPage() {
         attempts++;
         if (attempts > 24) { stopPolling(); setPayStatus("failed"); setPayError("Payment timeout. Please try again."); return; }
         try {
-          const statusRes = await fetch(`${API_BASE}/api/payments/${data.orderId}/status`, {
+          const statusRes = await fetch(`${API_BASE}/api/payments/status/${data.orderId}`, {
             headers: { ...(token && { Authorization: `Bearer ${token}` }) },
           });
           const statusData = await statusRes.json();
@@ -286,7 +292,7 @@ export default function PayPage() {
     } finally {
       setPayLoading(false);
     }
-  }, [mmPhone, amount, currency, payRef, note, receiptContact, proofFile, token, stopPolling, buildReceipt, sendReceiptNotification]);
+  }, [mmPhone, total, selectedCurrency, payRef, note, token, stopPolling, buildReceipt, sendReceiptNotification]);
 
   const isPaid = payStatus === "paid";
   const isFailed = payStatus === "failed";
@@ -332,11 +338,33 @@ export default function PayPage() {
   }
 
   // ─── Pay Now button handler ───────────────────────────────────────────────
-  const handlePayNow = () => {
+  const handlePayNow = async () => {
     if (openMethod === "mobile") handlePaymentRequest();
     else if (openMethod === "whatsapp") {
-      const msg = encodeURIComponent(`I want to pay ${currency} ${total.toFixed(2)} for reference ${payRef}`);
-      window.open(`https://wa.me/${whatsappNumber}?text=${msg}`, "_blank");
+      setPayLoading(true); setPayError(null);
+      try {
+        const exchangeRate = selectedCurrency.exchangeRate || 1;
+        const totalZMW = total * exchangeRate;
+        const res = await fetch(`${API_BASE}/api/payments/whatsapp`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", ...(token && { Authorization: `Bearer ${token}` }) },
+          body: JSON.stringify({
+            phone: receiptContact || undefined,
+            amount: totalZMW,
+            currency: "ZMW",
+            note: note || `WhatsApp payment for ${currency} ${total.toFixed(2)}`,
+            reference: payRef,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || "Failed to create payment record");
+        const msg = encodeURIComponent(`I want to pay ${currency} ${total.toFixed(2)} for reference ${payRef}\n\nOrder: ${data.orderNumber || data.orderId}\nPhone: ${receiptContact || 'Not provided'}`);
+        window.open(`https://wa.me/${whatsappNumber}?text=${msg}`, "_blank");
+      } catch (err: any) {
+        setPayError(err.message || "Failed to initiate WhatsApp payment");
+      } finally {
+        setPayLoading(false);
+      }
     }
   };
 

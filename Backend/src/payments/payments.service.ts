@@ -185,7 +185,6 @@ export class PaymentsService {
   async processDirectPayment(userId: string | null, phone: string, amountZMW: number, currency = 'ZMW', note?: string) {
     this.logger.log(`=== Direct Payment (no order) for user: ${userId} ===`);
 
-    // Create a lightweight placeholder order so we can track the payment
     const orderNumber = `DIR-${Date.now().toString(36).toUpperCase()}`;
     const order = await this.prisma.order.create({
       data: {
@@ -210,6 +209,37 @@ export class PaymentsService {
       orderId: order.id,
       orderNumber,
       ...result,
+    };
+  }
+
+  async processWhatsAppPayment(userId: string | null, phone: string, amountZMW: number, currency = 'ZMW', note?: string, reference?: string) {
+    this.logger.log(`=== WhatsApp Payment for user: ${userId}, ref: ${reference}`);
+
+    const orderNumber = `WA-${Date.now().toString(36).toUpperCase()}`;
+    const order = await this.prisma.order.create({
+      data: {
+        orderNumber,
+        ...(userId ? { userId } : {}),
+        paymentMethod: 'WHATSAPP',
+        paymentPhone: phone || '',
+        subtotal: amountZMW,
+        total: amountZMW,
+        currencyCode: currency,
+        currencySymbol: currency,
+        notes: note || 'WhatsApp payment via Pay page',
+        paymentReference: reference,
+        paymentStatus: 'PENDING',
+        status: 'PENDING',
+      },
+    });
+
+    this.logger.log(`Created WhatsApp payment order: ${order.id} (${orderNumber})`);
+
+    return {
+      orderId: order.id,
+      orderNumber,
+      reference: reference || orderNumber,
+      status: 'PENDING',
     };
   }
 

@@ -8,6 +8,7 @@ import { Roles } from '../common/decorators/roles.decorator';
 import { UserRole } from '@prisma/client';
 import { InitializePaymentDto } from './dto/initialize-payment.dto';
 import { DirectPaymentDto } from './dto/direct-payment.dto';
+import { WhatsAppPaymentDto } from './dto/whatsapp-payment.dto';
 import { Request } from 'express';
 
 @ApiTags('Payments')
@@ -29,6 +30,14 @@ export class PaymentsController {
   direct(@Body() body: DirectPaymentDto, @Req() req: Request) {
     const userId = (req as any).user?.id ?? null;
     return this.paymentsService.processDirectPayment(userId, body.phone, body.amount, body.currency, body.note);
+  }
+
+  @Post('whatsapp')
+  @UseGuards(OptionalJwtAuthGuard)
+  @ApiOperation({ summary: 'Create a WhatsApp payment record and return reference for manual payment' })
+  whatsapp(@Body() body: WhatsAppPaymentDto, @Req() req: Request) {
+    const userId = (req as any).user?.id ?? null;
+    return this.paymentsService.processWhatsAppPayment(userId, body.phone, body.amount, body.currency, body.note, body.reference);
   }
 
   @Post('verify')
