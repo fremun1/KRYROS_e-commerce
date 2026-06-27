@@ -2,12 +2,13 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import AdminShell from '@/components/admin/admin-shell';
 import { useTheme } from '@/contexts/theme-context';
+import { useAuth } from '@/contexts/auth-context';
 import {
   Search, X, ChevronRight, Package, Truck, MapPin,
   CheckCircle, RefreshCw, User, ArrowRight, Mail,
-  Phone, ShoppingBag, Clock, AlertCircle, Ban,
+  Phone, ShoppingBag, Clock, AlertCircle, Ban, Trash2,
 } from 'lucide-react';
-import { getOrders, getOrder, updateOrderStatus, bulkUpdateOrderStatus } from '@/lib/api';
+import { getOrders, getOrder, updateOrderStatus, bulkUpdateOrderStatus, deleteOrder, bulkDeleteOrders } from '@/lib/api';
 import toast from 'react-hot-toast';
 
 // ─── Types ────────────────────────────────────────────────
@@ -66,15 +67,6 @@ type TabDef = {
   filter: (o: OrderListItem) => boolean;
 };
 
-type ActionDef = {
-  label: string;
-  description: string;
-  newStatus?: OrderStatus;
-  newPaymentStatus?: PaymentStatus;
-  variant: 'primary' | 'danger';
-  requiresTracking?: boolean;
-};
-
 // ─── Tab definitions ──────────────────────────────────────
 const TABS: TabDef[] = [
   { key: 'all',        label: 'All Orders',  color: '#8E9AAF', filter: () => true },
@@ -117,25 +109,9 @@ const METHOD_LABEL: Record<string, string> = {
 
 const MANUAL_METHODS = ['BANK_TRANSFER', 'WHATSAPP'];
 
-// ─── Next actions per status ──────────────────────────────
-function getNextActions(status: OrderStatus, payStatus: PaymentStatus): ActionDef[] {
-  if (status === 'PENDING' && payStatus === 'PENDING') return [
-    { label: 'Mark as Paid',   description: 'Confirm manual payment received', newPaymentStatus: 'PAID',      variant: 'primary' },
-    { label: 'Cancel Order',   description: 'Cancel this order',               newStatus: 'CANCELLED',        variant: 'danger'  },
-  ];
-  if (status === 'PENDING' && payStatus === 'PAID') return [
-    { label: 'Confirm Order',  description: 'Confirm order for fulfillment',   newStatus: 'CONFIRMED',        variant: 'primary' },
-    { label: 'Cancel & Refund',description: 'Cancel and refund payment',       newStatus: 'CANCELLED', newPaymentStatus: 'REFUNDED', variant: 'danger' },
-  ];
-  if (status === 'CONFIRMED') return [
-    { label: 'Mark as Shipped',description: 'Order dispatched to courier',     newStatus: 'SHIPPED',          variant: 'primary', requiresTracking: true },
-    { label: 'Cancel & Refund',description: 'Cancel and refund',               newStatus: 'CANCELLED', newPaymentStatus: 'REFUNDED', variant: 'danger' },
-  ];
-  if (status === 'SHIPPED')    return [{ label: 'Mark In Transit',  description: 'Order is en route to pickup station', newStatus: 'IN_TRANSIT', variant: 'primary' }];
-  if (status === 'IN_TRANSIT') return [{ label: 'Mark as Delivered', description: 'Order arrived at pickup station/park', newStatus: 'DELIVERED', variant: 'primary' }];
-  if (status === 'DELIVERED')  return [{ label: 'Mark as Collected', description: 'Customer has picked up the order',    newStatus: 'COLLECTED', variant: 'primary' }];
-  return [];
-}
+// All valid order statuses for dropdown
+const ALL_ORDER_STATUSES: OrderStatus[] = ['PENDING', 'PROCESSING', 'CONFIRMED', 'SHIPPED', 'IN_TRANSIT', 'DELIVERED', 'COLLECTED', 'CANCELLED', 'REFUNDED', 'RETURNED'];
+const ALL_PAYMENT_STATUSES: PaymentStatus[] = ['PENDING', 'PAID', 'FAILED', 'REFUNDED', 'PARTIALLY_PAID'];
 
 // ─── Helpers ──────────────────────────────────────────────
 const fmtDate = (iso: string) => {
@@ -152,6 +128,7 @@ const fmtMoney = (amount: number, symbol = '$') =>
 // ─── Main Content ─────────────────────────────────────────
 function OrdersContent() {
   const { theme } = useTheme();
+  const { user } = useAuth();
   const dark = theme === 'dark';
   const T = {
     card:    dark ? '#0D1523' : '#FFFFFF',
@@ -164,6 +141,9 @@ function OrdersContent() {
     input:   dark ? '#0D1523' : '#FFFFFF',
   };
 
+  // Check if user is Admin or Super Admin
+  const isAdminOrSuperAdmin = user?.role === 'Admin' || user?.role === 'Super Admin';
+
   const [orders, setOrders]             = useState<OrderListItem[]>([]);
   const [loading, setLoading]           = useState(true);
   const [tab, setTab]                   = useState('all');
@@ -174,6 +154,11 @@ function OrdersContent() {
   const [tracking, setTracking]         = useState('');
   const [selectedIds, setSelectedIds]   = useState<Set<string>>(new Set());
   const [bulkLoading, setBulkLoading]   = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null); // 'single' or 'bulk'
+  const [showStatusDropdown, setShowStatusDropdown] = useState(false);
+  const [showPaymentDropdown, setShowPaymentDropdown] = useState(false);
+  const [selectedOrderStatus, setSelectedOrderStatus] = useState<OrderStatus | ''>('');
+  const [selectedPaymentStatus, setSelectedPaymentStatus] = useState<PaymentStatus | ''>('');
 
   // Load order list
   const loadOrders = useCallback(() => {
@@ -208,6 +193,10 @@ function OrdersContent() {
     setDetailLoading(true);
     setDetail(null);
     setTracking('');
+    setSelectedOrderStatus('');
+    setSelectedPaymentStatus('');
+    setShowStatusDropdown(false);
+    setShowPaymentDropdown(false);
     try {
       const res: any = await getOrder(orderId);
       const o = res.data;
@@ -253,6 +242,8 @@ function OrdersContent() {
         })),
       });
       if (o.trackingNumber) setTracking(o.trackingNumber);
+      setSelectedOrderStatus(o.status);
+      setSelectedPaymentStatus(o.paymentStatus);
     } catch {
       toast.error('Failed to load order details');
     } finally {
@@ -261,24 +252,54 @@ function OrdersContent() {
   }, []);
 
   // Execute status update
-  const doAction = useCallback(async (newStatus?: string, newPayStatus?: string) => {
+  const doAction = useCallback(async () => {
     if (!detail) return;
     setActionLoading(true);
     try {
       const payload: Record<string, string> = {};
-      if (newStatus)    payload.status = newStatus;
-      if (newPayStatus) payload.paymentStatus = newPayStatus;
+      if (selectedOrderStatus && selectedOrderStatus !== detail.status) {
+        payload.status = selectedOrderStatus;
+      }
+      if (selectedPaymentStatus && selectedPaymentStatus !== detail.paymentStatus) {
+        payload.paymentStatus = selectedPaymentStatus;
+      }
       if (tracking.trim()) payload.trackingNumber = tracking.trim();
+      
+      if (Object.keys(payload).length === 0) {
+        toast.error('No changes to save');
+        setActionLoading(false);
+        return;
+      }
+
       await (updateOrderStatus as any)(detail.id, payload);
       toast.success('Order updated successfully');
       loadOrders();
       await openDetail(detail.id);
+      setShowStatusDropdown(false);
+      setShowPaymentDropdown(false);
     } catch (err: any) {
       toast.error(err?.response?.data?.message || 'Failed to update order');
     } finally {
       setActionLoading(false);
     }
-  }, [detail, tracking, loadOrders, openDetail]);
+  }, [detail, selectedOrderStatus, selectedPaymentStatus, tracking, loadOrders, openDetail]);
+
+  // Delete single order
+  const doDeleteOrder = useCallback(async () => {
+    if (!detail) return;
+    setActionLoading(true);
+    try {
+      await (deleteOrder as any)(detail.id);
+      toast.success(`Order ${detail.orderNumber} deleted successfully`);
+      setDetail(null);
+      setDeleteConfirm(null);
+      loadOrders();
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Failed to delete order');
+    } finally {
+      setActionLoading(false);
+    }
+  }, [detail, loadOrders]);
 
   // Bulk status update
   const doBulkAction = useCallback(async (status: string) => {
@@ -292,6 +313,24 @@ function OrdersContent() {
       loadOrders();
     } catch (err: any) {
       toast.error(err?.response?.data?.message || 'Bulk update failed');
+    } finally {
+      setBulkLoading(false);
+    }
+  }, [selectedIds, loadOrders]);
+
+  // Bulk delete orders
+  const doBulkDelete = useCallback(async () => {
+    if (!selectedIds.size) return;
+    setBulkLoading(true);
+    try {
+      const res: any = await (bulkDeleteOrders as any)([...selectedIds]);
+      const { succeeded, failed } = res.data;
+      toast.success(`Deleted ${succeeded} order${succeeded !== 1 ? 's' : ''}${failed ? `, ${failed} failed` : ''}`);
+      setSelectedIds(new Set());
+      setDeleteConfirm(null);
+      loadOrders();
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Bulk delete failed');
     } finally {
       setBulkLoading(false);
     }
@@ -316,8 +355,6 @@ function OrdersContent() {
     Object.fromEntries(TABS.map(t => [t.key, orders.filter(t.filter).length])),
   [orders]);
 
-  const nextActions = detail ? getNextActions(detail.status, detail.paymentStatus) : [];
-
   return (
     <AdminShell>
       <div style={{ paddingBottom: '2rem' }}>
@@ -327,210 +364,222 @@ function OrdersContent() {
           <div>
             <h1 style={{ color: T.text, fontSize: '1.3rem', fontWeight: 700, margin: 0 }}>Order Management</h1>
             <p style={{ color: T.muted, fontSize: '0.8rem', marginTop: '0.2rem' }}>
-              {orders.length} total &middot; {counts['pending'] || 0} awaiting payment &middot; {counts['paid'] || 0} awaiting confirmation
+              {orders.length} total &middot; {counts['pending'] || 0} awaiting payment
             </p>
           </div>
-          <button onClick={loadOrders} disabled={loading} style={{
-            display: 'flex', alignItems: 'center', gap: '0.4rem',
-            padding: '0.5rem 1rem', borderRadius: '8px',
-            border: `1px solid ${T.border}`, background: 'transparent',
-            color: T.muted, fontSize: '0.8rem', cursor: 'pointer',
-          }}>
+          <button
+            onClick={() => loadOrders()}
+            disabled={loading}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '0.4rem',
+              padding: '0.5rem 1rem', borderRadius: '8px', border: 'none',
+              background: '#00D4AA', color: '#000', fontWeight: 600, fontSize: '0.8rem',
+              cursor: loading ? 'wait' : 'pointer', opacity: loading ? 0.6 : 1,
+            }}
+          >
             <RefreshCw size={13} /> Refresh
           </button>
         </div>
 
-        {/* ── Bulk action toolbar (appears when rows are selected) ── */}
-        {selectedIds.size > 0 && (
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: '0.75rem',
-            padding: '0.65rem 1rem', marginBottom: '0.75rem',
-            background: dark ? '#0F2542' : '#EFF6FF',
-            border: `1px solid ${dark ? '#1D4ED8' : '#BFDBFE'}`,
-            borderRadius: '10px', flexWrap: 'wrap' as const,
-          }}>
-            <span style={{ fontSize: '0.82rem', fontWeight: 600, color: dark ? '#93C5FD' : '#1D4ED8', flex: 1 }}>
-              {selectedIds.size} order{selectedIds.size !== 1 ? 's' : ''} selected
-            </span>
-            {[
-              { label: 'Confirm',     status: 'CONFIRMED',       color: '#3B82F6' },
-              { label: 'Processing',  status: 'PROCESSING',      color: '#8B5CF6' },
-              { label: 'Shipped',     status: 'SHIPPED',         color: '#0EA5E9' },
-              { label: 'In Transit',  status: 'IN_TRANSIT',      color: '#F59E0B' },
-              { label: 'Delivered',   status: 'DELIVERED',       color: '#10B981' },
-              { label: 'Cancel',      status: 'CANCELLED',       color: '#EF4444' },
-            ].map(({ label, status, color }) => (
-              <button
-                key={status}
-                disabled={bulkLoading}
-                onClick={() => doBulkAction(status)}
-                style={{
-                  padding: '0.35rem 0.85rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 600,
-                  border: `1px solid ${color}40`, background: `${color}15`, color,
-                  cursor: bulkLoading ? 'not-allowed' : 'pointer', transition: 'all 0.15s', fontFamily: 'inherit',
-                  opacity: bulkLoading ? 0.6 : 1,
-                }}
-              >{label}</button>
-            ))}
+        {/* ── Tabs ── */}
+        <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', overflowX: 'auto', paddingBottom: '0.5rem' }}>
+          {TABS.map((t) => (
             <button
-              onClick={() => setSelectedIds(new Set())}
+              key={t.key}
+              onClick={() => setTab(t.key)}
               style={{
-                padding: '0.35rem 0.75rem', borderRadius: '6px', fontSize: '0.75rem',
-                border: `1px solid ${T.border}`, background: 'transparent', color: T.muted,
-                cursor: 'pointer', fontFamily: 'inherit',
+                padding: '0.5rem 1rem', borderRadius: '8px', border: 'none',
+                background: tab === t.key ? t.color : T.surface,
+                color: tab === t.key ? '#fff' : T.muted,
+                fontWeight: tab === t.key ? 700 : 500, fontSize: '0.8rem',
+                cursor: 'pointer', whiteSpace: 'nowrap',
               }}
-            >Clear</button>
-          </div>
-        )}
+            >
+              {t.label} <span style={{ fontSize: '0.7rem', opacity: 0.8 }}>({counts[t.key] || 0})</span>
+            </button>
+          ))}
+        </div>
 
-        {/* ── Search + Tabs + Table card ── */}
-        <div style={{ background: T.card, borderRadius: '12px', border: `1px solid ${T.border}` }}>
-
-          {/* Search */}
-          <div style={{ padding: '0.7rem 1rem', borderBottom: `1px solid ${T.border}`, display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-            <Search size={14} color={T.muted} />
+        {/* ── Search + Bulk Actions ── */}
+        <div style={{ display: 'flex', gap: '0.8rem', marginBottom: '1.2rem', flexWrap: 'wrap', alignItems: 'center' }}>
+          <div style={{ flex: 1, minWidth: '200px', position: 'relative' }}>
+            <Search size={14} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: T.muted }} />
             <input
               value={search} onChange={e => setSearch(e.target.value)}
-              placeholder="Search by order #, customer name or email..."
-              style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', color: T.text, fontSize: '0.84rem', fontFamily: 'inherit' }}
+              placeholder="Search by order # or customer…"
+              style={{
+                width: '100%', padding: '0.6rem 0.75rem 0.6rem 2.2rem', boxSizing: 'border-box',
+                background: T.input, border: `1px solid ${T.border}`, borderRadius: '8px',
+                color: T.text, fontSize: '0.8rem', outline: 'none',
+              }}
             />
-            {search && (
-              <button onClick={() => setSearch('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: T.muted, display: 'flex' }}>
-                <X size={13} />
-              </button>
-            )}
           </div>
-
-          {/* Tabs */}
-          <div style={{ display: 'flex', overflowX: 'auto', padding: '0 0.25rem', borderBottom: `1px solid ${T.border}`, scrollbarWidth: 'none' as const }}>
-            {TABS.map(t => (
+          {selectedIds.size > 0 && isAdminOrSuperAdmin && (
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
               <button
-                key={t.key} onClick={() => setTab(t.key)}
+                onClick={() => setDeleteConfirm('bulk')}
+                disabled={bulkLoading}
                 style={{
-                  display: 'flex', alignItems: 'center', gap: '0.35rem',
-                  padding: '0.7rem 0.8rem', whiteSpace: 'nowrap' as const,
-                  background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit',
-                  borderBottom: tab === t.key ? `2px solid ${t.color}` : '2px solid transparent',
-                  color: tab === t.key ? t.color : T.muted,
-                  fontWeight: tab === t.key ? 700 : 400,
-                  fontSize: '0.79rem', marginBottom: '-1px', transition: 'all 0.15s',
+                  display: 'flex', alignItems: 'center', gap: '0.3rem',
+                  padding: '0.5rem 0.8rem', borderRadius: '8px', border: 'none',
+                  background: 'rgba(248,113,113,0.1)', color: '#F87171',
+                  fontWeight: 600, fontSize: '0.75rem', cursor: bulkLoading ? 'wait' : 'pointer',
                 }}
               >
-                {t.label}
-                {(counts[t.key] || 0) > 0 && (
-                  <span style={{
-                    background: tab === t.key ? `${t.color}20` : T.surface,
-                    color: tab === t.key ? t.color : T.muted,
-                    fontSize: '0.63rem', fontWeight: 700,
-                    padding: '1px 5px', borderRadius: '8px',
-                  }}>{counts[t.key]}</span>
-                )}
+                <Trash2 size={12} /> Delete ({selectedIds.size})
               </button>
-            ))}
-          </div>
-
-          {/* Table */}
-          {loading ? (
-            <div style={{ padding: '3rem', textAlign: 'center' as const, color: T.muted, fontSize: '0.85rem' }}>Loading orders…</div>
-          ) : shown.length === 0 ? (
-            <div style={{ padding: '3rem', textAlign: 'center' as const, color: T.muted }}>
-              <Package size={28} color={T.muted} style={{ marginBottom: '0.5rem' }} />
-              <p style={{ fontSize: '0.9rem', fontWeight: 600, color: T.text, marginTop: 0 }}>No orders</p>
-              <p style={{ fontSize: '0.78rem', marginTop: '0.2rem' }}>
-                {search ? 'No results for your search.' : `No orders in "${activeDef.label}".`}
-              </p>
-            </div>
-          ) : (
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.81rem' }}>
-                <thead>
-                  <tr style={{ background: T.surface }}>
-                    <th style={{ padding: '0.6rem 0.5rem 0.6rem 1rem', width: '40px' }}>
-                      <input
-                        type="checkbox"
-                        checked={shown.length > 0 && shown.every(o => selectedIds.has(o.id))}
-                        onChange={e => {
-                          if (e.target.checked) setSelectedIds(new Set(shown.map(o => o.id)));
-                          else setSelectedIds(new Set());
-                        }}
-                        style={{ cursor: 'pointer', accentColor: '#3B82F6', width: '14px', height: '14px' }}
-                      />
-                    </th>
-                    {['Order #', 'Customer', 'Date', 'Items', 'Payment', 'Total', 'Pay Status', 'Order Status', ''].map(h => (
-                      <th key={h} style={{ padding: '0.6rem 1rem', textAlign: 'left' as const, color: T.muted, fontWeight: 600, fontSize: '0.68rem', textTransform: 'uppercase' as const, letterSpacing: '0.05em', whiteSpace: 'nowrap' as const }}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {shown.map((o, i) => {
-                    const sc  = STATUS_CFG[o.status]       || STATUS_CFG.PENDING;
-                    const psc = PAY_CFG[o.paymentStatus]   || PAY_CFG.PENDING;
-                    const isManual = MANUAL_METHODS.includes(o.paymentMethod?.toUpperCase());
-                    const customer = o.user
-                      ? (`${o.user.firstName} ${o.user.lastName}`.trim() || o.user.email)
-                      : 'Guest';
-                    return (
-                      <tr
-                        key={o.id}
-                        onClick={() => openDetail(o.id)}
-                        style={{
-                          borderTop: `1px solid ${T.border}`, cursor: 'pointer',
-                          background: i % 2 === 0 ? 'transparent' : (dark ? 'rgba(255,255,255,0.012)' : 'rgba(0,0,0,0.01)'),
-                          transition: 'background 0.12s',
-                        }}
-                        onMouseEnter={e => (e.currentTarget.style.background = T.hover)}
-                        onMouseLeave={e => (e.currentTarget.style.background = i % 2 === 0 ? 'transparent' : (dark ? 'rgba(255,255,255,0.012)' : 'rgba(0,0,0,0.01)'))}
-                      >
-                        <td style={{ padding: '0.5rem 0.5rem 0.5rem 1rem' }} onClick={e => e.stopPropagation()}>
-                          <input
-                            type="checkbox"
-                            checked={selectedIds.has(o.id)}
-                            onChange={e => {
-                              const next = new Set(selectedIds);
-                              if (e.target.checked) next.add(o.id);
-                              else next.delete(o.id);
-                              setSelectedIds(next);
-                            }}
-                            style={{ cursor: 'pointer', accentColor: '#3B82F6', width: '14px', height: '14px' }}
-                          />
-                        </td>
-                        <td style={{ padding: '0.75rem 1rem', fontWeight: 700, color: T.text, fontFamily: 'monospace', fontSize: '0.77rem' }}>
-                          #{o.orderNumber}
-                        </td>
-                        <td style={{ padding: '0.75rem 1rem' }}>
-                          <div style={{ fontWeight: 600, color: T.text }}>{customer}</div>
-                          {o.user?.email && <div style={{ color: T.muted, fontSize: '0.7rem' }}>{o.user.email}</div>}
-                        </td>
-                        <td style={{ padding: '0.75rem 1rem', color: T.muted, whiteSpace: 'nowrap' as const }}>{fmtDate(o.createdAt)}</td>
-                        <td style={{ padding: '0.75rem 1rem', color: T.muted }}>{o._count.items}</td>
-                        <td style={{ padding: '0.75rem 1rem' }}>
-                          <span style={{
-                            fontSize: '0.7rem', fontWeight: 600, padding: '2px 7px', borderRadius: '4px',
-                            background: isManual ? 'rgba(245,158,11,0.1)' : 'rgba(99,102,241,0.1)',
-                            color: isManual ? '#F59E0B' : '#818CF8',
-                          }}>
-                            {METHOD_LABEL[o.paymentMethod?.toUpperCase()] || o.paymentMethod || 'N/A'}
-                          </span>
-                        </td>
-                        <td style={{ padding: '0.75rem 1rem', fontWeight: 700, color: T.text, whiteSpace: 'nowrap' as const }}>
-                          {fmtMoney(o.total, o.currencySymbol)}
-                          {/* ZMW display removed */}
-                        </td>
-                        <td style={{ padding: '0.75rem 1rem' }}>
-                          <span style={{ background: psc.bg, color: psc.color, fontSize: '0.68rem', fontWeight: 700, padding: '2px 7px', borderRadius: '4px', whiteSpace: 'nowrap' as const }}>{psc.label}</span>
-                        </td>
-                        <td style={{ padding: '0.75rem 1rem' }}>
-                          <span style={{ background: sc.bg, color: sc.color, fontSize: '0.68rem', fontWeight: 700, padding: '2px 7px', borderRadius: '4px', whiteSpace: 'nowrap' as const }}>{sc.label}</span>
-                        </td>
-                        <td style={{ padding: '0.75rem 1rem' }}><ChevronRight size={13} color={T.muted} /></td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+              <span style={{ color: T.muted, fontSize: '0.8rem' }}>{selectedIds.size} selected</span>
             </div>
           )}
         </div>
+
+        {/* ── Delete Confirmation Modal ── */}
+        {deleteConfirm && (
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 60, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ background: T.panel, borderRadius: '12px', padding: '2rem', maxWidth: '400px', boxShadow: '0 10px 40px rgba(0,0,0,0.3)' }}>
+              <h3 style={{ color: T.text, fontWeight: 700, fontSize: '1rem', margin: '0 0 0.5rem 0' }}>
+                {deleteConfirm === 'single' ? 'Delete Order?' : `Delete ${selectedIds.size} Orders?`}
+              </h3>
+              <p style={{ color: T.muted, fontSize: '0.85rem', margin: '0 0 1.5rem 0' }}>
+                This action cannot be undone. All order data will be permanently deleted.
+              </p>
+              <div style={{ display: 'flex', gap: '0.8rem', justifyContent: 'flex-end' }}>
+                <button
+                  onClick={() => setDeleteConfirm(null)}
+                  disabled={actionLoading || bulkLoading}
+                  style={{
+                    padding: '0.5rem 1rem', borderRadius: '8px', border: `1px solid ${T.border}`,
+                    background: T.input, color: T.text, fontWeight: 600, fontSize: '0.8rem',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    if (deleteConfirm === 'single') doDeleteOrder();
+                    else doBulkDelete();
+                  }}
+                  disabled={actionLoading || bulkLoading}
+                  style={{
+                    padding: '0.5rem 1rem', borderRadius: '8px', border: 'none',
+                    background: '#F87171', color: '#fff', fontWeight: 600, fontSize: '0.8rem',
+                    cursor: actionLoading || bulkLoading ? 'wait' : 'pointer',
+                  }}
+                >
+                  {actionLoading || bulkLoading ? 'Deleting…' : 'Delete'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── Orders Table ── */}
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: '2rem', color: T.muted }}>Loading orders…</div>
+        ) : shown.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '2rem', color: T.muted }}>No orders found.</div>
+        ) : (
+          <div style={{ background: T.card, borderRadius: '12px', overflow: 'hidden', border: `1px solid ${T.border}` }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ borderBottom: `1px solid ${T.border}`, background: T.surface }}>
+                  <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontSize: '0.7rem', fontWeight: 700, color: T.muted, textTransform: 'uppercase' }}>
+                    {isAdminOrSuperAdmin && (
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.size === shown.length && shown.length > 0}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedIds(new Set(shown.map(o => o.id)));
+                          } else {
+                            setSelectedIds(new Set());
+                          }
+                        }}
+                        style={{ cursor: 'pointer' }}
+                      />
+                    )}
+                  </th>
+                  <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontSize: '0.7rem', fontWeight: 700, color: T.muted, textTransform: 'uppercase' }}>Order</th>
+                  <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontSize: '0.7rem', fontWeight: 700, color: T.muted, textTransform: 'uppercase' }}>Customer</th>
+                  <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontSize: '0.7rem', fontWeight: 700, color: T.muted, textTransform: 'uppercase' }}>Date</th>
+                  <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontSize: '0.7rem', fontWeight: 700, color: T.muted, textTransform: 'uppercase' }}>Items</th>
+                  <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontSize: '0.7rem', fontWeight: 700, color: T.muted, textTransform: 'uppercase' }}>Method</th>
+                  <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontSize: '0.7rem', fontWeight: 700, color: T.muted, textTransform: 'uppercase' }}>Total</th>
+                  <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontSize: '0.7rem', fontWeight: 700, color: T.muted, textTransform: 'uppercase' }}>Payment</th>
+                  <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontSize: '0.7rem', fontWeight: 700, color: T.muted, textTransform: 'uppercase' }}>Status</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {shown.map((o) => {
+                  const sc  = STATUS_CFG[o.status]       || STATUS_CFG.PENDING;
+                  const psc = PAY_CFG[o.paymentStatus]   || PAY_CFG.PENDING;
+                  const isManual = MANUAL_METHODS.includes(o.paymentMethod?.toUpperCase());
+                  const customer = o.user ? `${o.user.firstName} ${o.user.lastName}` : 'Guest';
+                  return (
+                    <tr
+                      key={o.id}
+                      onClick={() => openDetail(o.id)}
+                      style={{
+                        borderBottom: `1px solid ${T.border}`, cursor: 'pointer',
+                        background: selectedIds.has(o.id) ? 'rgba(0,212,170,0.08)' : 'transparent',
+                        transition: 'background 0.2s',
+                      }}
+                      onMouseEnter={(e) => { if (!selectedIds.has(o.id)) (e.currentTarget as any).style.background = T.hover; }}
+                      onMouseLeave={(e) => { (e.currentTarget as any).style.background = selectedIds.has(o.id) ? 'rgba(0,212,170,0.08)' : 'transparent'; }}
+                    >
+                      <td style={{ padding: '0.75rem 1rem' }} onClick={(e) => e.stopPropagation()}>
+                        {isAdminOrSuperAdmin && (
+                          <input
+                            type="checkbox"
+                            checked={selectedIds.has(o.id)}
+                            onChange={(e) => {
+                              const newIds = new Set(selectedIds);
+                              if (e.target.checked) {
+                                newIds.add(o.id);
+                              } else {
+                                newIds.delete(o.id);
+                              }
+                              setSelectedIds(newIds);
+                            }}
+                            style={{ cursor: 'pointer' }}
+                          />
+                        )}
+                      </td>
+                      <td style={{ padding: '0.75rem 1rem', color: T.text, fontWeight: 600, fontSize: '0.8rem' }}>{o.orderNumber}</td>
+                      <td style={{ padding: '0.75rem 1rem' }}>
+                        <div style={{ fontWeight: 600, color: T.text }}>{customer}</div>
+                        {o.user?.email && <div style={{ color: T.muted, fontSize: '0.7rem' }}>{o.user.email}</div>}
+                      </td>
+                      <td style={{ padding: '0.75rem 1rem', color: T.muted, whiteSpace: 'nowrap' as const }}>{fmtDate(o.createdAt)}</td>
+                      <td style={{ padding: '0.75rem 1rem', color: T.muted }}>{o._count.items}</td>
+                      <td style={{ padding: '0.75rem 1rem' }}>
+                        <span style={{
+                          fontSize: '0.7rem', fontWeight: 600, padding: '2px 7px', borderRadius: '4px',
+                          background: isManual ? 'rgba(245,158,11,0.1)' : 'rgba(99,102,241,0.1)',
+                          color: isManual ? '#F59E0B' : '#818CF8',
+                        }}>
+                          {METHOD_LABEL[o.paymentMethod?.toUpperCase()] || o.paymentMethod || 'N/A'}
+                        </span>
+                      </td>
+                      <td style={{ padding: '0.75rem 1rem', fontWeight: 700, color: T.text, whiteSpace: 'nowrap' as const }}>
+                        {fmtMoney(o.total, o.currencySymbol)}
+                      </td>
+                      <td style={{ padding: '0.75rem 1rem' }}>
+                        <span style={{ background: psc.bg, color: psc.color, fontSize: '0.68rem', fontWeight: 700, padding: '2px 7px', borderRadius: '4px', whiteSpace: 'nowrap' as const }}>{psc.label}</span>
+                      </td>
+                      <td style={{ padding: '0.75rem 1rem' }}>
+                        <span style={{ background: sc.bg, color: sc.color, fontSize: '0.68rem', fontWeight: 700, padding: '2px 7px', borderRadius: '4px', whiteSpace: 'nowrap' as const }}>{sc.label}</span>
+                      </td>
+                      <td style={{ padding: '0.75rem 1rem' }}><ChevronRight size={13} color={T.muted} /></td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
 
         {/* ── Detail Panel ── */}
         {(detail || detailLoading) && (
@@ -665,7 +714,6 @@ function OrdersContent() {
                       <span>Total</span>
                       <span>{fmtMoney(detail.total, detail.currencySymbol)}</span>
                     </div>
-                    {/* ZMW display removed */}
                   </Section>
 
                   {/* Status History */}
@@ -692,62 +740,148 @@ function OrdersContent() {
                     </Section>
                   )}
 
-                  {/* Status Actions */}
-                  {nextActions.length > 0 ? (
-                    <Section title="Update Status" T={T}>
-                      {/* Tracking input for CONFIRMED → SHIPPED */}
-                      {detail.status === 'CONFIRMED' && (
-                        <div style={{ marginBottom: '0.8rem' }}>
-                          <label style={{ display: 'block', fontSize: '0.72rem', color: T.muted, marginBottom: '0.3rem' }}>
-                            Tracking Number <span style={{ color: T.muted, fontWeight: 400 }}>(optional)</span>
-                          </label>
-                          <input
-                            value={tracking} onChange={e => setTracking(e.target.value)}
-                            placeholder="e.g. TRK-2024-001"
-                            style={{
-                              width: '100%', padding: '0.55rem 0.75rem', boxSizing: 'border-box',
-                              background: T.input, border: `1px solid ${T.border}`, borderRadius: '7px',
-                              color: T.text, fontSize: '0.81rem', outline: 'none', fontFamily: 'inherit',
-                            }}
-                          />
-                        </div>
-                      )}
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
-                        {nextActions.map((action, i) => (
-                          <button
-                            key={i}
-                            onClick={() => doAction(action.newStatus, action.newPaymentStatus)}
-                            disabled={actionLoading}
-                            style={{
-                              padding: '0.6rem 1rem', borderRadius: '8px', border: 'none',
-                              cursor: actionLoading ? 'wait' : 'pointer', fontFamily: 'inherit',
-                              background: action.variant === 'primary' ? '#00D4AA' : 'rgba(239,68,68,0.1)',
-                              color: action.variant === 'primary' ? '#000' : '#F87171',
-                              fontWeight: 700, fontSize: '0.82rem',
-                              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                              opacity: actionLoading ? 0.65 : 1,
-                            }}
-                          >
-                            <div>
-                              <div>{actionLoading ? 'Updating…' : action.label}</div>
-                              <div style={{ fontSize: '0.68rem', fontWeight: 400, opacity: 0.7, marginTop: '1px' }}>{action.description}</div>
-                            </div>
-                            {action.variant === 'primary' && <ArrowRight size={14} />}
-                            {action.variant === 'danger'  && <Ban size={14} />}
-                          </button>
-                        ))}
+                  {/* Status Update Section */}
+                  <Section title="Update Status" T={T}>
+                    {/* Order Status Dropdown */}
+                    <div style={{ marginBottom: '0.8rem' }}>
+                      <label style={{ display: 'block', fontSize: '0.72rem', color: T.muted, marginBottom: '0.3rem', fontWeight: 600 }}>
+                        Order Status
+                      </label>
+                      <div style={{ position: 'relative' }}>
+                        <button
+                          onClick={() => setShowStatusDropdown(!showStatusDropdown)}
+                          style={{
+                            width: '100%', padding: '0.55rem 0.75rem', boxSizing: 'border-box',
+                            background: T.input, border: `1px solid ${T.border}`, borderRadius: '7px',
+                            color: T.text, fontSize: '0.81rem', textAlign: 'left', cursor: 'pointer',
+                            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                          }}
+                        >
+                          <span>{selectedOrderStatus ? STATUS_CFG[selectedOrderStatus]?.label : 'Select status'}</span>
+                          <span style={{ fontSize: '0.6rem' }}>▼</span>
+                        </button>
+                        {showStatusDropdown && (
+                          <div style={{
+                            position: 'absolute', top: '100%', left: 0, right: 0, marginTop: '0.3rem',
+                            background: T.input, border: `1px solid ${T.border}`, borderRadius: '7px',
+                            zIndex: 10, maxHeight: '200px', overflowY: 'auto',
+                          }}>
+                            {ALL_ORDER_STATUSES.map((status) => (
+                              <button
+                                key={status}
+                                onClick={() => {
+                                  setSelectedOrderStatus(status);
+                                  setShowStatusDropdown(false);
+                                }}
+                                style={{
+                                  width: '100%', padding: '0.5rem 0.75rem', textAlign: 'left',
+                                  background: selectedOrderStatus === status ? 'rgba(0,212,170,0.1)' : 'transparent',
+                                  border: 'none', color: T.text, fontSize: '0.8rem', cursor: 'pointer',
+                                  borderBottom: `1px solid ${T.border}`,
+                                }}
+                              >
+                                {STATUS_CFG[status]?.label || status}
+                              </button>
+                            ))}
+                          </div>
+                        )}
                       </div>
-                    </Section>
-                  ) : (
-                    <div style={{ textAlign: 'center', padding: '1rem', background: T.surface, borderRadius: '10px', color: T.muted, fontSize: '0.79rem' }}>
-                      <CheckCircle size={18} color={detail.status === 'COLLECTED' ? '#10B981' : T.muted} style={{ marginBottom: '0.4rem' }} />
-                      <p style={{ margin: 0 }}>
-                        {detail.status === 'COLLECTED' ? 'Order complete — customer has collected their item.' :
-                         detail.status === 'CANCELLED' ? 'This order has been cancelled.' :
-                         'No further actions available.'}
-                      </p>
                     </div>
-                  )}
+
+                    {/* Payment Status Dropdown */}
+                    <div style={{ marginBottom: '0.8rem' }}>
+                      <label style={{ display: 'block', fontSize: '0.72rem', color: T.muted, marginBottom: '0.3rem', fontWeight: 600 }}>
+                        Payment Status
+                      </label>
+                      <div style={{ position: 'relative' }}>
+                        <button
+                          onClick={() => setShowPaymentDropdown(!showPaymentDropdown)}
+                          style={{
+                            width: '100%', padding: '0.55rem 0.75rem', boxSizing: 'border-box',
+                            background: T.input, border: `1px solid ${T.border}`, borderRadius: '7px',
+                            color: T.text, fontSize: '0.81rem', textAlign: 'left', cursor: 'pointer',
+                            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                          }}
+                        >
+                          <span>{selectedPaymentStatus ? PAY_CFG[selectedPaymentStatus]?.label : 'Select status'}</span>
+                          <span style={{ fontSize: '0.6rem' }}>▼</span>
+                        </button>
+                        {showPaymentDropdown && (
+                          <div style={{
+                            position: 'absolute', top: '100%', left: 0, right: 0, marginTop: '0.3rem',
+                            background: T.input, border: `1px solid ${T.border}`, borderRadius: '7px',
+                            zIndex: 10, maxHeight: '200px', overflowY: 'auto',
+                          }}>
+                            {ALL_PAYMENT_STATUSES.map((status) => (
+                              <button
+                                key={status}
+                                onClick={() => {
+                                  setSelectedPaymentStatus(status);
+                                  setShowPaymentDropdown(false);
+                                }}
+                                style={{
+                                  width: '100%', padding: '0.5rem 0.75rem', textAlign: 'left',
+                                  background: selectedPaymentStatus === status ? 'rgba(0,212,170,0.1)' : 'transparent',
+                                  border: 'none', color: T.text, fontSize: '0.8rem', cursor: 'pointer',
+                                  borderBottom: `1px solid ${T.border}`,
+                                }}
+                              >
+                                {PAY_CFG[status]?.label || status}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Tracking input */}
+                    <div style={{ marginBottom: '0.8rem' }}>
+                      <label style={{ display: 'block', fontSize: '0.72rem', color: T.muted, marginBottom: '0.3rem' }}>
+                        Tracking Number <span style={{ color: T.muted, fontWeight: 400 }}>(optional)</span>
+                      </label>
+                      <input
+                        value={tracking} onChange={e => setTracking(e.target.value)}
+                        placeholder="e.g. TRK-2024-001"
+                        style={{
+                          width: '100%', padding: '0.55rem 0.75rem', boxSizing: 'border-box',
+                          background: T.input, border: `1px solid ${T.border}`, borderRadius: '7px',
+                          color: T.text, fontSize: '0.81rem', outline: 'none', fontFamily: 'inherit',
+                        }}
+                      />
+                    </div>
+
+                    {/* Action buttons */}
+                    <div style={{ display: 'flex', gap: '0.6rem' }}>
+                      <button
+                        onClick={doAction}
+                        disabled={actionLoading}
+                        style={{
+                          flex: 1, padding: '0.6rem 1rem', borderRadius: '8px', border: 'none',
+                          cursor: actionLoading ? 'wait' : 'pointer', fontFamily: 'inherit',
+                          background: '#00D4AA', color: '#000',
+                          fontWeight: 700, fontSize: '0.82rem',
+                          opacity: actionLoading ? 0.65 : 1,
+                        }}
+                      >
+                        {actionLoading ? 'Updating…' : 'Update Status'}
+                      </button>
+                      {isAdminOrSuperAdmin && (
+                        <button
+                          onClick={() => setDeleteConfirm('single')}
+                          disabled={actionLoading}
+                          style={{
+                            padding: '0.6rem 1rem', borderRadius: '8px', border: 'none',
+                            cursor: actionLoading ? 'wait' : 'pointer', fontFamily: 'inherit',
+                            background: 'rgba(248,113,113,0.1)', color: '#F87171',
+                            fontWeight: 700, fontSize: '0.82rem',
+                            display: 'flex', alignItems: 'center', gap: '0.3rem',
+                          }}
+                        >
+                          <Trash2 size={14} /> Delete
+                        </button>
+                      )}
+                    </div>
+                  </Section>
 
                 </div>
               ) : null}

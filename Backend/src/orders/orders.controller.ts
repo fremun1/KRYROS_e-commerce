@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Body, Param, Query, UseGuards, ForbiddenException, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { OrdersService } from './orders.service';
@@ -122,5 +122,26 @@ export class OrdersController {
       );
     }
     return this.ordersService.bulkUpdateStatus(ids, status);
+  }
+
+  @Delete(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Delete a single order (Admin/Super Admin only)' })
+  async deleteOrder(@Param('id') id: string) {
+    return this.ordersService.deleteOrder(id);
+  }
+
+  @Post('bulk-delete')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Bulk delete orders (Admin/Super Admin only)' })
+  async bulkDeleteOrders(@Body('ids') ids: string[]) {
+    if (!ids || !ids.length) {
+      throw new BadRequestException('At least one order ID is required');
+    }
+    return this.ordersService.bulkDeleteOrders(ids);
   }
 }

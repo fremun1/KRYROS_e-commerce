@@ -502,7 +502,7 @@ function DashboardContent() {
               { label: "Outstanding Credit", val: fmt(totalOutstanding),  sub: "Total credit outstanding",  color: "#6366f1", hl: false },
               { label: "Credit Disbursed",   val: fmt(creditDisbursed),   sub: "Total credit issued",        color: "#FFC107", hl: false },
               { label: "Total Customers",    val: String(totalUsersCount), sub: "Registered users",          color: "#ef4444", hl: false },
-              { label: "Total Revenue",      val: fmt(totalRevenue),       sub: "This year (all orders)",    color: "#1FA89A", hl: true  },
+              { label: "Total Revenue",      val: fmt(totalRevenue),       sub: "This year (paid orders only)",    color: "#1FA89A", hl: true  },
             ].map(item => (
               <div key={item.label} style={{
                 background: item.hl ? "linear-gradient(135deg, #1FA89A, #27B9AF)" : surface,

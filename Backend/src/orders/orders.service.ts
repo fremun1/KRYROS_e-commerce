@@ -547,4 +547,24 @@ export class OrdersService {
     const failed = results.filter(r => r.status === 'rejected').length;
     return { succeeded, failed, total: ids.length };
   }
+
+  async deleteOrder(id: string) {
+    const order = await this.findById(id);
+    
+    // Delete order and cascade to items and logs
+    await this.prisma.order.delete({
+      where: { id },
+    });
+
+    return { success: true, message: `Order ${order.orderNumber} deleted successfully` };
+  }
+
+  async bulkDeleteOrders(ids: string[]) {
+    const results = await Promise.allSettled(
+      ids.map(id => this.deleteOrder(id)),
+    );
+    const succeeded = results.filter(r => r.status === 'fulfilled').length;
+    const failed = results.filter(r => r.status === 'rejected').length;
+    return { succeeded, failed, total: ids.length };
+  }
 }

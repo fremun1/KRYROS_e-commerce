@@ -119,6 +119,12 @@ export const bulkUpdateOrderStatus = (
   status: string,
 ) => api.put('/api/orders/bulk-status', { ids, status });
 
+export const deleteOrder = (id: string) =>
+  api.delete(`/api/orders/${id}`);
+
+export const bulkDeleteOrders = (ids: string[]) =>
+  api.post('/api/orders/bulk-delete', { ids });
+
 // ── Products ──────────────────────────────────────────────
 export const getProducts = (params?: Record<string, unknown>) =>
   api.get("/api/products", { params });

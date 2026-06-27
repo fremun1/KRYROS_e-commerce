@@ -26,7 +26,10 @@ export class ReportsService {
 
     const [orderStats, usersCount, creditStats] = await Promise.all([
       this.prisma.order.aggregate({
-        where: { createdAt: { gte: start, lte: end } },
+        where: {
+          createdAt: { gte: start, lte: end },
+          paymentStatus: 'PAID', // Only count paid orders for revenue
+        },
         _sum: { total: true },
         _count: { id: true },
       }),
@@ -38,16 +41,17 @@ export class ReportsService {
     ]);
 
     const totalRevenue = Number(orderStats._sum.total || 0);
-    const totalOrders = orderStats._count.id;
+    const totalOrders = orderStats._count.id; // Count of paid orders only
     const activeUsers = usersCount;
     const creditDisbursed = Number(creditStats._sum.amount || 0);
 
     // Group revenue by month using groupBy for efficiency
+    // Only include PAID orders for accurate revenue tracking
     const revenueByMonth = await this.prisma.order.groupBy({
       by: ['createdAt'],
       where: { 
         createdAt: { gte: start, lte: end },
-        OR: [{ paymentStatus: 'PAID' }, { status: 'DELIVERED' }]
+        paymentStatus: 'PAID', // Only count paid orders
       },
       _sum: { total: true },
       _count: { id: true },
@@ -68,8 +72,14 @@ export class ReportsService {
       return { label: m, revenue: byMonth[k].revenue, orders: byMonth[k].orders };
     });
 
+    // Only include items from paid orders for accurate product/category revenue
     const orderItems = await this.prisma.orderItem.findMany({
-      where: { order: { createdAt: { gte: start, lte: end } } },
+      where: {
+        order: {
+          createdAt: { gte: start, lte: end },
+          paymentStatus: 'PAID', // Only count items from paid orders
+        },
+      },
       include: { product: { select: { name: true, categoryId: true, category: { select: { name: true } } } } },
     });
     const productAgg: Record<string, { name: string; sales: number; revenue: number }> = {};
@@ -92,7 +102,9 @@ export class ReportsService {
       value: Math.round((val / catTotal) * 100),
     }));
 
+    // Show recent paid orders for transaction history
     const recentOrders = await this.prisma.order.findMany({
+      where: { paymentStatus: 'PAID' }, // Only show paid orders in recent transactions
       take: 8,
       orderBy: { createdAt: 'desc' },
       include: { user: true },
@@ -119,6 +131,7 @@ export class ReportsService {
       recentTransactions,
       credit,
       salesByCategory,
+      note: 'Revenue calculated from PAID orders only. Pending and failed orders are excluded.',
     };
   }
 }
