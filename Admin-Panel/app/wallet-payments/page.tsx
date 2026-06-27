@@ -57,18 +57,18 @@ const METHOD_TYPES: { value: string; label: string }[] = [
 const FRONTEND_PAYMENT_URL = (process.env.NEXT_PUBLIC_FRONTEND_URL || "") + "/pay";
 
 const STATUS_COLOR: Record<string, string> = {
-  Completed: '#1FA89A', PAID: '#1FA89A', Active: '#1FA89A', Yes: '#1FA89A',
+  Completed: '#1FA89A', PAID: '#1FA89A', SUCCESS: '#1FA89A', Active: '#1FA89A', Yes: '#1FA89A',
   Pending: '#FFC107', PENDING: '#FFC107', Failed: '#ef4444', FAILED: '#ef4444', Expired: '#ef4444', No: '#ef4444', Inactive: '#64748b',
 };
 
 const STATUS_BG: Record<string, string> = {
-  Completed: 'rgba(31,168,154,0.12)', PAID: 'rgba(31,168,154,0.12)', Active: 'rgba(31,168,154,0.12)', Yes: 'rgba(31,168,154,0.12)',
+  Completed: 'rgba(31,168,154,0.12)', PAID: 'rgba(31,168,154,0.12)', SUCCESS: 'rgba(31,168,154,0.12)', Active: 'rgba(31,168,154,0.12)', Yes: 'rgba(31,168,154,0.12)',
   Pending: 'rgba(255,193,7,0.12)', PENDING: 'rgba(255,193,7,0.12)', Failed: 'rgba(185,28,28,0.12)', FAILED: 'rgba(185,28,28,0.12)', Expired: 'rgba(185,28,28,0.12)',
   No: 'rgba(185,28,28,0.12)', Inactive: 'rgba(100,116,139,0.12)',
 };
 
 function StatusBadge({ value }: { value: string }) {
-  const displayValue = value.toUpperCase();
+  const displayValue = (value || '').toUpperCase();
   return (
     <span style={{ 
       padding: '3px 10px', 
@@ -128,9 +128,20 @@ export default function DirectPaymentHub() {
   const [payMethods, setPayMethods] = useState<PayMethod[]>([]);
   const [loadingMethods, setLoadingMethods] = useState(false);
   const [configMethod, setConfigMethod] = useState<PayMethod | null>(null);
+  const [configProvider, setConfigProvider] = useState<PayProvider | null>(null);
+  const [providerEditForm, setProviderEditForm] = useState<{ name: string; description: string; config: Record<string, string> }>({ name: '', description: '', config: {} });
+
   const [showAddMethod, setShowAddMethod] = useState(false);
   const [addMethodForm, setAddMethodForm] = useState({ name: '', type: 'mobile_wallet' });
   const [savingMethod, setSavingMethod] = useState(false);
+
+  const [showAddProvider, setShowAddProvider] = useState(false);
+  const [addProviderForm, setAddProviderForm] = useState({ name: '', description: '', accountName: '', accountNumber: '', bankName: '', apiKey: '' });
+  const [savingProvider, setSavingProvider] = useState(false);
+
+  const [showAddNetwork, setShowAddNetwork] = useState(false);
+  const [newNetworkName, setNewNetworkName] = useState('');
+  const [savingNetwork, setSavingNetwork] = useState(false);
 
   const inputStyle = { width: '100%', background: surface, border: `1px solid ${border}`, borderRadius: '9px', color: textMain, fontSize: '13.5px', fontFamily: 'var(--font-inter)', outline: 'none', padding: '10px 14px' };
 
@@ -209,6 +220,7 @@ export default function DirectPaymentHub() {
     try {
       await updatePaymentMethod(id, { isEnabled: enabled });
       setPayMethods(ms => ms.map(m => m.id === id ? { ...m, isEnabled: enabled } : m));
+      if (configMethod?.id === id) setConfigMethod(m => m ? { ...m, isEnabled: enabled } : null);
       toast.success(enabled ? 'Method enabled' : 'Method disabled');
     } catch (err) {
       toast.error('Failed to update method');
@@ -230,6 +242,17 @@ export default function DirectPaymentHub() {
     }
   };
 
+  const handleDeleteMethod = async (id: string) => {
+    if (!confirm('Delete this payment method and all its providers?')) return;
+    try {
+      await deletePaymentMethod(id);
+      setPayMethods(ms => ms.filter(m => m.id !== id));
+      toast.success('Method deleted');
+    } catch (err) {
+      toast.error('Failed to delete');
+    }
+  };
+
   const moveMethod = async (idx: number, dir: -1 | 1) => {
     const list = [...payMethods];
     const target = idx + dir;
@@ -242,14 +265,91 @@ export default function DirectPaymentHub() {
     } catch { toast.error('Failed to reorder'); fetchData(); }
   };
 
+  // ── Provider Handlers ──────────────────────────────────────────────────────
+  const handleToggleProvider = async (id: string, enabled: boolean) => {
+    try {
+      await updatePaymentProvider(id, { isEnabled: enabled });
+      setConfigMethod(m => m ? { ...m, providers: m.providers.map(p => p.id === id ? { ...p, isEnabled: enabled } : p) } : null);
+      setPayMethods(ms => ms.map(m => m.id === configMethod?.id ? { ...m, providers: m.providers.map(p => p.id === id ? { ...p, isEnabled: enabled } : p) } : m));
+      toast.success(enabled ? 'Provider enabled' : 'Provider disabled');
+    } catch { toast.error('Failed to update provider'); }
+  };
+
+  const handleAddProvider = async () => {
+    if (!addProviderForm.name.trim() || !configMethod) return;
+    setSavingProvider(true);
+    try {
+      const config: Record<string, string> = {};
+      if (addProviderForm.accountName) config.accountName = addProviderForm.accountName;
+      if (addProviderForm.accountNumber) config.accountNumber = addProviderForm.accountNumber;
+      if (addProviderForm.bankName) config.bankName = addProviderForm.bankName;
+      if (addProviderForm.apiKey) config.apiKey = addProviderForm.apiKey;
+
+      const res = await createPaymentProvider({
+        methodId: configMethod.id,
+        name: addProviderForm.name,
+        description: addProviderForm.description,
+        config
+      });
+      const newP = res.data || res;
+      setConfigMethod(m => m ? { ...m, providers: [...m.providers, newP] } : null);
+      setShowAddProvider(false);
+      setAddProviderForm({ name: '', description: '', accountName: '', accountNumber: '', bankName: '', apiKey: '' });
+      toast.success('Provider added');
+    } catch { toast.error('Failed to add provider'); }
+    finally { setSavingProvider(false); }
+  };
+
+  const handleDeleteProvider = async (id: string) => {
+    if (!confirm('Delete this provider?')) return;
+    try {
+      await deletePaymentProvider(id);
+      setConfigMethod(m => m ? { ...m, providers: m.providers.filter(p => p.id !== id) } : null);
+      toast.success('Provider deleted');
+    } catch { toast.error('Failed to delete'); }
+  };
+
+  // ── Network Handlers ───────────────────────────────────────────────────────
+  const handleAddNetwork = async () => {
+    if (!newNetworkName.trim() || !configProvider) return;
+    setSavingNetwork(true);
+    try {
+      const res = await createPaymentNetwork({ providerId: configProvider.id, name: newNetworkName.trim() });
+      const newN = res.data || res;
+      setConfigProvider(p => p ? { ...p, networks: [...p.networks, newN] } : null);
+      setConfigMethod(m => m ? { ...m, providers: m.providers.map(p => p.id === configProvider.id ? { ...p, networks: [...p.networks, newN] } : p) } : null);
+      setNewNetworkName('');
+      setShowAddNetwork(false);
+      toast.success('Network added');
+    } catch { toast.error('Failed to add network'); }
+    finally { setSavingNetwork(false); }
+  };
+
+  const handleToggleNetwork = async (id: string, enabled: boolean) => {
+    try {
+      await updatePaymentNetwork(id, { isEnabled: enabled });
+      setConfigProvider(p => p ? { ...p, networks: p.networks.map(n => n.id === id ? { ...n, isEnabled: enabled } : n) } : null);
+      toast.success(enabled ? 'Network enabled' : 'Network disabled');
+    } catch { toast.error('Failed to update network'); }
+  };
+
+  const handleDeleteNetwork = async (id: string) => {
+    if (!confirm('Delete this network?')) return;
+    try {
+      await deletePaymentNetwork(id);
+      setConfigProvider(p => p ? { ...p, networks: p.networks.filter(n => n.id !== id) } : null);
+      toast.success('Network deleted');
+    } catch { toast.error('Failed to delete'); }
+  };
+
   // ── Columns ────────────────────────────────────────────────────────────────
   const txColumns: Column[] = [
     { key: 'id', label: 'Payment ID' },
     { key: 'user', label: 'Customer' },
     { key: 'amount', label: 'Amount' },
     { key: 'date', label: 'Date' },
-    { key: 'status', label: 'Status', render: (v) => <StatusBadge value={String(v)} /> },
-    { key: 'linkName', label: 'Source Link', render: (v) => <span style={{fontSize:'12px', color:textMuted}}>{v || 'Direct/WhatsApp'}</span> },
+    { key: 'status', label: 'Status', render: (v) => <StatusBadge value={String(v || '')} /> },
+    { key: 'linkName', label: 'Source Link', render: (v) => <span style={{fontSize:'12px', color:textMuted}}>{String(v || 'Direct/WhatsApp')}</span> },
   ];
 
   const linkColumns: Column[] = [
@@ -317,8 +417,13 @@ export default function DirectPaymentHub() {
                       <div style={{ fontWeight: 600, color: textMain }}>{m.name}</div>
                       <div style={{ fontSize: '12px', color: textMuted }}>{m.type.replace('_', ' ')} • {m.providers.length} Providers</div>
                     </div>
-                    <Toggle on={m.isEnabled} onChange={(v) => handleToggleMethod(m.id, v)} />
-                    <button onClick={() => handleDeleteMethod(m.id)} style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer' }}><Trash2 size={16} /></button>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <Toggle on={m.isEnabled} onChange={(v) => handleToggleMethod(m.id, v)} />
+                      <button onClick={() => setConfigMethod(m)} style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '6px 12px', background: 'rgba(31,168,154,0.1)', border: '1px solid rgba(31,168,154,0.3)', borderRadius: '7px', color: '#1FA89A', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}>
+                        <Settings size={14} /> Configure
+                      </button>
+                      <button onClick={() => handleDeleteMethod(m.id)} style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer' }}><Trash2 size={16} /></button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -361,6 +466,97 @@ export default function DirectPaymentHub() {
         </div>
       </Modal>
 
+      {/* ── Configure Method Modal ── */}
+      <Modal open={!!configMethod} onClose={() => setConfigMethod(null)} title={`Configure ${configMethod?.name}`}>
+        {configMethod && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', background: surface, borderRadius: '8px' }}>
+              <div>
+                <div style={{ fontSize: '14px', fontWeight: 600, color: textMain }}>Enable Method</div>
+                <div style={{ fontSize: '12px', color: textMuted }}>Turn this payment method on or off globally</div>
+              </div>
+              <Toggle on={configMethod.isEnabled} onChange={(v) => handleToggleMethod(configMethod.id, v)} />
+            </div>
+
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <div style={{ fontSize: '13px', fontWeight: 700, color: textMain }}>Providers</div>
+                <button onClick={() => setShowAddProvider(true)} style={{ fontSize: '12px', color: '#1FA89A', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer' }}>+ Add Provider</button>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {configMethod.providers.map(p => (
+                  <div key={p.id} style={{ padding: '12px', border: `1px solid ${border}`, borderRadius: '8px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div>
+                        <div style={{ fontSize: '13.5px', fontWeight: 600, color: textMain }}>{p.name}</div>
+                        <div style={{ fontSize: '11px', color: textMuted }}>{p.networks.length} Networks</div>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <Toggle on={p.isEnabled} onChange={(v) => handleToggleProvider(p.id, v)} />
+                        <button onClick={() => setConfigProvider(p)} style={{ padding: '6px', color: textMuted, background: 'none', border: 'none', cursor: 'pointer' }}><Settings size={14} /></button>
+                        <button onClick={() => handleDeleteProvider(p.id)} style={{ padding: '6px', color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer' }}><Trash2 size={14} /></button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* ── Configure Provider Modal ── */}
+      <Modal open={!!configProvider} onClose={() => setConfigProvider(null)} title={`Provider: ${configProvider?.name}`}>
+        {configProvider && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+              <div style={{ fontSize: '13px', fontWeight: 700, color: textMain }}>Networks</div>
+              <button onClick={() => setShowAddNetwork(true)} style={{ fontSize: '12px', color: '#1FA89A', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer' }}>+ Add Network</button>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {configProvider.networks.map(n => (
+                <div key={n.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', border: `1px solid ${border}`, borderRadius: '8px' }}>
+                  <span style={{ fontSize: '13px', color: textMain }}>{n.name}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Toggle on={n.isEnabled} onChange={(v) => handleToggleNetwork(n.id, v)} />
+                    <button onClick={() => handleDeleteNetwork(n.id)} style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer' }}><Trash2 size={14} /></button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* ── Add Provider Modal ── */}
+      <Modal open={showAddProvider} onClose={() => setShowAddProvider(false)} title="Add Provider">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <FormField label="Provider Name" value={addProviderForm.name} onChange={v => setAddProviderForm(f => ({ ...f, name: v }))} placeholder="e.g. MTN Zambia, Standard Chartered" isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+          <FormField label="Description" value={addProviderForm.description} onChange={v => setAddProviderForm(f => ({ ...f, description: v }))} placeholder="Internal description" isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+          
+          <div style={{ fontSize: '11px', fontWeight: 700, color: textMuted, textTransform: 'uppercase', marginTop: '4px' }}>Configuration (Optional)</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+            <FormField label="Account Name" value={addProviderForm.accountName} onChange={v => setAddProviderForm(f => ({ ...f, accountName: v }))} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="Account Number" value={addProviderForm.accountNumber} onChange={v => setAddProviderForm(f => ({ ...f, accountNumber: v }))} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+          </div>
+          <FormField label="API Key / Secret" value={addProviderForm.apiKey} onChange={v => setAddProviderForm(f => ({ ...f, apiKey: v }))} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+          
+          <button onClick={handleAddProvider} disabled={savingProvider} style={{ width: '100%', padding: '12px', background: '#1FA89A', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', marginTop: '10px' }}>
+            {savingProvider ? 'Saving...' : 'Add Provider'}
+          </button>
+        </div>
+      </Modal>
+
+      {/* ── Add Network Modal ── */}
+      <Modal open={showAddNetwork} onClose={() => setShowAddNetwork(false)} title="Add Network">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <FormField label="Network Name" value={newNetworkName} onChange={setNewNetworkName} placeholder="e.g. MTN, Airtel, Zamtel" isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+          <button onClick={handleAddNetwork} disabled={savingNetwork} style={{ width: '100%', padding: '12px', background: '#1FA89A', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', marginTop: '10px' }}>
+            {savingNetwork ? 'Adding...' : 'Add Network'}
+          </button>
+        </div>
+      </Modal>
+
       <Modal open={showAddMethod} onClose={() => setShowAddMethod(false)} title="Add Payment Method">
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           <FormField label="Method Name" value={addMethodForm.name} onChange={v => setAddMethodForm(f => ({ ...f, name: v }))} placeholder="e.g. Airtel Money" isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
@@ -377,15 +573,4 @@ export default function DirectPaymentHub() {
       </Modal>
     </AdminShell>
   );
-}
-
-async function handleDeleteMethod(id: string) {
-  if (!confirm('Delete this method?')) return;
-  try {
-    await deletePaymentMethod(id);
-    toast.success('Method deleted');
-    window.location.reload();
-  } catch {
-    toast.error('Failed to delete');
-  }
 }
