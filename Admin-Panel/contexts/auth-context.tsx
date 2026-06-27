@@ -31,7 +31,7 @@ const AuthContext = createContext<AuthContextType>({
 const normalizeRole = (role?: string | null) =>
   (role || "").toUpperCase().replace(/[\s_]+/g, "");
 
-const ADMIN_ROLES = new Set(["SUPERADMIN", "ADMIN", "MANAGER"]);
+const ADMIN_ROLES = new Set(["SUPERADMIN", "ADMIN", "MANAGER", "STAFF", "WHOLESALER", "WHOLESALE"]);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUserState] = useState<AdminUser | null>(null);

@@ -45,7 +45,7 @@ export class WholesaleController {
 
   @Put('applications/:id/status')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update wholesale application status (Admin only)' })
   updateApplicationStatus(
@@ -68,7 +68,7 @@ export class WholesaleController {
 
   @Put('accounts/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update a wholesale account (Admin only)' })
   updateAccount(@Param('id') id: string, @Body() body: any) {
@@ -77,7 +77,7 @@ export class WholesaleController {
 
   @Put('accounts/:id/status')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update wholesale account status (Admin only)' })
   updateStatus(
@@ -90,7 +90,7 @@ export class WholesaleController {
 
   @Delete('accounts/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete a wholesale account (Admin only)' })
   deleteAccount(@Param('id') id: string) {
@@ -134,7 +134,7 @@ export class WholesaleController {
 
   @Post('deals')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create a wholesale deal (Admin only)' })
   createDeal(@Body() body: any) {
@@ -143,7 +143,7 @@ export class WholesaleController {
 
   @Put('deals/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update a wholesale deal (Admin only)' })
   updateDeal(@Param('id') id: string, @Body() body: any) {
@@ -152,7 +152,7 @@ export class WholesaleController {
 
   @Delete('deals/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete a wholesale deal (Admin only)' })
   deleteDeal(@Param('id') id: string) {
@@ -163,7 +163,7 @@ export class WholesaleController {
 
   @Post('prices/:productId')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Set tiered wholesale prices for a product (Admin only)' })
   setPrices(

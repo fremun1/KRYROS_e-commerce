@@ -32,9 +32,21 @@ function UsersContent() {
 
   const { user: currentUser, loading: authLoading } = useAuth();
   const isSuperAdmin = (currentUser?.role || '').toUpperCase().replace(/[\s_]+/g, '') === 'SUPERADMIN';
+const currentUserRoleNorm = (currentUser?.role || '').toUpperCase().replace(/[\s_]+/g, '');
+const canDeleteUsers = currentUserRoleNorm === 'SUPERADMIN' || currentUserRoleNorm === 'ADMIN' || currentUserRoleNorm === 'MANAGER';
+const canManageRoles = isSuperAdmin;
 
   const [data, setData] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  const normalizeRole = (r: string) =>
+    r === 'SUPER_ADMIN' ? 'Super Admin'
+      : r === 'ADMIN' ? 'Admin'
+      : r === 'MANAGER' ? 'Manager'
+      : r === 'WHOLESALER' ? 'Wholesale'
+      : r === 'WHOLESALE' ? 'Wholesale'
+      : r === 'STAFF' ? 'Staff'
+      : 'Customer';
 
   // Load real users from API on mount
   useEffect(() => {
@@ -45,7 +57,7 @@ function UsersContent() {
         id: u.id || '',
         name: [u.firstName, u.lastName].filter(Boolean).join(' ') || u.name || u.email || '',
         email: u.email || '',
-        role: u.role === 'SUPER_ADMIN' ? 'Super Admin' : u.role === 'ADMIN' ? 'Admin' : u.role === 'MANAGER' ? 'Manager' : u.role === 'WHOLESALE' ? 'Wholesale' : 'Customer',
+        role: normalizeRole(u.role),
         status: u.status === 'ACTIVE' ? 'Active' : u.status === 'INACTIVE' ? 'Inactive' : u.status === 'BLOCKED' ? 'Blocked' : (u.status || 'Active'),
         joined: u.createdAt ? u.createdAt.split('T')[0] : '',
         orders: u._count?.orders ?? 0,
@@ -68,15 +80,20 @@ function UsersContent() {
   const openDelete = (row: Record<string, unknown>) => {
     const r = row as unknown as User;
     if (authLoading) { toast.error('Loading user session...'); return; }
-    if (!isSuperAdmin) { toast.error('Only Super Admin can delete users'); return; }
+    if (!canDeleteUsers) { toast.error('Only Admin, Manager, or Super Admin can delete users'); return; }
     
     // Prevent deleting self
     if (r.id === currentUser?.id) { toast.error('You cannot delete your own account'); return; }
     
-    // Super Admins can delete anyone else, but let's keep a safety check for other Super Admins if desired
-    // For now, just allow deleting Admins as requested.
-    if ((r.role || '').toUpperCase() === 'SUPER_ADMIN' && r.id !== currentUser?.id) {
-       toast.error('Super Admin accounts cannot be deleted via dashboard for safety'); 
+    // No one can delete Super Admin accounts (safety)
+    if ((r.role || '').toUpperCase().replace(/[\s_]+/g, '') === 'SUPERADMIN') {
+       toast.error('Super Admin accounts cannot be deleted'); 
+       return; 
+    }
+    
+    // Only Super Admin can delete other Admins or Managers
+    if (!isSuperAdmin && ((r.role || '').toUpperCase().replace(/[\s_]+/g, '') === 'ADMIN' || (r.role || '').toUpperCase().replace(/[\s_]+/g, '') === 'MANAGER')) {
+       toast.error('Only Super Admin can delete Admin or Manager accounts'); 
        return; 
     }
     
@@ -92,7 +109,7 @@ function UsersContent() {
       const nameParts = form.name.trim().split(' ');
       const firstName = nameParts[0] || form.name;
       const lastName = nameParts.slice(1).join(' ') || '-';
-      const roleMap: Record<string, string> = { 'Customer': 'CUSTOMER', 'Admin': 'ADMIN', 'Manager': 'MANAGER', 'Super Admin': 'SUPER_ADMIN' };
+      const roleMap: Record<string, string> = { 'Customer': 'CUSTOMER', 'Wholesale': 'WHOLESALE', 'Manager': 'MANAGER', 'Admin': 'ADMIN', 'Super Admin': 'SUPER_ADMIN', 'Staff': 'STAFF' };
       await createUser({
         firstName,
         lastName,
@@ -119,7 +136,7 @@ function UsersContent() {
       const nameParts = form.name.trim().split(' ');
       const firstName = nameParts[0] || form.name;
       const lastName = nameParts.slice(1).join(' ') || '-';
-      const roleMap: Record<string, string> = { 'Customer': 'CUSTOMER', 'Admin': 'ADMIN', 'Manager': 'MANAGER', 'Super Admin': 'SUPER_ADMIN' };
+      const roleMap: Record<string, string> = { 'Customer': 'CUSTOMER', 'Wholesale': 'WHOLESALE', 'Manager': 'MANAGER', 'Admin': 'ADMIN', 'Super Admin': 'SUPER_ADMIN', 'Staff': 'STAFF' };
       const payload: Record<string, unknown> = {
         firstName,
         lastName,
@@ -143,7 +160,7 @@ function UsersContent() {
   };
 
   const handleDelete = async () => {
-    if (!deleteRow || !isSuperAdmin || authLoading) return;
+    if (!deleteRow || !canDeleteUsers || authLoading) return;
     setLoading(true);
     try {
       await deleteUser(deleteRow.id);
@@ -195,7 +212,7 @@ function UsersContent() {
       <FormField label="Email Address" value={form.email} onChange={fp('email')} type="email" isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="john@example.com" />
       <FormField label="Password (leave blank to keep)" value={(form as any).password || ''} onChange={fp('password')} type="password" isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Min 8 chars, upper+lower+number" />
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-        <FormField label="Role" value={form.role} onChange={fp('role')} options={isSuperAdmin ? ['Customer', 'Wholesale', 'Manager', 'Admin'] : ['Customer', 'Wholesale']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+        <FormField label="Role" value={form.role} onChange={fp('role')} options={isSuperAdmin ? ['Customer', 'Wholesale', 'Staff', 'Manager', 'Admin', 'Super Admin'] : ['Customer', 'Wholesale', 'Staff']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
         <FormField label="Status" value={form.status} onChange={fp('status')} options={['Active', 'Inactive', 'Blocked']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
       </div>
     </>
@@ -277,7 +294,7 @@ function UsersContent() {
         </>}
       </Modal>
 
-      <ConfirmDialog open={!!deleteRow} onClose={() => setDeleteRow(null)} onConfirm={handleDelete} loading={loading} title="Delete User (Super Admin Action)" message={`You are about to permanently delete "${deleteRow?.name}" (${deleteRow?.email}). This action cannot be undone and requires Super Admin authority.`} />
+      <ConfirmDialog open={!!deleteRow} onClose={() => setDeleteRow(null)} onConfirm={handleDelete} loading={loading} title="Delete User" message={`You are about to permanently delete "${deleteRow?.name}" (${deleteRow?.email}). This action cannot be undone.`} />
 
       <style>{`@media (max-width: 768px) { .stats-grid { grid-template-columns: 1fr 1fr !important; } .roles-grid { grid-template-columns: 1fr 1fr !important; } }`}</style>
     </div>

@@ -7,6 +7,9 @@ import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { UserRole } from '@prisma/client';
 
+const ADMIN_ROLES = [UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER];
+const PROTECTED_ROLES = [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.MANAGER];
+
 @ApiTags('Users')
 @Controller('users')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -15,7 +18,7 @@ export class UsersController {
   constructor(private usersService: UsersService) {}
 
   @Get()
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER)
   @ApiOperation({ summary: 'Get all users' })
   @ApiQuery({ name: 'skip', required: false, type: Number })
   @ApiQuery({ name: 'take', required: false, type: Number })
@@ -42,7 +45,7 @@ export class UsersController {
   }
 
   @Get(':id')
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER)
   @ApiOperation({ summary: 'Get user by ID' })
   findOne(@Param('id') id: string) {
     return this.usersService.findById(id);
@@ -51,40 +54,42 @@ export class UsersController {
   @Put(':id')
   @ApiOperation({ summary: 'Update user' })
   async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto, @Request() req) {
-    const isAdmin = req.user.role === UserRole.ADMIN || req.user.role === UserRole.SUPER_ADMIN;
+    const isSuperAdmin = req.user.role === UserRole.SUPER_ADMIN;
+    const isAdmin = ADMIN_ROLES.includes(req.user.role);
+
+    if (!isAdmin) {
+      throw new ForbiddenException('You do not have permission to update users');
+    }
 
     if (req.user.id !== id && !isAdmin) {
       throw new ForbiddenException('You do not have permission to update this user');
     }
 
-    if (!isAdmin) {
-      // Non-admins get a strictly whitelisted set of fields — never role, isVerified, isActive, or password
+    if (!isSuperAdmin) {
       const { firstName, lastName, email, phone, avatar } = updateUserDto;
       return this.usersService.update(id, { firstName, lastName, email, phone, avatar });
     }
 
-    // Admins cannot set role higher than their own
-    if (req.user.role === UserRole.ADMIN && updateUserDto.role === UserRole.SUPER_ADMIN) {
-      throw new ForbiddenException('Admins cannot assign Super Admin role');
+    if (!isSuperAdmin && updateUserDto.role && PROTECTED_ROLES.includes(updateUserDto.role)) {
+      throw new ForbiddenException('Only Super Admins can assign protected roles (Admin, Manager, Super Admin)');
     }
 
     return this.usersService.update(id, updateUserDto);
   }
 
   @Delete(':id')
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER)
   @ApiOperation({ summary: 'Delete user' })
   async remove(@Param('id') id: string, @Request() req) {
     const targetUser = await this.usersService.findById(id);
-    
-    // Prevent normal admin from deleting SUPER_ADMIN
-    if (req.user.role === UserRole.ADMIN && targetUser.role === UserRole.SUPER_ADMIN) {
-      throw new ForbiddenException('Admins cannot delete Super Admins');
-    }
 
-    // Prevent deleting self
     if (req.user.id === id) {
       throw new ForbiddenException('You cannot delete your own account');
+    }
+
+    const isSuperAdmin = req.user.role === UserRole.SUPER_ADMIN;
+    if (!isSuperAdmin && PROTECTED_ROLES.includes(targetUser.role)) {
+      throw new ForbiddenException('Only Super Admins can delete users with protected roles (Admin, Manager, Super Admin)');
     }
 
     return this.usersService.remove(id);
