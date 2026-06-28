@@ -491,22 +491,9 @@ export class OrdersService {
       return createdOrder;
     });
 
-    // Send "Order Placed" Notification (push + email + SMS — all non-blocking)
+    // Send "Order Placed" Notification / invoice summary (push + email + SMS — all non-blocking)
     this.notificationsService.sendOrderPlacedNotification(order.id)
       .catch(e => console.warn('Order placed notification failed:', e?.message));
-
-    // If payment method is MOBILE_MONEY, initiate payment push
-    if (paymentMethodEnum === 'MOBILE_MONEY' && data.paymentPhone && order.totalZMW) {
-      try {
-        await this.paymentsService.process543Payment(
-          order.id,
-          data.paymentPhone,
-          Number(order.totalZMW),
-        );
-      } catch {
-        // Payment push failed — order is already created, no action needed
-      }
-    }
 
     return order;
   }
@@ -515,6 +502,7 @@ export class OrdersService {
     const existingOrder = await this.findById(id);
     const order = await this.prisma.$transaction(async (tx) => {
       const data: any = {};
+      const isPaymentBeingMarkedPaid = paymentStatus === 'PAID' && existingOrder.paymentStatus !== 'PAID';
 
       if (status) {
         data.status = status as any;
@@ -524,6 +512,9 @@ export class OrdersService {
         if (trackingNumber) data.trackingNumber = trackingNumber;
       }
       if (paymentStatus) data.paymentStatus = paymentStatus as any;
+      if (!status && isPaymentBeingMarkedPaid && existingOrder.status === 'PENDING') {
+        data.status = 'CONFIRMED';
+      }
 
       const updatedOrder = await tx.order.update({
         where: { id },
@@ -531,9 +522,9 @@ export class OrdersService {
       });
 
       // Use the new status for the log, or existing status if only paymentStatus changed
-      const logStatus = (status || existingOrder.status) as any;
+      const logStatus = (data.status || existingOrder.status) as any;
       const autoNotes = [
-        status ? `Status → ${status}` : null,
+        data.status ? `Status → ${data.status}` : null,
         paymentStatus ? `Payment → ${paymentStatus}` : null,
         trackingNumber ? `Tracking: ${trackingNumber}` : null,
       ].filter(Boolean).join(' | ');
@@ -550,9 +541,15 @@ export class OrdersService {
     });
 
     // Send notification to ALL customers (including guests) when status changes
-    if (status) {
-      this.notificationsService.sendOrderStatusNotification(order.id, status)
+    const nextStatus = (status || (paymentStatus === 'PAID' && existingOrder.status === 'PENDING' ? 'CONFIRMED' : '')) as string;
+    if (nextStatus) {
+      this.notificationsService.sendOrderStatusNotification(order.id, nextStatus)
         .catch(e => console.warn('Status notification failed:', e?.message));
+    }
+
+    if (paymentStatus === 'PAID' && existingOrder.paymentStatus !== 'PAID') {
+      this.notificationsService.sendPaymentReceiptNotification(order.id)
+        .catch(e => console.warn('Receipt notification failed:', e?.message));
     }
 
     return order;

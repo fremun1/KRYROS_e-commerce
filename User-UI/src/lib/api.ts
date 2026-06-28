@@ -374,8 +374,9 @@ export async function fetchOrders(token: string): Promise<ApiOrder[]> {
   return list as ApiOrder[];
 }
 
-export async function trackOrder(orderNumber: string): Promise<ApiOrder | null> {
+export async function trackOrder(orderNumber: string, email?: string): Promise<ApiOrder | null> {
   const qs = new URLSearchParams({ orderNumber: orderNumber.trim() });
+  if (email?.trim()) qs.set("email", email.trim());
   const result = await apiFetch<ApiOrder>(`/api/orders/track?${qs.toString()}`);
   return result ?? null;
 }

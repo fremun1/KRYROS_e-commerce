@@ -69,8 +69,8 @@ const DIAL_COUNTRIES = [
 
 const DEFAULT_CHECKOUT_METHODS = [
   { id: "mobile",   label: "Mobile Money",   sub: "MTN, Airtel, Zamtel",       icon: Smartphone, iconBg: "bg-primary/10" },
-  { id: "card",     label: "Card Payment",   sub: "Visa, Mastercard & more",   icon: CreditCard, iconBg: "bg-blue-50 dark:bg-blue-900/20" },
-  { id: "bank",     label: "Bank Transfer",  sub: "Local & International",     icon: Building2,  iconBg: "bg-slate-50 dark:bg-slate-800" },
+  { id: "card",     label: "Card Payment",   sub: "Coming soon",               icon: CreditCard, iconBg: "bg-blue-50 dark:bg-blue-900/20", pending: true },
+  { id: "bank",     label: "Bank Transfer",  sub: "Coming soon",               icon: Building2,  iconBg: "bg-slate-50 dark:bg-slate-800", pending: true },
   {
     id: "whatsapp", label: "WhatsApp Payment", sub: "Pay securely on WhatsApp",
     icon: () => (
@@ -276,7 +276,6 @@ export default function CheckoutPage() {
   // ── Dynamic payment config from admin panel ─────────────────────────────────
   const [bankProviders, setBankProviders]   = useState<{ name: string; config?: { accountName?: string; accountNumber?: string } }[]>([]);
   const [mobileNetworks, setMobileNetworks] = useState<string[]>(["MTN", "Airtel", "Zamtel", "M-Pesa"]);
-  const [apiMethodTypes, setApiMethodTypes] = useState<string[]>([]);
 
   useEffect(() => {
     fetch(`${API_BASE}/api/payment-config/public`)
@@ -298,8 +297,6 @@ export default function CheckoutPage() {
             );
           if (nets.length > 0) setMobileNetworks(nets);
         }
-        const enabledTypes = arr.filter((m: any) => m.isEnabled).map((m: any) => m.type as string);
-        setApiMethodTypes(enabledTypes);
       })
       .catch(() => {});
 
@@ -314,44 +311,17 @@ export default function CheckoutPage() {
       .catch(() => {});
   }, []);
 
-  const TYPE_TO_ID: Record<string, string> = {
-    mobile_wallet: "mobile", card: "card", bank: "bank", cash: "cod", digital_wallet: "whatsapp",
-  };
-  const activeCheckoutMethods =
-    apiMethodTypes.length > 0
-      ? (apiMethodTypes.map((t) => DEFAULT_CHECKOUT_METHODS.find((m) => m.id === (TYPE_TO_ID[t] ?? t))).filter(Boolean) as typeof DEFAULT_CHECKOUT_METHODS)
-      : [...DEFAULT_CHECKOUT_METHODS];
+  const activeCheckoutMethods = [...DEFAULT_CHECKOUT_METHODS];
 
-  if (!activeCheckoutMethods.find((m) => m.id === "whatsapp")) {
-    const wa = DEFAULT_CHECKOUT_METHODS.find((m) => m.id === "whatsapp");
-    if (wa) activeCheckoutMethods.push(wa);
-  }
-
-  // ── Helpers: register phone + send receipt ──────────────────────────────────
-  const registerPhoneForSms = (customerPhone: string, customerName: string) => {
-    if (!customerPhone?.trim()) return;
-    fetch(`${API_BASE}/api/notifications/sms/contacts/register`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ phone: customerPhone.trim(), name: customerName.trim() || undefined, source: "Checkout" }),
-    }).catch(() => {});
+  const buildTrackingPath = (orderNumber: string) => {
+    const params = new URLSearchParams({ orderNumber });
+    if (email.trim()) params.set("email", email.trim());
+    return `/track?${params.toString()}`;
   };
 
-  const sendReceiptAfterOrder = (orderRef: string, amountFormatted: string, method: string) => {
-    const customerPhone = phone.trim();
-    const customerEmail = email.trim();
-    if (!customerPhone && !customerEmail) return;
-    fetch(`${API_BASE}/api/notifications/receipt`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        phone: customerPhone || undefined, email: customerEmail || undefined,
-        orderRef, amount: amountFormatted,
-        currency: selectedCurrency.symbol || selectedCurrency.code,
-        customerName: `${firstName} ${lastName}`.trim() || "Customer",
-        paymentMethod: method, status: "completed",
-      }),
-    }).catch(() => {});
+  const buildTrackingUrl = (orderNumber: string) => {
+    if (typeof window === "undefined") return buildTrackingPath(orderNumber);
+    return `${window.location.origin}${buildTrackingPath(orderNumber)}`;
   };
 
   useEffect(() => {
@@ -397,16 +367,14 @@ export default function CheckoutPage() {
         if (!r.ok) return;
         const d = await r.json().catch(() => null);
         if (!d) return;
-        const status = d.status ?? d.paymentStatus ?? "";
-        if (status === "PAID") {
+        const status = String(d.status ?? d.paymentStatus ?? "").toLowerCase();
+        if (status === "paid") {
           clearInterval(pollRef.current!);
           setPlacedOrderNumber(orderNum);
           clearCart();
           setOrdered(true);
-          registerPhoneForSms(phone, `${firstName} ${lastName}`);
-          sendReceiptAfterOrder(orderNum, total.toFixed(2), `Mobile Money (${mmProvider})`);
           setMmPhase("idle");
-        } else if (status === "FAILED") {
+        } else if (status === "failed") {
           clearInterval(pollRef.current!);
           setMmPhase("failed_init");
         }
@@ -488,19 +456,29 @@ export default function CheckoutPage() {
       setSavedCartItems([...cartItems]);
       if (openMethod === "whatsapp") {
         const itemsList = cartItems.map((i) => `• ${i.qty}× ${i.name}`).join("\n");
-        const msg = `*New Order: ${orderNum}*\n\n*Customer:*\n${firstName} ${lastName}\n${phone}\n\n*Items:*\n${itemsList}\n\n*Total:* ${format(total)}\n\n*Payment Method:* WhatsApp Transfer\nPlease confirm my payment. Thank you!`;
+        const deliveryText = pickupStationId
+          ? `Pickup Station: ${selectedStation?.name || "Selected pickup station"}`
+          : `Delivery Address: ${addressLine}, ${city}${state ? `, ${state}` : ""}, ${country}`;
+        const msg =
+          `*New Order: ${orderNum}*\n\n` +
+          `*Customer*\n` +
+          `${firstName} ${lastName}\n` +
+          `${phone || "No phone provided"}\n` +
+          `${email || "No email provided"}\n\n` +
+          `*Items*\n${itemsList}\n\n` +
+          `*Order Total*\n${format(total)}\n\n` +
+          `*Payment Method*\nWhatsApp Payment\n\n` +
+          `*Fulfilment*\n${deliveryText}\n\n` +
+          `*Track My Payment*\n${buildTrackingUrl(orderNum)}\n\n` +
+          `I have placed this order and I want to complete my payment on WhatsApp. Please confirm the next step.`;
         setWaMessage(msg);
         setOrdered(true);
         clearCart();
-        registerPhoneForSms(phone, `${firstName} ${lastName}`);
-        sendReceiptAfterOrder(orderNum, total.toFixed(2), "WhatsApp Payment");
         const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(msg)}`;
         window.open(url, "_blank");
       } else {
         setOrdered(true);
         clearCart();
-        registerPhoneForSms(phone, `${firstName} ${lastName}`);
-        sendReceiptAfterOrder(orderNum, total.toFixed(2), openMethod === "bank" ? "Bank Transfer" : "Card Payment");
       }
     } catch {
       const msg = "Network error. Please check your connection and try again.";
@@ -517,6 +495,7 @@ export default function CheckoutPage() {
   // ── Order confirmation screen ───────────────────────────────────────────────
   if (ordered) {
     const isManual = openMethod === "bank" || openMethod === "whatsapp";
+    const trackingPath = placedOrderNumber ? buildTrackingPath(placedOrderNumber) : "/track";
     return (
       <div className="max-w-lg mx-auto bg-background min-h-screen flex flex-col px-6 pt-12 pb-8">
         <div className="flex-1 flex flex-col items-center justify-center text-center space-y-6">
@@ -536,18 +515,22 @@ export default function CheckoutPage() {
                 </div>
               ))}
               <div className="pt-3 border-t border-border flex justify-between font-black">
-                <span>Total Paid</span>
+                <span>{isManual ? "Total Due" : "Total Paid"}</span>
                 <span className="text-primary">{format(total)}</span>
               </div>
             </div>
           </div>
           <div className="space-y-3 w-full">
             <p className="text-sm text-muted-foreground px-4">
-              {isManual ? "We'll confirm your order once we verify your payment." : `Thank you${firstName ? `, ${firstName}` : ""}! Your order is confirmed.`}
+              {isManual
+                ? "Your order has been created. We’ve sent your invoice/order summary, and your receipt will be sent after we verify your WhatsApp payment."
+                : `Thank you${firstName ? `, ${firstName}` : ""}! Your payment is verified. Your receipt will be sent automatically.`}
             </p>
             {isManual && (
               <div className="bg-primary/5 border border-primary/15 rounded-2xl p-4 text-xs text-primary font-medium">
-                {openMethod === "whatsapp" ? "Our team will contact you on WhatsApp to confirm your payment." : "Send your proof of transfer to support. Once confirmed, your order will be processed."}
+                {openMethod === "whatsapp"
+                  ? "Open WhatsApp below to send your payment request. Use the tracking link to check payment status any time, even if you leave this page."
+                  : "Send your proof of transfer to support. Once confirmed, your order will be processed."}
               </div>
             )}
           </div>
@@ -559,6 +542,11 @@ export default function CheckoutPage() {
               <span>Open WhatsApp</span>
             </button>
           )}
+          <Link href={trackingPath}>
+            <button className="w-full py-3 rounded-2xl border border-primary/30 bg-primary/5 text-sm font-semibold text-primary hover:bg-primary/10 transition-colors">
+              Track Payment
+            </button>
+          </Link>
           <Link href="/">
             <button className="w-full py-3 rounded-2xl border border-border bg-background text-sm font-semibold hover:bg-primary/5 transition-colors">Continue Shopping</button>
           </Link>
@@ -812,15 +800,25 @@ export default function CheckoutPage() {
             {activeCheckoutMethods.map((method) => {
               const Icon = method.icon;
               const isSelected = openMethod === method.id;
+              const isPending = !!method.pending;
               return (
                 <button
                   key={method.id}
-                  onClick={() => { setOpenMethod(method.id); setOrderError(null); setMmPhase("idle"); }}
-                  className={`flex flex-col items-center gap-1.5 px-2 py-3 rounded-xl border text-center transition-all ${isSelected ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"}`}
+                  type="button"
+                  disabled={isPending}
+                  onClick={() => {
+                    if (isPending) return;
+                    setOpenMethod(method.id);
+                    setOrderError(null);
+                    setMmPhase("idle");
+                  }}
+                  className={`flex flex-col items-center gap-1.5 px-2 py-3 rounded-xl border text-center transition-all ${isSelected ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"} ${isPending ? "opacity-50 cursor-not-allowed" : ""}`}
                 >
                   <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${method.iconBg}`}><Icon /></div>
                   <p className="text-[11px] font-bold text-foreground leading-tight">{method.label.replace(" Payment", "")}</p>
-                  <p className="text-[9px] text-muted-foreground leading-tight">{method.id === "mobile" ? mobileNetworks.slice(0, 2).join(", ") : method.sub}</p>
+                  <p className="text-[9px] text-muted-foreground leading-tight">
+                    {method.id === "mobile" ? mobileNetworks.slice(0, 2).join(", ") : method.sub}
+                  </p>
                 </button>
               );
             })}
@@ -988,7 +986,7 @@ export default function CheckoutPage() {
             if (openMethod === "mobile") handleMobileMoneyPay();
             else handlePlaceOrder();
           }}
-          disabled={isSubmitting || !openMethod || cartItems.length === 0}
+          disabled={isSubmitting || !openMethod || cartItems.length === 0 || !!activeCheckoutMethods.find((method) => method.id === openMethod && method.pending)}
           className="w-full py-4 rounded-2xl bg-primary text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg active:scale-[0.98] transition-all disabled:opacity-60 disabled:cursor-not-allowed"
         >
           {isSubmitting ? (

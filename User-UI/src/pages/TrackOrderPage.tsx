@@ -140,20 +140,9 @@ export default function TrackOrderPage() {
   const [trackedOrder, setTrackedOrder] = useState<OrderRow | null>(null);
   const [searchError, setSearchError] = useState("");
 
-  useEffect(() => {
-    if (!token) return;
-    setLoading(true);
-    fetchOrders(token)
-      .then((data) => setOrders(data.map(normalizeOrder)))
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, [token]);
-
-  const handleTrackOrder = async (event?: FormEvent) => {
-    event?.preventDefault();
-    const query = searchQ.trim();
-
-    if (!query) {
+  const runTrackLookup = async (query: string, email?: string) => {
+    const cleanQuery = query.trim();
+    if (!cleanQuery) {
       setTrackedOrder(null);
       setSearchError("");
       return;
@@ -161,7 +150,7 @@ export default function TrackOrderPage() {
 
     const localMatch = orders.find((order) => {
       const normalizedOrderId = order.orderId.replace(/^#/, "").toLowerCase();
-      return normalizedOrderId === query.replace(/^#/, "").toLowerCase();
+      return normalizedOrderId === cleanQuery.replace(/^#/, "").toLowerCase();
     });
 
     if (localMatch) {
@@ -171,7 +160,7 @@ export default function TrackOrderPage() {
     setSearchLoading(true);
     setSearchError("");
     try {
-      const result = await trackOrder(query);
+      const result = await trackOrder(cleanQuery, email);
       if (!result) {
         setTrackedOrder(null);
         setSearchError("No order was found for that ID.");
@@ -184,6 +173,29 @@ export default function TrackOrderPage() {
     } finally {
       setSearchLoading(false);
     }
+  };
+
+  useEffect(() => {
+    if (!token) return;
+    setLoading(true);
+    fetchOrders(token)
+      .then((data) => setOrders(data.map(normalizeOrder)))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [token]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const linkedOrder = params.get("orderNumber") || params.get("order") || "";
+    const linkedEmail = params.get("email") || "";
+    if (!linkedOrder.trim()) return;
+    setSearchQ(linkedOrder);
+    runTrackLookup(linkedOrder, linkedEmail);
+  }, []);
+
+  const handleTrackOrder = async (event?: FormEvent) => {
+    event?.preventDefault();
+    await runTrackLookup(searchQ);
   };
 
   const displayedOrders = trackedOrder ? [trackedOrder] : orders;

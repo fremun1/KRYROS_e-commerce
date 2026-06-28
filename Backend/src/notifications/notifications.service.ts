@@ -395,6 +395,30 @@ export class NotificationsService implements OnModuleInit {
 
   // ==================== NOTIFICATION TEMPLATES ====================
 
+  private buildTrackingUrl(orderNumber: string, email?: string) {
+    const frontendUrl = (this.configService.get('FRONTEND_URL') || '').replace(/\/$/, '');
+    const params = new URLSearchParams({ orderNumber });
+    if (email?.trim()) params.set('email', email.trim());
+    return `${frontendUrl}/track?${params.toString()}`;
+  }
+
+  private getOrderContactDetails(order: any) {
+    const firstName = order?.user?.firstName || order?.shippingAddress?.firstName || 'Valued Customer';
+    const email = order?.user?.email || order?.shippingAddress?.email || '';
+    const phone = order?.shippingAddress?.phone || order?.user?.phone || '';
+    return { firstName, email, phone };
+  }
+
+  private getOrderAmountDetails(order: any) {
+    const currency = order?.currencyCode || 'USD';
+    const rawAmount = currency === 'ZMW' && order?.totalZMW != null ? Number(order.totalZMW) : Number(order?.total || 0);
+    return {
+      currency,
+      amountValue: rawAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+      displayAmount: `${currency} ${rawAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+    };
+  }
+
   async sendOrderStatusNotification(orderId: string, status: string) {
     const order = await this.prisma.order.findUnique({
       where: { id: orderId },
@@ -405,6 +429,8 @@ export class NotificationsService implements OnModuleInit {
     });
 
     if (!order) return;
+    const { firstName, email: userEmail, phone: smsPhone } = this.getOrderContactDetails(order);
+    const trackingUrl = this.buildTrackingUrl(order.orderNumber, userEmail);
 
     let title = 'Order Update';
     let body = `Your order ${order.orderNumber} status has changed to ${status}.`;
@@ -450,20 +476,17 @@ export class NotificationsService implements OnModuleInit {
     }
 
     // ── 2. Email notification ─────────────────────────────────────────────
-    const userEmail = (order as any).user?.email || (order as any).shippingAddress?.email;
-    const firstName = (order as any).user?.firstName || (order as any).shippingAddress?.firstName || 'Valued Customer';
     if (userEmail) {
       this.mailerService.sendOrderStatusEmail({
         to: userEmail,
         firstName,
         orderNumber: order.orderNumber,
         status,
-        trackingUrl: `${this.configService.get('FRONTEND_URL')}/orders/${orderId}`,
+        trackingUrl,
       }).catch(e => this.logger.warn(`Email notification failed for order ${order.orderNumber}: ${e.message}`));
     }
 
     // ── 3. SMS notification (Zambia for now, non-blocking) ────────────────
-    const smsPhone = (order as any).shippingAddress?.phone || (order as any).user?.phone;
     if (smsPhone) {
       this.sendSMS(smsPhone, `KRYROS: ${title} - ${body}`)
         .catch(e => this.logger.warn(`SMS notification failed for order ${order.orderNumber}: ${e.message}`));
@@ -487,24 +510,29 @@ export class NotificationsService implements OnModuleInit {
 
       if (!order) return;
 
-      const firstName = (order as any).user?.firstName || (order as any).shippingAddress?.firstName || 'Valued Customer';
-      const userEmail = (order as any).user?.email || (order as any).shippingAddress?.email;
-      const total = order.totalZMW && order.currencyCode === 'ZMW' 
-        ? `ZMW ${Number(order.totalZMW).toLocaleString()}` 
-        : `${order.currencyCode || 'USD'} ${Number(order.total).toLocaleString()}`;
-      const currency = order.currencyCode || 'ZMW';
+      const { firstName, email: userEmail, phone: smsPhone } = this.getOrderContactDetails(order);
+      const { currency, amountValue, displayAmount } = this.getOrderAmountDetails(order);
+      const paymentMethod = String(order.paymentMethod || 'Standard').replace(/_/g, ' ');
+      const isManualPayment = ['WHATSAPP', 'BANK_TRANSFER'].includes(String(order.paymentMethod || '').toUpperCase());
+      const isMobileMoney = String(order.paymentMethod || '').toUpperCase() === 'MOBILE_MONEY';
 
       const address = (order as any).shippingAddress;
       const shippingAddr = address
         ? [address.street, address.city, address.state, address.country].filter(Boolean).join(', ')
         : undefined;
+      const trackingUrl = this.buildTrackingUrl(order.orderNumber, userEmail);
+      const smsText = isManualPayment
+        ? `KRYROS: Order #${order.orderNumber} received. Payment is pending verification. Track here: ${trackingUrl}`
+        : isMobileMoney
+          ? `KRYROS: Order #${order.orderNumber} received. Approve the mobile money prompt to complete payment. Track here: ${trackingUrl}`
+          : `KRYROS: Order #${order.orderNumber} received. Track here: ${trackingUrl}`;
 
       // ── 1. Push ──────────────────────────────────────────────────────────
       if (order.userId) {
         this.sendToUser(
           order.userId,
           'Order Placed! 🛍️',
-          `Your order #${order.orderNumber} has been received. Total: ${total}`,
+          `Your order #${order.orderNumber} has been received. Total: ${displayAmount}`,
           { orderId, type: 'ORDER_PLACED' },
         ).catch(e => this.logger.warn(`Push failed for new order ${order.orderNumber}: ${e.message}`));
       }
@@ -515,11 +543,11 @@ export class NotificationsService implements OnModuleInit {
           to: userEmail,
           firstName,
           orderNumber: order.orderNumber,
-          total,
+          total: amountValue,
           currency,
-          paymentMethod: (order.paymentMethod || 'Standard').replace(/_/g, ' '),
+          paymentMethod,
           shippingAddress: shippingAddr,
-          trackingUrl: `${this.configService.get('FRONTEND_URL')}/orders/${orderId}`,
+          trackingUrl,
         }).catch(e => this.logger.warn(`Order confirmation email failed for ${order.orderNumber}: ${e.message}`));
 
         // Auto-register customer as an email contact for future blasts
@@ -531,9 +559,8 @@ export class NotificationsService implements OnModuleInit {
       }
 
       // ── 3. SMS ───────────────────────────────────────────────────────────
-      const smsPhone = address?.phone || (order as any).user?.phone;
       if (smsPhone) {
-        this.sendSMS(smsPhone, `KRYROS: Order #${order.orderNumber} received! Total: ${total}. We'll confirm shortly.`)
+        this.sendSMS(smsPhone, smsText)
           .catch(e => this.logger.warn(`Order SMS failed for ${order.orderNumber}: ${e.message}`));
 
         // Auto-register customer phone as an SMS contact for future blasts
@@ -546,6 +573,68 @@ export class NotificationsService implements OnModuleInit {
 
     } catch (error) {
       this.logger.error(`sendOrderPlacedNotification failed for ${orderId}`, error.message);
+    }
+  }
+
+  async sendPaymentReceiptNotification(orderId: string) {
+    try {
+      const order = await this.prisma.order.findUnique({
+        where: { id: orderId },
+        include: {
+          user: true,
+          shippingAddress: true,
+        } as any,
+      });
+
+      if (!order) return;
+
+      const { firstName, email: userEmail, phone: smsPhone } = this.getOrderContactDetails(order);
+      const { displayAmount } = this.getOrderAmountDetails(order);
+      const paymentMethod = String(order.paymentMethod || 'Payment').replace(/_/g, ' ');
+      const trackingUrl = this.buildTrackingUrl(order.orderNumber, userEmail);
+
+      if (order.userId) {
+        this.sendToUser(
+          order.userId,
+          'Payment Received ✅',
+          `Payment confirmed for order #${order.orderNumber}. Receipt ready.`,
+          { orderId, type: 'PAYMENT_RECEIPT', url: trackingUrl },
+        ).catch(e => this.logger.warn(`Payment receipt push failed for ${order.orderNumber}: ${e.message}`));
+      }
+
+      if (userEmail) {
+        const html = this.mailerService.buildAnnouncementHtml({
+          firstName,
+          subject: `Payment Receipt — #${order.orderNumber}`,
+          headline: 'Payment Receipt ✅',
+          bodyHtml: `
+            <p>Your payment has been verified successfully. This message is your receipt confirmation.</p>
+            <div class="order-box">
+              <div class="order-row"><span class="order-label">Order Number</span><span class="order-value">#${order.orderNumber}</span></div>
+              <div class="order-row"><span class="order-label">Amount Paid</span><span class="order-value">${displayAmount}</span></div>
+              <div class="order-row"><span class="order-label">Payment Method</span><span class="order-value">${paymentMethod}</span></div>
+              <div class="order-row"><span class="order-label">Payment Status</span><span class="order-value" style="color:#10b981">PAID</span></div>
+            </div>
+            <p>You can use the link below any time to track the order and review the latest status.</p>`,
+          ctaText: 'Track My Order',
+          ctaUrl: trackingUrl,
+        });
+        this.mailerService.sendMail(
+          userEmail,
+          `Payment Receipt — Order #${order.orderNumber}`,
+          `Payment confirmed for order #${order.orderNumber}. Amount paid: ${displayAmount}.`,
+          html,
+        ).catch(e => this.logger.warn(`Payment receipt email failed for ${order.orderNumber}: ${e.message}`));
+      }
+
+      if (smsPhone) {
+        this.sendSMS(
+          smsPhone,
+          `KRYROS: Payment received for order #${order.orderNumber}. Amount: ${displayAmount}. Receipt confirmed. Track: ${trackingUrl}`,
+        ).catch(e => this.logger.warn(`Payment receipt SMS failed for ${order.orderNumber}: ${e.message}`));
+      }
+    } catch (error) {
+      this.logger.error(`sendPaymentReceiptNotification failed for ${orderId}`, error.message);
     }
   }
 

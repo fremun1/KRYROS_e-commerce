@@ -5,6 +5,7 @@ import { PaymentStatus } from '@prisma/client';
 import axios from 'axios';
 import { XMLParser } from 'fast-xml-parser';
 import { PaymentLinksService } from '../payment-links/payment-links.service';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class PaymentsService {
@@ -16,6 +17,7 @@ export class PaymentsService {
     private prisma: PrismaService,
     private configService: ConfigService,
     private paymentLinksService: PaymentLinksService,
+    private notificationsService: NotificationsService,
   ) {}
 
   private get apiUrl() {
@@ -328,10 +330,37 @@ export class PaymentsService {
         }
         
         if (newStatus !== order.paymentStatus) {
-          await this.prisma.order.update({
-            where: { id: orderId },
-            data: { paymentStatus: newStatus as PaymentStatus },
+          const shouldAutoConfirm = newStatus === 'PAID' && order.status === 'PENDING';
+
+          await this.prisma.$transaction(async (tx) => {
+            await tx.order.update({
+              where: { id: orderId },
+              data: {
+                paymentStatus: newStatus as PaymentStatus,
+                ...(shouldAutoConfirm ? { status: 'CONFIRMED' } : {}),
+              },
+            });
+
+            await tx.orderLog.create({
+              data: {
+                orderId,
+                status: (shouldAutoConfirm ? 'CONFIRMED' : order.status) as any,
+                notes:
+                  newStatus === 'PAID'
+                    ? `Mobile money payment verified${shouldAutoConfirm ? ' | Status → CONFIRMED' : ''} | Payment → PAID`
+                    : `Payment → ${newStatus}`,
+              },
+            });
           });
+
+          if (newStatus === 'PAID') {
+            if (shouldAutoConfirm) {
+              this.notificationsService.sendOrderStatusNotification(orderId, 'CONFIRMED')
+                .catch((error) => this.logger.warn(`Status notification failed for ${orderId}: ${error.message}`));
+            }
+            this.notificationsService.sendPaymentReceiptNotification(orderId)
+              .catch((error) => this.logger.warn(`Receipt notification failed for ${orderId}: ${error.message}`));
+          }
         }
         return { status: newStatus.toLowerCase() };
       }

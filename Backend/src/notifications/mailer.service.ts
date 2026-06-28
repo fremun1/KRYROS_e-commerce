@@ -85,7 +85,7 @@ export class MailerService {
   }): string {
     const { firstName, orderNumber, total, currency, paymentMethod, shippingAddress, trackingUrl } = params;
     const appUrl = this.configService.get('FRONTEND_URL');
-    return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Order Confirmed - KRYROS</title><style>${BASE_STYLES}</style></head>
+    return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Order Received - KRYROS</title><style>${BASE_STYLES}</style></head>
 <body><div class="wrapper"><div class="card">
   <div class="header">
     <div class="logo">KR<span>YROS</span></div>
@@ -93,7 +93,7 @@ export class MailerService {
   </div>
   <div class="body">
     <div class="greeting">Order Received! 🎉</div>
-    <p class="text">Hi <strong>${firstName}</strong>, thank you for shopping with KRYROS! Your order has been received and is now being processed.</p>
+    <p class="text">Hi <strong>${firstName}</strong>, thank you for shopping with KRYROS! Your order has been received and this email serves as your order summary / invoice.</p>
     <div class="order-box">
       <div class="order-row"><span class="order-label">Order Number</span><span class="order-value">#${orderNumber}</span></div>
       <div class="order-row"><span class="order-label">Total Amount</span><span class="order-value">${currency} ${total}</span></div>
@@ -101,7 +101,7 @@ export class MailerService {
       ${shippingAddress ? `<div class="order-row"><span class="order-label">Shipping To</span><span class="order-value">${shippingAddress}</span></div>` : ''}
       <div class="order-row"><span class="order-label">Status</span><span class="order-value" style="color:#f59e0b">⏳ Pending Confirmation</span></div>
     </div>
-    <p class="text">We'll send you another email as soon as your order is confirmed. You can also track your order in the KRYROS app.</p>
+    <p class="text">If payment still needs verification, we will automatically send your final payment receipt once it is confirmed. You can also track your order any time using the button below.</p>
     <a href="${trackingUrl || appUrl}" class="cta-btn">Track My Order →</a>
     <div class="divider"></div>
     <p class="text" style="font-size:12px;color:#94a3b8">If you have any questions, reply to this email or contact our support team.</p>
@@ -316,4 +316,3 @@ export class MailerService {
     await this.sendMail(to, subject, body, html);
   }
 }
-
