@@ -14,63 +14,20 @@ import {
 } from "@/components/ui/select";
 import {
   Check,
-  CreditCard,
   Smartphone,
-  Building2,
   Lock,
   ChevronLeft,
   Truck,
-  Zap,
-  Clock,
   User,
-  Mail,
-  Phone,
   MapPin,
-  Home,
   Globe,
-  X,
-  Upload,
   ChevronDown,
-  Search,
   Package,
+  X,
 } from "lucide-react";
-
-// ── Country dial codes (for phone picker only) ────────────────────────────────
-const DIAL_COUNTRIES = [
-  { name: "Zambia",       code: "ZM", dial: "+260" },
-  { name: "Zimbabwe",     code: "ZW", dial: "+263" },
-  { name: "South Africa", code: "ZA", dial: "+27"  },
-  { name: "Kenya",        code: "KE", dial: "+254" },
-  { name: "Nigeria",      code: "NG", dial: "+234" },
-  { name: "Ghana",        code: "GH", dial: "+233" },
-  { name: "Tanzania",     code: "TZ", dial: "+255" },
-  { name: "Uganda",       code: "UG", dial: "+256" },
-  { name: "Malawi",       code: "MW", dial: "+265" },
-  { name: "Mozambique",   code: "MZ", dial: "+258" },
-  { name: "Botswana",     code: "BW", dial: "+267" },
-  { name: "Namibia",      code: "NA", dial: "+264" },
-  { name: "Rwanda",       code: "RW", dial: "+250" },
-  { name: "Ethiopia",     code: "ET", dial: "+251" },
-  { name: "DR Congo",     code: "CD", dial: "+243" },
-  { name: "Cameroon",     code: "CM", dial: "+237" },
-  { name: "Senegal",      code: "SN", dial: "+221" },
-  { name: "Ivory Coast",  code: "CI", dial: "+225" },
-  { name: "Angola",       code: "AO", dial: "+244" },
-  { name: "United Kingdom", code: "GB", dial: "+44" },
-  { name: "United States", code: "US", dial: "+1"  },
-  { name: "Canada",       code: "CA", dial: "+1"   },
-  { name: "Germany",      code: "DE", dial: "+49"  },
-  { name: "France",       code: "FR", dial: "+33"  },
-  { name: "China",        code: "CN", dial: "+86"  },
-  { name: "India",        code: "IN", dial: "+91"  },
-  { name: "Australia",    code: "AU", dial: "+61"  },
-  { name: "UAE",          code: "AE", dial: "+971" },
-];
 
 const DEFAULT_CHECKOUT_METHODS = [
   { id: "mobile",   label: "Mobile Money",   sub: "MTN, Airtel, Zamtel",       icon: Smartphone, iconBg: "bg-primary/10" },
-  { id: "card",     label: "Card Payment",   sub: "Coming soon",               icon: CreditCard, iconBg: "bg-blue-50 dark:bg-blue-900/20", pending: true },
-  { id: "bank",     label: "Bank Transfer",  sub: "Coming soon",               icon: Building2,  iconBg: "bg-slate-50 dark:bg-slate-800", pending: true },
   {
     id: "whatsapp", label: "WhatsApp Payment", sub: "Pay securely on WhatsApp",
     icon: () => (
@@ -103,38 +60,6 @@ function normalizePickupStation(s: any): PickupStation {
   };
 }
 
-function CopyBtn({ text }: { text: string }) {
-  const [copied, setCopied] = useState(false);
-  return (
-    <button
-      onClick={() => {
-        navigator.clipboard?.writeText(text).catch(() => {});
-        setCopied(true);
-        setTimeout(() => setCopied(false), 1500);
-      }}
-      className="text-xs text-primary font-semibold border border-primary/40 px-3 py-1 rounded-lg hover:bg-primary/5 transition-colors flex-shrink-0"
-    >
-      {copied ? "Copied" : "Copy"}
-    </button>
-  );
-}
-
-function SecureFooter() {
-  return (
-    <div className="flex items-center justify-between pt-4 text-[10px] text-muted-foreground">
-      <div className="flex items-center gap-1.5">
-        <Lock className="w-3 h-3" />
-        <span>Secure checkout powered by Kryros</span>
-      </div>
-      <div className="flex -space-x-1.5">
-        <div className="w-5 h-3 rounded-[4px] bg-gradient-to-r from-blue-500 to-blue-700" />
-        <div className="w-5 h-3 rounded-[4px] bg-gradient-to-r from-slate-200 to-slate-400 dark:from-slate-600 dark:to-slate-800" />
-      </div>
-    </div>
-  );
-}
-
-// Numbered section header used for every section (1. Shipping Information, 2. Pickup Station, etc.)
 function SectionHeader({ number, icon: Icon, title }: { number: number; icon: any; title: string }) {
   return (
     <div className="flex items-center gap-2.5 mb-3.5">
@@ -168,20 +93,11 @@ export default function CheckoutPage() {
   const pollRef     = useRef<ReturnType<typeof setInterval> | null>(null);
   const [whatsappNumber, setWhatsappNumber] = useState(import.meta.env.VITE_WHATSAPP_NUMBER || "260969597029");
 
-  // Shipping Information (Section 1)
+  // Simplified Shipping Information (Section 1)
   const [firstName,     setFirstName]     = useState(authUser?.firstName ?? "");
   const [lastName,      setLastName]      = useState(authUser?.lastName ?? "");
-  const [email,         setEmail]         = useState(authUser?.email ?? "");
-  const [phone,         setPhone]         = useState("");
-  const [orderNotes,    setOrderNotes]    = useState("");
-  const [phoneCountry,  setPhoneCountry]  = useState(DIAL_COUNTRIES[0]);
-  const [showCountryPicker, setShowCountryPicker] = useState(false);
-  const [countrySearch, setCountrySearch] = useState("");
   const [country,      setCountry]     = useState("");
   const [state,        setState]       = useState("");
-  const [city,         setCity]        = useState("");
-  const [addressLine,  setAddressLine] = useState("");
-  const [zipCode,      setZipCode]     = useState("");
 
   // Pickup Station (Section 2)
   const [pickupStations, setPickupStations] = useState<PickupStation[]>([]);
@@ -193,9 +109,7 @@ export default function CheckoutPage() {
   const DISCOUNT = 0;
   const [feeRate, setFeeRate] = useState(0.03); // default 3%
   const PROCESSING_FEE = SUBTOTAL * feeRate;
-  // Calculate shipping as sum of each product's shipping fee
   const shippingPrice = cartItems.reduce((t, i) => t + (i.shippingFee || 0) * i.qty, 0);
-  // Use the slowest item's delivery window so the checkout estimate stays accurate for the whole order
   const deliveryMinDays = cartItems.reduce(
     (max, i) => Math.max(max, i.estimatedDeliveryMinDays || i.estimatedDeliveryDays || 2),
     0,
@@ -204,7 +118,6 @@ export default function CheckoutPage() {
     (max, i) => Math.max(max, i.estimatedDeliveryMaxDays || i.estimatedDeliveryDays || 7),
     0,
   ) || 7;
-  // Calculate estimated delivery dates
   const today = new Date();
   const estimatedStart = new Date(today);
   estimatedStart.setDate(today.getDate() + deliveryMinDays);
@@ -219,20 +132,11 @@ export default function CheckoutPage() {
     : `Delivery in ${deliveryMinDays}-${deliveryMaxDays} days`;
   const total = SUBTOTAL - DISCOUNT + PROCESSING_FEE + shippingPrice;
 
-  // Payment Method (Section 4) — openMethod now controls inline expansion, not a bottom sheet
   const [openMethod,       setOpenMethod]       = useState<string | null>("mobile");
   const [showProviderDrop, setShowProviderDrop] = useState(false);
-  const [bankRef]   = useState(() => "PAY-" + Date.now().toString(36).toUpperCase().slice(-8));
-  const [cardNum,   setCardNum]   = useState("");
-  const [expiry,    setExpiry]    = useState("");
-  const [cvv,       setCvv]       = useState("");
-  const [cardName,  setCardName]  = useState("");
   const [mmProvider, setMmProvider] = useState("MTN");
   const [mmPhone,   setMmPhone]   = useState("");
-  const fileRef = useRef<HTMLInputElement>(null);
-  const [proofFile, setProofFile] = useState<string | null>(null);
 
-  // ── Dynamic countries from admin panel ──────────────────────────────────────
   type ShippingCountry = { name: string; code: string; shippingEnabled: boolean; isActive: boolean };
   const [shippingCountries, setShippingCountries] = useState<ShippingCountry[]>([]);
 
@@ -256,7 +160,6 @@ export default function CheckoutPage() {
       });
   }, []);
 
-  // ── Pickup stations (Section 2) ──────────────────────────────────────────
   useEffect(() => {
     let cancelled = false;
     setLoadingStations(true);
@@ -273,8 +176,6 @@ export default function CheckoutPage() {
     return () => { cancelled = true; };
   }, []);
 
-  // ── Dynamic payment config from admin panel ─────────────────────────────────
-  const [bankProviders, setBankProviders]   = useState<{ name: string; config?: { accountName?: string; accountNumber?: string } }[]>([]);
   const [mobileNetworks, setMobileNetworks] = useState<string[]>(["MTN", "Airtel", "Zamtel", "M-Pesa"]);
 
   useEffect(() => {
@@ -282,10 +183,6 @@ export default function CheckoutPage() {
       .then((r) => r.json())
       .then((data: any) => {
         const arr: any[] = Array.isArray(data) ? data : data?.data ?? [];
-        const bankMethod = arr.find((m: any) => m.type === "bank");
-        if (bankMethod?.providers) {
-          setBankProviders(bankMethod.providers.filter((p: any) => p.isEnabled));
-        }
         const mobileMethod = arr.find((m: any) => m.type === "mobile_wallet");
         if (mobileMethod?.providers?.length > 0) {
           const nets: string[] = mobileMethod.providers
@@ -315,7 +212,6 @@ export default function CheckoutPage() {
 
   const buildTrackingPath = (orderNumber: string) => {
     const params = new URLSearchParams({ orderNumber });
-    if (email.trim()) params.set("email", email.trim());
     return `/track?${params.toString()}`;
   };
 
@@ -340,12 +236,11 @@ export default function CheckoutPage() {
     currencyCode: selectedCurrency.code,
     currencySymbol: selectedCurrency.symbol,
     exchangeRate: selectedCurrency.exchangeRate,
-    ...(openMethod === "mobile" && mmProvider ? { notes: `Mobile money provider: ${mmProvider}${orderNotes ? ` | Notes: ${orderNotes}` : ""}` } : orderNotes ? { notes: orderNotes } : {}),
+    ...(openMethod === "mobile" && mmProvider ? { notes: `Mobile money provider: ${mmProvider}` } : {}),
     addressDetails: {
-      email, firstName, lastName, phone,
-      address: addressLine || `${city}, ${state}, ${country}`,
-      zipCode: zipCode || undefined,
-      countryName: country, stateName: state || undefined, cityName: city || undefined, manual: true,
+      firstName, lastName,
+      address: `${state}, ${country}`,
+      countryName: country, stateName: state || undefined, manual: true,
       pickupStationId: pickupStationId || undefined,
     },
   });
@@ -385,10 +280,8 @@ export default function CheckoutPage() {
   const validateShippingInfo = () => {
     if (!firstName.trim()) { toast.error("Please enter your first name"); return false; }
     if (!lastName.trim())  { toast.error("Please enter your last name");  return false; }
-    if (!email.trim() && !phone.trim()) { toast.error("Please provide at least an email or phone number"); return false; }
     if (!country) { toast.error("Please select a country"); return false; }
-    if (!city.trim()) { toast.error("Please enter your city"); return false; }
-    if (!addressLine.trim()) { toast.error("Please enter your address"); return false; }
+    if (!state.trim()) { toast.error("Please enter your province / state"); return false; }
     return true;
   };
 
@@ -437,8 +330,8 @@ export default function CheckoutPage() {
     try {
       const headers: Record<string, string> = { "Content-Type": "application/json" };
       if (authToken) headers["Authorization"] = `Bearer ${authToken}`;
-      const PAYMENT_METHOD_MAP: Record<string, string> = { card: "CARD", bank: "BANK_TRANSFER", whatsapp: "WHATSAPP", apple: "CARD", google: "CARD", crypto: "CARD" };
-      const backendPaymentMethod = PAYMENT_METHOD_MAP[openMethod ?? "card"] ?? "CARD";
+      const PAYMENT_METHOD_MAP: Record<string, string> = { whatsapp: "WHATSAPP" };
+      const backendPaymentMethod = PAYMENT_METHOD_MAP[openMethod ?? "whatsapp"] ?? "WHATSAPP";
       const exchangeRate = selectedCurrency.exchangeRate || 1;
       const totalLocal = total * exchangeRate;
       const res = await fetch(`${API_BASE}/api/orders`, { method: "POST", headers, body: JSON.stringify(buildOrderPayload(backendPaymentMethod, totalLocal)) });
@@ -458,12 +351,10 @@ export default function CheckoutPage() {
         const itemsList = cartItems.map((i) => `• ${i.qty}× ${i.name}`).join("\n");
         const deliveryText = pickupStationId
           ? `Pickup Station: ${selectedStation?.name || "Selected pickup station"}`
-          : `Delivery Address: ${addressLine}, ${city}${state ? `, ${state}` : ""}, ${country}`;
+          : `Delivery: ${state}, ${country}`;
         const msg =
           `*New Order:* ${orderNum}\n\n` +
-          `*Customer:* ${firstName} ${lastName}\n` +
-          `*Phone:* ${phone || "No phone provided"}\n` +
-          `*Email:* ${email || "No email provided"}\n\n` +
+          `*Customer:* ${firstName} ${lastName}\n\n` +
           `*Item:* ${itemsList.replace(/• /g, "")}\n` +
           `*Total:* ${format(total)}\n\n` +
           `*Payment:* WhatsApp Payment\n` +
@@ -491,14 +382,13 @@ export default function CheckoutPage() {
     window.open(url, "_blank");
   };
 
-  // ── Order confirmation screen ───────────────────────────────────────────────
   if (ordered) {
-    const isManual = openMethod === "bank" || openMethod === "whatsapp";
+    const isManual = openMethod === "whatsapp";
     const trackingPath = placedOrderNumber ? buildTrackingPath(placedOrderNumber) : "/track";
     return (
       <div className="max-w-lg mx-auto bg-background min-h-screen flex flex-col px-6 pt-12 pb-8">
         <div className="flex-1 flex flex-col items-center justify-center text-center space-y-6">
-          <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-2">
+          <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center">
             <Check className="w-10 h-10 text-primary" strokeWidth={3} />
           </div>
           <div className="space-y-2">
@@ -527,9 +417,7 @@ export default function CheckoutPage() {
             </p>
             {isManual && (
               <div className="bg-primary/5 border border-primary/15 rounded-2xl p-4 text-xs text-primary font-medium">
-                {openMethod === "whatsapp"
-                  ? "Open WhatsApp below to send your payment request. Use the tracking link to check payment status any time, even if you leave this page."
-                  : "Send your proof of transfer to support. Once confirmed, your order will be processed."}
+                Open WhatsApp below to send your payment request. Use the tracking link to check payment status any time, even if you leave this page.
               </div>
             )}
           </div>
@@ -559,7 +447,6 @@ export default function CheckoutPage() {
 
   return (
     <div className="max-w-lg mx-auto bg-background min-h-screen flex flex-col">
-      {/* Header */}
       <div className="sticky top-0 z-20 flex items-center justify-between px-4 pt-5 pb-3 bg-background/90 backdrop-blur border-b border-border/60">
         <button onClick={() => navigate("/cart")} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground">
           <ChevronLeft className="w-4 h-4" /> Back to Cart
@@ -570,10 +457,7 @@ export default function CheckoutPage() {
         </span>
       </div>
 
-      {/* Single scrolling page — all sections always visible */}
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 pb-32">
-
-        {/* ── SECTION 1: Shipping Information ── */}
         <div className="bg-card border border-border rounded-2xl p-4">
           <SectionHeader number={1} icon={User} title="Shipping Information" />
           <div className="space-y-3">
@@ -588,59 +472,10 @@ export default function CheckoutPage() {
               </div>
             </div>
 
-            {/* Phone Number gets its own full-width row so the dial code + number both have room */}
-            <div className="space-y-1.5">
-              <label className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground"><Phone className="w-3 h-3" />Phone Number</label>
-              <div className="flex gap-1.5">
-                <div className="w-[88px] rounded-xl border border-border bg-muted/40 flex items-center flex-shrink-0 overflow-hidden">
-                  <input
-                    list="checkout-dial-codes"
-                    value={phoneCountry.dial}
-                    onChange={(e) => {
-                      const nextValue = e.target.value;
-                      const match = DIAL_COUNTRIES.find((c) => c.dial === nextValue || c.name.toLowerCase() === nextValue.toLowerCase());
-                      setPhoneCountry(match ?? { ...phoneCountry, dial: nextValue });
-                    }}
-                    placeholder="+1"
-                    type="text"
-                    className="w-full min-w-0 px-3 py-3 bg-transparent text-sm font-semibold text-foreground outline-none"
-                  />
-                  <datalist id="checkout-dial-codes">
-                    {DIAL_COUNTRIES.map((c) => (
-                      <option key={c.code} value={c.dial}>{c.name}</option>
-                    ))}
-                  </datalist>
-                </div>
-                <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Enter phone number" type="tel" className="flex-1 min-w-0 px-3.5 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
-              </div>
-            </div>
-
             <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <label className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground"><Mail className="w-3 h-3" />Email Address</label>
-                <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="you@email.com" className="w-full px-3.5 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
-              </div>
-              <div className="space-y-1.5">
-                <label className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground"><MapPin className="w-3 h-3" />Address</label>
-                <input value={addressLine} onChange={(e) => setAddressLine(e.target.value)} placeholder="Enter street address" className="w-full px-3.5 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <label className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground"><Home className="w-3 h-3" />Town / City</label>
-                <input value={city} onChange={(e) => setCity(e.target.value)} placeholder="Enter city" className="w-full px-3.5 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
-              </div>
               <div className="space-y-1.5">
                 <label className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground"><MapPin className="w-3 h-3" />Province / State</label>
                 <input value={state} onChange={(e) => setState(e.target.value)} placeholder="Enter province / state" className="w-full px-3.5 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <label className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground"><Mail className="w-3 h-3" />Postal Code</label>
-                <input value={zipCode} onChange={(e) => setZipCode(e.target.value)} placeholder="Enter postal code" className="w-full px-3.5 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
               </div>
               <div className="space-y-1.5">
                 <label className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground"><Globe className="w-3 h-3" />Country</label>
@@ -663,40 +498,8 @@ export default function CheckoutPage() {
               </div>
             </div>
           </div>
-
-          {/* Country picker modal (for phone dial code) — kept available, opened from a small link */}
-          <button type="button" onClick={() => { setShowCountryPicker(true); setCountrySearch(""); }} className="text-[10px] text-primary font-semibold mt-2 hover:underline">
-            Change dial code
-          </button>
-          {showCountryPicker && (
-            <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center" onClick={() => setShowCountryPicker(false)}>
-              <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
-              <div className="relative w-full max-w-sm bg-card border border-border rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
-                <div className="flex items-center justify-between px-4 pt-4 pb-3 border-b border-border">
-                  <h3 className="text-sm font-bold text-foreground">Select Country Code</h3>
-                  <button onClick={() => setShowCountryPicker(false)} className="p-1.5 rounded-full hover:bg-muted transition-colors"><X className="w-4 h-4" /></button>
-                </div>
-                <div className="px-4 py-3 border-b border-border">
-                  <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-muted/60 border border-border">
-                    <Search className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                    <input autoFocus value={countrySearch} onChange={(e) => setCountrySearch(e.target.value)} placeholder="Search country..." className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground" />
-                  </div>
-                </div>
-                <div className="overflow-y-auto max-h-64 divide-y divide-border/50">
-                  {DIAL_COUNTRIES.filter((c) => c.name.toLowerCase().includes(countrySearch.toLowerCase()) || c.dial.includes(countrySearch)).map((c) => (
-                    <button key={c.code} onClick={() => { setPhoneCountry(c); setShowCountryPicker(false); }} className={`w-full flex items-center gap-3 px-4 py-3 text-sm hover:bg-muted/60 transition-colors ${phoneCountry.code === c.code ? "bg-primary/5 text-primary font-semibold" : "text-foreground"}`}>
-                      <span className="flex-1 text-left">{c.name}</span>
-                      <span className="text-xs text-muted-foreground font-mono">{c.dial}</span>
-                      {phoneCountry.code === c.code && <Check className="w-3.5 h-3.5 text-primary" />}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
         </div>
 
-        {/* ── SECTION 2: Pickup Station ── */}
         <div className="bg-card border border-border rounded-2xl p-4">
           <SectionHeader number={2} icon={Package} title="Pickup Station" />
           <div className="relative">
@@ -714,15 +517,11 @@ export default function CheckoutPage() {
             {showStationDrop && (
               <div className="absolute left-0 right-0 top-full mt-1 z-20 bg-background border border-border rounded-xl shadow-xl overflow-hidden max-h-56 overflow-y-auto">
                 <button
-                  type="button"
                   onClick={() => { setPickupStationId(""); setShowStationDrop(false); }}
                   className="w-full flex items-center px-4 py-3 text-left hover:bg-muted transition-colors border-b border-border text-sm text-muted-foreground"
                 >
                   No pickup station (deliver to address)
                 </button>
-                {pickupStations.length === 0 && !loadingStations && (
-                  <div className="px-4 py-3 text-xs text-muted-foreground">No pickup stations available yet.</div>
-                )}
                 {pickupStations.map((s) => (
                   <button
                     key={s.id}
@@ -744,13 +543,8 @@ export default function CheckoutPage() {
               </div>
             )}
           </div>
-          <p className="flex items-start gap-1.5 text-[11px] text-muted-foreground mt-2">
-            <MapPin className="w-3 h-3 mt-0.5 flex-shrink-0" />
-            {"Your order will be delivered to the selected pickup station."}
-          </p>
         </div>
 
-        {/* ── SECTION 3: Delivery Information ── */}
         <div className="bg-card border border-border rounded-2xl p-4">
           <SectionHeader number={3} icon={Truck} title="Delivery" />
           <div className="space-y-3">
@@ -762,19 +556,11 @@ export default function CheckoutPage() {
                 <p className="text-xs text-foreground mt-0.5">Estimated by {formatDate(estimatedStart)} - {formatDate(estimatedEnd)}</p>
               </div>
             </div>
-            <div className="border-t border-border pt-3 flex items-center justify-between">
-              <span className="text-sm font-semibold text-muted-foreground">Condition</span>
-              <span className="text-sm font-semibold text-foreground">
-                {cartItems[0]?.condition || "New"}
-              </span>
-            </div>
           </div>
         </div>
 
-        {/* ── SECTION 4: Payment Method ── */}
         <div className="bg-card border border-border rounded-2xl p-4">
-          <SectionHeader number={4} icon={CreditCard} title="Payment Method" />
-
+          <SectionHeader number={4} icon={Smartphone} title="Payment Method" />
           {hasPaymentError && (
             <div className="p-3 mb-3 rounded-xl bg-red-50 dark:bg-red-900/15 border border-red-200 dark:border-red-900/30 text-[11px] text-red-600 dark:text-red-300 flex items-start gap-2">
               <X className="w-3 h-3 mt-0.5" />
@@ -784,50 +570,39 @@ export default function CheckoutPage() {
               </div>
             </div>
           )}
-
           {mmPhase === "waiting" && (
             <div className="p-3 mb-3 rounded-xl bg-amber-50 dark:bg-amber-900/15 border border-amber-200 dark:border-amber-900/30 text-[11px] text-amber-700 dark:text-amber-200 flex items-start gap-2">
-              <Clock className="w-3 h-3 mt-0.5" />
+              <Smartphone className="w-3 h-3 mt-0.5" />
               <div>
                 <p className="font-semibold mb-0.5">Waiting for your mobile money payment…</p>
                 <p>Check your phone and approve the payment prompt. This can take up to 3 minutes.</p>
               </div>
             </div>
           )}
-
-          <div className="grid grid-cols-3 gap-2 mb-1">
+          <div className="grid grid-cols-2 gap-2 mb-1">
             {activeCheckoutMethods.map((method) => {
               const Icon = method.icon;
               const isSelected = openMethod === method.id;
-              const isPending = !!method.pending;
               return (
                 <button
                   key={method.id}
                   type="button"
-                  disabled={isPending}
                   onClick={() => {
-                    if (isPending) return;
                     setOpenMethod(method.id);
                     setOrderError(null);
                     setMmPhase("idle");
                   }}
-                  className={`flex flex-col items-center gap-1.5 px-2 py-3 rounded-xl border text-center transition-all ${isSelected ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"} ${isPending ? "opacity-50 cursor-not-allowed" : ""}`}
+                  className={`flex flex-col items-center gap-1.5 px-2 py-3 rounded-xl border text-center transition-all ${isSelected ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"}`}
                 >
                   <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${method.iconBg}`}><Icon /></div>
                   <p className="text-[11px] font-bold text-foreground leading-tight">{method.label.replace(" Payment", "")}</p>
-                  <p className="text-[9px] text-muted-foreground leading-tight">
-                    {method.id === "mobile" ? mobileNetworks.slice(0, 2).join(", ") : method.sub}
-                  </p>
                 </button>
               );
             })}
           </div>
 
-          {/* Inline expansion panel — opens directly under the selected method, matching the reference's intent */}
           {openMethod && (
             <div className="mt-4 pt-4 border-t border-border space-y-4">
-
-              {/* MOBILE MONEY — inline fields */}
               {openMethod === "mobile" && (
                 <div className="space-y-3">
                   <div className="relative">
@@ -848,155 +623,54 @@ export default function CheckoutPage() {
                       </div>
                     )}
                   </div>
-                  <div>
-                    <label className="block text-[11px] font-semibold text-muted-foreground mb-1.5">Mobile Money Number</label>
-                    <div className="flex items-center gap-2 border border-border rounded-xl px-3.5 py-3 bg-background focus-within:ring-2 focus-within:ring-primary/30">
-                      <Smartphone className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                      <input value={mmPhone} onChange={(e) => setMmPhone(e.target.value)} placeholder="Enter the number to charge" type="tel" className="flex-1 text-sm text-foreground outline-none bg-transparent" />
+                  <div className="space-y-1.5">
+                    <label className="block text-[11px] font-semibold text-muted-foreground">Phone Number</label>
+                    <div className="flex gap-2">
+                      <div className="w-14 h-11 rounded-xl border border-border bg-muted/40 flex items-center justify-center text-sm font-bold text-foreground flex-shrink-0">+260</div>
+                      <input value={mmPhone} onChange={(e) => setMmPhone(e.target.value)} placeholder="97XXXXXXX" type="tel" className="flex-1 px-3.5 py-2.5 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
                     </div>
                   </div>
-                  <div className="bg-primary/5 border border-primary/15 rounded-xl px-3.5 py-2.5">
-                    <p className="text-[11px] text-muted-foreground">A payment prompt will be sent to this number. Please approve it to complete the payment.</p>
-                  </div>
+                  <button onClick={handleMobileMoneyPay} disabled={isSubmitting || !mmPhone.trim()} className="w-full py-3.5 bg-primary text-white rounded-xl font-bold text-sm shadow-lg shadow-primary/20 hover:opacity-90 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50">
+                    {isSubmitting ? "Processing..." : `Pay ${format(total)}`}
+                  </button>
                 </div>
               )}
-
-              {/* CARD PAYMENT — inline fields */}
-              {openMethod === "card" && (
-                <div className="space-y-3">
-                  <div>
-                    <label className="block text-[11px] font-semibold text-muted-foreground mb-1.5">Card Number</label>
-                    <div className="flex items-center gap-2 border border-border rounded-xl px-3.5 py-3 bg-background focus-within:ring-2 focus-within:ring-primary/30">
-                      <input value={cardNum} onChange={(e) => setCardNum(e.target.value)} placeholder="1234 5678 9012 3456" inputMode="numeric" className="flex-1 text-sm text-foreground outline-none bg-transparent" />
-                      <CreditCard className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-[11px] font-semibold text-muted-foreground mb-1.5">Expiry Date</label>
-                      <input value={expiry} onChange={(e) => setExpiry(e.target.value)} placeholder="MM / YY" className="w-full border border-border rounded-xl px-3.5 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/30 bg-background text-foreground" />
-                    </div>
-                    <div>
-                      <label className="block text-[11px] font-semibold text-muted-foreground mb-1.5">CVV</label>
-                      <input value={cvv} onChange={(e) => setCvv(e.target.value)} placeholder="123" type="password" className="w-full border border-border rounded-xl px-3.5 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/30 bg-background text-foreground" />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-semibold text-muted-foreground mb-1.5">Cardholder Name</label>
-                    <input value={cardName} onChange={(e) => setCardName(e.target.value)} placeholder="John Doe" className="w-full border border-border rounded-xl px-3.5 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/30 bg-background text-foreground" />
-                  </div>
-                </div>
-              )}
-
-              {/* BANK TRANSFER — inline fields */}
-              {openMethod === "bank" && (
-                <div className="space-y-3">
-                  <div className="bg-primary/5 border border-primary/15 rounded-xl px-3.5 py-2.5 flex items-start gap-2">
-                    <Building2 className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-                    <p className="text-[11px] text-muted-foreground">Transfer the exact amount to the account below and use your reference as payment note.</p>
-                  </div>
-                  <div className="space-y-2.5">
-                    {[
-                      ...(bankProviders.length > 0
-                        ? bankProviders.flatMap((acc) => [
-                            { label: "Bank Name",      val: acc.name },
-                            { label: "Account Name",   val: acc.config?.accountName   || "" },
-                            { label: "Account Number", val: acc.config?.accountNumber || "" },
-                          ])
-                        : [
-                            { label: "Bank Name",      val: "Stanbic Bank Zambia" },
-                            { label: "Account Name",   val: "KRYROS LIMITED"       },
-                            { label: "Account Number", val: "91200012345667"       },
-                          ]
-                      ),
-                      { label: "Reference", val: bankRef },
-                    ].map(({ label, val }) => (
-                      <div key={label} className="flex items-center justify-between py-2 border-b border-border last:border-0">
-                        <div>
-                          <p className="text-[10px] text-muted-foreground">{label}</p>
-                          <p className="text-sm font-bold text-foreground">{val}</p>
-                        </div>
-                        <CopyBtn text={val} />
-                      </div>
-                    ))}
-                  </div>
-                  <div>
-                    <p className="text-[11px] font-semibold text-muted-foreground mb-2">Upload Payment Proof (Optional)</p>
-                    <label className="flex flex-col items-center justify-center border-2 border-dashed border-border rounded-xl py-5 cursor-pointer hover:border-primary/40 hover:bg-primary/[0.02] transition-colors" onClick={() => fileRef.current?.click()}>
-                      <Upload className="w-5 h-5 text-muted-foreground mb-2" />
-                      <p className="text-xs font-semibold text-foreground">{proofFile ?? "Choose File or Drag & Drop"}</p>
-                      <p className="text-[10px] text-muted-foreground mt-0.5">PNG, JPG, PDF up to 10MB</p>
-                      <input ref={fileRef} type="file" className="hidden" accept=".png,.jpg,.jpeg,.pdf" onChange={(e) => setProofFile(e.target.files?.[0]?.name ?? null)} />
-                    </label>
-                  </div>
-                </div>
-              )}
-
-              {/* WHATSAPP — inline confirmation copy */}
               {openMethod === "whatsapp" && (
-                <div className="flex flex-col items-center py-4 gap-2.5">
-                  <div className="w-12 h-12 rounded-xl bg-green-50 dark:bg-green-900/20 flex items-center justify-center">
-                    <svg viewBox="0 0 24 24" className="w-6 h-6 text-green-600" fill="currentColor">
-                      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
-                    </svg>
+                <div className="space-y-4">
+                  <div className="p-3.5 rounded-xl bg-green-50 dark:bg-green-900/10 border border-green-100 dark:border-green-900/20">
+                    <p className="text-xs text-green-700 dark:text-green-300 leading-relaxed font-medium">
+                      Place your order first, then you will be redirected to WhatsApp to complete payment with our support team.
+                    </p>
                   </div>
-                  <p className="text-xs text-center text-muted-foreground px-4">You'll be redirected to WhatsApp to confirm your payment with our team.</p>
+                  <button onClick={handlePlaceOrder} disabled={isSubmitting} className="w-full py-3.5 bg-[var(--kryros-primary-hover)] text-white rounded-xl font-bold text-sm shadow-lg shadow-primary/20 hover:opacity-90 active:scale-95 transition-all flex items-center justify-center gap-2">
+                    {isSubmitting ? "Placing Order..." : `Place Order & Pay via WhatsApp`}
+                  </button>
                 </div>
               )}
             </div>
           )}
         </div>
 
-        {/* ── SECTION 5: Order Summary ── */}
         <div className="bg-card border border-border rounded-2xl p-4">
-          <SectionHeader number={5} icon={Package} title="Order Summary" />
-          <div className="space-y-3">
-            {cartItems.map((item) => (
-              <div key={item.id} className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-lg overflow-hidden bg-muted flex-shrink-0">
-                  {item.image && <img src={item.image} alt={item.name} className="w-full h-full object-cover" />}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-foreground truncate">{item.name}</p>
-                  <p className="text-[11px] text-muted-foreground">Qty: {item.qty}</p>
-                </div>
-                <p className="text-sm font-semibold text-foreground flex-shrink-0">{format(item.price * item.qty)}</p>
-              </div>
-            ))}
-          </div>
-
-          <div className="border-t border-border mt-4 pt-3 space-y-1.5">
-            <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Subtotal</span><span className="font-semibold text-foreground">{format(SUBTOTAL)}</span></div>
-            <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Shipping</span><span className="font-semibold text-foreground">{format(shippingPrice)}</span></div>
-            <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Fee</span><span className="font-semibold text-foreground">{format(PROCESSING_FEE)}</span></div>
-            <div className="pt-2 border-t border-border flex items-center justify-between text-base font-black">
-              <span className="text-foreground">Total</span><span className="text-primary">{format(total)}</span>
+          <div className="space-y-2.5">
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Subtotal</span>
+              <span className="font-semibold text-foreground">{format(SUBTOTAL)}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Shipping</span>
+              <span className="font-semibold text-foreground">{format(shippingPrice)}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Processing Fee (3%)</span>
+              <span className="font-semibold text-foreground">{format(PROCESSING_FEE)}</span>
+            </div>
+            <div className="pt-2.5 border-t border-border flex justify-between items-center">
+              <span className="text-base font-bold text-foreground">Total</span>
+              <span className="text-lg font-black text-primary">{format(total)}</span>
             </div>
           </div>
         </div>
-
-        <SecureFooter />
-      </div>
-
-      {/* Pinned Pay Now button */}
-      <div className="sticky bottom-0 px-4 py-4 border-t border-border bg-background/95 backdrop-blur">
-        <button
-          onClick={() => {
-            if (openMethod === "mobile") handleMobileMoneyPay();
-            else handlePlaceOrder();
-          }}
-          disabled={isSubmitting || !openMethod || cartItems.length === 0 || !!activeCheckoutMethods.find((method) => method.id === openMethod && method.pending)}
-          className="w-full py-4 rounded-2xl bg-primary text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg active:scale-[0.98] transition-all disabled:opacity-60 disabled:cursor-not-allowed"
-        >
-          {isSubmitting ? (
-            <>
-              <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-              {mmPhase === "initializing" ? "Sending prompt…" : "Processing…"}
-            </>
-          ) : (
-            <><Lock className="w-4 h-4" /> Pay Now</>
-          )}
-        </button>
       </div>
     </div>
   );
