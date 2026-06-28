@@ -1,7 +1,8 @@
 import { Injectable, Logger, HttpException, HttpStatus } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { ConfigService } from '@nestjs/config';
-import { PaymentStatus } from '@prisma/client';
+import { PaymentStatus, OrderStatus } from '@prisma/client';
 import axios from 'axios';
 import { XMLParser } from 'fast-xml-parser';
 import { PaymentLinksService } from '../payment-links/payment-links.service';
@@ -31,6 +32,9 @@ export class PaymentsService {
     const username = this.configService.get('CGRATE_USERNAME');
     const password = this.configService.get('CGRATE_PASSWORD');
     const transactionId = `KRYROS_${Date.now()}`;
+    const paymentNumber = `ORD-${Date.now().toString(36).toUpperCase()}`;
+    const receiptNumber = `REC-${Date.now().toString(36).toUpperCase()}`;
+
 
     this.logger.log('=== Starting 543 Payment Process ===');
     this.logger.log(`Order ID: ${orderId}`);
@@ -88,6 +92,36 @@ export class PaymentsService {
           paymentReference: reference,
           paymentPhone: phone,
           paymentStatus: status as PaymentStatus,
+          status: status === 'PAID' ? OrderStatus.CONFIRMED : OrderStatus.PENDING, // Update order status based on payment
+        },
+      });
+
+      // Create or update DirectPayment record for this order
+      await this.prisma.directPayment.upsert({
+        where: { paymentNumber: paymentNumber },
+        update: {
+          status: status as PaymentStatus,
+          paymentReference: reference,
+          paidAt: status === 'PAID' ? new Date() : undefined,
+          receiptNumber: status === 'PAID' ? receiptNumber : undefined,
+          trackingLink: `/pay/${paymentNumber}`, // Example tracking link
+        },
+        create: {
+          paymentNumber: paymentNumber,
+          userId: (await this.prisma.order.findUnique({ where: { id: orderId } }))?.userId,
+          orderId: orderId,
+          amount: amountZMW,
+          currency: 'ZMW',
+          paymentMethod: 'MOBILE_MONEY',
+          paymentPhone: phone,
+          paymentReference: reference,
+          status: status as PaymentStatus,
+          note: `Payment for order ${orderId}`,
+          providerName: '543/cGrate',
+          networkName: 'Mobile Money',
+          paidAt: status === 'PAID' ? new Date() : undefined,
+          receiptNumber: status === 'PAID' ? receiptNumber : undefined,
+          trackingLink: `/pay/${paymentNumber}`, // Example tracking link
         },
       });
 
@@ -119,6 +153,9 @@ export class PaymentsService {
     }
 
     const paymentNumber = `PAY-${Date.now().toString(36).toUpperCase()}`;
+    const receiptNumber = `REC-${Date.now().toString(36).toUpperCase()}`;
+    const trackingLink = `/pay/${paymentNumber}`;
+
     const directPayment = await this.prisma.directPayment.create({
       data: {
         paymentNumber,
@@ -130,6 +167,9 @@ export class PaymentsService {
         paymentMethod: 'MOBILE_MONEY',
         paymentPhone: phone,
         status: 'PENDING',
+        providerName: '543/cGrate',
+        networkName: 'Mobile Money',
+        trackingLink: trackingLink,
       },
     });
 
@@ -139,6 +179,7 @@ export class PaymentsService {
     return {
       paymentId: directPayment.id,
       paymentNumber,
+      trackingLink: trackingLink,
       ...result,
     };
   }
@@ -175,6 +216,8 @@ export class PaymentsService {
 
       const isSuccess = txReturn.responseCode === 0 || txReturn.responseCode === '0';
       const status = isSuccess ? 'PENDING' : 'FAILED';
+      const paidAt = status === 'PAID' ? new Date() : undefined;
+      const receiptNumber = status === 'PAID' ? `REC-${Date.now().toString(36).toUpperCase()}` : undefined;
       const reference = txReturn.paymentID || transactionId;
 
       await this.prisma.directPayment.update({
@@ -182,6 +225,8 @@ export class PaymentsService {
         data: {
           paymentReference: reference,
           status: status as PaymentStatus,
+          paidAt: paidAt,
+          receiptNumber: receiptNumber,
         },
       });
 
@@ -211,6 +256,7 @@ export class PaymentsService {
     }
 
     const paymentNumber = `WA-${Date.now().toString(36).toUpperCase()}`;
+    const trackingLink = `/pay/${paymentNumber}`;
     const directPayment = await this.prisma.directPayment.create({
       data: {
         paymentNumber,
@@ -223,6 +269,9 @@ export class PaymentsService {
         paymentPhone: phone || '',
         paymentReference: reference,
         status: 'PENDING',
+        providerName: 'WhatsApp',
+        networkName: 'WhatsApp',
+        trackingLink: trackingLink,
       },
     });
 
@@ -231,6 +280,7 @@ export class PaymentsService {
       paymentNumber,
       reference: reference || paymentNumber,
       status: 'PENDING',
+      trackingLink: trackingLink,
     };
   }
 
@@ -239,18 +289,83 @@ export class PaymentsService {
       include: {
         user: { select: { firstName: true, lastName: true, email: true } },
         paymentLink: { select: { name: true } },
+        order: { select: { orderNumber: true } },
       },
       orderBy: { createdAt: 'desc' },
       take: 200,
     });
   }
 
+  async updateDirectPaymentStatus(paymentId: string, status: PaymentStatus, adminNotes?: string) {
+    const payment = await this.prisma.directPayment.findUnique({ where: { id: paymentId } });
+    if (!payment) {
+      throw new HttpException('Direct payment not found', HttpStatus.NOT_FOUND);
+    }
+
+    const updateData: Prisma.DirectPaymentUpdateInput = { status: status };
+    if (adminNotes) {
+      updateData.adminNotes = adminNotes;
+    }
+    if (status === 'PAID' && !payment.paidAt) {
+      updateData.paidAt = new Date();
+      updateData.receiptNumber = `REC-${Date.now().toString(36).toUpperCase()}`;
+    }
+
+    const updatedPayment = await this.prisma.directPayment.update({
+      where: { id: paymentId },
+      data: updateData,
+    });
+
+    // If this direct payment is linked to an order, update the order status as well
+    if (updatedPayment.orderId) {
+      await this.prisma.order.update({
+        where: { id: updatedPayment.orderId },
+        data: {
+          paymentStatus: status,
+          status: status === 'PAID' ? OrderStatus.CONFIRMED : OrderStatus.PENDING,
+        },
+      });
+    }
+
+    // Send notification if payment is paid or failed
+    if (status === 'PAID' || status === 'FAILED') {
+      const user = updatedPayment.userId ? await this.prisma.user.findUnique({ where: { id: updatedPayment.userId } }) : null;
+      const customerName = updatedPayment.customerName || user?.firstName + ' ' + user?.lastName || 'Customer';
+      const customerEmail = updatedPayment.customerEmail || user?.email;
+      const customerPhone = updatedPayment.paymentPhone || user?.phone;
+
+      if (customerEmail || customerPhone) {
+        this.notificationsService.sendPaymentStatusNotification({
+          email: customerEmail,
+          phone: customerPhone,
+          status: status,
+          amount: updatedPayment.amount.toNumber(),
+          currency: updatedPayment.currency,
+          paymentNumber: updatedPayment.paymentNumber,
+          paymentMethod: updatedPayment.paymentMethod || 'Direct Payment',
+          customerName: customerName,
+          receiptNumber: updatedPayment.receiptNumber,
+          trackingLink: updatedPayment.trackingLink,
+        });
+      }
+    }
+
+    return updatedPayment;
+  }
+
   async checkDirectStatus(paymentId: string) {
     const payment = await this.prisma.directPayment.findUnique({ where: { id: paymentId } });
-    if (!payment || !payment.paymentReference) return null;
+    if (!payment) return null;
+
+    // If it's a WhatsApp payment, status is manual
+    if (payment.paymentMethod === 'WHATSAPP') {
+      return { status: payment.status.toLowerCase(), trackingLink: payment.trackingLink };
+    }
+
+    if (!payment.paymentReference) return null;
 
     if (payment.status === 'PAID' || payment.status === 'FAILED') {
-      return { status: payment.status.toLowerCase() };
+      return { status: payment.status.toLowerCase(), trackingLink: payment.trackingLink };
     }
 
     const username = this.configService.get('CGRATE_USERNAME');
@@ -281,9 +396,14 @@ export class PaymentsService {
         }
         
         if (newStatus !== payment.status) {
+          const updateData: Prisma.DirectPaymentUpdateInput = { status: newStatus as PaymentStatus };
+          if (newStatus === 'PAID' && !payment.paidAt) {
+            updateData.paidAt = new Date();
+            updateData.receiptNumber = `REC-${Date.now().toString(36).toUpperCase()}`;
+          }
           await this.prisma.directPayment.update({
             where: { id: paymentId },
-            data: { status: newStatus as PaymentStatus },
+            data: updateData,
           });
         }
         return { status: newStatus.toLowerCase() };
@@ -291,12 +411,21 @@ export class PaymentsService {
     } catch (error) {
       this.logger.error(`Status Check Error: ${error.message}`);
     }
-    return { status: payment.status.toLowerCase() };
+    return { status: payment.status.toLowerCase(), trackingLink: payment.trackingLink };
   }
 
   async checkStatus(orderId: string) {
     const order = await this.prisma.order.findUnique({ where: { id: orderId } });
-    if (!order || !order.paymentReference) return null;
+    if (!order) return null;
+
+    // For order payments, we can also check the associated direct payment if it exists
+    const directPayment = await this.prisma.directPayment.findFirst({ where: { orderId: orderId } });
+    if (directPayment) {
+      // If there's a direct payment, its status is more authoritative for direct payment methods
+      return this.checkDirectStatus(directPayment.id);
+    }
+
+    if (!order.paymentReference) return null;
 
     if (order.paymentStatus === 'PAID' || order.paymentStatus === 'FAILED') {
       return { status: order.paymentStatus.toLowerCase() };
@@ -330,37 +459,13 @@ export class PaymentsService {
         }
         
         if (newStatus !== order.paymentStatus) {
-          const shouldAutoConfirm = newStatus === 'PAID' && order.status === 'PENDING';
-
-          await this.prisma.$transaction(async (tx) => {
-            await tx.order.update({
-              where: { id: orderId },
-              data: {
-                paymentStatus: newStatus as PaymentStatus,
-                ...(shouldAutoConfirm ? { status: 'CONFIRMED' } : {}),
-              },
-            });
-
-            await tx.orderLog.create({
-              data: {
-                orderId,
-                status: (shouldAutoConfirm ? 'CONFIRMED' : order.status) as any,
-                notes:
-                  newStatus === 'PAID'
-                    ? `Mobile money payment verified${shouldAutoConfirm ? ' | Status → CONFIRMED' : ''} | Payment → PAID`
-                    : `Payment → ${newStatus}`,
-              },
-            });
+          await this.prisma.order.update({
+            where: { id: orderId },
+            data: {
+              paymentStatus: newStatus as PaymentStatus,
+              status: newStatus === 'PAID' ? OrderStatus.CONFIRMED : OrderStatus.PENDING,
+            },
           });
-
-          if (newStatus === 'PAID') {
-            if (shouldAutoConfirm) {
-              this.notificationsService.sendOrderStatusNotification(orderId, 'CONFIRMED')
-                .catch((error) => this.logger.warn(`Status notification failed for ${orderId}: ${error.message}`));
-            }
-            this.notificationsService.sendPaymentReceiptNotification(orderId)
-              .catch((error) => this.logger.warn(`Receipt notification failed for ${orderId}: ${error.message}`));
-          }
         }
         return { status: newStatus.toLowerCase() };
       }

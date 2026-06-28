@@ -403,6 +403,7 @@ model Order {
   billingAddress    Address?      @relation("OrderBillingAddress", fields: [billingAddressId], references: [id])
   shippingAddress   Address?      @relation("OrderShippingAddress", fields: [shippingAddressId], references: [id])
   user              User?         @relation(fields: [userId], references: [id])
+  directPayments    DirectPayment[]
 
   @@map("orders")
 }
@@ -1359,12 +1360,24 @@ model PaymentLink {
 model DirectPayment {
   id               String        @id @default(uuid())
   paymentNumber    String        @unique // e.g., PAY-12345
+  customerName     String? // Name of the customer for the payment
+  customerEmail    String? // Email of the customer for the payment
+  fee              Decimal?      @db.Decimal(10, 2) // Processing fee
+  totalPaid        Decimal?      @db.Decimal(10, 2) // Total amount paid including fee
+  receiptNumber    String?       @unique // Unique receipt number
+  paidAt           DateTime? // Timestamp when the payment was successfully made
+  adminNotes       String? // Internal notes by admin for manual payments
+  trackingLink     String? // Publicly shareable link for tracking payment status
   userId           String?
   paymentLinkId    String?
   amount           Decimal       @db.Decimal(10, 2)
   currency         String        @default("ZMW")
   status           PaymentStatus @default(PENDING)
-  paymentMethod    String? // MOBILE_MONEY, WHATSAPP, etc.
+  orderId          String? // Link to an order if applicable
+  order            Order?        @relation(fields: [orderId], references: [id])
+  paymentMethod    String? // MOBILE_MONEY, WHATSAPP, BANK_TRANSFER, etc.
+  providerName     String? // e.g., MTN, Airtel, Zamtel, Bank Name
+  networkName      String? // e.g., MTN, Airtel, Zamtel
   paymentReference String? // External reference from gateway
   paymentPhone     String?
   note             String?
@@ -1373,6 +1386,10 @@ model DirectPayment {
   updatedAt        DateTime      @updatedAt
   user             User?         @relation(fields: [userId], references: [id])
   paymentLink      PaymentLink?  @relation(fields: [paymentLinkId], references: [id])
+  @@index([paymentNumber])
+  @@index([paymentReference])
+  @@index([status])
+  @@index([createdAt])
 
   @@map("direct_payments")
 }

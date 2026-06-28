@@ -9,6 +9,7 @@ import { UserRole } from '@prisma/client';
 import { InitializePaymentDto } from './dto/initialize-payment.dto';
 import { DirectPaymentDto } from './dto/direct-payment.dto';
 import { WhatsAppPaymentDto } from './dto/whatsapp-payment.dto';
+import { UpdateDirectPaymentStatusDto } from './dto/update-direct-payment-status.dto';
 import { Request } from 'express';
 
 @ApiTags('Payments')
@@ -67,6 +68,17 @@ export class PaymentsController {
   @ApiOperation({ summary: 'Get current payment status for an order' })
   getStatus(@Param('orderId') orderId: string) {
     return this.paymentsService.checkStatus(orderId);
+  }
+
+  @Patch('direct-status/:paymentId')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER)
+  @ApiOperation({ summary: 'Update status of a direct payment (Admin only)' })
+  updateDirectPaymentStatus(
+    @Param('paymentId') paymentId: string,
+    @Body() body: UpdateDirectPaymentStatusDto,
+  ) {
+    return this.paymentsService.updateDirectPaymentStatus(paymentId, body.status, body.adminNotes);
   }
 
   @Get('direct-all')

@@ -225,7 +225,9 @@ export default function PayPage() {
   const CURRENCIES = allCurrencies;
 
   const [mmProvider, setMmProvider] = useState("MTN");
-  const [mmPhone, setMmPhone] = useState("");
+  const [phone, setPhone] = useState("");
+  const [customerName, setCustomerName] = useState("");
+  const [customerEmail, setCustomerEmail] = useState("");
   const [showProviderDrop, setShowProviderDrop] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const [proofFile, setProofFile] = useState<string | null>(null);
@@ -343,12 +345,18 @@ export default function PayPage() {
           currency: "ZMW",
           note: note || payRef,
           paymentLinkId: paymentLinkId || undefined,
+          customerName,
+          customerEmail,
         }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Payment initiation failed");
       setOrderId(data.paymentId); // paymentId from DirectPayment model
-      setPayStatus("waiting");
+      if (data.trackingLink) {
+        navigate(data.trackingLink);
+      } else {
+        setPayStatus("waiting");
+      }
       let attempts = 0;
       pollRef.current = setInterval(async () => {
         attempts++;
@@ -790,9 +798,33 @@ export default function PayPage() {
                       placeholder=""
                       inputMode="tel"
                       autoComplete="tel"
-                      className="flex-1 px-4 h-full text-sm outline-none bg-transparent text-foreground"
+                      className="flex-1 h-full bg-transparent outline-none px-4 text-sm font-medium text-foreground"
                     />
                   </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="block text-sm font-bold mb-2 text-foreground" htmlFor="customerName">Your Name</label>
+                  <input
+                    id="customerName"
+                    type="text"
+                    placeholder="John Doe"
+                    value={customerName}
+                    onChange={(e) => setCustomerName(e.target.value)}
+                    className="flex-1 h-[52px] w-full rounded-xl border bg-card outline-none px-4 text-sm font-medium text-foreground"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="block text-sm font-bold mb-2 text-foreground" htmlFor="customerEmail">Your Email (Optional)</label>
+                  <input
+                    id="customerEmail"
+                    type="email"
+                    placeholder="john.doe@example.com"
+                    value={customerEmail}
+                    onChange={(e) => setCustomerEmail(e.target.value)}
+                    className="flex-1 h-[52px] w-full rounded-xl border bg-card outline-none px-4 text-sm font-medium text-foreground"
+                  />
                 </div>
               </div>
             )}

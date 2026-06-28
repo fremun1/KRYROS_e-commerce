@@ -1,9 +1,9 @@
 import { useState, useEffect, type FormEvent } from "react";
 import { Link } from "wouter";
-import { Search, ChevronRight, Headphones, CheckCircle, Truck, MapPin, Loader2, Package } from "lucide-react";
+import { Search, ChevronRight, Headphones, CheckCircle, Truck, MapPin, Loader2, Package, Link as LinkIcon } from "lucide-react";
 import { motion } from "framer-motion";
 import { useAuthStore } from "@/store/authStore";
-import { fetchOrders, trackOrder, type ApiOrder } from "@/lib/api";
+import { fetchOrders, trackOrder, type ApiOrder, API_BASE } from "@/lib/api";
 import AccountLayout from "@/components/layout/AccountLayout";
 
 const statusColors: Record<string, string> = {
@@ -36,6 +36,33 @@ const STATUS_MAP: Record<string, string> = {
 
 function normalizeStatus(s: string): string {
   return STATUS_MAP[s?.toUpperCase?.()] ?? s ?? "Pending";
+}
+
+interface DirectPaymentApiResult {
+  id: string;
+  amount: number;
+  currency: string;
+  status: string;
+  paymentNumber: string;
+  paymentMethod: string;
+  createdAt: string;
+  trackingLink?: string;
+}
+
+function normalizeDirectPayment(dp: DirectPaymentApiResult): OrderRow {
+  const status = getDisplayStatus(dp.status);
+  return {
+    id: dp.id,
+    name: `Direct Payment (${dp.paymentMethod})`,
+    specs: `${dp.amount} ${dp.currency}`,
+    orderId: `#${dp.paymentNumber}`,
+    placedOn: new Date(dp.createdAt).toLocaleDateString("en", { month: "short", day: "numeric", year: "numeric" }),
+    status,
+    estDelivery: "—",
+    image: (import.meta as unknown as { env: Record<string, string> }).env?.VITE_FALLBACK_IMAGE_URL || "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=200&q=80",
+    timeline: getTimeline(status),
+    trackingLink: dp.trackingLink || undefined,
+  };
 }
 
 function getDisplayStatus(status?: string, paymentStatus?: string): string {
@@ -92,6 +119,7 @@ interface OrderRow {
   estDelivery: string;
   image: string;
   timeline: { label: string; done: boolean; active: boolean }[];
+  trackingLink?: string;
 }
 
 function normalizeOrder(o: ApiOrder): OrderRow {
@@ -106,6 +134,7 @@ function normalizeOrder(o: ApiOrder): OrderRow {
       : null;
   return {
     id: String(o.id),
+    trackingLink: (o as any).trackingLink || undefined,
     name: item?.product?.name ?? item?.name ?? "Order",
     specs: item?.product?.specs ?? "",
     orderId: `#${o.orderNumber ?? o.id}`,
@@ -163,8 +192,22 @@ export default function TrackOrderPage() {
       const result = await trackOrder(cleanQuery, email);
       if (!result) {
         setTrackedOrder(null);
-        setSearchError("No order was found for that ID.");
-        return;
+      setSearchError("No order was found for that ID.");
+      // Try direct payment lookup if order lookup fails
+      try {
+        const directPaymentResult = await fetch(`${API_BASE}/api/payments/direct-status/${cleanQuery}`, {
+          headers: { ...(token && { Authorization: `Bearer ${token}` }) },
+        });
+        const directPaymentData = await directPaymentResult.json();
+
+        if (directPaymentResult.ok && directPaymentData) {
+          setTrackedOrder(normalizeDirectPayment(directPaymentData));
+          return;
+        }
+      } catch (directPaymentError) {
+        console.error("Direct payment lookup error:", directPaymentError);
+      }
+      return;
       }
       setTrackedOrder(normalizeOrder(result));
     } catch {
@@ -273,6 +316,19 @@ export default function TrackOrderPage() {
                     </div>
                     <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0 self-center ml-1" />
                   </div>
+                  {recentOrder.trackingLink && (
+                    <div className="mb-4">
+                      <a
+                        href={recentOrder.trackingLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-center gap-2 w-full py-2 bg-primary/10 text-primary rounded-xl text-xs font-bold hover:bg-primary/20 transition-colors"
+                      >
+                        <LinkIcon className="w-4 h-4" />
+                        View Payment Tracking Link
+                      </a>
+                    </div>
+                  )}
                   {/* Timeline */}
                   <div className="flex items-start">
                     {recentOrder.timeline.map((step, i) => (
