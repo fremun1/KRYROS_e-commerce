@@ -459,20 +459,19 @@ export default function CheckoutPage() {
           : `Delivery Address: ${addressLine}, ${city}${state ? `, ${state}` : ""}, ${country}`;
         const msg =
           `*New Order: ${orderNum}*\n\n` +
-          `*Customer*\n` +
-          `${firstName} ${lastName}\n` +
-          `${phone || "No phone provided"}\n` +
-          `${email || "No email provided"}\n\n` +
-          `*Items*\n${itemsList}\n\n` +
-          `*Order Total*\n${format(total)}\n\n` +
-          `*Payment Method*\nWhatsApp Payment\n\n` +
-          `*Fulfilment*\n${deliveryText}\n\n` +
-          `*Track My Payment*\n${buildTrackingUrl(orderNum)}\n\n` +
-          `I have placed this order and I want to complete my payment on WhatsApp. Please confirm the next step.`;
+          `*Customer:* ${firstName} ${lastName}\n` +
+          `*Phone:* ${phone || "No phone provided"}\n` +
+          `*Email:* ${email || "No email provided"}\n\n` +
+          `*Items:*\n${itemsList}\n\n` +
+          `*Total:* ${format(total)}\n\n` +
+          `*Payment:* WhatsApp Payment\n` +
+          `*Delivery:* ${deliveryText}\n\n` +
+          `*Track:* ${buildTrackingUrl(orderNum)}\n\n` +
+          `Order placed. Please confirm the next step.`;
         setWaMessage(msg);
         setOrdered(true);
         clearCart();
-        const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(msg)}`;
+        const url = `https://api.whatsapp.com/send?phone=${whatsappNumber}&text=${encodeURIComponent(msg)}`;
         window.open(url, "_blank");
       } else {
         setOrdered(true);
@@ -486,7 +485,7 @@ export default function CheckoutPage() {
   };
 
   const handleWhatsAppRedirect = () => {
-    const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(waMessage)}`;
+    const url = `https://api.whatsapp.com/send?phone=${whatsappNumber}&text=${encodeURIComponent(waMessage)}`;
     window.open(url, "_blank");
   };
 

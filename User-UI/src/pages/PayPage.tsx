@@ -488,13 +488,20 @@ export default function PayPage() {
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.message || "Failed to create payment record");
+        const trackingUrl = data.trackingLink ? `${window.location.origin}${data.trackingLink}` : "";
         const msg = encodeURIComponent(
-          `I want to pay ${currency} ${total.toFixed(2)} for reference ${payRef}\n\n` +
-          `Payment Number: ${data.paymentNumber || payRef}\n` +
-          `Phone: ${receiptContact || "Not provided"}\n` +
-          `${data.trackingLink ? `Tracking Link: ${window.location.origin}${data.trackingLink}` : ""}`,
+          `*New Payment Request: ${data.paymentNumber || payRef}*\n\n` +
+          `*Customer:* ${customerName || receiptContact || "Valued Customer"}\n` +
+          `*Phone:* ${receiptContact || "Not provided"}\n` +
+          `*Email:* ${customerEmail || "Not provided"}\n\n` +
+          `*Payment For:* ${note || "Direct Payment"}\n` +
+          `*Total:* ${currency} ${total.toFixed(2)}\n\n` +
+          `*Payment:* WhatsApp Payment\n\n` +
+          `*Track:* ${trackingUrl}\n\n` +
+          `I want to pay ${currency} ${total.toFixed(2)} for reference ${payRef}. Please confirm the next step.`
         );
-        window.open(`https://wa.me/${whatsappNumber}?text=${msg}`, "_blank");
+        // Using api.whatsapp.com/send can sometimes trigger the app better on mobile
+        window.open(`https://api.whatsapp.com/send?phone=${whatsappNumber}&text=${msg}`, "_blank");
         if (data.trackingLink) navigate(data.trackingLink);
       } catch (err: any) {
         setPayError(err.message || "Failed to initiate WhatsApp payment");
