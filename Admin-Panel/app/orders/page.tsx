@@ -141,13 +141,11 @@ function OrdersContent() {
     input:   dark ? '#0D1523' : '#FFFFFF',
   };
 
-  // Check if user has permission to delete (Admin, Super Admin, or Manager)
-  // We normalize the role by removing spaces and underscores to handle "Super Admin", "SUPER_ADMIN", etc.
   const r = (user?.role || '').toUpperCase().replace(/[\s_]+/g, '');
   const canDelete = loading || r === 'ADMIN' || r === 'SUPERADMIN' || r === 'MANAGER';
 
   const [orders, setOrders]             = useState<OrderListItem[]>([]);
-  const [loading, setLoading]           = useState(true);
+  const [ordersLoading, setOrdersLoading]         = useState(true);
   const [tab, setTab]                   = useState('all');
   const [search, setSearch]             = useState('');
   const [detail, setDetail]             = useState<OrderDetail | null>(null);
@@ -164,7 +162,7 @@ function OrdersContent() {
 
   // Load order list
   const loadOrders = useCallback(() => {
-    setLoading(true);
+    setOrdersLoading(true);
     (getOrders({ take: 500, skip: 0 }) as any)
       .then((r: any) => {
         const raw: any[] = Array.isArray(r.data?.data) ? r.data.data
@@ -185,7 +183,7 @@ function OrdersContent() {
         })));
       })
       .catch(() => toast.error('Failed to load orders'))
-      .finally(() => setLoading(false));
+      .finally(() => setOrdersLoading(false));
   }, []);
 
   useEffect(() => { loadOrders(); }, [loadOrders]);
@@ -477,7 +475,7 @@ function OrdersContent() {
         )}
 
         {/* ── Desktop Table View ── */}
-        {!loading && orders.length > 0 && (
+        {!ordersLoading && orders.length > 0 && (
           <div className="desktop-only" style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: '12px', overflow: 'hidden', overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
@@ -593,7 +591,7 @@ function OrdersContent() {
         )}
 
         {/* ── Mobile List View ── */}
-        {!loading && orders.length > 0 && (
+        {!ordersLoading && orders.length > 0 && (
           <div className="mobile-only" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
             {shown.map((o) => {
               const sc  = STATUS_CFG[o.status]       || STATUS_CFG.PENDING;

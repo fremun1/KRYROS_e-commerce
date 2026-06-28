@@ -127,12 +127,11 @@ function WalletPaymentsContent() {
 
   const role = normalizeRole(user?.role);
   const canManage = role === 'ADMIN' || role === 'SUPERADMIN' || role === 'MANAGER';
-  const authReady = !loading && user;
 
   type Tab = 'transactions' | 'links' | 'methods';
   const [activeTab, setActiveTab] = useState<Tab>('transactions');
   const [search, setSearch] = useState('');
-  const [loading, setLoading] = useState(true);
+  const [dataLoading, setDataLoading] = useState(true);
 
   const [txData, setTxData] = useState<Tx[]>([]);
   const [payLinks, setPayLinks] = useState<PayLink[]>([]);
@@ -167,7 +166,7 @@ function WalletPaymentsContent() {
   const [networkForm, setNetworkForm] = useState<NetworkForm>({ name: '', isEnabled: true });
 
   const fetchData = useCallback(async () => {
-    setLoading(true);
+    setDataLoading(true);
     try {
       if (activeTab === 'transactions') {
         const res = await getDirectPayments({ limit: 500 });
@@ -201,7 +200,7 @@ function WalletPaymentsContent() {
     } catch {
       toast.error('Failed to load data');
     } finally {
-      setLoading(false);
+      setDataLoading(false);
     }
   }, [activeTab]);
 
@@ -596,12 +595,12 @@ function WalletPaymentsContent() {
             />
           </div>
           <button onClick={() => fetchData()} style={{ ...actionButton('default'), padding: '0.55rem 0.7rem' }}>
-            <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
+            <RefreshCw size={14} className={dataLoading ? 'animate-spin' : ''} />
           </button>
         </div>
 
         <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem' }}>
-          {loading ? (
+          {dataLoading ? (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '220px', color: T.muted, fontSize: '0.85rem' }}>
               Loading data...
             </div>
