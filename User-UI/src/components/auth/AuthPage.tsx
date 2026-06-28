@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { Mail, Lock, User, Eye, EyeOff } from "lucide-react";
 
 interface AuthPageProps {
@@ -11,49 +11,10 @@ export default function AuthPage({ initialTab = "login" }: AuthPageProps) {
   const [showRegisterPassword, setShowRegisterPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [forgotStep, setForgotStep] = useState(1);
-  const [humanVerified, setHumanVerified] = useState(false);
-
-  const loginWidgetRef = useRef<HTMLDivElement>(null);
-  const registerWidgetRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setShowPassword(false);
     setShowRegisterPassword(false);
-  }, [activeTab]);
-
-  useEffect(() => {
-    if (!document.getElementById("turnstile-script")) {
-      const script = document.createElement("script");
-      script.id = "turnstile-script";
-      script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
-      script.async = true;
-      script.defer = true;
-      document.body.appendChild(script);
-    }
-  }, []);
-
-  useEffect(() => {
-    setHumanVerified(false);
-    const renderWidget = () => {
-      const ref = activeTab === "login" ? loginWidgetRef.current : registerWidgetRef.current;
-      const id = activeTab === "login" ? "login-turnstile-inner" : "register-turnstile-inner";
-      const el = document.getElementById(id);
-      if (ref && el && (window as any).turnstile) {
-        el.innerHTML = "";
-        (window as any).turnstile.render(el, {
-          sitekey: "1x00000000000000000000AA",
-          callback: () => setHumanVerified(true),
-        });
-      }
-    };
-    if ((window as any).turnstile) {
-      renderWidget();
-    } else {
-      const timer = setInterval(() => {
-        if ((window as any).turnstile) { renderWidget(); clearInterval(timer); }
-      }, 200);
-      return () => clearInterval(timer);
-    }
   }, [activeTab]);
 
   const handleSubmit = async (e: React.FormEvent, action: string) => {
@@ -68,42 +29,6 @@ export default function AuthPage({ initialTab = "login" }: AuthPageProps) {
     outline-none text-[14px] placeholder:text-muted-foreground
     focus:border-primary focus:ring-1 focus:ring-primary transition-colors
   `;
-
-  const TurnstileWidget = ({ widgetId }: { widgetId: string }) => (
-    <div className="border border-border rounded-[10px] p-[10px_12px] flex items-center justify-between bg-card">
-      <div className="flex items-center gap-3">
-        <div
-          onClick={() => setHumanVerified(v => !v)}
-          className={`w-[22px] h-[22px] border-2 rounded-[4px] flex items-center justify-center cursor-pointer flex-shrink-0 transition-all ${humanVerified ? "border-primary bg-primary" : "border-gray-300 dark:border-gray-600 bg-card"}`}
-        >
-          {humanVerified && (
-            <svg width="13" height="10" viewBox="0 0 13 10" fill="none">
-              <path d="M1.5 5L5 8.5L11.5 1.5" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          )}
-        </div>
-        <span className="text-[14px] text-foreground font-medium">Verify you are human</span>
-      </div>
-      <div className="flex flex-col items-end gap-[1px]">
-        <div className="flex items-center gap-[5px]">
-          <svg width="28" height="22" viewBox="0 0 28 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <ellipse cx="14" cy="17" rx="13" ry="5" fill="#F6821F" opacity="0.18" />
-            <path d="M14 2C10 2 7 5 7 9c0 2.5 1.2 4.7 3 6l4 3 4-3c1.8-1.3 3-3.5 3-6 0-4-3-7-7-7z" fill="#F6821F" />
-            <path d="M10 9c0-2.2 1.8-4 4-4s4 1.8 4 4-1.8 4-4 4-4-1.8-4-4z" fill="#fff" opacity="0.5" />
-          </svg>
-          <span className="text-[11px] font-bold text-foreground tracking-[0.04em]">CLOUDFLARE</span>
-        </div>
-        <div className="text-[10px] text-muted-foreground">
-          <span className="underline cursor-pointer">Privacy</span>
-          {" · "}
-          <span className="underline cursor-pointer">Terms</span>
-        </div>
-      </div>
-      <div ref={activeTab === "login" ? loginWidgetRef : registerWidgetRef} className="hidden">
-        <div id={widgetId} />
-      </div>
-    </div>
-  );
 
   const SubmitButton = ({ label, loadingLabel }: { label: string; loadingLabel: string }) => (
     <button
@@ -140,7 +65,6 @@ export default function AuthPage({ initialTab = "login" }: AuthPageProps) {
           </button>
         </div>
       </div>
-      <TurnstileWidget widgetId="login-turnstile-inner" />
       <SubmitButton label="Login" loadingLabel="Logging in..." />
     </form>
   );
@@ -171,7 +95,6 @@ export default function AuthPage({ initialTab = "login" }: AuthPageProps) {
           </button>
         </div>
       </div>
-      <TurnstileWidget widgetId="register-turnstile-inner" />
       <SubmitButton label="Create account" loadingLabel="Creating account..." />
     </form>
   );
