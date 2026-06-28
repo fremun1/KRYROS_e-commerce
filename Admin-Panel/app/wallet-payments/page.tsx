@@ -10,7 +10,7 @@ import {
   ExternalLink, Wallet,
 } from 'lucide-react';
 import {
-  getDirectPayments, getPaymentLinks, createPaymentLink, deletePaymentLink,
+  getDirectPayments, updateDirectPayment, getPaymentLinks, createPaymentLink, deletePaymentLink,
   updatePaymentLink,
   getPaymentMethods, updatePaymentMethod, deletePaymentMethod, reorderPaymentMethods,
   createPaymentMethod, createPaymentProvider, updatePaymentProvider, deletePaymentProvider,
@@ -156,6 +156,7 @@ const role = normalizeRole(user?.role);
   const [payLinks, setPayLinks] = useState<PayLink[]>([]);
   const [payMethods, setPayMethods] = useState<PayMethod[]>([]);
   const [detail, setDetail] = useState<Tx | null>(null);
+  const [txUpdating, setTxUpdating] = useState(false);
 
   const [showGenModal, setShowGenModal] = useState(false);
   const [editingLink, setEditingLink] = useState<PayLink | null>(null);
@@ -620,6 +621,22 @@ const role = normalizeRole(user?.role);
     }
   };
 
+  const handleUpdateTxStatus = async (newStatus: string) => {
+    if (!detail) return;
+    setTxUpdating(true);
+    try {
+      await updateDirectPayment(detail.id, { status: newStatus });
+      const updated = { ...detail, status: newStatus };
+      setDetail(updated);
+      setTxData(prev => prev.map(t => t.id === detail.id ? updated : t));
+      toast.success(`Transaction marked as ${newStatus.toLowerCase()}`);
+    } catch {
+      toast.error('Failed to update transaction status');
+    } finally {
+      setTxUpdating(false);
+    }
+  };
+
   return (
     <AdminShell noPadding>
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: 'calc(100vh - 64px)', background: T.panel }}>
@@ -1063,6 +1080,50 @@ const role = normalizeRole(user?.role);
                   <ConfigRow label="Origin" value={detail.linkName || 'Direct'} T={T} />
                   <ConfigRow label="Date" value={`${fmtDate(detail.date)} ${fmtTime(detail.date)}`} T={T} />
                 </div>
+
+                {canManage && (() => {
+                  const s = (detail.status || '').toUpperCase();
+                  const isPending = s === 'PENDING';
+                  const isFinal = s === 'COMPLETED' || s === 'PAID' || s === 'SUCCESS' || s === 'REFUNDED';
+                  const isFailed = s === 'FAILED';
+                  if (!isPending && !isFinal && !isFailed) return null;
+                  return (
+                    <div style={{ background: T.surface, borderRadius: '14px', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                      <div style={{ fontSize: '0.68rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: T.muted }}>Update Status</div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.55rem' }}>
+                        {isPending && (
+                          <>
+                            <button disabled={txUpdating} onClick={() => handleUpdateTxStatus('PAID')} style={{ ...actionButton('primary'), opacity: txUpdating ? 0.6 : 1 }}>
+                              ✓ Mark as Paid
+                            </button>
+                            <button disabled={txUpdating} onClick={() => handleUpdateTxStatus('FAILED')} style={{ ...actionButton('danger'), opacity: txUpdating ? 0.6 : 1 }}>
+                              Mark as Failed
+                            </button>
+                            <button disabled={txUpdating} onClick={() => handleUpdateTxStatus('REFUNDED')} style={{ ...actionButton('default'), opacity: txUpdating ? 0.6 : 1 }}>
+                              Refund
+                            </button>
+                          </>
+                        )}
+                        {isFinal && (
+                          <button disabled={txUpdating} onClick={() => handleUpdateTxStatus('REFUNDED')} style={{ ...actionButton('default'), opacity: txUpdating ? 0.6 : 1 }}>
+                            Refund
+                          </button>
+                        )}
+                        {isFailed && (
+                          <>
+                            <button disabled={txUpdating} onClick={() => handleUpdateTxStatus('PENDING')} style={{ ...actionButton('default'), opacity: txUpdating ? 0.6 : 1 }}>
+                              Reset to Pending
+                            </button>
+                            <button disabled={txUpdating} onClick={() => handleUpdateTxStatus('REFUNDED')} style={{ ...actionButton('default'), opacity: txUpdating ? 0.6 : 1 }}>
+                              Refund
+                            </button>
+                          </>
+                        )}
+                      </div>
+                      {txUpdating && <div style={{ fontSize: '0.75rem', color: T.muted }}>Saving…</div>}
+                    </div>
+                  );
+                })()}
               </div>
             </div>
           </>
