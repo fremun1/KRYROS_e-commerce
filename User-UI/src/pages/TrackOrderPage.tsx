@@ -38,6 +38,27 @@ function normalizeStatus(s: string): string {
   return STATUS_MAP[s?.toUpperCase?.()] ?? s ?? "Pending";
 }
 
+function getDisplayStatus(status?: string, paymentStatus?: string): string {
+  const normalizedStatus = status?.toUpperCase?.() ?? "";
+  const normalizedPaymentStatus = paymentStatus?.toUpperCase?.() ?? "";
+
+  if (normalizedStatus === "PROCESSING") return "Processing";
+  if (normalizedStatus === "CONFIRMED") return "Paid";
+  if (normalizedStatus === "SHIPPED") return "Shipped";
+  if (normalizedStatus === "IN_TRANSIT") return "In Transit";
+  if (normalizedStatus === "DELIVERED") return "Delivered";
+  if (normalizedStatus === "COLLECTED") return "Collected";
+  if (normalizedStatus === "CANCELLED") return "Cancelled";
+  if (normalizedStatus === "REFUNDED") return "Refunded";
+  if (normalizedStatus === "RETURNED") return "Returned";
+
+  if (normalizedPaymentStatus === "PAID") return "Paid";
+  if (normalizedPaymentStatus === "PARTIALLY_PAID") return "Processing";
+  if (normalizedPaymentStatus === "REFUNDED") return "Refunded";
+
+  return normalizeStatus(status || "PENDING");
+}
+
 function getTimeline(status: string) {
   const norm = normalizeStatus(status);
   const steps = [
@@ -77,7 +98,7 @@ function normalizeOrder(o: ApiOrder): OrderRow {
   const item = o.items?.[0];
   const imgRaw = item?.product?.images?.[0];
   const image = item?.image || (typeof imgRaw === "string" ? imgRaw : (imgRaw as any)?.url ?? "");
-  const status = normalizeStatus(o.status);
+  const status = getDisplayStatus(o.status, o.paymentStatus);
   const estimatedDelivery = o.estimatedDelivery
     ? new Date(o.estimatedDelivery)
     : o.createdAt && o.estimatedDays
@@ -96,7 +117,7 @@ function normalizeOrder(o: ApiOrder): OrderRow {
       ? estimatedDelivery.toLocaleDateString("en", { month: "short", day: "numeric", year: "numeric" })
       : "—",
     image: image || (import.meta as unknown as { env: Record<string, string> }).env?.VITE_FALLBACK_IMAGE_URL || "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=200&q=80",
-    timeline: getTimeline(o.status),
+    timeline: getTimeline(status),
   };
 }
 
@@ -145,8 +166,6 @@ export default function TrackOrderPage() {
 
     if (localMatch) {
       setTrackedOrder(localMatch);
-      setSearchError("");
-      return;
     }
 
     setSearchLoading(true);
