@@ -59,7 +59,7 @@ export class OrdersController {
     const user = (req as any).user;
     const order = await this.ordersService.findById(id);
 
-    const isAdmin = [UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER].includes(user.role);
+    const isAdmin = user.role === UserRole.ADMIN || user.role === UserRole.SUPER_ADMIN || user.role === UserRole.MANAGER;
     if (!isAdmin && order.userId !== user.id) {
       throw new ForbiddenException('You do not have access to this order');
     }

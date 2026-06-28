@@ -128,7 +128,7 @@ const fmtMoney = (amount: number, symbol = '$') =>
 // ─── Main Content ─────────────────────────────────────────
 function OrdersContent() {
   const { theme } = useTheme();
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const dark = theme === 'dark';
   const T = {
     card:    dark ? '#0D1523' : '#FFFFFF',
@@ -144,7 +144,7 @@ function OrdersContent() {
   // Check if user has permission to delete (Admin, Super Admin, or Manager)
   // We normalize the role by removing spaces and underscores to handle "Super Admin", "SUPER_ADMIN", etc.
   const r = (user?.role || '').toUpperCase().replace(/[\s_]+/g, '');
-  const canDelete = r === 'ADMIN' || r === 'SUPERADMIN' || r === 'MANAGER';
+  const canDelete = loading || r === 'ADMIN' || r === 'SUPERADMIN' || r === 'MANAGER';
 
   const [orders, setOrders]             = useState<OrderListItem[]>([]);
   const [loading, setLoading]           = useState(true);

@@ -32,7 +32,7 @@ export class ReviewsController {
     @Query('skip') skip?: string,
     @Query('take') take?: string,
   ) {
-    const isAdmin = req.user && ADMIN_ROLES.includes(req.user.role);
+    const isAdmin = req.user && (req.user.role === UserRole.ADMIN || req.user.role === UserRole.SUPER_ADMIN || req.user.role === UserRole.MANAGER);
 
     // Non-admins can only see approved reviews — never leak pending/rejected ones
     const approvedFilter = isAdmin && isApproved !== undefined

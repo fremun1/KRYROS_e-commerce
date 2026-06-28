@@ -112,7 +112,7 @@ const maskValue = (value?: string) => {
 
 function WalletPaymentsContent() {
   const { theme } = useTheme();
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const dark = theme === 'dark';
   const T = {
     card: dark ? '#0D1523' : '#FFFFFF',
@@ -127,6 +127,7 @@ function WalletPaymentsContent() {
 
   const role = normalizeRole(user?.role);
   const canManage = role === 'ADMIN' || role === 'SUPERADMIN' || role === 'MANAGER';
+  const authReady = !loading && user;
 
   type Tab = 'transactions' | 'links' | 'methods';
   const [activeTab, setActiveTab] = useState<Tab>('transactions');
@@ -701,7 +702,7 @@ function WalletPaymentsContent() {
 
               {activeTab === 'methods' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxWidth: '1100px', margin: '0 auto' }}>
-                  {!canManage && (
+                  {!loading && !canManage && (
                     <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: '14px', padding: '1rem 1.15rem', color: T.muted, fontSize: '0.82rem' }}>
                       This section is visible only to admin roles. If the buttons are missing on your live server, the account logged into the admin panel is likely not an `Admin`, `Super Admin`, or `Manager`.
                     </div>
