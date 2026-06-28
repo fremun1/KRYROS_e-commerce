@@ -67,6 +67,11 @@ type TabDef = {
   filter: (o: OrderListItem) => boolean;
 };
 
+type DeleteTarget = {
+  id: string;
+  orderNumber: string;
+};
+
 // ─── Tab definitions ──────────────────────────────────────
 const TABS: TabDef[] = [
   { key: 'all',        label: 'All Orders',  color: '#8E9AAF', filter: () => true },
@@ -155,6 +160,7 @@ function OrdersContent() {
   const [selectedIds, setSelectedIds]   = useState<Set<string>>(new Set());
   const [bulkLoading, setBulkLoading]   = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<'single' | 'bulk' | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null);
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const [showPaymentDropdown, setShowPaymentDropdown] = useState(false);
   const [selectedOrderStatus, setSelectedOrderStatus] = useState<OrderStatus | ''>('');
@@ -286,12 +292,16 @@ function OrdersContent() {
 
   // Delete single order
   const doDeleteOrder = useCallback(async () => {
-    if (!detail) return;
+    const target = deleteTarget ?? (detail ? { id: detail.id, orderNumber: detail.orderNumber } : null);
+    if (!target) return;
     setActionLoading(true);
     try {
-      await (deleteOrder as any)(detail.id);
-      toast.success(`Order ${detail.orderNumber} deleted successfully`);
-      setDetail(null);
+      await (deleteOrder as any)(target.id);
+      toast.success(`Order ${target.orderNumber} deleted successfully`);
+      if (detail?.id === target.id) {
+        setDetail(null);
+      }
+      setDeleteTarget(null);
       setDeleteConfirm(null);
       loadOrders();
     } catch (err: any) {
@@ -299,7 +309,17 @@ function OrdersContent() {
     } finally {
       setActionLoading(false);
     }
-  }, [detail, loadOrders]);
+  }, [deleteTarget, detail, loadOrders]);
+
+  const openSingleDeleteConfirm = useCallback((order: DeleteTarget) => {
+    setDeleteTarget({ id: order.id, orderNumber: order.orderNumber });
+    setDeleteConfirm('single');
+  }, []);
+
+  const closeDeleteConfirm = useCallback(() => {
+    setDeleteConfirm(null);
+    setDeleteTarget(null);
+  }, []);
 
   // Bulk status update
   const doBulkAction = useCallback(async (status: string) => {
@@ -327,6 +347,7 @@ function OrdersContent() {
       const { succeeded, failed } = res.data;
       toast.success(`Deleted ${succeeded} order${succeeded !== 1 ? 's' : ''}${failed ? `, ${failed} failed` : ''}`);
       setSelectedIds(new Set());
+      setDeleteTarget(null);
       setDeleteConfirm(null);
       loadOrders();
     } catch (err: any) {
@@ -417,7 +438,10 @@ function OrdersContent() {
           {selectedIds.size > 0 && canDelete && (
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               <button
-                onClick={() => setDeleteConfirm('bulk')}
+                onClick={() => {
+                  setDeleteTarget(null);
+                  setDeleteConfirm('bulk');
+                }}
                 disabled={bulkLoading}
                 style={{
                   display: 'flex', alignItems: 'center', gap: '0.3rem',
@@ -432,47 +456,6 @@ function OrdersContent() {
             </div>
           )}
         </div>
-
-        {/* ── Delete Confirmation Modal ── */}
-        {deleteConfirm && (
-          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 60, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <div style={{ background: T.panel, borderRadius: '12px', padding: '2rem', maxWidth: '400px', boxShadow: '0 10px 40px rgba(0,0,0,0.3)' }}>
-              <h3 style={{ color: T.text, fontWeight: 700, fontSize: '1rem', margin: '0 0 0.5rem 0' }}>
-                {deleteConfirm === 'single' ? 'Delete Order?' : `Delete ${selectedIds.size} Orders?`}
-              </h3>
-              <p style={{ color: T.muted, fontSize: '0.85rem', margin: '0 0 1.5rem 0', lineHeight: 1.5 }}>
-                This action cannot be undone. All order data will be <strong>permanently deleted</strong> and will not appear again.
-              </p>
-              <div style={{ display: 'flex', gap: '0.8rem', justifyContent: 'flex-end' }}>
-                <button
-                  onClick={() => setDeleteConfirm(null)}
-                  disabled={actionLoading || bulkLoading}
-                  style={{
-                    padding: '0.5rem 1rem', borderRadius: '8px', border: `1px solid ${T.border}`,
-                    background: T.input, color: T.text, fontWeight: 600, fontSize: '0.8rem',
-                    cursor: 'pointer',
-                  }}
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={() => {
-                    if (deleteConfirm === 'single') doDeleteOrder();
-                    else doBulkDelete();
-                  }}
-                  disabled={actionLoading || bulkLoading}
-                  style={{
-                    padding: '0.5rem 1rem', borderRadius: '8px', border: 'none',
-                    background: '#F87171', color: '#fff', fontWeight: 600, fontSize: '0.8rem',
-                    cursor: actionLoading || bulkLoading ? 'wait' : 'pointer',
-                  }}
-                >
-                  {actionLoading || bulkLoading ? 'Deleting…' : 'Delete'}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* ── Desktop Table View ── */}
         {!ordersLoading && orders.length > 0 && (
@@ -572,7 +555,7 @@ function OrdersContent() {
                         <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                           {canDelete && (
                             <button
-                              onClick={() => { setDetail(o as any); setDeleteConfirm('single'); }}
+                              onClick={() => openSingleDeleteConfirm(o)}
                               style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#F87171', padding: '0.25rem' }}
                               title="Delete Order"
                             >
@@ -642,7 +625,7 @@ function OrdersContent() {
                         </div>
                         {canDelete && (
                           <button
-                            onClick={(e) => { e.stopPropagation(); setDetail(o as any); setDeleteConfirm('single'); }}
+                            onClick={(e) => { e.stopPropagation(); openSingleDeleteConfirm(o); }}
                             style={{ background: 'rgba(248,113,113,0.1)', border: 'none', cursor: 'pointer', color: '#F87171', padding: '5px', borderRadius: '6px' }}
                           >
                             <Trash2 size={14} />
@@ -672,7 +655,7 @@ function OrdersContent() {
         {deleteConfirm && (
           <>
             <div
-              onClick={() => setDeleteConfirm(null)}
+              onClick={closeDeleteConfirm}
               style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 100, backdropFilter: 'blur(4px)' }}
             />
             <div style={{
@@ -686,12 +669,12 @@ function OrdersContent() {
               <h3 style={{ color: T.text, margin: '0 0 0.5rem', fontSize: '1.1rem' }}>Permanently Delete?</h3>
               <p style={{ color: T.muted, fontSize: '0.85rem', margin: '0 0 1.5rem', lineHeight: 1.5 }}>
                 {deleteConfirm === 'single'
-                  ? `Are you sure you want to delete order #${detail?.orderNumber}? This action cannot be undone.`
+                  ? `Are you sure you want to delete order #${deleteTarget?.orderNumber || detail?.orderNumber}? This action cannot be undone.`
                   : `Are you sure you want to delete ${selectedIds.size} selected orders? This action cannot be undone.`}
               </p>
               <div style={{ display: 'flex', gap: '0.75rem' }}>
                 <button
-                  onClick={() => setDeleteConfirm(null)}
+                  onClick={closeDeleteConfirm}
                   style={{ flex: 1, padding: '0.6rem', borderRadius: '8px', border: `1px solid ${T.border}`, background: 'transparent', color: T.text, fontWeight: 600, cursor: 'pointer' }}
                 >
                   Cancel
@@ -994,7 +977,7 @@ function OrdersContent() {
                       </button>
                       {canDelete && (
                         <button
-                          onClick={() => setDeleteConfirm('single')}
+                          onClick={() => openSingleDeleteConfirm(detail)}
                           disabled={actionLoading}
                           style={{
                             padding: '0.6rem 1rem', borderRadius: '8px', border: 'none',
