@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/auth-context';
 import {
   Search, X, ChevronRight, RefreshCw, User, Trash2,
   Link2, CreditCard, TrendingUp, Plus, Copy,
-  Settings, Edit2, ArrowUp, ArrowDown, Smartphone, Building2,
+  Settings, Edit2, ArrowUp, ArrowDown, Smartphone, Building2, MessageCircle,
   ExternalLink, Wallet,
 } from 'lucide-react';
 import {
@@ -88,6 +88,7 @@ const METHOD_TYPES = [
   { value: 'mobile_wallet', label: 'Mobile Wallet' },
   { value: 'card', label: 'Card Payment' },
   { value: 'bank', label: 'Bank Transfer' },
+  { value: 'whatsapp', label: 'WhatsApp Payment' },
   { value: 'cash', label: 'Cash' },
   { value: 'digital_wallet', label: 'Digital Wallet' },
 ];
@@ -917,7 +918,11 @@ function WalletPaymentsContent() {
                           <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: T.surface, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                             {method.type === 'mobile_wallet'
                               ? <Smartphone size={20} color="#00D4AA" />
-                              : <Building2 size={20} color="#818CF8" />}
+                              : method.type === 'card'
+                                ? <CreditCard size={20} color="#3B82F6" />
+                                : method.type === 'whatsapp'
+                                  ? <MessageCircle size={20} color="#22C55E" />
+                                  : <Building2 size={20} color="#818CF8" />}
                           </div>
 
                           <div style={{ minWidth: 0, flex: 1 }}>

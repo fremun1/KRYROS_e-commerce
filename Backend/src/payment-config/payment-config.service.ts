@@ -27,7 +27,7 @@ export class PaymentConfigService {
 
   // ── Enabled methods only (public – customer frontend) ──────────────────
   async getEnabledMethods() {
-    return this.prisma.checkoutMethod.findMany({
+    const methods = await this.prisma.checkoutMethod.findMany({
       where: { isEnabled: true },
       orderBy: { sortOrder: 'asc' },
       include: {
@@ -43,6 +43,20 @@ export class PaymentConfigService {
         },
       },
     });
+
+    return methods.map((method) => ({
+      ...method,
+      providers: method.providers.map((provider) => ({
+        ...provider,
+        config: provider.config && typeof provider.config === 'object'
+          ? {
+              accountName: (provider.config as Record<string, unknown>).accountName,
+              accountNumber: (provider.config as Record<string, unknown>).accountNumber,
+              bankName: (provider.config as Record<string, unknown>).bankName,
+            }
+          : provider.config,
+      })),
+    }));
   }
 
   // ── CheckoutMethod CRUD ─────────────────────────────────────────────────
