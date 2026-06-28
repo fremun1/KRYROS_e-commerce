@@ -145,7 +145,7 @@ function WalletPaymentsContent() {
   };
 
 const role = normalizeRole(user?.role);
-  const canManage = ['ADMIN', 'SUPERADMIN', 'MANAGER', 'STAFF'].includes(role);
+  const canManage = !!user;
 
   type Tab = 'transactions' | 'links' | 'methods';
   const [activeTab, setActiveTab] = useState<Tab>('transactions');
@@ -184,6 +184,13 @@ const role = normalizeRole(user?.role);
   const [networkMethod, setNetworkMethod] = useState<PayMethod | null>(null);
   const [networkProvider, setNetworkProvider] = useState<PayProvider | null>(null);
   const [networkForm, setNetworkForm] = useState<NetworkForm>({ name: '', isEnabled: true });
+
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
 
   const fetchData = useCallback(async () => {
     setDataLoading(true);
@@ -639,7 +646,7 @@ const role = normalizeRole(user?.role);
             </div>
           </div>
 
-          <div style={{ display: 'flex', gap: '0.75rem', borderBottom: `1px solid ${T.border}`, marginBottom: '-0.75rem', flexWrap: 'wrap', overflowX: 'auto', WebkitOverflowScrolling: 'touch', paddingBottom: '0.75rem' }}>
+          <div style={{ display: 'flex', gap: '0', borderBottom: `1px solid ${T.border}`, marginBottom: '-1px', flexWrap: 'nowrap', overflowX: 'auto', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
             {[
               { id: 'transactions', label: 'Transactions', icon: TrendingUp },
               { id: 'links', label: 'Pay Pages', icon: Link2 },
@@ -651,8 +658,8 @@ const role = normalizeRole(user?.role);
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '0.5rem',
-                  padding: '0.75rem 0.25rem 1rem',
+                  gap: '0.4rem',
+                  padding: '0.75rem 1rem 1rem',
                   background: 'none',
                   border: 'none',
                   borderBottom: activeTab === t.id ? '2px solid #00D4AA' : '2px solid transparent',
@@ -661,6 +668,7 @@ const role = normalizeRole(user?.role);
                   cursor: 'pointer',
                   fontSize: '0.82rem',
                   whiteSpace: 'nowrap' as const,
+                  flexShrink: 0,
                 }}
               >
                 <t.icon size={15} /> {t.label}
@@ -697,87 +705,122 @@ const role = normalizeRole(user?.role);
             </div>
           ) : (
             <>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '0.9rem', marginBottom: '1rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fit, minmax(220px, 1fr))', gap: isMobile ? '0.55rem' : '0.9rem', marginBottom: '1rem' }}>
                 {activeTab === 'transactions' && (
                   <>
-                    <OverviewCard title="Total Transactions" value={String(txData.length)} hint="Direct and linked payments" icon={<Wallet size={16} color="#00D4AA" />} T={T} />
-                    <OverviewCard title="Pending Review" value={String(txStats.pendingCount)} hint="Waiting for completion" icon={<RefreshCw size={16} color="#F59E0B" />} T={T} />
-                    <OverviewCard title="Linked Payments" value={String(txStats.linkedCount)} hint="Created from pay pages" icon={<Link2 size={16} color="#818CF8" />} T={T} />
-                    <OverviewCard title="Recorded Volume" value={fmtMoney(txStats.totalAmount)} hint="Visible transaction amount" icon={<TrendingUp size={16} color="#00D4AA" />} T={T} />
+                    <OverviewCard compact={isMobile} title="Total Transactions" value={String(txData.length)} hint="Direct and linked payments" icon={<Wallet size={isMobile ? 14 : 16} color="#00D4AA" />} T={T} />
+                    <OverviewCard compact={isMobile} title="Pending Review" value={String(txStats.pendingCount)} hint="Waiting for completion" icon={<RefreshCw size={isMobile ? 14 : 16} color="#F59E0B" />} T={T} />
+                    <OverviewCard compact={isMobile} title="Linked Payments" value={String(txStats.linkedCount)} hint="Created from pay pages" icon={<Link2 size={isMobile ? 14 : 16} color="#818CF8" />} T={T} />
+                    <OverviewCard compact={isMobile} title="Recorded Volume" value={fmtMoney(txStats.totalAmount)} hint="Visible transaction amount" icon={<TrendingUp size={isMobile ? 14 : 16} color="#00D4AA" />} T={T} />
                   </>
                 )}
                 {activeTab === 'links' && (
                   <>
-                    <OverviewCard title="Active Pages" value={String(linkStats.activeCount)} hint="Ready to receive payments" icon={<Link2 size={16} color="#00D4AA" />} T={T} />
-                    <OverviewCard title="Inactive Pages" value={String(linkStats.inactiveCount)} hint="Saved but unavailable" icon={<Settings size={16} color={T.muted} />} T={T} />
-                    <OverviewCard title="Total Clicks" value={String(linkStats.totalClicks)} hint="Open events across all links" icon={<ExternalLink size={16} color="#818CF8" />} T={T} />
-                    <OverviewCard title="Quick Action" value="Create Page" hint="Generate a customer payment page" icon={<Plus size={16} color="#00D4AA" />} T={T} action={canManage ? <button onClick={() => openLinkModal()} style={actionButton('primary')}><Plus size={13} /> New page</button> : undefined} />
+                    <OverviewCard compact={isMobile} title="Active Pages" value={String(linkStats.activeCount)} hint="Ready to receive payments" icon={<Link2 size={isMobile ? 14 : 16} color="#00D4AA" />} T={T} />
+                    <OverviewCard compact={isMobile} title="Inactive Pages" value={String(linkStats.inactiveCount)} hint="Saved but unavailable" icon={<Settings size={isMobile ? 14 : 16} color={T.muted} />} T={T} />
+                    <OverviewCard compact={isMobile} title="Total Clicks" value={String(linkStats.totalClicks)} hint="Open events across all links" icon={<ExternalLink size={isMobile ? 14 : 16} color="#818CF8" />} T={T} />
+                    <OverviewCard compact={isMobile} title="Quick Action" value="Create Page" hint="Generate a customer payment page" icon={<Plus size={isMobile ? 14 : 16} color="#00D4AA" />} T={T} action={canManage ? <button onClick={() => openLinkModal()} style={actionButton('primary')}><Plus size={13} /> {isMobile ? 'New' : 'New page'}</button> : undefined} />
                   </>
                 )}
                 {activeTab === 'methods' && (
                   <>
-                    <OverviewCard title="Enabled Methods" value={String(methodStats.enabledMethods)} hint={`${payMethods.length} methods in total`} icon={<CreditCard size={16} color="#00D4AA" />} T={T} />
-                    <OverviewCard title="Providers" value={String(methodStats.providerCount)} hint="Operator and bank setups" icon={<Building2 size={16} color="#818CF8" />} T={T} />
-                    <OverviewCard title="Networks" value={String(methodStats.networkCount)} hint="Network options exposed at checkout" icon={<Smartphone size={16} color="#F59E0B" />} T={T} />
-                    <OverviewCard title="Quick Action" value="Add Method" hint="Create a new checkout method" icon={<Plus size={16} color="#00D4AA" />} T={T} action={canManage ? <button onClick={() => openMethodModal()} style={actionButton('primary')}><Plus size={13} /> Add method</button> : undefined} />
+                    <OverviewCard compact={isMobile} title="Enabled Methods" value={String(methodStats.enabledMethods)} hint={`${payMethods.length} methods in total`} icon={<CreditCard size={isMobile ? 14 : 16} color="#00D4AA" />} T={T} />
+                    <OverviewCard compact={isMobile} title="Providers" value={String(methodStats.providerCount)} hint="Operator and bank setups" icon={<Building2 size={isMobile ? 14 : 16} color="#818CF8" />} T={T} />
+                    <OverviewCard compact={isMobile} title="Networks" value={String(methodStats.networkCount)} hint="Network options exposed at checkout" icon={<Smartphone size={isMobile ? 14 : 16} color="#F59E0B" />} T={T} />
+                    <OverviewCard compact={isMobile} title="Quick Action" value="Add Method" hint="Create a new checkout method" icon={<Plus size={isMobile ? 14 : 16} color="#00D4AA" />} T={T} action={canManage ? <button onClick={() => openMethodModal()} style={actionButton('primary')}><Plus size={13} /> {isMobile ? 'Add' : 'Add method'}</button> : undefined} />
                   </>
                 )}
               </div>
 
               {activeTab === 'transactions' && (
-                <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: '14px', overflow: 'hidden' }}>
-                  <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-                    <table className="tx-table" style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem', minWidth: '800px' }}>
-                    <thead>
-                      <tr style={{ borderBottom: `1px solid ${T.border}`, background: T.surface }}>
-                        <th style={tableHead(T)}>Reference</th>
-                        <th style={tableHead(T)}>Customer</th>
-                        <th style={tableHead(T)}>Date</th>
-                        <th style={tableHead(T)}>Method</th>
-                        <th style={tableHead(T)}>Amount</th>
-                        <th style={tableHead(T)}>Status</th>
-                        <th style={tableHead(T)}>Source</th>
-                        <th style={tableHead(T)}></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredTx.map((t) => {
-                        const sc = STATUS_CFG[t.status?.toUpperCase()] || STATUS_CFG.PENDING;
-                        return (
-                          <tr
-                            key={t.id}
-                            onClick={() => setDetail(t)}
-                            style={{ borderBottom: `1px solid ${T.border}`, cursor: 'pointer' }}
-                            onMouseEnter={(e) => { e.currentTarget.style.background = T.hover; }}
-                            onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
-                          >
-                            <td style={tableCellStrong(T)}>{t.ref}</td>
-                            <td style={tableCell(T)}>
-                              <div style={{ fontWeight: 600, color: T.text }}>{t.user}</div>
-                              {t.userEmail && <div style={{ fontSize: '0.72rem', color: T.muted }}>{t.userEmail}</div>}
-                            </td>
-                            <td style={tableCellMuted(T)}>{fmtDate(t.date)}</td>
-                            <td style={tableCell(T)}>
-                              <span style={pillStyle('#818CF8', 'rgba(129,140,248,0.1)')}>{t.method}</span>
-                            </td>
-                            <td style={tableCellStrong(T)}>{fmtMoney(t.amount, t.currency)}</td>
-                            <td style={tableCell(T)}>
-                              <span style={pillStyle(sc.color, sc.bg)}>{sc.label}</span>
-                            </td>
-                            <td style={tableCellMuted(T)}>{t.linkName || 'Direct'}</td>
-                            <td style={{ ...tableCell(T), textAlign: 'right' }}><ChevronRight size={14} color={T.muted} /></td>
-                          </tr>
-                        );
-                      })}
-{filteredTx.length === 0 && (
-                         <tr>
-                           <td colSpan={8} style={{ padding: '3rem', textAlign: 'center', color: T.muted }}>No transactions found</td>
-                         </tr>
-                       )}
-                     </tbody>
-                   </table>
+                isMobile ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+                    {filteredTx.map((t) => {
+                      const sc = STATUS_CFG[t.status?.toUpperCase()] || STATUS_CFG.PENDING;
+                      return (
+                        <div
+                          key={t.id}
+                          onClick={() => setDetail(t)}
+                          style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: '14px', padding: '0.9rem', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}
+                        >
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem' }}>
+                            <div style={{ fontWeight: 800, color: T.text, fontSize: '0.8rem', wordBreak: 'break-all', flex: 1 }}>{t.ref}</div>
+                            <span style={{ ...pillStyle(sc.color, sc.bg), flexShrink: 0 }}>{sc.label}</span>
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem' }}>
+                            <div style={{ minWidth: 0 }}>
+                              <div style={{ fontWeight: 600, color: T.text, fontSize: '0.82rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.user}</div>
+                              {t.userEmail && <div style={{ fontSize: '0.7rem', color: T.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.userEmail}</div>}
+                            </div>
+                            <div style={{ fontWeight: 900, color: T.text, fontSize: '0.9rem', flexShrink: 0 }}>{fmtMoney(t.amount, t.currency)}</div>
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem' }}>
+                            <span style={pillStyle('#818CF8', 'rgba(129,140,248,0.1)')}>{t.method}</span>
+                            <span style={{ color: T.muted, fontSize: '0.72rem', whiteSpace: 'nowrap' }}>{fmtDate(t.date)} {fmtTime(t.date)}</span>
+                          </div>
+                          {t.linkName && <div style={{ fontSize: '0.72rem', color: T.muted }}>Via: {t.linkName}</div>}
+                        </div>
+                      );
+                    })}
+                    {filteredTx.length === 0 && (
+                      <div style={{ padding: '3rem', textAlign: 'center', color: T.muted, background: T.card, borderRadius: '14px', border: `1px solid ${T.border}` }}>No transactions found</div>
+                    )}
                   </div>
-                </div>
+                ) : (
+                  <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: '14px', overflow: 'hidden' }}>
+                    <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+                      <table className="tx-table" style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem', minWidth: '800px' }}>
+                        <thead>
+                          <tr style={{ borderBottom: `1px solid ${T.border}`, background: T.surface }}>
+                            <th style={tableHead(T)}>Reference</th>
+                            <th style={tableHead(T)}>Customer</th>
+                            <th style={tableHead(T)}>Date</th>
+                            <th style={tableHead(T)}>Method</th>
+                            <th style={tableHead(T)}>Amount</th>
+                            <th style={tableHead(T)}>Status</th>
+                            <th style={tableHead(T)}>Source</th>
+                            <th style={tableHead(T)}></th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {filteredTx.map((t) => {
+                            const sc = STATUS_CFG[t.status?.toUpperCase()] || STATUS_CFG.PENDING;
+                            return (
+                              <tr
+                                key={t.id}
+                                onClick={() => setDetail(t)}
+                                style={{ borderBottom: `1px solid ${T.border}`, cursor: 'pointer' }}
+                                onMouseEnter={(e) => { e.currentTarget.style.background = T.hover; }}
+                                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                              >
+                                <td style={tableCellStrong(T)}>{t.ref}</td>
+                                <td style={tableCell(T)}>
+                                  <div style={{ fontWeight: 600, color: T.text }}>{t.user}</div>
+                                  {t.userEmail && <div style={{ fontSize: '0.72rem', color: T.muted }}>{t.userEmail}</div>}
+                                </td>
+                                <td style={{ ...tableCellMuted(T), whiteSpace: 'nowrap' }}>{fmtDate(t.date)}</td>
+                                <td style={tableCell(T)}>
+                                  <span style={pillStyle('#818CF8', 'rgba(129,140,248,0.1)')}>{t.method}</span>
+                                </td>
+                                <td style={{ ...tableCellStrong(T), whiteSpace: 'nowrap' }}>{fmtMoney(t.amount, t.currency)}</td>
+                                <td style={tableCell(T)}>
+                                  <span style={pillStyle(sc.color, sc.bg)}>{sc.label}</span>
+                                </td>
+                                <td style={tableCellMuted(T)}>{t.linkName || 'Direct'}</td>
+                                <td style={{ ...tableCell(T), textAlign: 'right' }}><ChevronRight size={14} color={T.muted} /></td>
+                              </tr>
+                            );
+                          })}
+                          {filteredTx.length === 0 && (
+                            <tr>
+                              <td colSpan={8} style={{ padding: '3rem', textAlign: 'center', color: T.muted }}>No transactions found</td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )
               )}
 
               {activeTab === 'links' && (
@@ -908,7 +951,7 @@ const role = normalizeRole(user?.role);
                               </span>
                             </div>
 
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '0.55rem' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '0.5rem' }}>
                               <ConfigItem label="Account name" value={provider.config?.accountName || 'Not set'} T={T} />
                               <ConfigItem label="Account number" value={maskValue(provider.config?.accountNumber)} T={T} />
                               <ConfigItem label="Bank" value={provider.config?.bankName || 'Not set'} T={T} />
@@ -982,7 +1025,10 @@ const role = normalizeRole(user?.role);
         {detail && (
           <>
             <div onClick={() => setDetail(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 100, backdropFilter: 'blur(2px)' }} />
-            <div style={{ position: 'fixed', top: 0, right: 0, bottom: 0, width: '460px', maxWidth: '92vw', background: T.panel, borderLeft: `1px solid ${T.border}`, zIndex: 101, display: 'flex', flexDirection: 'column', boxShadow: '-10px 0 30px rgba(0,0,0,0.1)' }}>
+            <div style={isMobile
+              ? { position: 'fixed', left: 0, right: 0, bottom: 0, maxHeight: '85vh', background: T.panel, borderTop: `1px solid ${T.border}`, borderRadius: '20px 20px 0 0', zIndex: 101, display: 'flex', flexDirection: 'column', boxShadow: '0 -10px 30px rgba(0,0,0,0.15)' }
+              : { position: 'fixed', top: 0, right: 0, bottom: 0, width: '460px', maxWidth: '92vw', background: T.panel, borderLeft: `1px solid ${T.border}`, zIndex: 101, display: 'flex', flexDirection: 'column', boxShadow: '-10px 0 30px rgba(0,0,0,0.1)' }
+            }>
               <div style={{ padding: '1.2rem 1.4rem', borderBottom: `1px solid ${T.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
                   <h2 style={{ fontSize: '1rem', fontWeight: 800, color: T.text, margin: 0 }}>Payment Details</h2>
@@ -1271,6 +1317,7 @@ function OverviewCard({
   icon,
   action,
   T,
+  compact,
 }: {
   title: string;
   value: string;
@@ -1278,20 +1325,21 @@ function OverviewCard({
   icon: React.ReactNode;
   action?: React.ReactNode;
   T: Record<string, string>;
+  compact?: boolean;
 }) {
   return (
-    <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: '14px', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', minHeight: '132px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem' }}>
-        <div style={{ width: '38px', height: '38px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,212,170,0.08)' }}>
+    <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: '14px', padding: compact ? '0.8rem' : '1rem', display: 'flex', flexDirection: 'column', gap: compact ? '0.4rem' : '0.75rem' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
+        <div style={{ width: compact ? '30px' : '38px', height: compact ? '30px' : '38px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,212,170,0.08)', flexShrink: 0 }}>
           {icon}
         </div>
-        {action}
+        {action && <div style={{ flexShrink: 0 }}>{action}</div>}
       </div>
       <div>
-        <div style={{ fontSize: '0.7rem', color: T.muted, textTransform: 'uppercase', fontWeight: 800, letterSpacing: '0.06em' }}>{title}</div>
-        <div style={{ fontSize: '1.3rem', color: T.text, fontWeight: 900, marginTop: '0.35rem' }}>{value}</div>
+        <div style={{ fontSize: compact ? '0.6rem' : '0.7rem', color: T.muted, textTransform: 'uppercase', fontWeight: 800, letterSpacing: '0.06em', lineHeight: 1.2 }}>{title}</div>
+        <div style={{ fontSize: compact ? '1.1rem' : '1.3rem', color: T.text, fontWeight: 900, marginTop: '0.25rem', lineHeight: 1.1 }}>{value}</div>
       </div>
-      <div style={{ color: T.muted, fontSize: '0.78rem', lineHeight: 1.45 }}>{hint}</div>
+      {!compact && <div style={{ color: T.muted, fontSize: '0.78rem', lineHeight: 1.45 }}>{hint}</div>}
     </div>
   );
 }
