@@ -31,36 +31,7 @@ import {
   Building2,
 } from "lucide-react";
 
-const DIAL_COUNTRIES = [
-  { name: "Zambia",       code: "ZM", dial: "+260" },
-  { name: "Zimbabwe",     code: "ZW", dial: "+263" },
-  { name: "South Africa", code: "ZA", dial: "+27"  },
-  { name: "Kenya",        code: "KE", dial: "+254" },
-  { name: "Nigeria",      code: "NG", dial: "+234" },
-  { name: "Ghana",        code: "GH", dial: "+233" },
-  { name: "Tanzania",     code: "TZ", dial: "+255" },
-  { name: "Uganda",       code: "UG", dial: "+256" },
-  { name: "Malawi",       code: "MW", dial: "+265" },
-  { name: "Mozambique",   code: "MZ", dial: "+258" },
-  { name: "Botswana",     code: "BW", dial: "+267" },
-  { name: "Namibia",      code: "NA", dial: "+264" },
-  { name: "Rwanda",       code: "RW", dial: "+250" },
-  { name: "Ethiopia",     code: "ET", dial: "+251" },
-  { name: "DR Congo",     code: "CD", dial: "+243" },
-  { name: "Cameroon",     code: "CM", dial: "+237" },
-  { name: "Senegal",      code: "SN", dial: "+221" },
-  { name: "Ivory Coast",  code: "CI", dial: "+225" },
-  { name: "Angola",       code: "AO", dial: "+244" },
-  { name: "United Kingdom", code: "GB", dial: "+44" },
-  { name: "United States", code: "US", dial: "+1"  },
-  { name: "Canada",       code: "CA", dial: "+1"   },
-  { name: "Germany",      code: "DE", dial: "+49"  },
-  { name: "France",       code: "FR", dial: "+33"  },
-  { name: "China",        code: "CN", dial: "+86"  },
-  { name: "India",        code: "IN", dial: "+91"  },
-  { name: "Australia",    code: "AU", dial: "+61"  },
-  { name: "UAE",          code: "AE", dial: "+971" },
-];
+const DIAL_CODES = ["+260", "+263", "+27", "+254", "+234", "+233", "+255", "+256", "+265", "+258", "+267", "+264", "+250", "+251", "+243", "+237", "+221", "+225", "+244", "+44", "+1", "+49", "+33", "+86", "+91", "+61", "+971"];
 
 interface PickupStation {
   id: string;
@@ -121,7 +92,8 @@ export default function CheckoutPage() {
   const [lastName,      setLastName]      = useState(authUser?.lastName ?? "");
   const [email,         setEmail]         = useState(authUser?.email ?? "");
   const [phone,         setPhone]         = useState("");
-  const [phoneCountry,  setPhoneCountry]  = useState(DIAL_COUNTRIES[0]);
+  const [dialCode,      setDialCode]      = useState("+260");
+  const [showDialDrop,  setShowDialDrop]  = useState(false);
   const [country,      setCountry]     = useState("");
   const [state,        setState]       = useState("");
   const [city,         setCity]        = useState("");
@@ -141,7 +113,6 @@ export default function CheckoutPage() {
   const [mmProvider, setMmProvider] = useState("MTN");
   const [mmPhone, setMmPhone] = useState("");
   const [mobileNetworks, setMobileNetworks] = useState<string[]>(["MTN", "Airtel", "Zamtel"]);
-  const [bankProviders, setBankProviders] = useState<any[]>([]);
 
   const SUBTOTAL = cartItems.reduce((s, i) => s + i.price * i.qty, 0);
   const [feeRate, setFeeRate] = useState(0.03);
@@ -190,10 +161,7 @@ export default function CheckoutPage() {
       if (card) methods.push({ id: "card", label: "Card", sub: "Visa, Mastercard", icon: CreditCard, iconBg: "bg-blue-50" });
 
       const bank = arr.find((m: any) => m.type === "bank" && m.isEnabled);
-      if (bank) {
-        methods.push({ id: "bank", label: "Bank", sub: "Bank Transfer", icon: Building2, iconBg: "bg-slate-50" });
-        setBankProviders(bank.providers?.filter((p: any) => p.isEnabled) || []);
-      }
+      if (bank) methods.push({ id: "bank", label: "Bank", sub: "Bank Transfer", icon: Building2, iconBg: "bg-slate-50" });
 
       setActiveMethods(methods);
       if (methods.length > 0) setOpenMethod(methods[0].id);
@@ -231,7 +199,7 @@ export default function CheckoutPage() {
     exchangeRate: selectedCurrency.exchangeRate,
     ...(openMethod === "mobile" && mmProvider ? { notes: `Provider: ${mmProvider}` } : {}),
     addressDetails: {
-      email, firstName, lastName, phone: `${phoneCountry.dial}${phone}`,
+      email, firstName, lastName, phone: `${dialCode}${phone}`,
       address: addressLine || `${city}, ${state}, ${country}`,
       zipCode: zipCode || undefined,
       countryName: country, stateName: state || undefined, cityName: city || undefined, manual: true,
@@ -358,7 +326,27 @@ export default function CheckoutPage() {
             <div className="space-y-1">
               <label className="text-[11px] font-semibold text-muted-foreground">Phone Number</label>
               <div className="flex gap-1.5">
-                <select value={phoneCountry.dial} onChange={e => setPhoneCountry(DIAL_COUNTRIES.find(c => c.dial === e.target.value)!)} className="w-24 px-2 py-3 rounded-xl border bg-muted/40 text-sm outline-none">{DIAL_COUNTRIES.map(c => <option key={c.code} value={c.dial}>{c.code} {c.dial}</option>)}</select>
+                <div className="relative w-20 flex-shrink-0">
+                  <input
+                    value={dialCode}
+                    onChange={(e) => {
+                      let val = e.target.value;
+                      if (val && !val.startsWith("+")) val = "+" + val.replace(/[^0-9]/g, "");
+                      setDialCode(val);
+                    }}
+                    onFocus={() => setShowDialDrop(true)}
+                    onBlur={() => setTimeout(() => setShowDialDrop(false), 200)}
+                    placeholder="+260"
+                    className="w-full px-2 py-3 rounded-xl border bg-muted/40 text-sm font-bold outline-none text-center"
+                  />
+                  {showDialDrop && (
+                    <div className="absolute top-full left-0 w-full mt-1 bg-background border border-border rounded-xl shadow-xl z-30 max-h-48 overflow-y-auto">
+                      {DIAL_CODES.map(code => (
+                        <button key={code} onClick={() => { setDialCode(code); setShowDialDrop(false); }} className="w-full px-3 py-2.5 text-sm font-bold hover:bg-muted text-center border-b last:border-0">{code}</button>
+                      ))}
+                    </div>
+                  )}
+                </div>
                 <input value={phone} onChange={e => setPhone(e.target.value)} placeholder="Phone Number" className="flex-1 px-3.5 py-3 rounded-xl border bg-background text-sm outline-none focus:ring-2 focus:ring-primary/40" />
               </div>
             </div>

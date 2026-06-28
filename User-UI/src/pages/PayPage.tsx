@@ -9,6 +9,8 @@ import {
 import { API_BASE, fetchSettings } from "@/lib/api";
 import { useCurrencyStore } from "@/store/currencyStore";
 
+const DIAL_CODES = ["+260", "+263", "+27", "+254", "+234", "+233", "+255", "+256", "+265", "+258", "+267", "+264", "+250", "+251", "+243", "+237", "+221", "+225", "+244", "+44", "+1", "+49", "+33", "+86", "+91", "+61", "+971"];
+
 const ICON_BG: Record<string, string> = {
   phone:    "rgba(39, 185, 175, 0.12)",
   whatsapp: "rgba(37, 211, 102, 0.12)",
@@ -59,7 +61,7 @@ function ReceiptScreen({ receipt, onClose }: { receipt: ReceiptData; onClose: ()
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-10 bg-background">
-      <div className="w-full max-sm space-y-4">
+      <div className="w-full max-w-sm space-y-4">
         <div className="bg-card rounded-3xl overflow-hidden shadow-xl border border-card-border">
           <div className="px-6 pt-8 pb-6 text-center border-b border-card-border">
             <div className="w-16 h-16 rounded-full bg-green-500 flex items-center justify-center mx-auto mb-4">
@@ -175,11 +177,13 @@ export default function PayPage() {
   const [rawAmount, setRawAmount] = useState(urlAmount);
   const [note, setNote] = useState(urlNote);
 
-  // User Details for Notifications & Shipping
+  // User Details
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [dialCode, setDialCode] = useState("+260");
+  const [showDialDrop, setShowDialDrop] = useState(false);
   const [address, setAddress] = useState("");
   const [city, setCity] = useState("");
   const [state, setState] = useState("");
@@ -223,7 +227,7 @@ export default function PayPage() {
         body: JSON.stringify({
           amount: total, currency, phone: `260${mmPhone.replace(/^0/, "")}`,
           provider: mmProvider, note, contact: email,
-          userDetails: { firstName, lastName, email, phone, address, city, state, zipCode, country }
+          userDetails: { firstName, lastName, email, phone: `${dialCode}${phone}`, address, city, state, zipCode, country }
         })
       });
       const data = await res.json();
@@ -237,11 +241,10 @@ export default function PayPage() {
     if (payLoading) return;
     if (!firstName || !lastName || !email || !phone) { setPayError("Please fill in contact details for notifications."); return; }
     if (openMethod === "whatsapp") {
-      const msg = encodeURIComponent(`*Payment Request*\nAmount: ${currency} ${total.toFixed(2)}\nRef: ${note || "None"}\nCustomer: ${firstName} ${lastName}\nPhone: ${phone}\nEmail: ${email}`);
+      const msg = encodeURIComponent(`*Payment Request*\nAmount: ${currency} ${total.toFixed(2)}\nRef: ${note || "None"}\nCustomer: ${firstName} ${lastName}\nPhone: ${dialCode}${phone}\nEmail: ${email}`);
       window.open(`https://api.whatsapp.com/send?phone=${whatsappNumber}&text=${msg}`, "_blank");
       return;
     }
-    // Card/Bank logic would go here if backend supported it for PayPage
     setPayError(`${openMethod?.toUpperCase()} payment is being processed. Our team will contact you.`);
   };
 
@@ -284,7 +287,30 @@ export default function PayPage() {
                 <input value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Last Name" className="w-full h-[46px] rounded-xl border border-border px-3 bg-card text-sm outline-none focus:ring-2 focus:ring-primary/40" />
               </div>
               <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email Address" className="w-full h-[46px] rounded-xl border border-border px-3 bg-card text-sm outline-none focus:ring-2 focus:ring-primary/40" />
-              <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone Number" className="w-full h-[46px] rounded-xl border border-border px-3 bg-card text-sm outline-none focus:ring-2 focus:ring-primary/40" />
+              <div className="flex gap-2">
+                <div className="relative w-20 flex-shrink-0">
+                  <input
+                    value={dialCode}
+                    onChange={(e) => {
+                      let val = e.target.value;
+                      if (val && !val.startsWith("+")) val = "+" + val.replace(/[^0-9]/g, "");
+                      setDialCode(val);
+                    }}
+                    onFocus={() => setShowDialDrop(true)}
+                    onBlur={() => setTimeout(() => setShowDialDrop(false), 200)}
+                    placeholder="+260"
+                    className="w-full h-[46px] rounded-xl border border-border px-2 bg-card text-sm font-bold outline-none text-center"
+                  />
+                  {showDialDrop && (
+                    <div className="absolute top-full left-0 w-full mt-1 bg-background border border-border rounded-xl shadow-xl z-30 max-h-48 overflow-y-auto">
+                      {DIAL_CODES.map(code => (
+                        <button key={code} onClick={() => { setDialCode(code); setShowDialDrop(false); }} className="w-full px-3 py-2.5 text-sm font-bold hover:bg-muted text-center border-b last:border-0">{code}</button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone Number" className="flex-1 h-[46px] rounded-xl border border-border px-3 bg-card text-sm outline-none focus:ring-2 focus:ring-primary/40" />
+              </div>
             </div>
 
             <div className="space-y-3 pt-2">
