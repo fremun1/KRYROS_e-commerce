@@ -145,7 +145,7 @@ function WalletPaymentsContent() {
   };
 
 const role = normalizeRole(user?.role);
-   const canManage = ['ADMIN', 'SUPERADMIN', 'MANAGER', 'STAFF'].includes(role);
+  const canManage = ['ADMIN', 'SUPERADMIN', 'MANAGER', 'STAFF'].includes(role);
 
   type Tab = 'transactions' | 'links' | 'methods';
   const [activeTab, setActiveTab] = useState<Tab>('transactions');
