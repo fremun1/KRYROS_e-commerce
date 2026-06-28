@@ -29,7 +29,14 @@ export class PaymentsController {
   @ApiOperation({ summary: 'Initiate a direct mobile money payment (no pre-existing order needed)' })
   direct(@Body() body: DirectPaymentDto, @Req() req: Request) {
     const userId = (req as any).user?.id ?? null;
-    return this.paymentsService.processDirectPayment(userId, body.phone, body.amount, body.currency, body.note);
+    return this.paymentsService.processDirectPayment(
+      userId,
+      body.phone,
+      body.amount,
+      body.currency,
+      body.note,
+      body.paymentLinkId,
+    );
   }
 
   @Post('whatsapp')
@@ -37,7 +44,15 @@ export class PaymentsController {
   @ApiOperation({ summary: 'Create a WhatsApp payment record and return reference for manual payment' })
   whatsapp(@Body() body: WhatsAppPaymentDto, @Req() req: Request) {
     const userId = (req as any).user?.id ?? null;
-    return this.paymentsService.processWhatsAppPayment(userId, body.phone, body.amount, body.currency, body.note, body.reference);
+    return this.paymentsService.processWhatsAppPayment(
+      userId,
+      body.phone,
+      body.amount,
+      body.currency,
+      body.note,
+      body.reference,
+      body.paymentLinkId,
+    );
   }
 
   @Get('direct-status/:paymentId')

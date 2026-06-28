@@ -67,9 +67,10 @@ const WHATSAPP_NUMBER = import.meta.env.VITE_WHATSAPP_NUMBER || "260969597029";
 function WhatsAppFloatingButton() {
   const [hovered, setHovered] = useState(false);
   const [location] = useLocation();
-  const hide = ["/login", "/register", "/forgot-password", "/pay"].includes(
-    location,
-  );
+  const hide =
+    ["/login", "/register", "/forgot-password"].includes(location) ||
+    location === "/pay" ||
+    location.startsWith("/pay/");
   if (hide) return null;
 
   const message = encodeURIComponent("Hi KRYROS! I need some help 👋");
@@ -284,15 +285,17 @@ function AppRoutes() {
     };
   }, [location]);
 
-  const hideShell = [
-    "/pay",
-    "/checkout",
-    "/dashboard",
-    "/cart",
-    "/get-now",
-    "/apply-credit",
-    "/wholesale-checkout",
-  ].includes(location);
+  const hideShell =
+    location === "/pay" ||
+    location.startsWith("/pay/") ||
+    [
+      "/checkout",
+      "/dashboard",
+      "/cart",
+      "/get-now",
+      "/apply-credit",
+      "/wholesale-checkout",
+    ].includes(location);
 
   return (
     <>
@@ -333,6 +336,7 @@ function AppRoutes() {
           <Route path="/returns" component={ReturnsPage} />
           <Route path="/shipping" component={ShippingPage} />
           <Route path="/security" component={SecurityPage} />
+          <Route path="/pay/:linkId" component={PayPage} />
           <Route path="/pay" component={PayPage} />
           <Route path="/wishlist" component={WishlistPage} />
           <Route path="/apply-credit" component={ApplyCreditPage} />

@@ -32,7 +32,6 @@ export class PaymentLinksService {
     this.logger.log('Fetching all payment links');
 
     const paymentLinks = await this.prisma.paymentLink.findMany({
-      where: { isActive: true },
       skip,
       take,
       orderBy: { createdAt: 'desc' },
@@ -109,7 +108,7 @@ export class PaymentLinksService {
     return { success: true, message: 'Payment link deleted successfully' };
   }
 
-  async validatePaymentLink(linkId: string, expectedAmount: number, expectedCurrency: string) {
+  async validatePaymentLink(linkId: string, expectedAmount?: number, expectedCurrency?: string) {
     const paymentLink = await this.findById(linkId);
 
     if (!paymentLink.isActive) {
@@ -120,11 +119,11 @@ export class PaymentLinksService {
       throw new BadRequestException('Payment link has expired');
     }
 
-    if (Number(paymentLink.amount) !== expectedAmount) {
+    if (expectedAmount !== undefined && Number(paymentLink.amount) !== expectedAmount) {
       throw new BadRequestException('Payment amount does not match the link');
     }
 
-    if (paymentLink.currency !== expectedCurrency) {
+    if (expectedCurrency !== undefined && paymentLink.currency !== expectedCurrency) {
       throw new BadRequestException('Payment currency does not match the link');
     }
 

@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { PaymentStatus } from '@prisma/client';
 import axios from 'axios';
 import { XMLParser } from 'fast-xml-parser';
+import { PaymentLinksService } from '../payment-links/payment-links.service';
 
 @Injectable()
 export class PaymentsService {
@@ -14,6 +15,7 @@ export class PaymentsService {
   constructor(
     private prisma: PrismaService,
     private configService: ConfigService,
+    private paymentLinksService: PaymentLinksService,
   ) {}
 
   private get apiUrl() {
@@ -110,6 +112,10 @@ export class PaymentsService {
   async processDirectPayment(userId: string | null, phone: string | undefined, amountZMW: number, currency = 'ZMW', note?: string, paymentLinkId?: string) {
     this.logger.log(`=== Direct Payment (no order) for user: ${userId} ===`);
 
+    if (paymentLinkId) {
+      await this.paymentLinksService.validatePaymentLink(paymentLinkId);
+    }
+
     const paymentNumber = `PAY-${Date.now().toString(36).toUpperCase()}`;
     const directPayment = await this.prisma.directPayment.create({
       data: {
@@ -187,14 +193,27 @@ export class PaymentsService {
     }
   }
 
-  async processWhatsAppPayment(userId: string | null, phone: string, amountZMW: number, currency = 'ZMW', note?: string, reference?: string) {
+  async processWhatsAppPayment(
+    userId: string | null,
+    phone: string,
+    amountZMW: number,
+    currency = 'ZMW',
+    note?: string,
+    reference?: string,
+    paymentLinkId?: string,
+  ) {
     this.logger.log(`=== WhatsApp Direct Payment for user: ${userId}, ref: ${reference}`);
+
+    if (paymentLinkId) {
+      await this.paymentLinksService.validatePaymentLink(paymentLinkId);
+    }
 
     const paymentNumber = `WA-${Date.now().toString(36).toUpperCase()}`;
     const directPayment = await this.prisma.directPayment.create({
       data: {
         paymentNumber,
         ...(userId ? { userId } : {}),
+        ...(paymentLinkId ? { paymentLinkId } : {}),
         amount: amountZMW,
         currency,
         note: note || 'WhatsApp payment via Pay page',

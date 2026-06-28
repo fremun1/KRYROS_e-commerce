@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import { Link, useLocation } from "wouter";
+import { Link, useLocation, useRoute } from "wouter";
 import {
   ChevronLeft, Lock, ChevronDown, X,
   Smartphone, CreditCard, Building2, Check, Upload, AlertCircle, Download, Info,
@@ -129,7 +129,9 @@ function ReceiptScreen({ receipt, onClose }: { receipt: ReceiptData; onClose: ()
 
 // ─── MAIN PAGE ────────────────────────────────────────────────────────────────
 export default function PayPage() {
+  const [, params] = useRoute("/pay/:linkId");
   const [, navigate] = useLocation();
+  const paymentLinkId = params?.linkId;
   const [step, setStep] = useState<1 | 2>(1);
   const { selected: selectedCurrency, currencies: allCurrencies, format, setCurrency: setGlobalCurrency } = useCurrencyStore();
 
@@ -137,11 +139,75 @@ export default function PayPage() {
   const urlAmount = urlParams.get("amount") || "";
   const urlCurrency = urlParams.get("currency")?.toUpperCase();
   const urlNote = urlParams.get("note") || "";
-  const isLinkedPayment = !!urlAmount;
+  const queryLinkedPayment = !!urlAmount;
+  const isLinkedPayment = !!paymentLinkId || queryLinkedPayment;
+  const [linkLoading, setLinkLoading] = useState(!!paymentLinkId);
+  const [linkError, setLinkError] = useState<string | null>(null);
+  const [linkedPaymentName, setLinkedPaymentName] = useState("");
+  const [linkedExpiry, setLinkedExpiry] = useState<string | null>(null);
 
   useEffect(() => {
     if (urlCurrency && allCurrencies.some(c => c.code === urlCurrency)) setGlobalCurrency(urlCurrency);
   }, [urlCurrency, allCurrencies, setGlobalCurrency]);
+
+  useEffect(() => {
+    if (!paymentLinkId) {
+      setLinkLoading(false);
+      setLinkError(null);
+      setLinkedPaymentName("");
+      setLinkedExpiry(null);
+      return;
+    }
+
+    let active = true;
+    setLinkLoading(true);
+    setLinkError(null);
+
+    fetch(`${API_BASE}/api/pay-links/${paymentLinkId}`)
+      .then(async (res) => {
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data?.message || "Payment link not found");
+        }
+        return data;
+      })
+      .then((link: any) => {
+        if (!active) return;
+
+        if (!link?.isActive) {
+          setLinkError("This payment link is no longer active.");
+          return;
+        }
+
+        if (link?.expiresAt && new Date(link.expiresAt) < new Date()) {
+          setLinkError("This payment link has expired.");
+          return;
+        }
+
+        const currencyCode = String(link.currency || "ZMW").toUpperCase();
+        const normalizedAmount = String(Number(link.amount || 0));
+
+        setLinkedPaymentName(link.name || "Payment Link");
+        setLinkedExpiry(link.expiresAt || null);
+        setRawAmount(normalizedAmount);
+        setNote(link.note || "");
+
+        if (allCurrencies.some((item) => item.code === currencyCode)) {
+          setGlobalCurrency(currencyCode);
+        }
+      })
+      .catch((err) => {
+        if (!active) return;
+        setLinkError(err.message || "Unable to load this payment link.");
+      })
+      .finally(() => {
+        if (active) setLinkLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [paymentLinkId, allCurrencies, setGlobalCurrency]);
 
   const [rawAmount, setRawAmount] = useState(urlAmount);
   const [showCurrencyDrop, setShowCurrencyDrop] = useState(false);
@@ -316,6 +382,39 @@ export default function PayPage() {
 
   if (isPaid && receipt) return <ReceiptScreen receipt={receipt} onClose={() => { setPayStatus("idle"); setReceipt(null); }} />;
 
+  if (linkLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4 py-10 bg-background">
+        <div className="w-full max-w-sm rounded-3xl border border-card-border bg-card p-8 text-center shadow-sm">
+          <div className="w-12 h-12 rounded-full mx-auto mb-4 border-4 flex items-center justify-center" style={{ borderColor: "rgba(39, 185, 175, 0.25)" }}>
+            <span className="w-6 h-6 border-2 rounded-full animate-spin" style={{ borderColor: "rgba(39,185,175,0.4)", borderTopColor: "var(--kryros-primary)" }} />
+          </div>
+          <h2 className="text-lg font-bold text-foreground mb-2">Loading payment page</h2>
+          <p className="text-sm text-muted-foreground">We’re preparing the payment details for this link.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (linkError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4 py-10 bg-background">
+        <div className="w-full max-w-sm rounded-3xl border border-card-border bg-card p-8 text-center shadow-sm">
+          <div className="w-14 h-14 rounded-full mx-auto mb-4 flex items-center justify-center" style={{ background: "rgba(239,68,68,0.1)" }}>
+            <AlertCircle className="w-7 h-7 text-red-500" />
+          </div>
+          <h2 className="text-lg font-bold text-foreground mb-2">This payment page is unavailable</h2>
+          <p className="text-sm text-muted-foreground mb-5">{linkError}</p>
+          <Link href="/">
+            <button className="w-full py-3 rounded-2xl font-semibold text-sm text-white" style={{ background: "linear-gradient(135deg, var(--kryros-primary-hover), var(--kryros-primary))" }}>
+              Back to Home
+            </button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   if (isWaiting || isFailed) {
     return (
       <div className="min-h-screen flex items-center justify-center px-4 py-10 bg-background">
@@ -445,8 +544,9 @@ export default function PayPage() {
 
             {isLinkedPayment && (
               <div className="rounded-xl px-3 py-2 text-sm border" style={{ background: "rgba(39,185,175,0.08)", borderColor: "var(--kryros-primary)", color: "var(--foreground)" }}>
-                <span className="font-bold">Payment Link</span> — Amount pre-filled: <strong>{currency} {rawAmount}</strong>
-                {urlNote ? <span className="text-muted-foreground ml-1">· {urlNote}</span> : null}
+                <span className="font-bold">{linkedPaymentName || "Payment Link"}</span> — Amount pre-filled: <strong>{currency} {rawAmount}</strong>
+                {note ? <span className="text-muted-foreground ml-1">· {note}</span> : null}
+                {linkedExpiry ? <span className="text-muted-foreground ml-1">· Expires {new Date(linkedExpiry).toLocaleDateString("en-GB")}</span> : null}
               </div>
             )}
 

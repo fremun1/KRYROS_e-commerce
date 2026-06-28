@@ -7,9 +7,11 @@ import {
   Search, X, ChevronRight, RefreshCw, User, Trash2,
   Link2, CreditCard, TrendingUp, Plus, Copy,
   Settings, Edit2, ArrowUp, ArrowDown, Smartphone, Building2,
+  ExternalLink, Wallet,
 } from 'lucide-react';
 import {
   getDirectPayments, getPaymentLinks, createPaymentLink, deletePaymentLink,
+  updatePaymentLink,
   getPaymentMethods, updatePaymentMethod, deletePaymentMethod, reorderPaymentMethods,
   createPaymentMethod, createPaymentProvider, updatePaymentProvider, deletePaymentProvider,
   createPaymentNetwork, updatePaymentNetwork, deletePaymentNetwork,
@@ -37,8 +39,10 @@ type PayLink = {
   currency: string;
   note: string;
   clicks: number;
+  isActive: boolean;
   status: string;
   createdAt: string;
+  expiresAt?: string | null;
 };
 
 type PayNetwork = { id: string; name: string; isEnabled: boolean; sortOrder: number };
@@ -61,6 +65,14 @@ type PayMethod = {
 };
 
 type MethodForm = { name: string; type: string; isEnabled: boolean };
+type LinkForm = {
+  name: string;
+  amount: string;
+  currency: string;
+  note: string;
+  expiresAt: string;
+  isActive: boolean;
+};
 type ProviderForm = {
   name: string;
   description: string;
@@ -80,7 +92,7 @@ const METHOD_TYPES = [
   { value: 'digital_wallet', label: 'Digital Wallet' },
 ];
 
-const FRONTEND_PAYMENT_URL = (process.env.NEXT_PUBLIC_FRONTEND_URL || '') + '/pay';
+const FRONTEND_PAYMENT_URL = `${(process.env.NEXT_PUBLIC_FRONTEND_URL || '').replace(/\/$/, '')}/pay`;
 
 const STATUS_CFG: Record<string, { label: string; color: string; bg: string }> = {
   COMPLETED: { label: 'Completed', color: '#1FA89A', bg: 'rgba(31,168,154,0.12)' },
@@ -100,6 +112,13 @@ const fmtDate = (iso: string) => {
 const fmtTime = (iso: string) => {
   if (!iso) return '';
   return new Date(iso).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+};
+const fmtDateTimeLocal = (iso?: string | null) => {
+  if (!iso) return '';
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return '';
+  const pad = (value: number) => String(value).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 };
 const fmtMoney = (amount: number, symbol = 'ZMW') =>
   `${symbol} ${Number(amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
@@ -139,7 +158,8 @@ function WalletPaymentsContent() {
   const [detail, setDetail] = useState<Tx | null>(null);
 
   const [showGenModal, setShowGenModal] = useState(false);
-  const [genForm, setGenForm] = useState({ name: '', amount: '', currency: 'ZMW', note: '' });
+  const [editingLink, setEditingLink] = useState<PayLink | null>(null);
+  const [genForm, setGenForm] = useState<LinkForm>({ name: '', amount: '', currency: 'ZMW', note: '', expiresAt: '', isActive: true });
   const [genLoading, setGenLoading] = useState(false);
 
   const [showMethodModal, setShowMethodModal] = useState(false);
@@ -187,11 +207,17 @@ function WalletPaymentsContent() {
         const res = await getPaymentLinks();
         const raw = Array.isArray(res.data) ? res.data : (res.data?.data ?? []);
         setPayLinks(raw.map((l: any) => ({
-          ...l,
+          id: l.id,
+          name: l.name || 'Untitled payment page',
           url: `${FRONTEND_PAYMENT_URL}/${l.id}`,
           amount: Number(l.amount) || 0,
           currency: l.currency || 'ZMW',
+          note: l.note || '',
+          clicks: Number(l.clicks) || 0,
+          isActive: Boolean(l.isActive),
+          status: !l.isActive ? 'INACTIVE' : l.expiresAt && new Date(l.expiresAt) < new Date() ? 'EXPIRED' : 'ACTIVE',
           createdAt: l.createdAt || '',
+          expiresAt: l.expiresAt || null,
         })));
       } else {
         const res = await getPaymentMethods();
@@ -240,6 +266,27 @@ function WalletPaymentsContent() {
     );
   }, [payMethods, search]);
 
+  const txStats = useMemo(() => {
+    const totalAmount = txData.reduce((sum, item) => sum + item.amount, 0);
+    const pendingCount = txData.filter((item) => ['PENDING'].includes(item.status?.toUpperCase())).length;
+    const linkedCount = txData.filter((item) => item.linkName).length;
+    return { totalAmount, pendingCount, linkedCount };
+  }, [txData]);
+
+  const linkStats = useMemo(() => {
+    const activeCount = payLinks.filter((item) => item.status === 'ACTIVE').length;
+    const inactiveCount = payLinks.filter((item) => item.status === 'INACTIVE').length;
+    const totalClicks = payLinks.reduce((sum, item) => sum + item.clicks, 0);
+    return { activeCount, inactiveCount, totalClicks };
+  }, [payLinks]);
+
+  const methodStats = useMemo(() => {
+    const enabledMethods = payMethods.filter((item) => item.isEnabled).length;
+    const providerCount = payMethods.reduce((sum, item) => sum + item.providers.length, 0);
+    const networkCount = payMethods.reduce((sum, item) => sum + item.providers.reduce((acc, provider) => acc + provider.networks.length, 0), 0);
+    return { enabledMethods, providerCount, networkCount };
+  }, [payMethods]);
+
   const actionButton = (variant: 'primary' | 'default' | 'danger' = 'default') => ({
     display: 'inline-flex',
     alignItems: 'center',
@@ -267,6 +314,24 @@ function WalletPaymentsContent() {
     flexShrink: 0,
   });
 
+  const resetLinkForm = useCallback(() => {
+    setEditingLink(null);
+    setGenForm({ name: '', amount: '', currency: 'ZMW', note: '', expiresAt: '', isActive: true });
+  }, []);
+
+  const openLinkModal = useCallback((link?: PayLink) => {
+    setEditingLink(link || null);
+    setGenForm({
+      name: link?.name || '',
+      amount: link ? String(link.amount) : '',
+      currency: link?.currency || 'ZMW',
+      note: link?.note || '',
+      expiresAt: fmtDateTimeLocal(link?.expiresAt),
+      isActive: link?.isActive ?? true,
+    });
+    setShowGenModal(true);
+  }, []);
+
   const handleGenerateLink = async () => {
     if (!genForm.name.trim()) {
       toast.error('Link name is required');
@@ -274,15 +339,41 @@ function WalletPaymentsContent() {
     }
     setGenLoading(true);
     try {
-      await createPaymentLink({ ...genForm, amount: Number(genForm.amount) });
-      toast.success('Payment link created');
+      const payload = {
+        name: genForm.name.trim(),
+        amount: Number(genForm.amount),
+        currency: genForm.currency,
+        note: genForm.note.trim(),
+        expiresAt: genForm.expiresAt ? new Date(genForm.expiresAt).toISOString() : undefined,
+      };
+
+      if (editingLink) {
+        await updatePaymentLink(editingLink.id, { ...payload, isActive: genForm.isActive });
+        toast.success('Payment page updated');
+      } else {
+        const res: any = await createPaymentLink(payload);
+        if (!genForm.isActive && res?.data?.id) {
+          await updatePaymentLink(res.data.id, { isActive: false });
+        }
+        toast.success('Payment page created');
+      }
       setShowGenModal(false);
-      setGenForm({ name: '', amount: '', currency: 'ZMW', note: '' });
+      resetLinkForm();
       fetchData();
     } catch {
-      toast.error('Failed to create payment link');
+      toast.error(editingLink ? 'Failed to update payment page' : 'Failed to create payment page');
     } finally {
       setGenLoading(false);
+    }
+  };
+
+  const handleToggleLink = async (link: PayLink, isActive: boolean) => {
+    try {
+      await updatePaymentLink(link.id, { isActive });
+      toast.success(isActive ? 'Payment page activated' : 'Payment page deactivated');
+      fetchData();
+    } catch {
+      toast.error('Failed to update payment page');
     }
   };
 
@@ -536,7 +627,7 @@ function WalletPaymentsContent() {
 
             <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
               {activeTab === 'links' && (
-                <button onClick={() => setShowGenModal(true)} style={actionButton('primary')}>
+                <button onClick={() => openLinkModal()} style={actionButton('primary')}>
                   <Plus size={15} /> Create Pay Page
                 </button>
               )}
@@ -606,19 +697,46 @@ function WalletPaymentsContent() {
             </div>
           ) : (
             <>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '0.9rem', marginBottom: '1rem' }}>
+                {activeTab === 'transactions' && (
+                  <>
+                    <OverviewCard title="Total Transactions" value={String(txData.length)} hint="Direct and linked payments" icon={<Wallet size={16} color="#00D4AA" />} T={T} />
+                    <OverviewCard title="Pending Review" value={String(txStats.pendingCount)} hint="Waiting for completion" icon={<RefreshCw size={16} color="#F59E0B" />} T={T} />
+                    <OverviewCard title="Linked Payments" value={String(txStats.linkedCount)} hint="Created from pay pages" icon={<Link2 size={16} color="#818CF8" />} T={T} />
+                    <OverviewCard title="Recorded Volume" value={fmtMoney(txStats.totalAmount)} hint="Visible transaction amount" icon={<TrendingUp size={16} color="#00D4AA" />} T={T} />
+                  </>
+                )}
+                {activeTab === 'links' && (
+                  <>
+                    <OverviewCard title="Active Pages" value={String(linkStats.activeCount)} hint="Ready to receive payments" icon={<Link2 size={16} color="#00D4AA" />} T={T} />
+                    <OverviewCard title="Inactive Pages" value={String(linkStats.inactiveCount)} hint="Saved but unavailable" icon={<Settings size={16} color={T.muted} />} T={T} />
+                    <OverviewCard title="Total Clicks" value={String(linkStats.totalClicks)} hint="Open events across all links" icon={<ExternalLink size={16} color="#818CF8" />} T={T} />
+                    <OverviewCard title="Quick Action" value="Create Page" hint="Generate a customer payment page" icon={<Plus size={16} color="#00D4AA" />} T={T} action={canManage ? <button onClick={() => openLinkModal()} style={actionButton('primary')}><Plus size={13} /> New page</button> : undefined} />
+                  </>
+                )}
+                {activeTab === 'methods' && (
+                  <>
+                    <OverviewCard title="Enabled Methods" value={String(methodStats.enabledMethods)} hint={`${payMethods.length} methods in total`} icon={<CreditCard size={16} color="#00D4AA" />} T={T} />
+                    <OverviewCard title="Providers" value={String(methodStats.providerCount)} hint="Operator and bank setups" icon={<Building2 size={16} color="#818CF8" />} T={T} />
+                    <OverviewCard title="Networks" value={String(methodStats.networkCount)} hint="Network options exposed at checkout" icon={<Smartphone size={16} color="#F59E0B" />} T={T} />
+                    <OverviewCard title="Quick Action" value="Add Method" hint="Create a new checkout method" icon={<Plus size={16} color="#00D4AA" />} T={T} action={canManage ? <button onClick={() => openMethodModal()} style={actionButton('primary')}><Plus size={13} /> Add method</button> : undefined} />
+                  </>
+                )}
+              </div>
+
               {activeTab === 'transactions' && (
                 <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: '14px', overflow: 'hidden' }}>
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem' }}>
                     <thead>
                       <tr style={{ borderBottom: `1px solid ${T.border}`, background: T.surface }}>
-                        <th style={tableHead}>Reference</th>
-                        <th style={tableHead}>Customer</th>
-                        <th style={tableHead}>Date</th>
-                        <th style={tableHead}>Method</th>
-                        <th style={tableHead}>Amount</th>
-                        <th style={tableHead}>Status</th>
-                        <th style={tableHead}>Source</th>
-                        <th style={tableHead}></th>
+                        <th style={tableHead(T)}>Reference</th>
+                        <th style={tableHead(T)}>Customer</th>
+                        <th style={tableHead(T)}>Date</th>
+                        <th style={tableHead(T)}>Method</th>
+                        <th style={tableHead(T)}>Amount</th>
+                        <th style={tableHead(T)}>Status</th>
+                        <th style={tableHead(T)}>Source</th>
+                        <th style={tableHead(T)}></th>
                       </tr>
                     </thead>
                     <tbody>
@@ -632,21 +750,21 @@ function WalletPaymentsContent() {
                             onMouseEnter={(e) => { e.currentTarget.style.background = T.hover; }}
                             onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
                           >
-                            <td style={tableCellStrong}>{t.ref}</td>
-                            <td style={tableCell}>
+                            <td style={tableCellStrong(T)}>{t.ref}</td>
+                            <td style={tableCell(T)}>
                               <div style={{ fontWeight: 600, color: T.text }}>{t.user}</div>
                               {t.userEmail && <div style={{ fontSize: '0.72rem', color: T.muted }}>{t.userEmail}</div>}
                             </td>
-                            <td style={tableCellMuted}>{fmtDate(t.date)}</td>
-                            <td style={tableCell}>
+                            <td style={tableCellMuted(T)}>{fmtDate(t.date)}</td>
+                            <td style={tableCell(T)}>
                               <span style={pillStyle('#818CF8', 'rgba(129,140,248,0.1)')}>{t.method}</span>
                             </td>
-                            <td style={tableCellStrong}>{fmtMoney(t.amount, t.currency)}</td>
-                            <td style={tableCell}>
+                            <td style={tableCellStrong(T)}>{fmtMoney(t.amount, t.currency)}</td>
+                            <td style={tableCell(T)}>
                               <span style={pillStyle(sc.color, sc.bg)}>{sc.label}</span>
                             </td>
-                            <td style={tableCellMuted}>{t.linkName || 'Direct'}</td>
-                            <td style={{ ...tableCell, textAlign: 'right' }}><ChevronRight size={14} color={T.muted} /></td>
+                            <td style={tableCellMuted(T)}>{t.linkName || 'Direct'}</td>
+                            <td style={{ ...tableCell(T), textAlign: 'right' }}><ChevronRight size={14} color={T.muted} /></td>
                           </tr>
                         );
                       })}
@@ -674,7 +792,7 @@ function WalletPaymentsContent() {
                             <div style={{ fontSize: '0.74rem', color: T.muted }}>{fmtDate(link.createdAt)}</div>
                           </div>
                         </div>
-                        <span style={pillStyle('#00D4AA', 'rgba(0,212,170,0.1)')}>{link.currency}</span>
+                        <span style={pillStyle(STATUS_CFG[link.status]?.color || '#00D4AA', STATUS_CFG[link.status]?.bg || 'rgba(0,212,170,0.1)')}>{STATUS_CFG[link.status]?.label || link.currency}</span>
                       </div>
 
                       <div style={{ fontSize: '1.15rem', fontWeight: 900, color: '#00D4AA' }}>{fmtMoney(link.amount, link.currency)}</div>
@@ -683,19 +801,34 @@ function WalletPaymentsContent() {
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '0.75rem', padding: '0.9rem', background: T.surface, borderRadius: '12px' }}>
                         <Stat label="Clicks" value={String(link.clicks)} T={T} />
                         <Stat label="Status" value={STATUS_CFG[link.status?.toUpperCase()]?.label || link.status || 'Active'} T={T} />
+                        <Stat label="Created" value={fmtDate(link.createdAt)} T={T} />
+                        <Stat label="Expires" value={link.expiresAt ? fmtDate(link.expiresAt) : 'No expiry'} T={T} />
                       </div>
 
                       <div style={{ display: 'flex', gap: '0.65rem', flexWrap: 'wrap' }}>
+                        <button onClick={() => window.open(link.url, '_blank', 'noopener,noreferrer')} style={actionButton('default')}>
+                          <ExternalLink size={13} /> Open
+                        </button>
                         <button onClick={() => { navigator.clipboard.writeText(link.url); toast.success('Link copied'); }} style={actionButton('default')}>
                           <Copy size={13} /> Copy link
                         </button>
+                        {canManage && (
+                          <>
+                            <button onClick={() => openLinkModal(link)} style={actionButton('default')}>
+                              <Edit2 size={13} /> Edit
+                            </button>
+                            <button onClick={() => handleToggleLink(link, !link.isActive)} style={actionButton('default')}>
+                              <Settings size={13} /> {link.isActive ? 'Deactivate' : 'Activate'}
+                            </button>
+                          </>
+                        )}
                         <button onClick={() => handleDeleteLink(link.id)} style={actionButton('danger')}>
                           <Trash2 size={13} /> Delete
                         </button>
                       </div>
                     </div>
                   ))}
-                  {filteredLinks.length === 0 && <EmptyCard title="No pay pages found" T={T} />}
+                  {filteredLinks.length === 0 && <EmptyCard title="No pay pages found" T={T} action={canManage ? <button onClick={() => openLinkModal()} style={actionButton('primary')}><Plus size={13} /> Create page</button> : undefined} />}
                 </div>
               )}
 
@@ -837,7 +970,7 @@ function WalletPaymentsContent() {
                     </div>
                   ))}
 
-                  {filteredMethods.length === 0 && <EmptyCard title="No payment methods found" T={T} />}
+                  {filteredMethods.length === 0 && <EmptyCard title="No payment methods found" T={T} action={canManage ? <button onClick={() => openMethodModal()} style={actionButton('primary')}><Plus size={13} /> Add method</button> : undefined} />}
                 </div>
               )}
             </>
@@ -889,8 +1022,8 @@ function WalletPaymentsContent() {
       </div>
 
       {showGenModal && (
-        <ModalShell onClose={() => setShowGenModal(false)} T={T}>
-          <ModalTitle title="Create Payment Page" subtitle="Generate a payment page customers can open directly." T={T} />
+        <ModalShell onClose={() => { setShowGenModal(false); resetLinkForm(); }} T={T}>
+          <ModalTitle title={editingLink ? 'Edit Payment Page' : 'Create Payment Page'} subtitle="Generate a payment page customers can open directly or update an existing one." T={T} />
           <div style={{ display: 'grid', gap: '0.9rem' }}>
             <Field label="Page name" T={T}>
               <input value={genForm.name} onChange={(e) => setGenForm((f) => ({ ...f, name: e.target.value }))} placeholder="e.g. Consulting Fee" style={inputStyle(T)} />
@@ -906,13 +1039,17 @@ function WalletPaymentsContent() {
                 </select>
               </Field>
             </div>
+            <Field label="Expires at" T={T}>
+              <input type="datetime-local" value={genForm.expiresAt} onChange={(e) => setGenForm((f) => ({ ...f, expiresAt: e.target.value }))} style={inputStyle(T)} />
+            </Field>
             <Field label="Note" T={T}>
               <textarea value={genForm.note} onChange={(e) => setGenForm((f) => ({ ...f, note: e.target.value }))} rows={3} placeholder="Visible to the customer..." style={{ ...inputStyle(T), resize: 'vertical' as const }} />
             </Field>
+            <ToggleField label="Active" checked={genForm.isActive} onChange={(checked) => setGenForm((f) => ({ ...f, isActive: checked }))} T={T} />
             <ModalActions>
-              <button onClick={() => setShowGenModal(false)} style={modalButton(T, 'default')}>Cancel</button>
+              <button onClick={() => { setShowGenModal(false); resetLinkForm(); }} style={modalButton(T, 'default')}>Cancel</button>
               <button onClick={handleGenerateLink} disabled={genLoading} style={modalButton(T, 'primary')}>
-                {genLoading ? 'Creating...' : 'Create Page'}
+                {genLoading ? (editingLink ? 'Saving...' : 'Creating...') : (editingLink ? 'Save Page' : 'Create Page')}
               </button>
             </ModalActions>
           </div>
@@ -999,29 +1136,38 @@ function WalletPaymentsContent() {
   );
 }
 
-const tableHead = {
-  padding: '0.75rem 1rem',
-  textAlign: 'left' as const,
-  fontWeight: 800,
-  color: '#64748B',
-  textTransform: 'uppercase' as const,
-  fontSize: '0.7rem',
-};
+function tableHead(T: Record<string, string>) {
+  return {
+    padding: '0.75rem 1rem',
+    textAlign: 'left' as const,
+    fontWeight: 800,
+    color: T.muted,
+    textTransform: 'uppercase' as const,
+    fontSize: '0.7rem',
+  };
+}
 
-const tableCell = {
-  padding: '0.8rem 1rem',
-};
+function tableCell(T: Record<string, string>) {
+  return {
+    padding: '0.8rem 1rem',
+    color: T.text,
+  };
+}
 
-const tableCellMuted = {
-  ...tableCell,
-  color: '#64748B',
-};
+function tableCellMuted(T: Record<string, string>) {
+  return {
+    ...tableCell(T),
+    color: T.muted,
+  };
+}
 
-const tableCellStrong = {
-  ...tableCell,
-  fontWeight: 700,
-  color: '#0F172A',
-};
+function tableCellStrong(T: Record<string, string>) {
+  return {
+    ...tableCell(T),
+    fontWeight: 700,
+    color: T.text,
+  };
+}
 
 function pillStyle(color: string, bg: string) {
   return {
@@ -1113,10 +1259,43 @@ function Stat({ label, value, T }: { label: string; value: string; T: Record<str
   );
 }
 
-function EmptyCard({ title, T }: { title: string; T: Record<string, string> }) {
+function OverviewCard({
+  title,
+  value,
+  hint,
+  icon,
+  action,
+  T,
+}: {
+  title: string;
+  value: string;
+  hint: string;
+  icon: React.ReactNode;
+  action?: React.ReactNode;
+  T: Record<string, string>;
+}) {
   return (
-    <div style={{ background: T.card, border: `1px dashed ${T.border}`, borderRadius: '14px', padding: '2.25rem', textAlign: 'center', color: T.muted, fontSize: '0.84rem' }}>
-      {title}
+    <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: '14px', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', minHeight: '132px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem' }}>
+        <div style={{ width: '38px', height: '38px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,212,170,0.08)' }}>
+          {icon}
+        </div>
+        {action}
+      </div>
+      <div>
+        <div style={{ fontSize: '0.7rem', color: T.muted, textTransform: 'uppercase', fontWeight: 800, letterSpacing: '0.06em' }}>{title}</div>
+        <div style={{ fontSize: '1.3rem', color: T.text, fontWeight: 900, marginTop: '0.35rem' }}>{value}</div>
+      </div>
+      <div style={{ color: T.muted, fontSize: '0.78rem', lineHeight: 1.45 }}>{hint}</div>
+    </div>
+  );
+}
+
+function EmptyCard({ title, T, action }: { title: string; T: Record<string, string>; action?: React.ReactNode }) {
+  return (
+    <div style={{ background: T.card, border: `1px dashed ${T.border}`, borderRadius: '14px', padding: '2.25rem', textAlign: 'center', color: T.muted, fontSize: '0.84rem', display: 'grid', gap: '0.9rem', justifyItems: 'center' }}>
+      <div>{title}</div>
+      {action}
     </div>
   );
 }

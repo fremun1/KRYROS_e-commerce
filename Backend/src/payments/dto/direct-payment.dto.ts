@@ -26,4 +26,10 @@ export class DirectPaymentDto {
   @IsString()
   @IsOptional()
   note?: string;
+
+  @ApiProperty({ description: 'Optional payment link id', required: false })
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : ''))
+  @IsString()
+  @IsOptional()
+  paymentLinkId?: string;
 }

@@ -30,4 +30,10 @@ export class WhatsAppPaymentDto {
   @Transform(({ value }) => value?.trim())
   @IsString()
   reference: string;
+
+  @ApiProperty({ description: 'Optional payment link id', required: false })
+  @Transform(({ value }) => value?.trim())
+  @IsString()
+  @IsOptional()
+  paymentLinkId?: string;
 }

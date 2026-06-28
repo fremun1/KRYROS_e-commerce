@@ -353,6 +353,8 @@ export const createPaymentLink = (data: Record<string, unknown>) =>
   api.post("/api/pay-links", data);
 export const getPaymentLinks = (params?: Record<string, unknown>) =>
   api.get("/api/pay-links", { params });
+export const updatePaymentLink = (id: string, data: Record<string, unknown>) =>
+  api.patch(`/api/pay-links/${id}`, data);
 export const deletePaymentLink = (id: string) =>
   api.delete(`/api/pay-links/${id}`);
 
