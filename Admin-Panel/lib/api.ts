@@ -363,6 +363,8 @@ export const initiateDirectPayment = (data: Record<string, unknown>) =>
   api.post("/api/payments/direct", data);
 export const getDirectPayments = (params?: Record<string, unknown>) =>
   api.get("/api/payments/direct-all", { params });
+export const updateDirectPayment = (id: string, data: Record<string, unknown>) =>
+  api.patch(`/api/payments/direct/${id}`, data);
 
 
 // ── Payment Config ──────────────────────────────────────────────────────────
