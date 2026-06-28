@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get, Param, UseGuards, Req } from '@nestjs/common';
+import { Controller, Post, Body, Get, Param, UseGuards, Req, Patch } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { PaymentsService } from './payments.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
@@ -37,6 +37,8 @@ export class PaymentsController {
       body.currency,
       body.note,
       body.paymentLinkId,
+      body.customerName,
+      body.customerEmail,
     );
   }
 
@@ -71,6 +73,7 @@ export class PaymentsController {
   }
 
   @Patch('direct-status/:paymentId')
+  @Patch('direct/:paymentId')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER)
   @ApiOperation({ summary: 'Update status of a direct payment (Admin only)' })

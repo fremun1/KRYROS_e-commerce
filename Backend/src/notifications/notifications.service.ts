@@ -419,6 +419,63 @@ export class NotificationsService implements OnModuleInit {
     };
   }
 
+  async sendPaymentStatusNotification(payload: {
+    email?: string | null;
+    phone?: string | null;
+    status: string;
+    amount: number;
+    currency: string;
+    paymentNumber: string;
+    paymentMethod?: string | null;
+    customerName?: string | null;
+    receiptNumber?: string | null;
+    trackingLink?: string | null;
+  }) {
+    const customerName = payload.customerName?.trim() || 'Customer';
+    const paymentMethod = String(payload.paymentMethod || 'Payment').replace(/_/g, ' ');
+    const isPaid = String(payload.status).toUpperCase() === 'PAID';
+    const statusLabel = isPaid ? 'PAID' : 'FAILED';
+    const statusEmoji = isPaid ? '✅' : '❌';
+    const amountText = `${payload.currency} ${Number(payload.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+    if (payload.email?.trim()) {
+      const subject = `${statusEmoji} KRYROS Payment ${statusLabel} — ${payload.paymentNumber}`;
+      const html = `
+        <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:520px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08)">
+          <div style="background:${isPaid ? '#10b981' : '#ef4444'};padding:32px 24px;text-align:center;color:#fff">
+            <div style="font-size:28px;margin-bottom:12px">${isPaid ? '✓' : '✗'}</div>
+            <h2 style="margin:0;font-size:20px;font-weight:700">Payment ${statusLabel}</h2>
+          </div>
+          <div style="padding:24px">
+            <p style="color:#374151;font-size:14px;margin-bottom:20px">Hi <strong>${customerName}</strong>, here is your payment update.</p>
+            <table style="width:100%;border-collapse:collapse">
+              <tr style="border-bottom:1px solid #f0f0f0"><td style="padding:12px 0;color:#6b7280;font-size:13px">Payment Ref</td><td style="padding:12px 0;font-weight:600;color:#111;font-size:13px;text-align:right">${payload.paymentNumber}</td></tr>
+              <tr style="border-bottom:1px solid #f0f0f0"><td style="padding:12px 0;color:#6b7280;font-size:13px">Amount</td><td style="padding:12px 0;font-weight:700;color:${isPaid ? '#10b981' : '#ef4444'};font-size:15px;text-align:right">${amountText}</td></tr>
+              <tr style="border-bottom:1px solid #f0f0f0"><td style="padding:12px 0;color:#6b7280;font-size:13px">Method</td><td style="padding:12px 0;font-weight:600;color:#111;font-size:13px;text-align:right">${paymentMethod}</td></tr>
+              ${payload.receiptNumber ? `<tr style="border-bottom:1px solid #f0f0f0"><td style="padding:12px 0;color:#6b7280;font-size:13px">Receipt Number</td><td style="padding:12px 0;font-weight:600;color:#111;font-size:13px;text-align:right">${payload.receiptNumber}</td></tr>` : ''}
+              <tr><td style="padding:12px 0;color:#6b7280;font-size:13px">Status</td><td style="padding:12px 0;font-weight:600;font-size:13px;text-align:right;color:${isPaid ? '#10b981' : '#ef4444'}">${statusLabel}</td></tr>
+            </table>
+            ${payload.trackingLink ? `<p style="margin:20px 0 0;font-size:13px;color:#4b5563">Tracking link: <a href="${payload.trackingLink}">${payload.trackingLink}</a></p>` : ''}
+          </div>
+        </div>`;
+      const plain = `KRYROS payment ${statusLabel}. Ref: ${payload.paymentNumber}. Amount: ${amountText}. Method: ${paymentMethod}.`;
+      this.mailerService.sendMail(payload.email.trim(), subject, plain, html)
+        .catch(e => this.logger.warn(`Payment status email failed for ${payload.paymentNumber}: ${e.message}`));
+    }
+
+    if (payload.phone?.trim()) {
+      const smsText =
+        `${statusEmoji} KRYROS Payment ${statusLabel}\n` +
+        `Ref: ${payload.paymentNumber}\n` +
+        `Amount: ${amountText}\n` +
+        `Method: ${paymentMethod}` +
+        (payload.receiptNumber ? `\nReceipt: ${payload.receiptNumber}` : '') +
+        (payload.trackingLink ? `\nTrack: ${payload.trackingLink}` : '');
+      this.sendSMS(payload.phone.trim(), smsText)
+        .catch(e => this.logger.warn(`Payment status SMS failed for ${payload.paymentNumber}: ${e.message}`));
+    }
+  }
+
   async sendOrderStatusNotification(orderId: string, status: string) {
     const order = await this.prisma.order.findUnique({
       where: { id: orderId },

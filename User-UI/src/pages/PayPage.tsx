@@ -225,7 +225,7 @@ export default function PayPage() {
   const CURRENCIES = allCurrencies;
 
   const [mmProvider, setMmProvider] = useState("MTN");
-  const [phone, setPhone] = useState("");
+  const [mmPhone, setMmPhone] = useState("");
   const [customerName, setCustomerName] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
   const [showProviderDrop, setShowProviderDrop] = useState(false);
@@ -313,7 +313,9 @@ export default function PayPage() {
   }, [mmProvider, fee, total, currency, payRef]);
 
   const sendReceiptNotification = useCallback((receiptData: ReceiptData) => {
-    const phone = receiptPhone.trim(); const email = receiptEmail.trim();
+    const contact = receiptContact.trim();
+    const phone = receiptPhone.trim() || (!contact.includes("@") ? contact : "");
+    const email = receiptEmail.trim() || (contact.includes("@") ? contact : "");
     if (!phone && !email) return;
     fetch(`${API_BASE}/api/notifications/receipt`, {
       method: "POST",
@@ -324,11 +326,11 @@ export default function PayPage() {
         orderRef: receiptData.transactionId,
         amount: receiptData.amount,
         currency: receiptData.currency,
-        customerName: mmName || "Customer",
+        customerName: customerName.trim() || "Customer",
         paymentMethod: receiptData.operatorName || "Mobile Money",
       }),
     }).catch(() => {});
-  }, [receiptPhone, receiptEmail, token]);
+  }, [receiptContact, receiptPhone, receiptEmail, customerName, token]);
 
   const handlePaymentRequest = useCallback(async () => {
     if (!mmPhone) { setPayError("Please enter your phone number"); return; }
@@ -482,8 +484,14 @@ export default function PayPage() {
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.message || "Failed to create payment record");
-        const msg = encodeURIComponent(`I want to pay ${currency} ${total.toFixed(2)} for reference ${payRef}\n\nOrder: ${data.orderNumber || data.orderId}\nPhone: ${receiptContact || 'Not provided'}`);
+        const msg = encodeURIComponent(
+          `I want to pay ${currency} ${total.toFixed(2)} for reference ${payRef}\n\n` +
+          `Payment Number: ${data.paymentNumber || payRef}\n` +
+          `Phone: ${receiptContact || "Not provided"}\n` +
+          `${data.trackingLink ? `Tracking Link: ${window.location.origin}${data.trackingLink}` : ""}`,
+        );
         window.open(`https://wa.me/${whatsappNumber}?text=${msg}`, "_blank");
+        if (data.trackingLink) navigate(data.trackingLink);
       } catch (err: any) {
         setPayError(err.message || "Failed to initiate WhatsApp payment");
       } finally {

@@ -28,12 +28,34 @@ export class PaymentsService {
     return url;
   }
 
+  private buildDirectPaymentTrackingLink(paymentNumber: string) {
+    return `/track?order=${encodeURIComponent(paymentNumber)}`;
+  }
+
+  private formatDirectPaymentResponse(payment: any, overrideStatus?: string) {
+    return {
+      id: payment.id,
+      amount: Number(payment.amount ?? 0),
+      currency: payment.currency,
+      status: String(overrideStatus || payment.status || 'PENDING').toLowerCase(),
+      paymentNumber: payment.paymentNumber,
+      paymentMethod: payment.paymentMethod,
+      createdAt: payment.createdAt,
+      trackingLink: payment.trackingLink,
+      paymentReference: payment.paymentReference,
+      receiptNumber: payment.receiptNumber,
+      paidAt: payment.paidAt,
+      customerName: payment.customerName,
+      customerEmail: payment.customerEmail,
+      paymentPhone: payment.paymentPhone,
+    };
+  }
+
   async process543Payment(orderId: string, phone: string, amountZMW: number) {
     const username = this.configService.get('CGRATE_USERNAME');
     const password = this.configService.get('CGRATE_PASSWORD');
     const transactionId = `KRYROS_${Date.now()}`;
     const paymentNumber = `ORD-${Date.now().toString(36).toUpperCase()}`;
-    const receiptNumber = `REC-${Date.now().toString(36).toUpperCase()}`;
 
 
     this.logger.log('=== Starting 543 Payment Process ===');
@@ -92,7 +114,7 @@ export class PaymentsService {
           paymentReference: reference,
           paymentPhone: phone,
           paymentStatus: status as PaymentStatus,
-          status: status === 'PAID' ? OrderStatus.CONFIRMED : OrderStatus.PENDING, // Update order status based on payment
+          status: OrderStatus.PENDING,
         },
       });
 
@@ -102,9 +124,7 @@ export class PaymentsService {
         update: {
           status: status as PaymentStatus,
           paymentReference: reference,
-          paidAt: status === 'PAID' ? new Date() : undefined,
-          receiptNumber: status === 'PAID' ? receiptNumber : undefined,
-          trackingLink: `/pay/${paymentNumber}`, // Example tracking link
+          trackingLink: this.buildDirectPaymentTrackingLink(paymentNumber),
         },
         create: {
           paymentNumber: paymentNumber,
@@ -119,9 +139,7 @@ export class PaymentsService {
           note: `Payment for order ${orderId}`,
           providerName: '543/cGrate',
           networkName: 'Mobile Money',
-          paidAt: status === 'PAID' ? new Date() : undefined,
-          receiptNumber: status === 'PAID' ? receiptNumber : undefined,
-          trackingLink: `/pay/${paymentNumber}`, // Example tracking link
+          trackingLink: this.buildDirectPaymentTrackingLink(paymentNumber),
         },
       });
 
@@ -145,7 +163,16 @@ export class PaymentsService {
     }
   }
 
-  async processDirectPayment(userId: string | null, phone: string | undefined, amountZMW: number, currency = 'ZMW', note?: string, paymentLinkId?: string) {
+  async processDirectPayment(
+    userId: string | null,
+    phone: string | undefined,
+    amountZMW: number,
+    currency = 'ZMW',
+    note?: string,
+    paymentLinkId?: string,
+    customerName?: string,
+    customerEmail?: string,
+  ) {
     this.logger.log(`=== Direct Payment (no order) for user: ${userId} ===`);
 
     if (paymentLinkId) {
@@ -153,12 +180,13 @@ export class PaymentsService {
     }
 
     const paymentNumber = `PAY-${Date.now().toString(36).toUpperCase()}`;
-    const receiptNumber = `REC-${Date.now().toString(36).toUpperCase()}`;
-    const trackingLink = `/pay/${paymentNumber}`;
+    const trackingLink = this.buildDirectPaymentTrackingLink(paymentNumber);
 
     const directPayment = await this.prisma.directPayment.create({
       data: {
         paymentNumber,
+        ...(customerName ? { customerName } : {}),
+        ...(customerEmail ? { customerEmail } : {}),
         ...(userId ? { userId } : {}),
         ...(paymentLinkId ? { paymentLinkId } : {}),
         amount: amountZMW,
@@ -216,8 +244,6 @@ export class PaymentsService {
 
       const isSuccess = txReturn.responseCode === 0 || txReturn.responseCode === '0';
       const status = isSuccess ? 'PENDING' : 'FAILED';
-      const paidAt = status === 'PAID' ? new Date() : undefined;
-      const receiptNumber = status === 'PAID' ? `REC-${Date.now().toString(36).toUpperCase()}` : undefined;
       const reference = txReturn.paymentID || transactionId;
 
       await this.prisma.directPayment.update({
@@ -225,8 +251,6 @@ export class PaymentsService {
         data: {
           paymentReference: reference,
           status: status as PaymentStatus,
-          paidAt: paidAt,
-          receiptNumber: receiptNumber,
         },
       });
 
@@ -256,7 +280,7 @@ export class PaymentsService {
     }
 
     const paymentNumber = `WA-${Date.now().toString(36).toUpperCase()}`;
-    const trackingLink = `/pay/${paymentNumber}`;
+    const trackingLink = this.buildDirectPaymentTrackingLink(paymentNumber);
     const directPayment = await this.prisma.directPayment.create({
       data: {
         paymentNumber,
@@ -330,7 +354,10 @@ export class PaymentsService {
     // Send notification if payment is paid or failed
     if (status === 'PAID' || status === 'FAILED') {
       const user = updatedPayment.userId ? await this.prisma.user.findUnique({ where: { id: updatedPayment.userId } }) : null;
-      const customerName = updatedPayment.customerName || user?.firstName + ' ' + user?.lastName || 'Customer';
+      const customerName =
+        updatedPayment.customerName ||
+        [user?.firstName, user?.lastName].filter(Boolean).join(' ').trim() ||
+        'Customer';
       const customerEmail = updatedPayment.customerEmail || user?.email;
       const customerPhone = updatedPayment.paymentPhone || user?.phone;
 
@@ -354,18 +381,27 @@ export class PaymentsService {
   }
 
   async checkDirectStatus(paymentId: string) {
-    const payment = await this.prisma.directPayment.findUnique({ where: { id: paymentId } });
+    const payment = await this.prisma.directPayment.findFirst({
+      where: {
+        OR: [
+          { id: paymentId },
+          { paymentNumber: paymentId },
+        ],
+      },
+    });
     if (!payment) return null;
 
     // If it's a WhatsApp payment, status is manual
     if (payment.paymentMethod === 'WHATSAPP') {
-      return { status: payment.status.toLowerCase(), trackingLink: payment.trackingLink };
+      return this.formatDirectPaymentResponse(payment);
     }
 
-    if (!payment.paymentReference) return null;
+    if (!payment.paymentReference) {
+      return this.formatDirectPaymentResponse(payment);
+    }
 
     if (payment.status === 'PAID' || payment.status === 'FAILED') {
-      return { status: payment.status.toLowerCase(), trackingLink: payment.trackingLink };
+      return this.formatDirectPaymentResponse(payment);
     }
 
     const username = this.configService.get('CGRATE_USERNAME');
@@ -401,17 +437,18 @@ export class PaymentsService {
             updateData.paidAt = new Date();
             updateData.receiptNumber = `REC-${Date.now().toString(36).toUpperCase()}`;
           }
-          await this.prisma.directPayment.update({
+          const updatedPayment = await this.prisma.directPayment.update({
             where: { id: paymentId },
             data: updateData,
           });
+          return this.formatDirectPaymentResponse(updatedPayment, newStatus);
         }
-        return { status: newStatus.toLowerCase() };
+        return this.formatDirectPaymentResponse(payment, newStatus);
       }
     } catch (error) {
       this.logger.error(`Status Check Error: ${error.message}`);
     }
-    return { status: payment.status.toLowerCase(), trackingLink: payment.trackingLink };
+    return this.formatDirectPaymentResponse(payment);
   }
 
   async checkStatus(orderId: string) {
