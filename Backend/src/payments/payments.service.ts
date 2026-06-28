@@ -29,14 +29,17 @@ export class PaymentsService {
   }
 
   private buildDirectPaymentTrackingLink(paymentNumber: string) {
-    return `/track?order=${encodeURIComponent(paymentNumber)}`;
+    return `/track-payment/${encodeURIComponent(paymentNumber)}`;
   }
 
   private formatDirectPaymentResponse(payment: any, overrideStatus?: string) {
+    const metadata = payment.metadata as any;
     return {
       id: payment.id,
       amount: Number(payment.amount ?? 0),
       currency: payment.currency,
+      originalAmount: metadata?.originalAmount ? Number(metadata.originalAmount) : Number(payment.amount ?? 0),
+      originalCurrency: metadata?.originalCurrency || payment.currency,
       status: String(overrideStatus || payment.status || 'PENDING').toLowerCase(),
       paymentNumber: payment.paymentNumber,
       paymentMethod: payment.paymentMethod,
@@ -172,6 +175,8 @@ export class PaymentsService {
     paymentLinkId?: string,
     customerName?: string,
     customerEmail?: string,
+    originalAmount?: number,
+    originalCurrency?: string,
   ) {
     this.logger.log(`=== Direct Payment (no order) for user: ${userId} ===`);
 
@@ -190,7 +195,7 @@ export class PaymentsService {
         ...(userId ? { userId } : {}),
         ...(paymentLinkId ? { paymentLinkId } : {}),
         amount: amountZMW,
-        currency,
+        currency: 'ZMW',
         note: note || 'Direct payment via Pay page',
         paymentMethod: 'MOBILE_MONEY',
         paymentPhone: phone,
@@ -198,6 +203,10 @@ export class PaymentsService {
         providerName: '543/cGrate',
         networkName: 'Mobile Money',
         trackingLink: trackingLink,
+        metadata: {
+          originalAmount: originalAmount || amountZMW,
+          originalCurrency: originalCurrency || currency,
+        }
       },
     });
 
@@ -272,6 +281,8 @@ export class PaymentsService {
     note?: string,
     reference?: string,
     paymentLinkId?: string,
+    originalAmount?: number,
+    originalCurrency?: string,
   ) {
     this.logger.log(`=== WhatsApp Direct Payment for user: ${userId}, ref: ${reference}`);
 
@@ -296,6 +307,10 @@ export class PaymentsService {
         providerName: 'WhatsApp',
         networkName: 'WhatsApp',
         trackingLink: trackingLink,
+        metadata: {
+          originalAmount: originalAmount || amountZMW,
+          originalCurrency: originalCurrency || currency,
+        }
       },
     });
 

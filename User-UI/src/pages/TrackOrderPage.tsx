@@ -318,15 +318,13 @@ export default function TrackOrderPage() {
                   </div>
                   {recentOrder.trackingLink && (
                     <div className="mb-4">
-                      <a
+                      <Link
                         href={recentOrder.trackingLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
                         className="flex items-center justify-center gap-2 w-full py-2 bg-primary/10 text-primary rounded-xl text-xs font-bold hover:bg-primary/20 transition-colors"
                       >
                         <LinkIcon className="w-4 h-4" />
                         View Payment Tracking Link
-                      </a>
+                      </Link>
                     </div>
                   )}
                   {/* Timeline */}

@@ -347,8 +347,10 @@ export default function PayPage() {
           currency: "ZMW",
           note: note || payRef,
           paymentLinkId: paymentLinkId || undefined,
-          customerName,
-          customerEmail,
+          customerName: customerName || receiptContact, // Use step 1 contact if step 2 name is empty
+          customerEmail: customerEmail,
+          originalAmount: total,
+          originalCurrency: currency,
         }),
       });
       const data = await res.json();
@@ -480,6 +482,8 @@ export default function PayPage() {
             note: note || `WhatsApp payment for ${currency} ${total.toFixed(2)}`,
             reference: payRef,
             paymentLinkId: paymentLinkId || undefined,
+            originalAmount: total,
+            originalCurrency: currency,
           }),
         });
         const data = await res.json();
@@ -786,7 +790,7 @@ export default function PayPage() {
 
                 {/* Phone Number input */}
                 <div>
-                  <label className="block text-sm font-bold mb-2 text-foreground">Phone Number</label>
+                  <label className="block text-sm font-bold mb-2 text-foreground">Phone Number to Charge</label>
                   <div
                     className="flex h-[52px] items-center rounded-xl border bg-card overflow-hidden"
                     style={{ borderColor: "hsl(var(--border))" }}
@@ -803,36 +807,13 @@ export default function PayPage() {
                     <input
                       value={mmPhone}
                       onChange={(e) => setMmPhone(e.target.value.replace(/[^0-9]/g, ""))}
-                      placeholder=""
+                      placeholder="Enter mobile money number"
                       inputMode="tel"
                       autoComplete="tel"
                       className="flex-1 h-full bg-transparent outline-none px-4 text-sm font-medium text-foreground"
                     />
                   </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="block text-sm font-bold mb-2 text-foreground" htmlFor="customerName">Your Name</label>
-                  <input
-                    id="customerName"
-                    type="text"
-                    placeholder="John Doe"
-                    value={customerName}
-                    onChange={(e) => setCustomerName(e.target.value)}
-                    className="flex-1 h-[52px] w-full rounded-xl border bg-card outline-none px-4 text-sm font-medium text-foreground"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="block text-sm font-bold mb-2 text-foreground" htmlFor="customerEmail">Your Email (Optional)</label>
-                  <input
-                    id="customerEmail"
-                    type="email"
-                    placeholder="john.doe@example.com"
-                    value={customerEmail}
-                    onChange={(e) => setCustomerEmail(e.target.value)}
-                    className="flex-1 h-[52px] w-full rounded-xl border bg-card outline-none px-4 text-sm font-medium text-foreground"
-                  />
+                  <p className="text-[10px] text-muted-foreground mt-1">This number will receive a payment prompt.</p>
                 </div>
               </div>
             )}

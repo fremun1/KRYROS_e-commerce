@@ -37,6 +37,7 @@ const ReturnsPage = lazy(() => import("@/pages/ReturnsPage"));
 const ShippingPage = lazy(() => import("@/pages/ShippingPage"));
 const SecurityPage = lazy(() => import("@/pages/SecurityPage"));
 const PayPage = lazy(() => import("@/pages/PayPage"));
+const TrackPaymentPage = lazy(() => import("@/pages/TrackPaymentPage"));
 const WishlistPage = lazy(() => import("@/pages/WishlistPage"));
 const ApplyCreditPage = lazy(() => import("@/pages/ApplyCreditPage"));
 const WholesaleCheckoutPage = lazy(
@@ -70,7 +71,8 @@ function WhatsAppFloatingButton() {
   const hide =
     ["/login", "/register", "/forgot-password"].includes(location) ||
     location === "/pay" ||
-    location.startsWith("/pay/");
+    location.startsWith("/pay/") ||
+    location.startsWith("/track-payment/");
   if (hide) return null;
 
   const message = encodeURIComponent("Hi KRYROS! I need some help 👋");
@@ -288,6 +290,7 @@ function AppRoutes() {
   const hideShell =
     location === "/pay" ||
     location.startsWith("/pay/") ||
+    location.startsWith("/track-payment/") ||
     [
       "/checkout",
       "/dashboard",
@@ -338,6 +341,7 @@ function AppRoutes() {
           <Route path="/security" component={SecurityPage} />
           <Route path="/pay/:linkId" component={PayPage} />
           <Route path="/pay" component={PayPage} />
+          <Route path="/track-payment/:paymentNumber" component={TrackPaymentPage} />
           <Route path="/wishlist" component={WishlistPage} />
           <Route path="/apply-credit" component={ApplyCreditPage} />
           <Route path="/wholesale-checkout" component={WholesaleCheckoutPage} />

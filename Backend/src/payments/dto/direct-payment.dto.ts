@@ -90,4 +90,14 @@ export class DirectPaymentDto {
   @IsString()
   @IsOptional()
   paymentLinkId?: string;
+
+  @ApiProperty({ description: 'Original amount before conversion', example: 20.00, required: false })
+  @IsNumber()
+  @IsOptional()
+  originalAmount?: number;
+
+  @ApiProperty({ description: 'Original currency before conversion', example: 'USD', required: false })
+  @IsString()
+  @IsOptional()
+  originalCurrency?: string;
 }

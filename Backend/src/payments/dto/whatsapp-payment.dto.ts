@@ -94,4 +94,14 @@ export class WhatsAppPaymentDto {
   @IsString()
   @IsOptional()
   paymentLinkId?: string;
+
+  @ApiProperty({ description: 'Original amount before conversion', required: false })
+  @IsNumber()
+  @IsOptional()
+  originalAmount?: number;
+
+  @ApiProperty({ description: 'Original currency before conversion', required: false })
+  @IsString()
+  @IsOptional()
+  originalCurrency?: string;
 }

@@ -39,6 +39,8 @@ export class PaymentsController {
       body.paymentLinkId,
       body.customerName,
       body.customerEmail,
+      body.originalAmount,
+      body.originalCurrency,
     );
   }
 
@@ -55,6 +57,8 @@ export class PaymentsController {
       body.note,
       body.reference,
       body.paymentLinkId,
+      body.originalAmount,
+      body.originalCurrency,
     );
   }
 
