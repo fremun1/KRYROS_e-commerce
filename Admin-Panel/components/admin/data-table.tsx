@@ -10,6 +10,23 @@ export interface Column {
   width?: string;
 }
 
+function looksLikeInternalId(value: string) {
+  return (
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value) ||
+    (value.length > 18 && /[a-z0-9-]{12,}/i.test(value))
+  );
+}
+
+function formatInternalId(value: unknown) {
+  const text = String(value ?? '').trim();
+  if (!text) return '-';
+  if (!looksLikeInternalId(text)) return text;
+
+  const clean = text.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+  if (!clean) return text;
+  return `ID-${clean.slice(-6)}`;
+}
+
 interface DataTableProps {
   columns: Column[];
   data: Record<string, unknown>[];
@@ -88,7 +105,11 @@ export default function DataTable({
                 onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
                 {columns.map((col) => (
                   <td key={col.key} style={{ padding: '12px 16px', fontSize: '13.5px', color: textMain, whiteSpace: 'nowrap' }}>
-                    {col.render ? col.render(row[col.key], row) : String(row[col.key] ?? '-')}
+                    {col.render
+                      ? col.render(row[col.key], row)
+                      : col.key === 'id'
+                        ? formatInternalId(row[col.key])
+                        : String(row[col.key] ?? '-')}
                   </td>
                 ))}
                 {hasActions && (
@@ -166,4 +187,3 @@ function PagBtn({ disabled, onClick, label, icon: Icon, surface, border, textMai
     </button>
   );
 }
-
