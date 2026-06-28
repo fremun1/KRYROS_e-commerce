@@ -2,7 +2,8 @@ import { useState, useRef, useEffect } from "react";
 import { Link, useLocation, useRoute } from "wouter";
 import {
   ChevronLeft, Lock, ChevronDown, X,
-  Smartphone, Check, Download, Info, AlertCircle
+  Smartphone, Check, Download, Info, AlertCircle,
+  User, Mail, Phone, MapPin, Globe, Home
 } from "lucide-react";
 import { API_BASE, fetchSettings } from "@/lib/api";
 import { useCurrencyStore } from "@/store/currencyStore";
@@ -146,8 +147,18 @@ export default function PayPage() {
 
   const [rawAmount, setRawAmount] = useState(urlAmount);
   const [note, setNote] = useState(urlNote);
-  const [receiptContact, setReceiptContact] = useState("");
   const [openMethod, setOpenMethod] = useState<string | null>(null);
+
+  // User Details for Notifications
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [address, setAddress] = useState("");
+  const [city, setCity] = useState("");
+  const [state, setState] = useState("");
+  const [zipCode, setZipCode] = useState("");
+  const [country, setCountry] = useState("");
 
   const amount = parseFloat(rawAmount) || 0;
   const feeRate = 0.03;
@@ -175,6 +186,10 @@ export default function PayPage() {
 
   const handleMobilePay = async () => {
     if (payLoading || !mmPhone.trim()) return;
+    if (!firstName || !lastName || !email || !phone) {
+      setPayError("Please fill in all contact details for notifications.");
+      return;
+    }
     setPayLoading(true); setPayError(null);
     try {
       const res = await fetch(`${API_BASE}/api/payments/pay-now`, {
@@ -182,7 +197,8 @@ export default function PayPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           amount: total, currency, phone: `260${mmPhone.replace(/^0/, "")}`,
-          provider: mmProvider, note, contact: receiptContact
+          provider: mmProvider, note, contact: email,
+          userDetails: { firstName, lastName, email, phone, address, city, state, zipCode, country }
         })
       });
       const data = await res.json();
@@ -193,7 +209,7 @@ export default function PayPage() {
   };
 
   const handleWhatsAppPay = () => {
-    const msg = encodeURIComponent(`*Payment Request*\nAmount: ${currency} ${total.toFixed(2)}\nRef: ${note || "None"}\nContact: ${receiptContact || "None"}`);
+    const msg = encodeURIComponent(`*Payment Request*\nAmount: ${currency} ${total.toFixed(2)}\nRef: ${note || "None"}\nCustomer: ${firstName} ${lastName}\nPhone: ${phone}\nEmail: ${email}`);
     window.open(`https://api.whatsapp.com/send?phone=${whatsappNumber}&text=${msg}`, "_blank");
   };
 
@@ -226,22 +242,37 @@ export default function PayPage() {
               </div>
               <input value={rawAmount} onChange={(e) => !isLinkedPayment && setRawAmount(e.target.value.replace(/[^0-9.]/g, ""))} readOnly={isLinkedPayment} placeholder="0.00" className="flex-1 text-right px-3 font-extrabold text-2xl bg-transparent outline-none" />
             </div>
-            {isLinkedPayment && <div className="rounded-xl px-3 py-2 text-sm border bg-primary/5 border-primary/20"><span className="font-bold">{linkedPaymentName}</span> · {currency} {rawAmount}</div>}
-            <div>
-              <p className="text-sm font-bold text-foreground mb-2">Reference (Optional)</p>
-              <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Enter reference" className="w-full h-[46px] rounded-xl border border-border px-3 bg-card text-sm outline-none" />
+
+            <div className="space-y-3 pt-2">
+              <p className="text-sm font-bold text-foreground">Personal Information</p>
+              <div className="grid grid-cols-2 gap-3">
+                <input value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="First Name" className="w-full h-[46px] rounded-xl border border-border px-3 bg-card text-sm outline-none" />
+                <input value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Last Name" className="w-full h-[46px] rounded-xl border border-border px-3 bg-card text-sm outline-none" />
+              </div>
+              <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email Address" className="w-full h-[46px] rounded-xl border border-border px-3 bg-card text-sm outline-none" />
+              <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone Number" className="w-full h-[46px] rounded-xl border border-border px-3 bg-card text-sm outline-none" />
             </div>
-            <div>
-              <p className="text-sm font-bold text-foreground mb-2">Receipt Contact (Optional)</p>
-              <input value={receiptContact} onChange={(e) => setReceiptContact(e.target.value)} placeholder="Phone or Email" className="w-full h-[46px] rounded-xl border border-border px-3 bg-card text-sm outline-none" />
+
+            <div className="space-y-3 pt-2">
+              <p className="text-sm font-bold text-foreground">Location Details</p>
+              <input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Street Address" className="w-full h-[46px] rounded-xl border border-border px-3 bg-card text-sm outline-none" />
+              <div className="grid grid-cols-2 gap-3">
+                <input value={city} onChange={(e) => setCity(e.target.value)} placeholder="City" className="w-full h-[46px] rounded-xl border border-border px-3 bg-card text-sm outline-none" />
+                <input value={state} onChange={(e) => setState(e.target.value)} placeholder="State" className="w-full h-[46px] rounded-xl border border-border px-3 bg-card text-sm outline-none" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <input value={zipCode} onChange={(e) => setZipCode(e.target.value)} placeholder="Postal Code" className="w-full h-[46px] rounded-xl border border-border px-3 bg-card text-sm outline-none" />
+                <input value={country} onChange={(e) => setCountry(e.target.value)} placeholder="Country" className="w-full h-[46px] rounded-xl border border-border px-3 bg-card text-sm outline-none" />
+              </div>
             </div>
+
             <div className="bg-card rounded-xl border border-border p-4 shadow-sm space-y-2">
               <div className="flex justify-between text-sm font-semibold text-muted-foreground"><span>Amount</span><span>{currency} {amount.toFixed(2)}</span></div>
               <div className="flex justify-between text-sm font-semibold text-muted-foreground"><span>Fee (3%)</span><span>{currency} {fee.toFixed(2)}</span></div>
               <div className="h-px bg-border" />
               <div className="flex justify-between font-black text-foreground"><span>Total Payable</span><span className="text-lg text-primary">{currency} {total.toFixed(2)}</span></div>
             </div>
-            <button onClick={() => amount > 0 && setStep(2)} disabled={amount <= 0} className="w-full h-[52px] rounded-xl bg-primary text-white font-extrabold text-base transition-all active:scale-95 disabled:opacity-50">Pay Now</button>
+            <button onClick={() => amount > 0 && setStep(2)} disabled={amount <= 0} className="w-full h-[52px] rounded-xl bg-primary text-white font-extrabold text-base transition-all active:scale-95 disabled:opacity-50">Continue to Payment</button>
           </div>
         ) : (
           <div className="px-4 space-y-5">

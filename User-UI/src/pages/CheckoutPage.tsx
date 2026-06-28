@@ -23,8 +23,42 @@ import {
   Globe,
   ChevronDown,
   Package,
+  Mail,
+  Phone,
+  Home,
   X,
 } from "lucide-react";
+
+const DIAL_COUNTRIES = [
+  { name: "Zambia",       code: "ZM", dial: "+260" },
+  { name: "Zimbabwe",     code: "ZW", dial: "+263" },
+  { name: "South Africa", code: "ZA", dial: "+27"  },
+  { name: "Kenya",        code: "KE", dial: "+254" },
+  { name: "Nigeria",      code: "NG", dial: "+234" },
+  { name: "Ghana",        code: "GH", dial: "+233" },
+  { name: "Tanzania",     code: "TZ", dial: "+255" },
+  { name: "Uganda",       code: "UG", dial: "+256" },
+  { name: "Malawi",       code: "MW", dial: "+265" },
+  { name: "Mozambique",   code: "MZ", dial: "+258" },
+  { name: "Botswana",     code: "BW", dial: "+267" },
+  { name: "Namibia",      code: "NA", dial: "+264" },
+  { name: "Rwanda",       code: "RW", dial: "+250" },
+  { name: "Ethiopia",     code: "ET", dial: "+251" },
+  { name: "DR Congo",     code: "CD", dial: "+243" },
+  { name: "Cameroon",     code: "CM", dial: "+237" },
+  { name: "Senegal",      code: "SN", dial: "+221" },
+  { name: "Ivory Coast",  code: "CI", dial: "+225" },
+  { name: "Angola",       code: "AO", dial: "+244" },
+  { name: "United Kingdom", code: "GB", dial: "+44" },
+  { name: "United States", code: "US", dial: "+1"  },
+  { name: "Canada",       code: "CA", dial: "+1"   },
+  { name: "Germany",      code: "DE", dial: "+49"  },
+  { name: "France",       code: "FR", dial: "+33"  },
+  { name: "China",        code: "CN", dial: "+86"  },
+  { name: "India",        code: "IN", dial: "+91"  },
+  { name: "Australia",    code: "AU", dial: "+61"  },
+  { name: "UAE",          code: "AE", dial: "+971" },
+];
 
 const DEFAULT_CHECKOUT_METHODS = [
   { id: "mobile",   label: "Mobile Money",   sub: "MTN, Airtel, Zamtel",       icon: Smartphone, iconBg: "bg-primary/10" },
@@ -93,11 +127,17 @@ export default function CheckoutPage() {
   const pollRef     = useRef<ReturnType<typeof setInterval> | null>(null);
   const [whatsappNumber, setWhatsappNumber] = useState(import.meta.env.VITE_WHATSAPP_NUMBER || "260969597029");
 
-  // Simplified Shipping Information (Section 1)
+  // Full Shipping Information (Section 1)
   const [firstName,     setFirstName]     = useState(authUser?.firstName ?? "");
   const [lastName,      setLastName]      = useState(authUser?.lastName ?? "");
+  const [email,         setEmail]         = useState(authUser?.email ?? "");
+  const [phone,         setPhone]         = useState("");
+  const [phoneCountry,  setPhoneCountry]  = useState(DIAL_COUNTRIES[0]);
   const [country,      setCountry]     = useState("");
   const [state,        setState]       = useState("");
+  const [city,         setCity]        = useState("");
+  const [addressLine,  setAddressLine] = useState("");
+  const [zipCode,      setZipCode]     = useState("");
 
   // Pickup Station (Section 2)
   const [pickupStations, setPickupStations] = useState<PickupStation[]>([]);
@@ -212,6 +252,7 @@ export default function CheckoutPage() {
 
   const buildTrackingPath = (orderNumber: string) => {
     const params = new URLSearchParams({ orderNumber });
+    if (email.trim()) params.set("email", email.trim());
     return `/track?${params.toString()}`;
   };
 
@@ -238,9 +279,10 @@ export default function CheckoutPage() {
     exchangeRate: selectedCurrency.exchangeRate,
     ...(openMethod === "mobile" && mmProvider ? { notes: `Mobile money provider: ${mmProvider}` } : {}),
     addressDetails: {
-      firstName, lastName,
-      address: `${state}, ${country}`,
-      countryName: country, stateName: state || undefined, manual: true,
+      email, firstName, lastName, phone: `${phoneCountry.dial}${phone}`,
+      address: addressLine || `${city}, ${state}, ${country}`,
+      zipCode: zipCode || undefined,
+      countryName: country, stateName: state || undefined, cityName: city || undefined, manual: true,
       pickupStationId: pickupStationId || undefined,
     },
   });
@@ -280,8 +322,10 @@ export default function CheckoutPage() {
   const validateShippingInfo = () => {
     if (!firstName.trim()) { toast.error("Please enter your first name"); return false; }
     if (!lastName.trim())  { toast.error("Please enter your last name");  return false; }
+    if (!email.trim() && !phone.trim()) { toast.error("Please provide at least an email or phone number"); return false; }
     if (!country) { toast.error("Please select a country"); return false; }
-    if (!state.trim()) { toast.error("Please enter your province / state"); return false; }
+    if (!city.trim()) { toast.error("Please enter your city"); return false; }
+    if (!addressLine.trim()) { toast.error("Please enter your address"); return false; }
     return true;
   };
 
@@ -351,10 +395,12 @@ export default function CheckoutPage() {
         const itemsList = cartItems.map((i) => `• ${i.qty}× ${i.name}`).join("\n");
         const deliveryText = pickupStationId
           ? `Pickup Station: ${selectedStation?.name || "Selected pickup station"}`
-          : `Delivery: ${state}, ${country}`;
+          : `Delivery Address: ${addressLine}, ${city}, ${state}, ${country}`;
         const msg =
           `*New Order:* ${orderNum}\n\n` +
-          `*Customer:* ${firstName} ${lastName}\n\n` +
+          `*Customer:* ${firstName} ${lastName}\n` +
+          `*Phone:* ${phoneCountry.dial}${phone}\n` +
+          `*Email:* ${email}\n\n` +
           `*Item:* ${itemsList.replace(/• /g, "")}\n` +
           `*Total:* ${format(total)}\n\n` +
           `*Payment:* WhatsApp Payment\n` +
@@ -464,24 +510,67 @@ export default function CheckoutPage() {
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <label className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground"><User className="w-3 h-3" />First Name</label>
-                <input value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="Enter first name" className="w-full px-3.5 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
+                <input value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="First Name" className="w-full px-3.5 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
               </div>
               <div className="space-y-1.5">
                 <label className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground"><User className="w-3 h-3" />Last Name</label>
-                <input value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Enter last name" className="w-full px-3.5 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
+                <input value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Last Name" className="w-full px-3.5 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground"><Phone className="w-3 h-3" />Phone Number</label>
+              <div className="flex gap-1.5">
+                <div className="w-[88px] rounded-xl border border-border bg-muted/40 flex items-center flex-shrink-0 overflow-hidden">
+                  <select
+                    value={phoneCountry.dial}
+                    onChange={(e) => {
+                      const nextValue = e.target.value;
+                      const match = DIAL_COUNTRIES.find((c) => c.dial === nextValue);
+                      if (match) setPhoneCountry(match);
+                    }}
+                    className="w-full px-3 py-3 bg-transparent text-sm font-semibold text-foreground outline-none"
+                  >
+                    {DIAL_COUNTRIES.map((c) => (
+                      <option key={c.code} value={c.dial}>{c.code} {c.dial}</option>
+                    ))}
+                  </select>
+                </div>
+                <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone Number" type="tel" className="flex-1 min-w-0 px-3.5 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground"><Mail className="w-3 h-3" />Email Address</label>
+              <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="Email Address" className="w-full px-3.5 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground"><MapPin className="w-3 h-3" />Street Address</label>
+              <input value={addressLine} onChange={(e) => setAddressLine(e.target.value)} placeholder="Street Address" className="w-full px-3.5 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <label className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground"><Home className="w-3 h-3" />City</label>
+                <input value={city} onChange={(e) => setCity(e.target.value)} placeholder="City" className="w-full px-3.5 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
+              </div>
+              <div className="space-y-1.5">
+                <label className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground"><MapPin className="w-3 h-3" />State / Province</label>
+                <input value={state} onChange={(e) => setState(e.target.value)} placeholder="State" className="w-full px-3.5 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <label className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground"><MapPin className="w-3 h-3" />Province / State</label>
-                <input value={state} onChange={(e) => setState(e.target.value)} placeholder="Enter province / state" className="w-full px-3.5 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
+                <label className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground"><Mail className="w-3 h-3" />Postal Code</label>
+                <input value={zipCode} onChange={(e) => setZipCode(e.target.value)} placeholder="Postal Code" className="w-full px-3.5 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
               </div>
               <div className="space-y-1.5">
                 <label className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground"><Globe className="w-3 h-3" />Country</label>
                 <Select value={country} onValueChange={setCountry}>
                   <SelectTrigger className="h-[46px] rounded-xl border-border bg-background px-3.5 text-sm shadow-none focus:ring-2 focus:ring-primary/40 focus:border-primary">
-                    <SelectValue placeholder="Select country" />
+                    <SelectValue placeholder="Country" />
                   </SelectTrigger>
                   <SelectContent className="rounded-xl border-border">
                     {shippingCountries.length > 0 ? (
@@ -624,7 +713,7 @@ export default function CheckoutPage() {
                     )}
                   </div>
                   <div className="space-y-1.5">
-                    <label className="block text-[11px] font-semibold text-muted-foreground">Phone Number</label>
+                    <label className="block text-[11px] font-semibold text-muted-foreground">Mobile Money Number</label>
                     <div className="flex gap-2">
                       <div className="w-14 h-11 rounded-xl border border-border bg-muted/40 flex items-center justify-center text-sm font-bold text-foreground flex-shrink-0">+260</div>
                       <input value={mmPhone} onChange={(e) => setMmPhone(e.target.value)} placeholder="97XXXXXXX" type="tel" className="flex-1 px-3.5 py-2.5 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
