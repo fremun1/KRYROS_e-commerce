@@ -490,7 +490,7 @@ export default function PayPage() {
         if (!res.ok) throw new Error(data.message || "Failed to create payment record");
         const trackingUrl = data.trackingLink ? `${window.location.origin}${data.trackingLink}` : "";
         const msg = encodeURIComponent(
-          `*New Payment Request: ${data.paymentNumber || payRef}*\n\n` +
+          `*New Payment Request:* ${data.paymentNumber || payRef}\n\n` +
           `*Customer:* ${customerName || receiptContact || "Valued Customer"}\n` +
           `*Phone:* ${receiptContact || "Not provided"}\n` +
           `*Email:* ${customerEmail || "Not provided"}\n\n` +

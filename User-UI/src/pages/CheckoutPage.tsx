@@ -314,7 +314,9 @@ export default function CheckoutPage() {
   const activeCheckoutMethods = [...DEFAULT_CHECKOUT_METHODS];
 
   const buildTrackingPath = (orderNumber: string) => {
-    return `/track-payment/${encodeURIComponent(orderNumber)}`;
+    const params = new URLSearchParams({ orderNumber });
+    if (email.trim()) params.set("email", email.trim());
+    return `/track?${params.toString()}`;
   };
 
   const buildTrackingUrl = (orderNumber: string) => {
@@ -458,11 +460,11 @@ export default function CheckoutPage() {
           ? `Pickup Station: ${selectedStation?.name || "Selected pickup station"}`
           : `Delivery Address: ${addressLine}, ${city}${state ? `, ${state}` : ""}, ${country}`;
         const msg =
-          `*New Order: ${orderNum}*\n\n` +
+          `*New Order:* ${orderNum}\n\n` +
           `*Customer:* ${firstName} ${lastName}\n` +
           `*Phone:* ${phone || "No phone provided"}\n` +
           `*Email:* ${email || "No email provided"}\n\n` +
-          `*Items:*\n${itemsList}\n\n` +
+          `*Item:* ${itemsList.replace(/• /g, "")}\n` +
           `*Total:* ${format(total)}\n\n` +
           `*Payment:* WhatsApp Payment\n` +
           `*Delivery:* ${deliveryText}\n\n` +
