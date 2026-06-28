@@ -3,8 +3,7 @@ import { Link, useLocation, useRoute } from "wouter";
 import {
   ChevronLeft, Lock, ChevronDown, X,
   Smartphone, Check, Download, Info, AlertCircle,
-  User, Mail, Phone, MapPin, Globe, Home,
-  CreditCard, Building2
+  User, Mail, Phone
 } from "lucide-react";
 import { API_BASE, fetchSettings } from "@/lib/api";
 import { useCurrencyStore } from "@/store/currencyStore";
@@ -25,8 +24,6 @@ function MethodIconInner({ type }: { type: string }) {
       <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
     </svg>
   );
-  if (type === "card") return <CreditCard className="w-6 h-6 text-blue-500" />;
-  if (type === "bank") return <Building2 className="w-6 h-6 text-slate-500" />;
   return null;
 }
 
@@ -147,12 +144,6 @@ export default function PayPage() {
         const whatsapp = arr.find((m: any) => m.type === "whatsapp" && m.isEnabled);
         if (whatsapp) methods.push({ id: "whatsapp", label: "WhatsApp", sub: "Pay on WhatsApp", icon: "whatsapp" });
 
-        const card = arr.find((m: any) => m.type === "card" && m.isEnabled);
-        if (card) methods.push({ id: "card", label: "Card", sub: "Visa, Mastercard", icon: "card" });
-
-        const bank = arr.find((m: any) => m.type === "bank" && m.isEnabled);
-        if (bank) methods.push({ id: "bank", label: "Bank", sub: "Bank Transfer", icon: "bank" });
-
         setActiveMethods(methods);
         if (methods.length > 0) setOpenMethod(methods[0].id);
       })
@@ -184,11 +175,6 @@ export default function PayPage() {
   const [phone, setPhone] = useState("");
   const [dialCode, setDialCode] = useState("+260");
   const [showDialDrop, setShowDialDrop] = useState(false);
-  const [address, setAddress] = useState("");
-  const [city, setCity] = useState("");
-  const [state, setState] = useState("");
-  const [zipCode, setZipCode] = useState("");
-  const [country, setCountry] = useState("");
 
   const amount = parseFloat(rawAmount) || 0;
   const [feeRate, setFeeRate] = useState(0.03);
@@ -227,7 +213,7 @@ export default function PayPage() {
         body: JSON.stringify({
           amount: total, currency, phone: `260${mmPhone.replace(/^0/, "")}`,
           provider: mmProvider, note, contact: email,
-          userDetails: { firstName, lastName, email, phone: `${dialCode}${phone}`, address, city, state, zipCode, country }
+          userDetails: { firstName, lastName, email, phone: `${dialCode}${phone}` }
         })
       });
       const data = await res.json();
@@ -245,7 +231,6 @@ export default function PayPage() {
       window.open(`https://api.whatsapp.com/send?phone=${whatsappNumber}&text=${msg}`, "_blank");
       return;
     }
-    setPayError(`${openMethod?.toUpperCase()} payment is being processed. Our team will contact you.`);
   };
 
   if (receipt) return <ReceiptScreen receipt={receipt} onClose={() => setReceipt(null)} />;
@@ -271,7 +256,7 @@ export default function PayPage() {
               <p className="text-sm font-bold text-foreground">Amount</p>
               <div className="flex h-[52px] rounded-xl bg-card border border-border overflow-hidden shadow-sm">
                 <div className="min-w-[96px] flex items-center justify-center border-r border-border font-bold text-kryros-primary text-base gap-2">
-                  <select value={currency} onChange={(e) => setGlobalCurrency(e.target.value)} disabled={isLinkedPayment} className="bg-transparent font-bold outline-none">
+                  <select value={currency} onChange={(e) => setGlobalCurrency(e.target.value)} disabled={isLinkedPayment} className="bg-transparent font-bold outline-none cursor-pointer">
                     {CURRENCIES.map(c => <option key={c.code} value={c.code}>{c.code}</option>)}
                   </select>
                   <ChevronDown className="w-4 h-4" />
@@ -310,19 +295,6 @@ export default function PayPage() {
                   )}
                 </div>
                 <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone Number" className="flex-1 h-[46px] rounded-xl border border-border px-3 bg-card text-sm outline-none focus:ring-2 focus:ring-primary/40" />
-              </div>
-            </div>
-
-            <div className="space-y-3 pt-2">
-              <p className="text-sm font-bold text-foreground">Location Details</p>
-              <input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Street Address" className="w-full h-[46px] rounded-xl border border-border px-3 bg-card text-sm outline-none focus:ring-2 focus:ring-primary/40" />
-              <div className="grid grid-cols-2 gap-3">
-                <input value={city} onChange={(e) => setCity(e.target.value)} placeholder="City" className="w-full h-[46px] rounded-xl border border-border px-3 bg-card text-sm outline-none focus:ring-2 focus:ring-primary/40" />
-                <input value={state} onChange={(e) => setState(e.target.value)} placeholder="State" className="w-full h-[46px] rounded-xl border border-border px-3 bg-card text-sm outline-none focus:ring-2 focus:ring-primary/40" />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <input value={zipCode} onChange={(e) => setZipCode(e.target.value)} placeholder="Postal Code" className="w-full h-[46px] rounded-xl border border-border px-3 bg-card text-sm outline-none focus:ring-2 focus:ring-primary/40" />
-                <input value={country} onChange={(e) => setCountry(e.target.value)} placeholder="Country" className="w-full h-[46px] rounded-xl border border-border px-3 bg-card text-sm outline-none focus:ring-2 focus:ring-primary/40" />
               </div>
             </div>
 
@@ -369,11 +341,6 @@ export default function PayPage() {
             {openMethod === "whatsapp" && (
               <div className="pt-2">
                 <button onClick={handleOtherPay} className="w-full h-[52px] rounded-xl bg-[#25D366] text-white font-bold transition-all active:scale-95">Pay via WhatsApp</button>
-              </div>
-            )}
-            {(openMethod === "card" || openMethod === "bank") && (
-              <div className="pt-2">
-                <button onClick={handleOtherPay} className="w-full h-[52px] rounded-xl bg-primary text-white font-bold transition-all active:scale-95">{`Pay via ${openMethod.toUpperCase()}`}</button>
               </div>
             )}
           </div>
