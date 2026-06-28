@@ -403,6 +403,7 @@ export class PaymentsService {
         OR: [
           { id: paymentId },
           { paymentNumber: paymentId },
+          { order: { orderNumber: paymentId } },
         ],
       },
     });

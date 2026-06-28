@@ -314,9 +314,7 @@ export default function CheckoutPage() {
   const activeCheckoutMethods = [...DEFAULT_CHECKOUT_METHODS];
 
   const buildTrackingPath = (orderNumber: string) => {
-    const params = new URLSearchParams({ orderNumber });
-    if (email.trim()) params.set("email", email.trim());
-    return `/track?${params.toString()}`;
+    return `/track-payment/${encodeURIComponent(orderNumber)}`;
   };
 
   const buildTrackingUrl = (orderNumber: string) => {
@@ -417,7 +415,7 @@ export default function CheckoutPage() {
       setSavedCartItems([...cartItems]);
       setMmPhase("initializing");
       try {
-        const initRes = await fetch(`${API_BASE}/api/payments/initialize`, { method: "POST", headers, body: JSON.stringify({ orderId, phone: mmPhone, amount: Math.round(totalLocal * 100) / 100 }) });
+        const initRes = await fetch(`${API_BASE}/api/payments/initialize`, { method: "POST", headers, body: JSON.stringify({ orderId, phone: `260${mmPhone.replace(/^0/, "")}`, amount: Math.round(totalLocal * 100) / 100 }) });
         if (!initRes.ok) { setMmPhase("failed_init"); setIsSubmitting(false); return; }
         setMmPhase("waiting");
         startPolling(orderId, orderNum);
