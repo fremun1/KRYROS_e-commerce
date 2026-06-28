@@ -74,6 +74,7 @@ export class PaymentsService {
     }
 
     let formattedPhone = phone.replace(/\D/g, '');
+    // Normalize to local Zambian format (09... or 07...) for 543/cGrate
     if (formattedPhone.startsWith('260')) {
       formattedPhone = '0' + formattedPhone.substring(3);
     } else if (!formattedPhone.startsWith('0')) {
@@ -231,6 +232,7 @@ export class PaymentsService {
     }
 
     let formattedPhone = phone.replace(/\D/g, '');
+    // Normalize to local Zambian format (09... or 07...) for 543/cGrate
     if (formattedPhone.startsWith('260')) {
       formattedPhone = '0' + formattedPhone.substring(3);
     } else if (!formattedPhone.startsWith('0')) {

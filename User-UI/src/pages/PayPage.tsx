@@ -342,7 +342,7 @@ export default function PayPage() {
         method: "POST",
         headers: { "Content-Type": "application/json", ...(token && { Authorization: `Bearer ${token}` }) },
         body: JSON.stringify({
-          phone: mmPhone,
+          phone: `260${mmPhone.replace(/^0/, "")}`,
           amount: totalZMW,
           currency: "ZMW",
           note: note || payRef,
