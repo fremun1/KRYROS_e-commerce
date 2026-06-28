@@ -144,8 +144,7 @@ function WalletPaymentsContent() {
     input: dark ? '#0D1523' : '#FFFFFF',
   };
 
-const role = normalizeRole(user?.role);
-  const canManage = !!user;
+  const canManage = true;
 
   type Tab = 'transactions' | 'links' | 'methods';
   const [activeTab, setActiveTab] = useState<Tab>('transactions');
