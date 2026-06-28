@@ -177,7 +177,7 @@ export default function Header() {
                         </button>
                       </Link>
                       {headerCategories.map(cat => (
-                        <Link key={cat.id} href={`/shop?category=${encodeURIComponent(cat.slug || String(cat.id))}`} onClick={() => setCatMenuOpen(false)}>
+                        <Link key={cat.id} href={`/shop?cat=${encodeURIComponent(cat.slug || String(cat.id))}`} onClick={() => setCatMenuOpen(false)}>
                           <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-muted transition-colors text-left">
                             {cat.image ? (
                               <img src={cat.image} alt={cat.name} className="w-8 h-8 rounded-lg object-cover flex-shrink-0" />

@@ -56,12 +56,15 @@ export default function ShopPage() {
 
   // Read brand query from URL (?brand=...) — reacts to URL changes without refresh
   useEffect(() => {
-    const catParam = new URLSearchParams(search).get("cat");
+    const params = new URLSearchParams(search);
+    const catParam = params.get("cat") || params.get("category");
     if (catParam) {
       setSelectedCat(decodeURIComponent(catParam));
+    } else {
+      setSelectedCat("All");
     }
 
-    const brandParam = new URLSearchParams(search).get("brand");
+    const brandParam = params.get("brand");
     if (brandParam) {
       setActiveBrandPanel(decodeURIComponent(brandParam));
     } else {
