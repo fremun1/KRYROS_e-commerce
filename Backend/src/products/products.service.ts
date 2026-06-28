@@ -476,6 +476,7 @@ export class ProductsService {
         },
       }).catch(() => null);
 
+      await this.cacheManager.reset();
       return this.findById(product.id);
     } catch (error) {
       throw error;
@@ -618,6 +619,7 @@ export class ProductsService {
         },
       }).catch(() => null);
 
+      await this.cacheManager.reset();
       return this.findById(product.id);
     } catch (error) {
       throw error;
@@ -799,6 +801,7 @@ export class ProductsService {
       }
     }
 
+    await this.cacheManager.reset();
     await this.cacheManager.reset();
     return this.findById(id);
   }

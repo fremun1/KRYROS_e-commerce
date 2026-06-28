@@ -93,22 +93,23 @@ function DashboardContent() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [totalOrders, setTotalOrders] = useState(0);
   const [report, setReport]       = useState<any>(null);
+  const [selectedMonth, setSelectedMonth] = useState(() => new Date().toISOString().slice(0, 7));
+  const [availableMonths, setAvailableMonths] = useState<Array<{ value: string; label: string }>>([]);
   const [isDashboardLoading, setIsDashboardLoading] = useState(true);
 
   useEffect(() => {
     setIsDashboardLoading(true);
-    // Fire all 4 requests in parallel — reduces total wait to the slowest one
     Promise.allSettled([
       getRecentOrders(5),
       getTopProducts(5),
       getRecentCustomers(5),
-      getReportsSummary("year"),
+      getReportsSummary("month", selectedMonth),
     ]).then(([ordersRes, productsRes, customersRes, reportRes]) => {
       if (ordersRes.status === "fulfilled") {
         const data = ordersRes.value.data?.data || ordersRes.value.data || [];
         const meta = ordersRes.value.data?.meta || {};
         setOrders(Array.isArray(data) ? data.slice(0, 5) : []);
-        if (meta.total) setTotalOrders(meta.total);
+        if (meta.total !== undefined) setTotalOrders(meta.total);
       }
       if (productsRes.status === "fulfilled") {
         const data = productsRes.value.data?.data || productsRes.value.data || [];
@@ -121,10 +122,11 @@ function DashboardContent() {
       if (reportRes.status === "fulfilled") {
         const d = reportRes.value.data;
         setReport(d);
-        if (d?.stats?.totalOrders) setTotalOrders(d.stats.totalOrders);
+        setAvailableMonths(Array.isArray(d?.availableMonths) ? d.availableMonths : []);
+        if (d?.stats?.totalOrders !== undefined) setTotalOrders(d.stats.totalOrders);
       }
     }).finally(() => setIsDashboardLoading(false));
-  }, []);
+  }, [selectedMonth]);
 
   const cardStyle = (extra?: React.CSSProperties): React.CSSProperties => ({
     background: card, border: `1px solid ${border}`, borderRadius: 12, overflow: "hidden", minWidth: 0, ...extra,
@@ -136,17 +138,18 @@ function DashboardContent() {
 
   const totalRevenue     = report?.stats?.totalRevenue    ?? 0;
   const totalOrdersCount = report?.stats?.totalOrders     ?? totalOrders;
-  const totalUsersCount  = report?.stats?.activeUsers     ?? 0;
+  const totalUsersCount  = report?.stats?.newCustomers    ?? 0;
   const creditDisbursed  = report?.stats?.creditDisbursed ?? 0;
   const totalOutstanding = report?.credit?.totalOutstanding ?? 0;
+  const selectedLabel = report?.selectedLabel || "This Month";
 
   const CHART_COLORS = ["#1FA89A","#6366f1","#FFC107","#f59e0b","#64748b","#ec4899"];
 
   // Sales area chart data — real monthly series from reports
-  const salesData: Array<{ date: string; sales: number }> = report?.revenueSeries?.length > 0
-    ? report.revenueSeries.map((s: any) => ({ date: String(s.label), sales: Number(s.revenue || 0) }))
+  const salesData: Array<{ date: string; sales: number; customers: number }> = report?.revenueSeries?.length > 0
+    ? report.revenueSeries.map((s: any) => ({ date: String(s.label), sales: Number(s.revenue || 0), customers: Number(s.customers || 0) }))
     : [{ date: "Jan", sales: 0 }, { date: "Feb", sales: 0 }, { date: "Mar", sales: 0 },
-       { date: "Apr", sales: 0 }, { date: "May", sales: 0 }, { date: "Jun", sales: 0 }];
+       { date: "Apr", sales: 0 }, { date: "May", sales: 0 }, { date: "Jun", sales: 0 }].map((item) => ({ ...item, customers: 0 }));
 
   // Pie chart data — real sales by category
   const channelData: Array<{ name: string; value: number; amount: number; color: string }> = report?.salesByCategory?.length > 0
@@ -184,10 +187,10 @@ function DashboardContent() {
 
   // KPI cards with real data
   const kpiCards = [
-    { label: "Total Revenue",    value: fmt(totalRevenue),         change: "YTD",  up: true,  Icon: DollarSign,   color: "#1FA89A", spark: salesData.slice(-7).map(s => s.sales) },
-    { label: "Total Orders",     value: String(totalOrdersCount),  change: "YTD",  up: true,  Icon: ShoppingCart, color: "#f59e0b", spark: [20,45,35,60,45,70,85] },
-    { label: "Total Customers",  value: String(totalUsersCount),   change: "All",  up: true,  Icon: UserPlus,     color: "#6366f1", spark: [10,15,20,18,25,30,35] },
-    { label: "Credit Disbursed", value: fmt(creditDisbursed),      change: "All",  up: true,  Icon: CreditCard,   color: "#FFC107", spark: [5,8,6,10,9,12,15] },
+    { label: "Monthly Revenue",  value: fmt(totalRevenue),         change: `${report?.stats?.revenueGrowth ?? 0}%`,   up: (report?.stats?.revenueGrowth ?? 0) >= 0,  Icon: DollarSign,   color: "#1FA89A", spark: salesData.slice(-7).map(s => s.sales) },
+    { label: "Monthly Orders",   value: String(totalOrdersCount),  change: `${report?.stats?.ordersGrowth ?? 0}%`,    up: (report?.stats?.ordersGrowth ?? 0) >= 0,   Icon: ShoppingCart, color: "#f59e0b", spark: salesData.slice(-7).map(s => s.sales) },
+    { label: "New Customers",    value: String(totalUsersCount),   change: `${report?.stats?.customersGrowth ?? 0}%`, up: (report?.stats?.customersGrowth ?? 0) >= 0, Icon: UserPlus,     color: "#6366f1", spark: salesData.map(s => s.customers || 0).slice(-7) },
+    { label: "Credit Disbursed", value: fmt(creditDisbursed),      change: selectedLabel,                               up: true,                                              Icon: CreditCard,   color: "#FFC107", spark: [5,8,6,10,9,12,15] },
     { label: "Outstanding",      value: fmt(totalOutstanding),     change: "Live", up: false, Icon: Wallet,       color: "#ef4444", spark: [5,5,5,5,5,5,5] },
   ];
 
@@ -216,7 +219,18 @@ function DashboardContent() {
         <div className="dash-top">
           <div style={{ marginBottom: 20 }}>
             <h1 style={{ fontSize: 20, fontWeight: 800, color: textMain, marginBottom: 4 }}>Welcome back, Admin! 👋</h1>
-            <p style={{ fontSize: 13, color: textMuted }}>Here&apos;s what&apos;s happening with your business this year.</p>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+              <p style={{ fontSize: 13, color: textMuted }}>Here&apos;s what&apos;s happening for {selectedLabel.toLowerCase()}.</p>
+              <select
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(e.target.value)}
+                style={{ background: surface, color: textMain, border: `1px solid ${border}`, borderRadius: 8, padding: "6px 10px", fontSize: 12, fontWeight: 600 }}
+              >
+                {(availableMonths.length > 0 ? availableMonths : [{ value: selectedMonth, label: selectedLabel }]).map((month) => (
+                  <option key={month.value} value={month.value}>{month.label}</option>
+                ))}
+              </select>
+            </div>
           </div>
 
           {/* KPI cards row */}
@@ -240,7 +254,7 @@ function DashboardContent() {
                     <div>
                       <div style={{ fontSize: 17, fontWeight: 800, color: textMain, lineHeight: 1 }}>{value}</div>
                       <div style={{ fontSize: 10, color: textMuted, marginTop: 3 }}>
-                        {label === "Total Revenue" || label === "Total Orders" ? "This year" : label === "Total Customers" ? "All users" : ""}
+                        {label === "Monthly Revenue" || label === "Monthly Orders" ? selectedLabel : label === "New Customers" ? "Joined this month" : ""}
                       </div>
                     </div>
                     <div className="kpi-spark" style={{ width: 80, height: 32, flexShrink: 0, overflow: "hidden", position: "relative" }}>
@@ -302,9 +316,9 @@ function DashboardContent() {
               </div>
               <div style={{ flex: 1 }}>
                 {[
-                  { label: "Total Orders",   val: totalOrdersCount, color: "#1FA89A" },
-                  { label: "Total Revenue",  val: fmt(totalRevenue), color: "#6366f1" },
-                  { label: "Customers",      val: totalUsersCount,  color: "#FFC107" },
+                  { label: "Orders",         val: totalOrdersCount, color: "#1FA89A" },
+                  { label: "Revenue",        val: fmt(totalRevenue), color: "#6366f1" },
+                  { label: "New Customers",  val: totalUsersCount,  color: "#FFC107" },
                   { label: "Credit Active",  val: report?.credit?.activeAccounts ?? 0, color: "#f59e0b" },
                 ].map(item => (
                   <div key={item.label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
@@ -352,11 +366,11 @@ function DashboardContent() {
                   <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
                     <span style={{ fontSize: 22, fontWeight: 800, color: textMain }}>{fmt(totalRevenue)}</span>
                     <span style={{ fontSize: 11.5, fontWeight: 600, color: "#1FA89A", display: "flex", alignItems: "center", gap: 2 }}>
-                      <TrendingUp size={11} /> Year to Date
+                      <TrendingUp size={11} /> {selectedLabel}
                     </span>
                   </div>
                 </div>
-                <div style={{ background: surface, border: `1px solid ${border}`, borderRadius: 7, padding: "4px 10px", fontSize: 11.5, fontWeight: 500, color: textMuted }}>This Year</div>
+                <div style={{ background: surface, border: `1px solid ${border}`, borderRadius: 7, padding: "4px 10px", fontSize: 11.5, fontWeight: 500, color: textMuted }}>{selectedLabel}</div>
               </div>
               <div style={{ height: 160 }}>
                 <ResponsiveContainer width="100%" height="100%">
@@ -381,7 +395,7 @@ function DashboardContent() {
             <div style={cardStyle({ padding: 18 })}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: textMain }}>Sales by Category</div>
-                <div style={{ background: surface, border: `1px solid ${border}`, borderRadius: 7, padding: "4px 10px", fontSize: 11.5, fontWeight: 500, color: textMuted }}>This Year</div>
+                <div style={{ background: surface, border: `1px solid ${border}`, borderRadius: 7, padding: "4px 10px", fontSize: 11.5, fontWeight: 500, color: textMuted }}>{selectedLabel}</div>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <div style={{ width: 140, height: 140, flexShrink: 0, position: "relative" }}>
@@ -499,10 +513,10 @@ function DashboardContent() {
           {/* Financial Summary */}
           <div className="financial-grid">
             {[
-              { label: "Outstanding Credit", val: fmt(totalOutstanding),  sub: "Total credit outstanding",  color: "#6366f1", hl: false },
-              { label: "Credit Disbursed",   val: fmt(creditDisbursed),   sub: "Total credit issued",        color: "#FFC107", hl: false },
-              { label: "Total Customers",    val: String(totalUsersCount), sub: "Registered users",          color: "#ef4444", hl: false },
-              { label: "Total Revenue",      val: fmt(totalRevenue),       sub: "This year (paid orders only)",    color: "#1FA89A", hl: true  },
+              { label: "Outstanding Credit", val: fmt(totalOutstanding),  sub: "Total credit outstanding",         color: "#6366f1", hl: false },
+              { label: "Credit Disbursed",   val: fmt(creditDisbursed),   sub: `${selectedLabel} credit issued`,   color: "#FFC107", hl: false },
+              { label: "New Customers",      val: String(totalUsersCount), sub: `${selectedLabel} sign-ups`,      color: "#ef4444", hl: false },
+              { label: "Monthly Revenue",    val: fmt(totalRevenue),       sub: `${selectedLabel} (paid orders only)`, color: "#1FA89A", hl: true  },
             ].map(item => (
               <div key={item.label} style={{
                 background: item.hl ? "linear-gradient(135deg, #1FA89A, #27B9AF)" : surface,

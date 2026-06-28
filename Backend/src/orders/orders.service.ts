@@ -23,6 +23,10 @@ export class OrdersService {
     return validMethods.includes(normalized) ? normalized : 'CARD';
   }
 
+  private normalizeTrackingLookup(value: string): string {
+    return value?.trim().replace(/^#/, '') ?? '';
+  }
+
   async findAll(userId?: string, params?: { skip?: number; take?: number; status?: string }) {
     const { skip = 0, take: rawTake = 20, status } = params || {};
     const take = Math.min(Math.max(1, Number(rawTake) || 20), 500); // Admin can fetch up to 500 orders
@@ -94,25 +98,33 @@ export class OrdersService {
   }
 
   async trackOrder(orderNumber: string, email: string) {
-    // 1. Find the order by orderNumber (which is the friendly ID like ORD-123)
-    // We search by orderNumber or ID just in case
+    const lookup = this.normalizeTrackingLookup(orderNumber);
+    if (!lookup) {
+      throw new BadRequestException('Order ID or tracking number is required');
+    }
+
+    const emailLookup = email?.trim();
+    const where: Prisma.OrderWhereInput = {
+      OR: [
+        { orderNumber: { equals: lookup, mode: 'insensitive' } },
+        { id: { equals: lookup, mode: 'insensitive' } },
+        { trackingNumber: { equals: lookup, mode: 'insensitive' } },
+      ],
+    };
+
+    if (emailLookup) {
+      where.AND = [
+        {
+          OR: [
+            { user: { email: { equals: emailLookup, mode: 'insensitive' } } },
+            { shippingAddress: { email: { equals: emailLookup, mode: 'insensitive' } } }
+          ]
+        }
+      ];
+    }
+
     const order = await this.prisma.order.findFirst({
-      where: {
-        AND: [
-          {
-            OR: [
-              { orderNumber: { equals: orderNumber, mode: 'insensitive' } },
-              { id: { equals: orderNumber, mode: 'insensitive' } }
-            ]
-          },
-          {
-            OR: [
-              { user: { email: { equals: email, mode: 'insensitive' } } },
-              { shippingAddress: { email: { equals: email, mode: 'insensitive' } } }
-            ]
-          }
-        ]
-      },
+      where,
       include: {
         items: {
           include: {
@@ -143,6 +155,7 @@ export class OrdersService {
   return {
     id: order.id,
     orderNumber: order.orderNumber,
+    trackingNumber: order.trackingNumber,
     status: order.status,
     paymentStatus: order.paymentStatus,
     paymentMethod: order.paymentMethod,

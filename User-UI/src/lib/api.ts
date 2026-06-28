@@ -113,15 +113,19 @@ export interface ApiBrandBanner {
 export interface ApiOrder {
   id: string;
   orderNumber?: string;
+  trackingNumber?: string;
   status: string;
   paymentStatus?: string;
   createdAt: string;
   estimatedDelivery?: string;
+  estimatedDays?: number;
   total?: number;
   totalZMW?: number;
   currencyCode?: string;
   currencySymbol?: string;
   items?: {
+    name?: string;
+    image?: string;
     product?: {
       name?: string;
       specs?: string;
@@ -199,7 +203,12 @@ function normalizeProduct(p: any): Product {
       // Prefer structured specifications array from backend
       if (Array.isArray(p.specifications) && p.specifications.length > 0) {
         return p.specifications
-          .map((s: any) => `${s.key}: ${s.value}`)
+          .map((s: any) => {
+            const key = String(s?.key || "").trim();
+            const value = String(s?.value || "").trim();
+            return key && key.toLowerCase() !== "specifications" ? `${key}: ${value}` : value;
+          })
+          .filter(Boolean)
           .join(' · ');
       }
       // Try to parse specifications JSON string
@@ -207,11 +216,18 @@ function normalizeProduct(p: any): Product {
         try {
           const parsed = JSON.parse(p.specifications);
           if (Array.isArray(parsed) && parsed.length > 0) {
-            return parsed.map((s: any) => `${s.key}: ${s.value}`).join(' · ');
+            return parsed
+              .map((s: any) => {
+                const key = String(s?.key || "").trim();
+                const value = String(s?.value || "").trim();
+                return key && key.toLowerCase() !== "specifications" ? `${key}: ${value}` : value;
+              })
+              .filter(Boolean)
+              .join(' · ');
           }
         } catch {}
         // Plain string specs
-        return p.specifications;
+        return p.specifications.replace(/^specifications?\s*:\s*/i, '').trim();
       }
       // No specs — show nothing (description is only on product detail page)
       return '';
@@ -347,6 +363,12 @@ export async function fetchOrders(token: string): Promise<ApiOrder[]> {
   if (!result) return [];
   const list = Array.isArray(result) ? result : result.data ?? result.orders ?? [];
   return list as ApiOrder[];
+}
+
+export async function trackOrder(orderNumber: string): Promise<ApiOrder | null> {
+  const qs = new URLSearchParams({ orderNumber: orderNumber.trim() });
+  const result = await apiFetch<ApiOrder>(`/api/orders/track?${qs.toString()}`);
+  return result ?? null;
 }
 
 export async function fetchShippingZones(type?: string): Promise<ApiShippingZone[]> {

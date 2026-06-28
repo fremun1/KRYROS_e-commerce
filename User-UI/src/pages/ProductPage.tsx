@@ -47,6 +47,10 @@ export default function ProductPage() {
     try {
       const parsed = JSON.parse(specs);
       if (Array.isArray(parsed)) {
+        const genericOnly = parsed.length === 1 && String(parsed[0]?.key || "").trim().toLowerCase() === "specifications";
+        if (genericOnly) {
+          return <div className="whitespace-pre-wrap">{parsed[0]?.value || "No details available."}</div>;
+        }
         return (
           <div className="space-y-2">
             {parsed.map((s: any, i: number) => (
@@ -530,13 +534,13 @@ export default function ProductPage() {
             )}
           </div>
 
-          {/* Specifications */}
+          {/* Details */}
           <div>
             <button onClick={() => setOpenSection(openSection === "specs" ? null : "specs")}
               className="w-full flex items-center justify-between px-4 py-4 text-left">
               <div>
-                <p className="text-sm font-bold text-foreground">Specifications</p>
-                <p className="text-xs text-muted-foreground mt-0.5">Detailed product specifications.</p>
+                <p className="text-sm font-bold text-foreground">Details</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Product details configured for this item.</p>
               </div>
               <ChevronRight className={`w-4 h-4 text-muted-foreground transition-transform flex-shrink-0 ${openSection === "specs" ? "rotate-90" : ""}`} />
             </button>

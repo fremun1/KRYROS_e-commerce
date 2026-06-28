@@ -16,7 +16,7 @@ export class ReportsController {
 
   @Get('summary')
   @ApiOperation({ summary: 'Get summary metrics and series for admin reports' })
-  summary(@Query('range') range?: string) {
-    return this.reportsService.summary(range || 'year');
+  summary(@Query('range') range?: string, @Query('month') month?: string) {
+    return this.reportsService.summary(range || 'month', month);
   }
 }

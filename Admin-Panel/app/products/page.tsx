@@ -200,7 +200,7 @@ function ProductsContent() {
 
 
   // Build backend-compatible specifications array from textarea text
-  const buildSpecsPayload = (specsStr: string): { key: string; value: string }[] | undefined => {
+  const buildSpecsPayload = (specsStr: string): { key: string; value: string }[] | string | undefined => {
     if (!specsStr || !specsStr.trim()) return undefined;
     try {
       const parsed = JSON.parse(specsStr);
@@ -216,7 +216,7 @@ function ProductsContent() {
       })
       .filter(s => s.key && s.value);
     if (pairs.length > 0) return pairs;
-    return [{ key: 'Specifications', value: specsStr.trim() }];
+    return specsStr.trim();
   };
 
   // Build the payload that matches the backend UpdateProductDto / CreateProductDto

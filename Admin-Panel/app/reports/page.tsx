@@ -4,31 +4,8 @@ import AdminShell from '@/components/admin/admin-shell';
 import PageHeader from '@/components/admin/page-header';
 import { useTheme } from '@/contexts/theme-context';
 import { BarChart3, TrendingUp, TrendingDown, Download } from 'lucide-react';
-import { getReportsSummary, getProducts } from '@/lib/api';
+import { getReportsSummary } from '@/lib/api';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-
-const monthlyData = [
-  { month: 'Jan', revenue: 12400, orders: 45, customers: 28 },
-  { month: 'Feb', revenue: 18900, orders: 62, customers: 41 },
-  { month: 'Mar', revenue: 15600, orders: 54, customers: 35 },
-  { month: 'Apr', revenue: 22100, orders: 78, customers: 52 },
-  { month: 'May', revenue: 28400, orders: 102, customers: 68 },
-];
-
-const categoryData = [
-  { name: 'Electronics', value: 68, color: '#1FA89A' },
-  { name: 'Audio', value: 18, color: '#6366f1' },
-  { name: 'Wearables', value: 8, color: '#FFC107' },
-  { name: 'Others', value: 6, color: '#64748b' },
-];
-
-const topProducts = [
-  { rank: 1, name: 'iPhone 15 Pro Max', revenue: '$268,755', units: 245, growth: '+12%', up: true },
-  { rank: 2, name: 'MacBook Air M2', revenue: '$232,014', units: 186, growth: '+8%', up: true },
-  { rank: 3, name: 'AirPods Pro 2', revenue: '$52,290', units: 210, growth: '+22%', up: true },
-  { rank: 4, name: 'Apple Watch S9', revenue: '$60,349', units: 151, growth: '-3%', up: false },
-  { rank: 5, name: 'Samsung S24 Ultra', revenue: '$143,872', units: 128, growth: '+5%', up: true },
-];
 
 function ReportsContent() {
   const { theme } = useTheme();
@@ -39,10 +16,14 @@ function ReportsContent() {
   const textMuted = isDark ? '#8E9AAF' : '#64748B';
   const surface = isDark ? '#101826' : '#F1F5F9';
   const gridColor = isDark ? '#1E293B' : '#E2E8F0';
+  const fmt = (n: number) => `$${Number(n || 0).toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
 
-  const [chartData, setChartData] = useState(monthlyData);
-  const [catData, setCatData] = useState(categoryData);
-  const [prodData, setProdData] = useState(topProducts);
+  const [selectedMonth, setSelectedMonth] = useState(() => new Date().toISOString().slice(0, 7));
+  const [selectedLabel, setSelectedLabel] = useState('This Month');
+  const [availableMonths, setAvailableMonths] = useState<Array<{ value: string; label: string }>>([]);
+  const [chartData, setChartData] = useState<Array<{ month: string; revenue: number; orders: number; customers: number }>>([]);
+  const [catData, setCatData] = useState<Array<{ name: string; value: number; color: string }>>([]);
+  const [prodData, setProdData] = useState<Array<{ rank: number; name: string; revenue: string; units: number; growth: string; up: boolean }>>([]);
   const [kpis, setKpis] = useState([
     { label: 'Total Revenue', val: 'Loading...', change: '—', up: true },
     { label: 'Total Orders', val: '—', change: '—', up: true },
@@ -51,42 +32,67 @@ function ReportsContent() {
   ]);
 
   useEffect(() => {
-    getReportsSummary('year').then((r: any) => {
+    getReportsSummary('month', selectedMonth).then((r: any) => {
       const d = r.data;
       if (!d) return;
+      const periodLabel = d.selectedLabel || 'This Month';
+      setSelectedLabel(periodLabel);
+      setAvailableMonths(Array.isArray(d.availableMonths) ? d.availableMonths : []);
       setKpis([
-        { label: 'Total Revenue', val: d.totalRevenue ? `$${Number(d.totalRevenue).toLocaleString()}` : '$0', change: d.revenueGrowth ? `${d.revenueGrowth>0?'+':''}${d.revenueGrowth}%` : '0%', up: (d.revenueGrowth||0)>=0 },
-        { label: 'Total Orders', val: String(d.totalOrders||0), change: d.ordersGrowth ? `${d.ordersGrowth>0?'+':''}${d.ordersGrowth}%` : '0%', up: (d.ordersGrowth||0)>=0 },
-        { label: 'New Customers', val: String(d.newCustomers||d.totalCustomers||0), change: d.customersGrowth ? `${d.customersGrowth>0?'+':''}${d.customersGrowth}%` : '0%', up: true },
-        { label: 'Avg Order Value', val: d.averageOrderValue ? `$${Number(d.averageOrderValue).toFixed(0)}` : '$0', change: '0%', up: false },
+        { label: 'Monthly Revenue', val: fmt(d.stats?.totalRevenue || 0), change: `${d.stats?.revenueGrowth ?? 0}%`, up: (d.stats?.revenueGrowth ?? 0) >= 0 },
+        { label: 'Monthly Orders', val: String(d.stats?.totalOrders || 0), change: `${d.stats?.ordersGrowth ?? 0}%`, up: (d.stats?.ordersGrowth ?? 0) >= 0 },
+        { label: 'New Customers', val: String(d.stats?.newCustomers || 0), change: `${d.stats?.customersGrowth ?? 0}%`, up: (d.stats?.customersGrowth ?? 0) >= 0 },
+        { label: 'Avg Order Value', val: fmt(d.stats?.averageOrderValue || 0), change: periodLabel, up: true },
       ]);
-      if (Array.isArray(d.monthly) && d.monthly.length > 0) {
-        setChartData(d.monthly.map((m: any) => ({ month: m.month||m.name, revenue: Number(m.revenue||0), orders: Number(m.orders||0), customers: Number(m.customers||0) })));
-      }
-      if (Array.isArray(d.categories) && d.categories.length > 0) {
-        const colors = ['#1FA89A','#6366f1','#FFC107','#ef4444','#64748b'];
-        setCatData(d.categories.map((c: any, i: number) => ({ name: c.name||c.category, value: Number(c.value||c.percentage||0), color: colors[i%colors.length] })));
-      }
+      setChartData(
+        Array.isArray(d.revenueSeries) && d.revenueSeries.length > 0
+          ? d.revenueSeries.map((m: any) => ({
+              month: m.label || m.key,
+              revenue: Number(m.revenue || 0),
+              orders: Number(m.orders || 0),
+              customers: Number(m.customers || 0),
+            }))
+          : [{ month: 'No Data', revenue: 0, orders: 0, customers: 0 }]
+      );
+      const colors = ['#1FA89A','#6366f1','#FFC107','#ef4444','#64748b'];
+      setCatData(
+        Array.isArray(d.salesByCategory) && d.salesByCategory.length > 0
+          ? d.salesByCategory.map((c: any, i: number) => ({ name: c.name || c.category, value: Number(c.value || c.percentage || 0), color: colors[i % colors.length] }))
+          : [{ name: 'No sales yet', value: 100, color: '#64748b' }]
+      );
+      setProdData(
+        Array.isArray(d.topProducts)
+          ? d.topProducts.map((p: any, i: number) => ({
+              rank: i + 1,
+              name: p.name || 'Unknown',
+              revenue: fmt(p.revenue || 0),
+              units: Number(p.sales || 0),
+              growth: periodLabel,
+              up: true,
+            }))
+          : []
+      );
     }).catch(() => {});
-    getProducts({ limit: 10, sortBy: 'bestSelling' }).then((r: any) => {
-      const raw: any[] = Array.isArray(r.data?.data) ? r.data.data : Array.isArray(r.data) ? r.data : [];
-      if (raw.length === 0) return;
-      setProdData(raw.map((p: any, i: number) => ({
-        rank: i+1, name: p.name||'Unknown',
-        revenue: p.price ? `$${Number(p.price).toLocaleString()}` : '$0',
-        units: p._count?.orderItems ?? p.sold ?? 0,
-        growth: '+0%', up: true,
-      })));
-    }).catch(() => {});
-  }, []);
+  }, [selectedMonth]);
 
   return (
     <div>
       <PageHeader title="Reports" subtitle="Sales analytics and business insights" icon={BarChart3}
         extra={
-          <button style={{display:'flex',alignItems:'center',gap:'6px',background:surface,border:`1px solid ${border}`,borderRadius:'9px',color:textMain,fontSize:'13px',fontWeight:500,padding:'8px 14px',cursor:'pointer',fontFamily:'var(--font-inter)'}}>
-            <Download size={14} /> Export
-          </button>
+          <div style={{ display:'flex', alignItems:'center', gap:'10px', flexWrap:'wrap' }}>
+            <select
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(e.target.value)}
+              style={{ background:surface, border:`1px solid ${border}`, borderRadius:'9px', color:textMain, fontSize:'13px', fontWeight:600, padding:'8px 12px', cursor:'pointer', fontFamily:'var(--font-inter)' }}
+            >
+              {(availableMonths.length > 0 ? availableMonths : [{ value: selectedMonth, label: selectedLabel }]).map((month) => (
+                <option key={month.value} value={month.value}>{month.label}</option>
+              ))}
+            </select>
+            <button style={{display:'flex',alignItems:'center',gap:'6px',background:surface,border:`1px solid ${border}`,borderRadius:'9px',color:textMain,fontSize:'13px',fontWeight:500,padding:'8px 14px',cursor:'pointer',fontFamily:'var(--font-inter)'}}>
+              <Download size={14} /> Export
+            </button>
+          </div>
         }
       />
 
@@ -97,7 +103,7 @@ function ReportsContent() {
             <div style={{fontSize:'12px',color:textMuted,marginBottom:'6px'}}>{k.label}</div>
             <div style={{fontSize:'22px',fontWeight:800,color:textMain}}>{k.val}</div>
             <div style={{fontSize:'12px',fontWeight:600,color:k.up?'#1FA89A':'#ef4444',display:'flex',alignItems:'center',gap:'3px',marginTop:'4px'}}>
-              {k.up?<TrendingUp size={12}/>:<TrendingDown size={12}/>}{k.change} vs last month
+              {k.up?<TrendingUp size={12}/>:<TrendingDown size={12}/>}{k.change}{k.label === 'Avg Order Value' ? '' : ' vs previous month'}
             </div>
           </div>
         ))}
@@ -106,7 +112,8 @@ function ReportsContent() {
       {/* Charts */}
       <div style={{display:'grid',gridTemplateColumns:'1.5fr 1fr',gap:'16px',marginBottom:'20px'}} className="chart-grid">
         <div style={{background:card,border:`1px solid ${border}`,borderRadius:'12px',padding:'20px'}}>
-          <div style={{fontSize:'14px',fontWeight:700,color:textMain,marginBottom:'16px'}}>Monthly Revenue</div>
+          <div style={{fontSize:'14px',fontWeight:700,color:textMain,marginBottom:'4px'}}>Revenue Trend</div>
+          <div style={{fontSize:'12px',color:textMuted,marginBottom:'16px'}}>{selectedLabel}</div>
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={chartData} margin={{left:-20}}>
               <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
@@ -118,7 +125,8 @@ function ReportsContent() {
           </ResponsiveContainer>
         </div>
         <div style={{background:card,border:`1px solid ${border}`,borderRadius:'12px',padding:'20px'}}>
-          <div style={{fontSize:'14px',fontWeight:700,color:textMain,marginBottom:'16px'}}>Sales by Category</div>
+          <div style={{fontSize:'14px',fontWeight:700,color:textMain,marginBottom:'4px'}}>Sales by Category</div>
+          <div style={{fontSize:'12px',color:textMuted,marginBottom:'16px'}}>{selectedLabel}</div>
           <div style={{display:'flex',alignItems:'center',gap:'16px'}}>
             <PieChart width={130} height={130}>
               <Pie data={catData} cx={65} cy={65} innerRadius={40} outerRadius={65} dataKey="value" stroke="none">
@@ -142,7 +150,8 @@ function ReportsContent() {
 
       {/* Orders/Customers trend */}
       <div style={{background:card,border:`1px solid ${border}`,borderRadius:'12px',padding:'20px',marginBottom:'20px'}}>
-        <div style={{fontSize:'14px',fontWeight:700,color:textMain,marginBottom:'16px'}}>Orders & Customers Trend</div>
+        <div style={{fontSize:'14px',fontWeight:700,color:textMain,marginBottom:'4px'}}>Orders & Customers Trend</div>
+        <div style={{fontSize:'12px',color:textMuted,marginBottom:'16px'}}>{selectedLabel}</div>
         <ResponsiveContainer width="100%" height={180}>
           <LineChart data={chartData} margin={{left:-20}}>
             <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
@@ -182,4 +191,3 @@ function ReportsContent() {
 }
 
 export default function ReportsPage() { return <AdminShell><ReportsContent /></AdminShell>; }
-

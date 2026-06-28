@@ -89,16 +89,16 @@ export const adminLogin = (identifier: string, password: string) =>
   api.post("/api/auth/login", { identifier, password });
 
 // ── Reports / Dashboard ───────────────────────────────────
-export const getReportsSummary = (range = "year") =>
-  api.get(`/api/reports/summary?range=${range}`);
+export const getReportsSummary = (range = "month", month?: string) =>
+  api.get("/api/reports/summary", { params: { range, ...(month ? { month } : {}) } });
 
 // ── Dashboard helpers ─────────────────────────────────────
 export const getRecentOrders = (limit = 5) =>
-  api.get(`/api/orders?limit=${limit}&skip=0`);
+  api.get(`/api/orders?take=${limit}&skip=0`);
 export const getTopProducts = (limit = 5) =>
-  api.get(`/api/products?limit=${limit}`);
+  api.get(`/api/products?take=${limit}`);
 export const getRecentCustomers = (limit = 5) =>
-  api.get(`/api/users?limit=${limit}&role=CUSTOMER`);
+  api.get(`/api/users?take=${limit}&role=CUSTOMER`);
 
 // ── Orders ────────────────────────────────────────────────
 export const getOrders = (params?: Record<string, unknown>) =>

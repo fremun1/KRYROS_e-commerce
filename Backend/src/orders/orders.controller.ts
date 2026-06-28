@@ -43,10 +43,10 @@ export class OrdersController {
 
   @Get('track')
   @Throttle({ default: { ttl: 60000, limit: 10 } })
-  @ApiOperation({ summary: 'Track order by number and email (Public)' })
+  @ApiOperation({ summary: 'Track order by order ID or tracking number (Public)' })
   async trackOrder(@Query('orderNumber') orderNumber: string, @Query('email') email: string) {
-    if (!orderNumber || !email) {
-      throw new BadRequestException('Both orderNumber and email are required');
+    if (!orderNumber) {
+      throw new BadRequestException('orderNumber is required');
     }
     return this.ordersService.trackOrder(orderNumber, email);
   }

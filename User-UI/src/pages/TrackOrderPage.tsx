@@ -1,9 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, type FormEvent } from "react";
 import { Link } from "wouter";
 import { Search, ChevronRight, Headphones, CheckCircle, Truck, MapPin, Loader2, Package } from "lucide-react";
 import { motion } from "framer-motion";
 import { useAuthStore } from "@/store/authStore";
-import { fetchOrders, type ApiOrder } from "@/lib/api";
+import { fetchOrders, trackOrder, type ApiOrder } from "@/lib/api";
 import AccountLayout from "@/components/layout/AccountLayout";
 
 const statusColors: Record<string, string> = {
@@ -76,19 +76,24 @@ interface OrderRow {
 function normalizeOrder(o: ApiOrder): OrderRow {
   const item = o.items?.[0];
   const imgRaw = item?.product?.images?.[0];
-  const image = typeof imgRaw === "string" ? imgRaw : (imgRaw as any)?.url ?? "";
+  const image = item?.image || (typeof imgRaw === "string" ? imgRaw : (imgRaw as any)?.url ?? "");
   const status = normalizeStatus(o.status);
+  const estimatedDelivery = o.estimatedDelivery
+    ? new Date(o.estimatedDelivery)
+    : o.createdAt && o.estimatedDays
+      ? new Date(new Date(o.createdAt).getTime() + o.estimatedDays * 24 * 60 * 60 * 1000)
+      : null;
   return {
     id: String(o.id),
-    name: item?.product?.name ?? "Order",
+    name: item?.product?.name ?? item?.name ?? "Order",
     specs: item?.product?.specs ?? "",
     orderId: `#${o.orderNumber ?? o.id}`,
     placedOn: o.createdAt
       ? new Date(o.createdAt).toLocaleDateString("en", { month: "short", day: "numeric", year: "numeric" })
       : "",
     status,
-    estDelivery: o.estimatedDelivery
-      ? new Date(o.estimatedDelivery).toLocaleDateString("en", { month: "short", day: "numeric", year: "numeric" })
+    estDelivery: estimatedDelivery
+      ? estimatedDelivery.toLocaleDateString("en", { month: "short", day: "numeric", year: "numeric" })
       : "—",
     image: image || (import.meta as unknown as { env: Record<string, string> }).env?.VITE_FALLBACK_IMAGE_URL || "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=200&q=80",
     timeline: getTimeline(o.status),
@@ -110,6 +115,9 @@ export default function TrackOrderPage() {
   const [activeFilter, setActiveFilter] = useState("All Orders");
   const [orders, setOrders] = useState<OrderRow[]>([]);
   const [loading, setLoading] = useState(false);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [trackedOrder, setTrackedOrder] = useState<OrderRow | null>(null);
+  const [searchError, setSearchError] = useState("");
 
   useEffect(() => {
     if (!token) return;
@@ -120,9 +128,49 @@ export default function TrackOrderPage() {
       .finally(() => setLoading(false));
   }, [token]);
 
-  const recentOrder = orders[0] ?? null;
+  const handleTrackOrder = async (event?: FormEvent) => {
+    event?.preventDefault();
+    const query = searchQ.trim();
 
-  const filtered = orders.filter((o) => {
+    if (!query) {
+      setTrackedOrder(null);
+      setSearchError("");
+      return;
+    }
+
+    const localMatch = orders.find((order) => {
+      const normalizedOrderId = order.orderId.replace(/^#/, "").toLowerCase();
+      return normalizedOrderId === query.replace(/^#/, "").toLowerCase();
+    });
+
+    if (localMatch) {
+      setTrackedOrder(localMatch);
+      setSearchError("");
+      return;
+    }
+
+    setSearchLoading(true);
+    setSearchError("");
+    try {
+      const result = await trackOrder(query);
+      if (!result) {
+        setTrackedOrder(null);
+        setSearchError("No order was found for that ID.");
+        return;
+      }
+      setTrackedOrder(normalizeOrder(result));
+    } catch {
+      setTrackedOrder(null);
+      setSearchError("No order was found for that ID.");
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+
+  const displayedOrders = trackedOrder ? [trackedOrder] : orders;
+  const recentOrder = trackedOrder ?? orders[0] ?? null;
+
+  const filtered = displayedOrders.filter((o) => {
     const allowed = STATUS_FILTER_MAP[activeFilter];
     if (allowed && !allowed.includes(o.status)) return false;
     if (searchQ && !o.orderId.toLowerCase().includes(searchQ.toLowerCase()) && !o.name.toLowerCase().includes(searchQ.toLowerCase())) return false;
@@ -135,21 +183,32 @@ export default function TrackOrderPage() {
         <p className="text-muted-foreground text-xs mb-5">Stay updated with your order status in real time</p>
 
         {/* Search */}
-        <div className="flex gap-2 mb-5">
+        <form className="flex gap-2 mb-2" onSubmit={handleTrackOrder}>
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <input
               type="text"
               placeholder="Enter Order ID or Tracking Number"
               value={searchQ}
-              onChange={(e) => setSearchQ(e.target.value)}
+              onChange={(e) => {
+                setSearchQ(e.target.value);
+                if (!e.target.value.trim()) {
+                  setTrackedOrder(null);
+                  setSearchError("");
+                }
+              }}
               className="w-full pl-10 pr-4 py-3 bg-card border border-border rounded-xl text-xs outline-none focus:ring-2 focus:ring-primary/30"
             />
           </div>
-          <button className="px-4 py-3 bg-foreground text-background rounded-xl font-bold text-xs hover:opacity-90 transition-opacity flex-shrink-0">
-            Track Order
+          <button
+            type="submit"
+            disabled={searchLoading}
+            className="px-4 py-3 bg-foreground text-background rounded-xl font-bold text-xs hover:opacity-90 transition-opacity flex-shrink-0 disabled:opacity-60"
+          >
+            {searchLoading ? "Searching..." : "Track Order"}
           </button>
-        </div>
+        </form>
+        {searchError && <p className="text-xs text-red-500 mb-3">{searchError}</p>}
 
         {loading ? (
           <div className="flex flex-col items-center py-12 gap-3">
@@ -220,13 +279,11 @@ export default function TrackOrderPage() {
               ))}
             </div>
 
-            {!token ? (
+            {!token && !trackedOrder ? (
               <div className="flex flex-col items-center py-10 text-center">
                 <Package className="w-10 h-10 text-muted-foreground/30 mb-2" />
-                <p className="text-sm font-bold text-foreground">Sign in to view your orders</p>
-                <Link href="/login">
-                  <button className="mt-4 px-5 py-2 bg-primary text-white rounded-xl text-xs font-bold">Sign In</button>
-                </Link>
+                <p className="text-sm font-bold text-foreground">Enter your order ID to track your order</p>
+                <p className="text-xs text-muted-foreground mt-1">You can search with your order ID or tracking number.</p>
               </div>
             ) : filtered.length === 0 ? (
               <div className="flex flex-col items-center py-10 text-center">
