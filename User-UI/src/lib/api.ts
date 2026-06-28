@@ -8,8 +8,10 @@ export interface Product {
   name: string;
   brand: string;
   brandId?: number;
+  brandSlug?: string;
   category: string;
   categoryId?: string;
+  categorySlug?: string;
   price: number;
   oldPrice: number;
   discount: number;
@@ -190,8 +192,10 @@ function normalizeProduct(p: any): Product {
     name: p.name || "",
     brand: p.brand?.name || p.brandName || "",
     brandId: p.brand?.id,
+    brandSlug: p.brand?.slug || p.brandSlug || "",
     category: p.category?.name || p.categoryName || "",
     categoryId: p.category?.id || p.categoryId || "",
+    categorySlug: p.category?.slug || p.categorySlug || "",
     price: effectivePrice,
     oldPrice: originalPrice,
     discount,

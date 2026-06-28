@@ -78,7 +78,7 @@ export default function ShopPage() {
       if (bs.length > 0) setSelectedBrand(bs[0].name);
     });
     const searchQ = new URLSearchParams(search).get("search") || "";
-    fetchProducts({ take: 50, search: searchQ || undefined }).then(setAllProducts);
+    fetchProducts({ take: 500, search: searchQ || undefined }).then(setAllProducts);
     fetchAllBrandBanners().then((banners) => {
       const bySlug: Record<string, ApiBrandBanner> = {};
       banners.forEach((b) => { bySlug[b.brandSlug] = b; });
@@ -174,6 +174,7 @@ export default function ShopPage() {
       const categoryKey = toCategoryKey(category);
       return (
         product.categoryId === category ||
+        toCategoryKey(product.categorySlug || "") === categoryKey ||
         toCategoryKey(product.category || "") === categoryKey
       );
     }
@@ -181,12 +182,13 @@ export default function ShopPage() {
     const categoryKey = toCategoryKey(category.slug || category.name);
     return (
       product.categoryId === category.id ||
+      toCategoryKey(product.categorySlug || "") === categoryKey ||
       toCategoryKey(product.category || "") === categoryKey
     );
   };
 
   const getCategoryCount = (category: ApiCategory) =>
-    allProducts.filter((product) => matchesCategory(product, category)).length;
+    category._count?.products ?? allProducts.filter((product) => matchesCategory(product, category)).length;
 
   const isCategorySelected = (category: ApiCategory) =>
     selectedCat === category.id ||
