@@ -27,6 +27,8 @@ import {
   Phone,
   Home,
   X,
+  CreditCard,
+  Building2,
 } from "lucide-react";
 
 const DIAL_COUNTRIES = [
@@ -58,19 +60,6 @@ const DIAL_COUNTRIES = [
   { name: "India",        code: "IN", dial: "+91"  },
   { name: "Australia",    code: "AU", dial: "+61"  },
   { name: "UAE",          code: "AE", dial: "+971" },
-];
-
-const DEFAULT_CHECKOUT_METHODS = [
-  { id: "mobile",   label: "Mobile Money",   sub: "MTN, Airtel, Zamtel",       icon: Smartphone, iconBg: "bg-primary/10" },
-  {
-    id: "whatsapp", label: "WhatsApp Payment", sub: "Pay securely on WhatsApp",
-    icon: () => (
-      <svg viewBox="0 0 24 24" className="w-5 h-5 text-primary" fill="currentColor">
-        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.788-1.653-2.086-.173-.298-.018-.459.13-.608.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.372-.025-.52-.075-.149-.669-1.612-.916-2.208-.242-.58-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.262.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.718 2.006-1.413.248-.695.248-1.291.173-1.413-.074-.123-.272-.198-.57-.347M11.886 3.004h.009c2.62 0 5.077 1.02 6.928 2.872 1.845 1.851 2.861 4.304 2.859 6.92-.004 5.394-4.394 9.78-9.79 9.78-1.676-.003-3.32-.428-4.78-1.236L3 21l.664-3.872a9.76 9.76 0 01-1.32-4.86c.003-5.39 4.394-9.78 9.78-9.78m0-2.004C5.322.999.5 5.82.498 12.135c0 2.19.576 4.326 1.668 6.2L.057 24l5.792-2.078a11.87 11.87 0 006.04 1.63h.005c6.313 0 11.44-5.128 11.445-11.438.003-3.06-1.187-5.94-3.346-8.104A11.43 11.43 0 0011.886.999z" />
-      </svg>
-    ),
-    iconBg: "bg-green-50 dark:bg-green-900/20",
-  },
 ];
 
 interface PickupStation {
@@ -127,7 +116,7 @@ export default function CheckoutPage() {
   const pollRef     = useRef<ReturnType<typeof setInterval> | null>(null);
   const [whatsappNumber, setWhatsappNumber] = useState(import.meta.env.VITE_WHATSAPP_NUMBER || "260969597029");
 
-  // Full Shipping Information (Section 1)
+  // Shipping Information
   const [firstName,     setFirstName]     = useState(authUser?.firstName ?? "");
   const [lastName,      setLastName]      = useState(authUser?.lastName ?? "");
   const [email,         setEmail]         = useState(authUser?.email ?? "");
@@ -139,116 +128,87 @@ export default function CheckoutPage() {
   const [addressLine,  setAddressLine] = useState("");
   const [zipCode,      setZipCode]     = useState("");
 
-  // Pickup Station (Section 2)
+  // Pickup Station
   const [pickupStations, setPickupStations] = useState<PickupStation[]>([]);
   const [pickupStationId, setPickupStationId] = useState("");
   const [loadingStations, setLoadingStations] = useState(false);
   const [showStationDrop, setShowStationDrop] = useState(false);
 
-  const SUBTOTAL = cartItems.reduce((s, i) => s + i.price * i.qty, 0);
-  const DISCOUNT = 0;
-  const [feeRate, setFeeRate] = useState(0.03); // default 3%
-  const PROCESSING_FEE = SUBTOTAL * feeRate;
-  const shippingPrice = cartItems.reduce((t, i) => t + (i.shippingFee || 0) * i.qty, 0);
-  const deliveryMinDays = cartItems.reduce(
-    (max, i) => Math.max(max, i.estimatedDeliveryMinDays || i.estimatedDeliveryDays || 2),
-    0,
-  ) || 2;
-  const deliveryMaxDays = cartItems.reduce(
-    (max, i) => Math.max(max, i.estimatedDeliveryMaxDays || i.estimatedDeliveryDays || 7),
-    0,
-  ) || 7;
-  const today = new Date();
-  const estimatedStart = new Date(today);
-  estimatedStart.setDate(today.getDate() + deliveryMinDays);
-  const estimatedEnd = new Date(today);
-  estimatedEnd.setDate(today.getDate() + deliveryMaxDays);
-  const formatDate = (date: Date) => {
-    const options: Intl.DateTimeFormatOptions = { weekday: 'short', month: 'short', day: 'numeric' };
-    return date.toLocaleDateString('en-US', options);
-  };
-  const deliveryRangeText = deliveryMinDays === deliveryMaxDays
-    ? `Delivery in ${deliveryMaxDays} day${deliveryMaxDays === 1 ? "" : "s"}`
-    : `Delivery in ${deliveryMinDays}-${deliveryMaxDays} days`;
-  const total = SUBTOTAL - DISCOUNT + PROCESSING_FEE + shippingPrice;
-
-  const [openMethod,       setOpenMethod]       = useState<string | null>("mobile");
+  // Payment Methods (Dynamic)
+  const [activeMethods, setActiveMethods] = useState<any[]>([]);
+  const [openMethod, setOpenMethod] = useState<string | null>(null);
   const [showProviderDrop, setShowProviderDrop] = useState(false);
   const [mmProvider, setMmProvider] = useState("MTN");
-  const [mmPhone,   setMmPhone]   = useState("");
+  const [mmPhone, setMmPhone] = useState("");
+  const [mobileNetworks, setMobileNetworks] = useState<string[]>(["MTN", "Airtel", "Zamtel"]);
+  const [bankProviders, setBankProviders] = useState<any[]>([]);
 
-  type ShippingCountry = { name: string; code: string; shippingEnabled: boolean; isActive: boolean };
-  const [shippingCountries, setShippingCountries] = useState<ShippingCountry[]>([]);
+  const SUBTOTAL = cartItems.reduce((s, i) => s + i.price * i.qty, 0);
+  const [feeRate, setFeeRate] = useState(0.03);
+  const PROCESSING_FEE = SUBTOTAL * feeRate;
+  const shippingPrice = cartItems.reduce((t, i) => t + (i.shippingFee || 0) * i.qty, 0);
+  const total = SUBTOTAL + PROCESSING_FEE + shippingPrice;
 
-  useEffect(() => {
-    fetch(`${API_BASE}/api/countries`)
-      .then((r) => r.json())
-      .then((data: any) => {
-        const raw: any[] = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : [];
-        const mapped = raw.map((c: any) => ({
-          name: c.name || '',
-          code: c.code || '',
-          shippingEnabled: c.shippingEnabled !== false,
-          isActive: c.isActive !== false && c.status !== false,
-        }));
-        setShippingCountries(mapped);
-        const defaultCountry = mapped.find((c) => c.isActive && c.shippingEnabled);
-        if (defaultCountry && !country) setCountry(defaultCountry.name);
-      })
-      .catch(() => {
-        setShippingCountries([{ name: 'Zambia', code: 'ZM', shippingEnabled: true, isActive: true }]);
-      });
-  }, []);
+  const deliveryMinDays = cartItems.reduce((max, i) => Math.max(max, i.estimatedDeliveryMinDays || 2), 0) || 2;
+  const deliveryMaxDays = cartItems.reduce((max, i) => Math.max(max, i.estimatedDeliveryMaxDays || 7), 0) || 7;
+  const deliveryRangeText = deliveryMinDays === deliveryMaxDays ? `Delivery in ${deliveryMaxDays} days` : `Delivery in ${deliveryMinDays}-${deliveryMaxDays} days`;
 
   useEffect(() => {
-    let cancelled = false;
-    setLoadingStations(true);
-    fetch(`${API_BASE}/api/pickup-stations?active=true`)
-      .then((r) => r.json())
-      .then((data: any) => {
-        const list = Array.isArray(data) ? data : (data?.data ?? []);
-        if (!cancelled) {
-          setPickupStations(list.filter((s: any) => s.isActive !== false).map(normalizePickupStation));
-        }
-      })
-      .catch(() => {})
-      .finally(() => { if (!cancelled) setLoadingStations(false); });
-    return () => { cancelled = true; };
+    fetch(`${API_BASE}/api/countries`).then(r => r.json()).then(data => {
+      const raw = Array.isArray(data?.data) ? data.data : data;
+      const mapped = raw.map((c: any) => ({ name: c.name, code: c.code, shippingEnabled: c.shippingEnabled !== false, isActive: c.isActive !== false }));
+      setShippingCountries(mapped);
+      const def = mapped.find((c: any) => c.isActive && c.shippingEnabled);
+      if (def && !country) setCountry(def.name);
+    }).catch(() => setShippingCountries([{ name: 'Zambia', code: 'ZM', shippingEnabled: true, isActive: true }]));
+
+    fetch(`${API_BASE}/api/pickup-stations?active=true`).then(r => r.json()).then(data => {
+      const list = Array.isArray(data) ? data : (data?.data ?? []);
+      setPickupStations(list.filter((s: any) => s.isActive !== false).map(normalizePickupStation));
+    }).catch(() => {});
+
+    fetch(`${API_BASE}/api/payment-config/public`).then(r => r.json()).then(data => {
+      const arr = Array.isArray(data) ? data : data?.data ?? [];
+      const methods = [];
+      
+      const mobile = arr.find((m: any) => m.type === "mobile_wallet" && m.isEnabled);
+      if (mobile) {
+        methods.push({ id: "mobile", label: "Mobile Money", sub: "MTN, Airtel, Zamtel", icon: Smartphone, iconBg: "bg-primary/10" });
+        const nets = mobile.providers?.filter((p: any) => p.isEnabled).flatMap((p: any) => p.networks?.filter((n: any) => n.isEnabled).map((n: any) => n.name.replace(/ Mobile Money/i, ""))) || [];
+        if (nets.length > 0) setMobileNetworks(nets);
+      }
+
+      const whatsapp = arr.find((m: any) => m.type === "whatsapp" && m.isEnabled);
+      if (whatsapp) {
+        methods.push({
+          id: "whatsapp", label: "WhatsApp", sub: "Pay on WhatsApp", iconBg: "bg-green-50",
+          icon: () => <svg viewBox="0 0 24 24" className="w-5 h-5 text-green-600" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.788-1.653-2.086-.173-.298-.018-.459.13-.608.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.372-.025-.52-.075-.149-.669-1.612-.916-2.208-.242-.58-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.262.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.718 2.006-1.413.248-.695.248-1.291.173-1.413-.074-.123-.272-.198-.57-.347M11.886 3.004h.009c2.62 0 5.077 1.02 6.928 2.872 1.845 1.851 2.861 4.304 2.859 6.92-.004 5.394-4.394 9.78-9.79 9.78-1.676-.003-3.32-.428-4.78-1.236L3 21l.664-3.872a9.76 9.76 0 01-1.32-4.86c.003-5.39 4.394-9.78 9.78-9.78m0-2.004C5.322.999.5 5.82.498 12.135c0 2.19.576 4.326 1.668 6.2L.057 24l5.792-2.078a11.87 11.87 0 006.04 1.63h.005c6.313 0 11.44-5.128 11.445-11.438.003-3.06-1.187-5.94-3.346-8.104A11.43 11.43 0 0011.886.999z" /></svg>
+        });
+      }
+
+      const card = arr.find((m: any) => m.type === "card" && m.isEnabled);
+      if (card) methods.push({ id: "card", label: "Card", sub: "Visa, Mastercard", icon: CreditCard, iconBg: "bg-blue-50" });
+
+      const bank = arr.find((m: any) => m.type === "bank" && m.isEnabled);
+      if (bank) {
+        methods.push({ id: "bank", label: "Bank", sub: "Bank Transfer", icon: Building2, iconBg: "bg-slate-50" });
+        setBankProviders(bank.providers?.filter((p: any) => p.isEnabled) || []);
+      }
+
+      setActiveMethods(methods);
+      if (methods.length > 0) setOpenMethod(methods[0].id);
+    }).catch(() => {});
+
+    fetchSettings().then(s => {
+      const arr = Array.isArray(s) ? s : (s as any)?.data || [];
+      const rate = arr.find((i: any) => i.key === 'processing_fee_rate')?.value;
+      if (rate) setFeeRate(Number(rate) / 100);
+      const wa = arr.find((i: any) => i.key === 'whatsapp_number')?.value;
+      if (wa) setWhatsappNumber(wa.replace(/[^0-9]/g, ""));
+    }).catch(() => {});
   }, []);
 
-  const [mobileNetworks, setMobileNetworks] = useState<string[]>(["MTN", "Airtel", "Zamtel", "M-Pesa"]);
-
-  useEffect(() => {
-    fetch(`${API_BASE}/api/payment-config/public`)
-      .then((r) => r.json())
-      .then((data: any) => {
-        const arr: any[] = Array.isArray(data) ? data : data?.data ?? [];
-        const mobileMethod = arr.find((m: any) => m.type === "mobile_wallet");
-        if (mobileMethod?.providers?.length > 0) {
-          const nets: string[] = mobileMethod.providers
-            .filter((p: any) => p.isEnabled)
-            .flatMap((p: any) =>
-              (p.networks || [])
-                .filter((n: any) => n.isEnabled)
-                .map((n: any) => (n.name as string).replace(/\s*Mobile\s*Money\s*/i, "").trim()),
-            );
-          if (nets.length > 0) setMobileNetworks(nets);
-        }
-      })
-      .catch(() => {});
-
-    fetchSettings()
-      .then((settings) => {
-        const arr = Array.isArray(settings) ? settings : (settings as any)?.data || [];
-        const rate = arr.find((s: any) => s.key === 'processing_fee_rate')?.value;
-        if (rate) setFeeRate(Number(rate) / 100);
-        const wa = arr.find((s: any) => s.key === 'whatsapp_number')?.value;
-        if (wa && wa.trim()) setWhatsappNumber(wa.replace(/[^0-9]/g, ""));
-      })
-      .catch(() => {});
-  }, []);
-
-  const activeCheckoutMethods = [...DEFAULT_CHECKOUT_METHODS];
+  const [shippingCountries, setShippingCountries] = useState<any[]>([]);
 
   const buildTrackingPath = (orderNumber: string) => {
     const params = new URLSearchParams({ orderNumber });
@@ -261,14 +221,6 @@ export default function CheckoutPage() {
     return `${window.location.origin}${buildTrackingPath(orderNumber)}`;
   };
 
-  useEffect(() => {
-    if (cartItems.length === 0 && !ordered && mmPhase === "idle") navigate("/cart");
-  }, [cartItems.length, ordered, mmPhase, navigate]);
-
-  useEffect(() => {
-    return () => { if (pollRef.current) clearInterval(pollRef.current); };
-  }, []);
-
   const buildOrderPayload = (backendPaymentMethod: string, totalZMW: number) => ({
     items: cartItems.map((item) => ({ productId: item.id, quantity: item.qty })),
     paymentMethod: backendPaymentMethod,
@@ -277,7 +229,7 @@ export default function CheckoutPage() {
     currencyCode: selectedCurrency.code,
     currencySymbol: selectedCurrency.symbol,
     exchangeRate: selectedCurrency.exchangeRate,
-    ...(openMethod === "mobile" && mmProvider ? { notes: `Mobile money provider: ${mmProvider}` } : {}),
+    ...(openMethod === "mobile" && mmProvider ? { notes: `Provider: ${mmProvider}` } : {}),
     addressDetails: {
       email, firstName, lastName, phone: `${phoneCountry.dial}${phone}`,
       address: addressLine || `${city}, ${state}, ${country}`,
@@ -287,220 +239,112 @@ export default function CheckoutPage() {
     },
   });
 
-  const startPolling = (orderId: string, orderNum: string) => {
-    const headers: Record<string, string> = { "Content-Type": "application/json" };
-    if (authToken) headers["Authorization"] = `Bearer ${authToken}`;
-    let attempts = 0;
-    const MAX_ATTEMPTS = 36;
-    pollRef.current = setInterval(async () => {
-      attempts++;
-      if (attempts > MAX_ATTEMPTS) {
-        clearInterval(pollRef.current!);
-        setMmPhase("timed_out");
-        return;
-      }
-      try {
-        const r = await fetch(`${API_BASE}/api/payments/status/${orderId}`, { headers });
-        if (!r.ok) return;
-        const d = await r.json().catch(() => null);
-        if (!d) return;
-        const status = String(d.status ?? d.paymentStatus ?? "").toLowerCase();
-        if (status === "paid") {
-          clearInterval(pollRef.current!);
-          setPlacedOrderNumber(orderNum);
-          clearCart();
-          setOrdered(true);
-          setMmPhase("idle");
-        } else if (status === "failed") {
-          clearInterval(pollRef.current!);
-          setMmPhase("failed_init");
-        }
-      } catch { /* ignore */ }
-    }, 5000);
-  };
-
   const validateShippingInfo = () => {
-    if (!firstName.trim()) { toast.error("Please enter your first name"); return false; }
-    if (!lastName.trim())  { toast.error("Please enter your last name");  return false; }
-    if (!email.trim() && !phone.trim()) { toast.error("Please provide at least an email or phone number"); return false; }
-    if (!country) { toast.error("Please select a country"); return false; }
-    if (!city.trim()) { toast.error("Please enter your city"); return false; }
-    if (!addressLine.trim()) { toast.error("Please enter your address"); return false; }
+    if (!firstName.trim() || !lastName.trim() || !country || !city.trim() || !addressLine.trim()) {
+      toast.error("Please fill in all shipping details");
+      return false;
+    }
+    if (!email.trim() && !phone.trim()) {
+      toast.error("Please provide email or phone for notifications");
+      return false;
+    }
     return true;
   };
 
   const handleMobileMoneyPay = async () => {
-    if (isSubmitting || !mmPhone.trim()) return;
-    if (!validateShippingInfo()) return;
-    setIsSubmitting(true);
-    setOrderError(null);
+    if (isSubmitting || !mmPhone.trim() || !validateShippingInfo()) return;
+    setIsSubmitting(true); setOrderError(null);
     try {
-      const headers: Record<string, string> = { "Content-Type": "application/json" };
-      if (authToken) headers["Authorization"] = `Bearer ${authToken}`;
-      const exchangeRate = selectedCurrency.exchangeRate || 1;
-      const totalLocal = total * exchangeRate;
+      const headers = { "Content-Type": "application/json", ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}) };
+      const totalLocal = total * (selectedCurrency.exchangeRate || 1);
       const res = await fetch(`${API_BASE}/api/orders`, { method: "POST", headers, body: JSON.stringify(buildOrderPayload("MOBILE_MONEY", totalLocal)) });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        const msg = Array.isArray(data.message) ? data.message.join(", ") : data.message || "Failed to place order.";
-        setOrderError(msg);
-        toast.error(msg);
-        setIsSubmitting(false);
-        return;
-      }
-      const orderId  = data.id ?? "";
-      const orderNum = data.orderNumber ?? data.id ?? "";
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Failed to place order");
+      
+      const orderId = data.id;
       setPlacedOrderId(orderId);
       setSavedCartItems([...cartItems]);
       setMmPhase("initializing");
+      
+      const initRes = await fetch(`${API_BASE}/api/payments/initialize`, { method: "POST", headers, body: JSON.stringify({ orderId, phone: `260${mmPhone.replace(/^0/, "")}`, amount: Math.round(totalLocal * 100) / 100 }) });
+      if (!initRes.ok) throw new Error("Payment init failed");
+      
+      setMmPhase("waiting");
+      startPolling(orderId, data.orderNumber || orderId);
+    } catch (err: any) { setOrderError(err.message); toast.error(err.message); }
+    finally { setIsSubmitting(false); }
+  };
+
+  const startPolling = (orderId: string, orderNum: string) => {
+    const headers = { "Content-Type": "application/json", ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}) };
+    let attempts = 0;
+    pollRef.current = setInterval(async () => {
+      if (++attempts > 36) { clearInterval(pollRef.current!); setMmPhase("timed_out"); return; }
       try {
-        const initRes = await fetch(`${API_BASE}/api/payments/initialize`, { method: "POST", headers, body: JSON.stringify({ orderId, phone: `260${mmPhone.replace(/^0/, "")}`, amount: Math.round(totalLocal * 100) / 100 }) });
-        if (!initRes.ok) { setMmPhase("failed_init"); setIsSubmitting(false); return; }
-        setMmPhase("waiting");
-        startPolling(orderId, orderNum);
-      } catch { setMmPhase("failed_init"); }
-    } catch {
-      const msg = "Network error. Please check your connection and try again.";
-      setOrderError(msg);
-      toast.error(msg);
-    } finally { setIsSubmitting(false); }
+        const r = await fetch(`${API_BASE}/api/payments/status/${orderId}`, { headers });
+        const d = await r.json();
+        if (d.status?.toLowerCase() === "paid") {
+          clearInterval(pollRef.current!); setPlacedOrderNumber(orderNum); clearCart(); setOrdered(true); setMmPhase("idle");
+        } else if (d.status?.toLowerCase() === "failed") {
+          clearInterval(pollRef.current!); setMmPhase("failed_init");
+        }
+      } catch {}
+    }, 5000);
   };
 
   const handlePlaceOrder = async () => {
-    if (isSubmitting || cartItems.length === 0) return;
-    if (!validateShippingInfo()) return;
-    setIsSubmitting(true);
-    setOrderError(null);
+    if (isSubmitting || cartItems.length === 0 || !validateShippingInfo()) return;
+    setIsSubmitting(true); setOrderError(null);
     try {
-      const headers: Record<string, string> = { "Content-Type": "application/json" };
-      if (authToken) headers["Authorization"] = `Bearer ${authToken}`;
-      const PAYMENT_METHOD_MAP: Record<string, string> = { whatsapp: "WHATSAPP" };
-      const backendPaymentMethod = PAYMENT_METHOD_MAP[openMethod ?? "whatsapp"] ?? "WHATSAPP";
-      const exchangeRate = selectedCurrency.exchangeRate || 1;
-      const totalLocal = total * exchangeRate;
-      const res = await fetch(`${API_BASE}/api/orders`, { method: "POST", headers, body: JSON.stringify(buildOrderPayload(backendPaymentMethod, totalLocal)) });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        const msg = Array.isArray(data.message) ? data.message.join(", ") : data.message || "Failed to place order.";
-        setOrderError(msg);
-        toast.error(msg);
-        setIsSubmitting(false);
-        return;
-      }
-      const orderNum = data.orderNumber ?? data.id ?? "";
-      setPlacedOrderNumber(orderNum);
-      setPlacedOrderId(data.id ?? "");
-      setSavedCartItems([...cartItems]);
+      const headers = { "Content-Type": "application/json", ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}) };
+      const MAP: any = { card: "CARD", bank: "BANK_TRANSFER", whatsapp: "WHATSAPP" };
+      const totalLocal = total * (selectedCurrency.exchangeRate || 1);
+      const res = await fetch(`${API_BASE}/api/orders`, { method: "POST", headers, body: JSON.stringify(buildOrderPayload(MAP[openMethod!] || "CARD", totalLocal)) });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Failed");
+      
+      const orderNum = data.orderNumber || data.id;
+      setPlacedOrderNumber(orderNum); setPlacedOrderId(data.id); setSavedCartItems([...cartItems]);
+      
       if (openMethod === "whatsapp") {
-        const itemsList = cartItems.map((i) => `• ${i.qty}× ${i.name}`).join("\n");
-        const deliveryText = pickupStationId
-          ? `Pickup Station: ${selectedStation?.name || "Selected pickup station"}`
-          : `Delivery Address: ${addressLine}, ${city}, ${state}, ${country}`;
-        const msg =
-          `*New Order:* ${orderNum}\n\n` +
-          `*Customer:* ${firstName} ${lastName}\n` +
-          `*Phone:* ${phoneCountry.dial}${phone}\n` +
-          `*Email:* ${email}\n\n` +
-          `*Item:* ${itemsList.replace(/• /g, "")}\n` +
-          `*Total:* ${format(total)}\n\n` +
-          `*Payment:* WhatsApp Payment\n` +
-          `*Delivery:* ${deliveryText}\n\n` +
-          `*Track:* ${buildTrackingUrl(orderNum)}\n\n` +
-          `Order placed. Please confirm the next step.`;
-        setWaMessage(msg);
-        setOrdered(true);
-        clearCart();
-        const url = `https://api.whatsapp.com/send?phone=${whatsappNumber}&text=${encodeURIComponent(msg)}`;
-        window.open(url, "_blank");
+        const msg = encodeURIComponent(`*New Order:* ${orderNum}\n*Customer:* ${firstName} ${lastName}\n*Total:* ${format(total)}\n*Track:* ${buildTrackingUrl(orderNum)}`);
+        setWaMessage(msg); setOrdered(true); clearCart();
+        window.open(`https://api.whatsapp.com/send?phone=${whatsappNumber}&text=${msg}`, "_blank");
       } else {
-        setOrdered(true);
-        clearCart();
+        setOrdered(true); clearCart();
       }
-    } catch {
-      const msg = "Network error. Please check your connection and try again.";
-      setOrderError(msg);
-      toast.error(msg);
-    } finally { setIsSubmitting(false); }
-  };
-
-  const handleWhatsAppRedirect = () => {
-    const url = `https://api.whatsapp.com/send?phone=${whatsappNumber}&text=${encodeURIComponent(waMessage)}`;
-    window.open(url, "_blank");
+    } catch (err: any) { setOrderError(err.message); toast.error(err.message); }
+    finally { setIsSubmitting(false); }
   };
 
   if (ordered) {
-    const isManual = openMethod === "whatsapp";
     const trackingPath = placedOrderNumber ? buildTrackingPath(placedOrderNumber) : "/track";
     return (
-      <div className="max-w-lg mx-auto bg-background min-h-screen flex flex-col px-6 pt-12 pb-8">
-        <div className="flex-1 flex flex-col items-center justify-center text-center space-y-6">
-          <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center">
-            <Check className="w-10 h-10 text-primary" strokeWidth={3} />
-          </div>
-          <div className="space-y-2">
-            <h1 className="text-2xl font-black text-foreground">Order Placed!</h1>
-            <p className="text-sm text-muted-foreground">Order Number: <span className="font-bold text-foreground">#{placedOrderNumber}</span></p>
-          </div>
-          <div className="w-full bg-card border border-border rounded-3xl p-5 space-y-4">
-            <div className="space-y-3">
-              {savedCartItems.map((item) => (
-                <div key={item.id} className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">{item.qty}× {item.name}</span>
-                  <span className="font-semibold">{format(item.price * item.qty)}</span>
-                </div>
-              ))}
-              <div className="pt-3 border-t border-border flex justify-between font-black">
-                <span>{isManual ? "Total Due" : "Total Paid"}</span>
-                <span className="text-primary">{format(total)}</span>
-              </div>
-            </div>
-          </div>
-          <div className="space-y-3 w-full">
-            <p className="text-sm text-muted-foreground px-4">
-              {isManual
-                ? "Your order has been created. We’ve sent your invoice/order summary, and your receipt will be sent after we verify your WhatsApp payment."
-                : `Thank you${firstName ? `, ${firstName}` : ""}! Your payment is verified. Your receipt will be sent automatically.`}
-            </p>
-            {isManual && (
-              <div className="bg-primary/5 border border-primary/15 rounded-2xl p-4 text-xs text-primary font-medium">
-                Open WhatsApp below to send your payment request. Use the tracking link to check payment status any time, even if you leave this page.
-              </div>
-            )}
-          </div>
+      <div className="max-w-lg mx-auto bg-background min-h-screen flex flex-col px-6 pt-12 pb-8 text-center space-y-6">
+        <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto"><Check className="w-10 h-10 text-primary" strokeWidth={3} /></div>
+        <h1 className="text-2xl font-black">Order Placed!</h1>
+        <p className="text-sm text-muted-foreground">Order: <span className="font-bold text-foreground">#{placedOrderNumber}</span></p>
+        <div className="bg-card border border-border rounded-3xl p-5 space-y-3">
+          {savedCartItems.map(i => <div key={i.id} className="flex justify-between text-sm"><span>{i.qty}× {i.name}</span><span className="font-semibold">{format(i.price * i.qty)}</span></div>)}
+          <div className="pt-3 border-t font-black flex justify-between"><span>Total</span><span className="text-primary">{format(total)}</span></div>
         </div>
         <div className="space-y-3">
-          {openMethod === "whatsapp" && (
-            <button onClick={handleWhatsAppRedirect} className="w-full py-4 bg-[var(--kryros-primary-hover)] text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 hover:opacity-90 active:scale-95 transition-all">
-              <span className="w-5 h-5 rounded-full bg-white/10 flex items-center justify-center text-[10px] font-semibold">WA</span>
-              <span>Open WhatsApp</span>
-            </button>
-          )}
-          <Link href={trackingPath}>
-            <button className="w-full py-3 rounded-2xl border border-primary/30 bg-primary/5 text-sm font-semibold text-primary hover:bg-primary/10 transition-colors">
-              Track Payment
-            </button>
-          </Link>
-          <Link href="/">
-            <button className="w-full py-3 rounded-2xl border border-border bg-background text-sm font-semibold hover:bg-primary/5 transition-colors">Continue Shopping</button>
-          </Link>
+          {openMethod === "whatsapp" && <button onClick={() => window.open(`https://api.whatsapp.com/send?phone=${whatsappNumber}&text=${waMessage}`, "_blank")} className="w-full py-4 bg-primary text-white rounded-2xl font-bold">Open WhatsApp</button>}
+          <Link href={trackingPath}><button className="w-full py-3 rounded-2xl border border-primary/30 text-primary font-semibold">Track Payment</button></Link>
+          <Link href="/"><button className="w-full py-3 rounded-2xl border border-border font-semibold">Continue Shopping</button></Link>
         </div>
       </div>
     );
   }
 
-  const hasPaymentError = !!orderError || mmPhase === "failed_init" || mmPhase === "timed_out";
-  const selectedStation = pickupStations.find((s) => s.id === pickupStationId);
+  const selectedStation = pickupStations.find(s => s.id === pickupStationId);
 
   return (
     <div className="max-w-lg mx-auto bg-background min-h-screen flex flex-col">
       <div className="sticky top-0 z-20 flex items-center justify-between px-4 pt-5 pb-3 bg-background/90 backdrop-blur border-b border-border/60">
-        <button onClick={() => navigate("/cart")} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground">
-          <ChevronLeft className="w-4 h-4" /> Back to Cart
-        </button>
-        <span className="text-base font-bold text-foreground absolute left-1/2 -translate-x-1/2">Checkout</span>
-        <span className="flex items-center gap-1 text-[11px] font-semibold text-primary">
-          <Lock className="w-3 h-3" /> Secure Checkout
-        </span>
+        <button onClick={() => navigate("/cart")} className="flex items-center gap-1.5 text-xs text-muted-foreground"><ChevronLeft className="w-4 h-4" /> Back</button>
+        <span className="text-base font-bold absolute left-1/2 -translate-x-1/2">Checkout</span>
+        <span className="flex items-center gap-1 text-[11px] font-semibold text-primary"><Lock className="w-3 h-3" /> Secure</span>
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 pb-32">
@@ -508,81 +352,28 @@ export default function CheckoutPage() {
           <SectionHeader number={1} icon={User} title="Shipping Information" />
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <label className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground"><User className="w-3 h-3" />First Name</label>
-                <input value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="First Name" className="w-full px-3.5 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
-              </div>
-              <div className="space-y-1.5">
-                <label className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground"><User className="w-3 h-3" />Last Name</label>
-                <input value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Last Name" className="w-full px-3.5 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
-              </div>
+              <div className="space-y-1"><label className="text-[11px] font-semibold text-muted-foreground">First Name</label><input value={firstName} onChange={e => setFirstName(e.target.value)} placeholder="First Name" className="w-full px-3.5 py-3 rounded-xl border bg-background text-sm outline-none focus:ring-2 focus:ring-primary/40" /></div>
+              <div className="space-y-1"><label className="text-[11px] font-semibold text-muted-foreground">Last Name</label><input value={lastName} onChange={e => setLastName(e.target.value)} placeholder="Last Name" className="w-full px-3.5 py-3 rounded-xl border bg-background text-sm outline-none focus:ring-2 focus:ring-primary/40" /></div>
             </div>
-
-            <div className="space-y-1.5">
-              <label className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground"><Phone className="w-3 h-3" />Phone Number</label>
+            <div className="space-y-1">
+              <label className="text-[11px] font-semibold text-muted-foreground">Phone Number</label>
               <div className="flex gap-1.5">
-                <div className="w-[88px] rounded-xl border border-border bg-muted/40 flex items-center flex-shrink-0 overflow-hidden">
-                  <select
-                    value={phoneCountry.dial}
-                    onChange={(e) => {
-                      const nextValue = e.target.value;
-                      const match = DIAL_COUNTRIES.find((c) => c.dial === nextValue);
-                      if (match) setPhoneCountry(match);
-                    }}
-                    className="w-full px-3 py-3 bg-transparent text-sm font-semibold text-foreground outline-none"
-                  >
-                    {DIAL_COUNTRIES.map((c) => (
-                      <option key={c.code} value={c.dial}>{c.code} {c.dial}</option>
-                    ))}
-                  </select>
-                </div>
-                <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone Number" type="tel" className="flex-1 min-w-0 px-3.5 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
+                <select value={phoneCountry.dial} onChange={e => setPhoneCountry(DIAL_COUNTRIES.find(c => c.dial === e.target.value)!)} className="w-24 px-2 py-3 rounded-xl border bg-muted/40 text-sm outline-none">{DIAL_COUNTRIES.map(c => <option key={c.code} value={c.dial}>{c.code} {c.dial}</option>)}</select>
+                <input value={phone} onChange={e => setPhone(e.target.value)} placeholder="Phone Number" className="flex-1 px-3.5 py-3 rounded-xl border bg-background text-sm outline-none focus:ring-2 focus:ring-primary/40" />
               </div>
             </div>
-
-            <div className="space-y-1.5">
-              <label className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground"><Mail className="w-3 h-3" />Email Address</label>
-              <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="Email Address" className="w-full px-3.5 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground"><MapPin className="w-3 h-3" />Street Address</label>
-              <input value={addressLine} onChange={(e) => setAddressLine(e.target.value)} placeholder="Street Address" className="w-full px-3.5 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
-            </div>
-
+            <div className="space-y-1"><label className="text-[11px] font-semibold text-muted-foreground">Email Address</label><input value={email} onChange={e => setEmail(e.target.value)} placeholder="Email Address" className="w-full px-3.5 py-3 rounded-xl border bg-background text-sm outline-none focus:ring-2 focus:ring-primary/40" /></div>
+            <div className="space-y-1"><label className="text-[11px] font-semibold text-muted-foreground">Street Address</label><input value={addressLine} onChange={e => setAddressLine(e.target.value)} placeholder="Street Address" className="w-full px-3.5 py-3 rounded-xl border bg-background text-sm outline-none focus:ring-2 focus:ring-primary/40" /></div>
             <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <label className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground"><Home className="w-3 h-3" />City</label>
-                <input value={city} onChange={(e) => setCity(e.target.value)} placeholder="City" className="w-full px-3.5 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
-              </div>
-              <div className="space-y-1.5">
-                <label className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground"><MapPin className="w-3 h-3" />State / Province</label>
-                <input value={state} onChange={(e) => setState(e.target.value)} placeholder="State" className="w-full px-3.5 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
-              </div>
+              <div className="space-y-1"><label className="text-[11px] font-semibold text-muted-foreground">City</label><input value={city} onChange={e => setCity(e.target.value)} placeholder="City" className="w-full px-3.5 py-3 rounded-xl border bg-background text-sm outline-none focus:ring-2 focus:ring-primary/40" /></div>
+              <div className="space-y-1"><label className="text-[11px] font-semibold text-muted-foreground">State</label><input value={state} onChange={e => setState(e.target.value)} placeholder="State" className="w-full px-3.5 py-3 rounded-xl border bg-background text-sm outline-none focus:ring-2 focus:ring-primary/40" /></div>
             </div>
-
             <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <label className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground"><Mail className="w-3 h-3" />Postal Code</label>
-                <input value={zipCode} onChange={(e) => setZipCode(e.target.value)} placeholder="Postal Code" className="w-full px-3.5 py-3 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all" />
-              </div>
-              <div className="space-y-1.5">
-                <label className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground"><Globe className="w-3 h-3" />Country</label>
+              <div className="space-y-1"><label className="text-[11px] font-semibold text-muted-foreground">Postal Code</label><input value={zipCode} onChange={e => setZipCode(e.target.value)} placeholder="Postal Code" className="w-full px-3.5 py-3 rounded-xl border bg-background text-sm outline-none focus:ring-2 focus:ring-primary/40" /></div>
+              <div className="space-y-1"><label className="text-[11px] font-semibold text-muted-foreground">Country</label>
                 <Select value={country} onValueChange={setCountry}>
-                  <SelectTrigger className="h-[46px] rounded-xl border-border bg-background px-3.5 text-sm shadow-none focus:ring-2 focus:ring-primary/40 focus:border-primary">
-                    <SelectValue placeholder="Country" />
-                  </SelectTrigger>
-                  <SelectContent className="rounded-xl border-border">
-                    {shippingCountries.length > 0 ? (
-                      shippingCountries.map((c) => (
-                        <SelectItem key={c.code} value={c.name} disabled={!c.isActive || !c.shippingEnabled} className="py-2.5">
-                          {!c.isActive || !c.shippingEnabled ? `${c.name} (Coming soon)` : c.name}
-                        </SelectItem>
-                      ))
-                    ) : (
-                      <SelectItem value="Zambia">Zambia</SelectItem>
-                    )}
-                  </SelectContent>
+                  <SelectTrigger className="h-[46px] rounded-xl border-border bg-background px-3.5 text-sm outline-none focus:ring-2 focus:ring-primary/40"><SelectValue placeholder="Country" /></SelectTrigger>
+                  <SelectContent className="rounded-xl border-border">{shippingCountries.map(c => <SelectItem key={c.code} value={c.name} disabled={!c.isActive || !c.shippingEnabled}>{c.name}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
             </div>
@@ -591,174 +382,52 @@ export default function CheckoutPage() {
 
         <div className="bg-card border border-border rounded-2xl p-4">
           <SectionHeader number={2} icon={Package} title="Pickup Station" />
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setShowStationDrop((v) => !v)}
-              className="w-full flex items-center gap-2.5 border border-border rounded-xl px-3.5 py-3 bg-background hover:border-primary/50 transition-colors"
-            >
-              <Package className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-              <span className={`flex-1 text-sm text-left ${selectedStation ? "font-semibold text-foreground" : "text-muted-foreground"}`}>
-                {loadingStations ? "Loading stations…" : selectedStation ? selectedStation.name : "Choose Pickup Station"}
-              </span>
-              <ChevronDown className={`w-4 h-4 text-muted-foreground flex-shrink-0 transition-transform ${showStationDrop ? "rotate-180" : ""}`} />
-            </button>
-            {showStationDrop && (
-              <div className="absolute left-0 right-0 top-full mt-1 z-20 bg-background border border-border rounded-xl shadow-xl overflow-hidden max-h-56 overflow-y-auto">
-                <button
-                  onClick={() => { setPickupStationId(""); setShowStationDrop(false); }}
-                  className="w-full flex items-center px-4 py-3 text-left hover:bg-muted transition-colors border-b border-border text-sm text-muted-foreground"
-                >
-                  No pickup station (deliver to address)
-                </button>
-                {pickupStations.map((s) => (
-                  <button
-                    key={s.id}
-                    type="button"
-                    onClick={() => { setPickupStationId(s.id); setShowStationDrop(false); }}
-                    className={`w-full flex items-start gap-2 px-4 py-3 text-left hover:bg-muted transition-colors border-b border-border last:border-0 ${pickupStationId === s.id ? "bg-primary/5" : ""}`}
-                  >
-                    <div className="flex-1 min-w-0">
-                      <p className={`text-sm font-semibold ${pickupStationId === s.id ? "text-primary" : "text-foreground"}`}>{s.name}</p>
-                      <p className="text-[11px] text-muted-foreground truncate">{s.address}</p>
-                    </div>
-                    {pickupStationId === s.id && (
-                      <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <Check className="w-3 h-3 text-white" />
-                      </div>
-                    )}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+          <button onClick={() => setShowStationDrop(!showStationDrop)} className="w-full flex items-center justify-between border rounded-xl px-3.5 py-3 bg-background text-sm">
+            <span className={selectedStation ? "font-semibold" : "text-muted-foreground"}>{selectedStation ? selectedStation.name : "Choose Pickup Station"}</span>
+            <ChevronDown className={`w-4 h-4 transition-transform ${showStationDrop ? "rotate-180" : ""}`} />
+          </button>
+          {showStationDrop && (
+            <div className="mt-1 border rounded-xl bg-background shadow-xl overflow-hidden max-h-56 overflow-y-auto">
+              <button onClick={() => { setPickupStationId(""); setShowStationDrop(false); }} className="w-full px-4 py-3 text-left hover:bg-muted border-b text-sm text-muted-foreground">No pickup station</button>
+              {pickupStations.map(s => <button key={s.id} onClick={() => { setPickupStationId(s.id); setShowStationDrop(false); }} className={`w-full px-4 py-3 text-left hover:bg-muted border-b last:border-0 ${pickupStationId === s.id ? "bg-primary/5 font-semibold text-primary" : ""}`}>{s.name}</button>)}
+            </div>
+          )}
         </div>
 
         <div className="bg-card border border-border rounded-2xl p-4">
           <SectionHeader number={3} icon={Truck} title="Delivery" />
-          <div className="space-y-3">
-            <div className="flex items-start gap-3">
-              <Truck className="w-6 h-6 text-primary flex-shrink-0 mt-0.5" />
-              <div className="flex-1">
-                <p className="text-sm font-bold text-primary">{format(shippingPrice)} shipping</p>
-                <p className="text-xs font-semibold text-foreground mt-1">{deliveryRangeText}</p>
-                <p className="text-xs text-foreground mt-0.5">Estimated by {formatDate(estimatedStart)} - {formatDate(estimatedEnd)}</p>
-              </div>
-            </div>
-          </div>
+          <div className="flex items-center gap-3"><Truck className="w-6 h-6 text-primary" /><div><p className="text-sm font-bold text-primary">{format(shippingPrice)} shipping</p><p className="text-xs font-semibold">{deliveryRangeText}</p></div></div>
         </div>
 
         <div className="bg-card border border-border rounded-2xl p-4">
           <SectionHeader number={4} icon={Smartphone} title="Payment Method" />
-          {hasPaymentError && (
-            <div className="p-3 mb-3 rounded-xl bg-red-50 dark:bg-red-900/15 border border-red-200 dark:border-red-900/30 text-[11px] text-red-600 dark:text-red-300 flex items-start gap-2">
-              <X className="w-3 h-3 mt-0.5" />
-              <div>
-                <p className="font-semibold mb-0.5">{mmPhase === "timed_out" ? "We couldn't confirm your payment in time." : "We couldn't initialize your payment."}</p>
-                <p>{orderError || "Please try again, or choose a different payment method."}</p>
-              </div>
-            </div>
-          )}
-          {mmPhase === "waiting" && (
-            <div className="p-3 mb-3 rounded-xl bg-amber-50 dark:bg-amber-900/15 border border-amber-200 dark:border-amber-900/30 text-[11px] text-amber-700 dark:text-amber-200 flex items-start gap-2">
-              <Smartphone className="w-3 h-3 mt-0.5" />
-              <div>
-                <p className="font-semibold mb-0.5">Waiting for your mobile money payment…</p>
-                <p>Check your phone and approve the payment prompt. This can take up to 3 minutes.</p>
-              </div>
-            </div>
-          )}
-          <div className="grid grid-cols-2 gap-2 mb-1">
-            {activeCheckoutMethods.map((method) => {
-              const Icon = method.icon;
-              const isSelected = openMethod === method.id;
-              return (
-                <button
-                  key={method.id}
-                  type="button"
-                  onClick={() => {
-                    setOpenMethod(method.id);
-                    setOrderError(null);
-                    setMmPhase("idle");
-                  }}
-                  className={`flex flex-col items-center gap-1.5 px-2 py-3 rounded-xl border text-center transition-all ${isSelected ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"}`}
-                >
-                  <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${method.iconBg}`}><Icon /></div>
-                  <p className="text-[11px] font-bold text-foreground leading-tight">{method.label.replace(" Payment", "")}</p>
-                </button>
-              );
-            })}
+          <div className="grid grid-cols-2 gap-2 mb-4">
+            {activeMethods.map(m => (
+              <button key={m.id} onClick={() => { setOpenMethod(m.id); setOrderError(null); setMmPhase("idle"); }} className={`flex flex-col items-center py-3 rounded-xl border transition-all ${openMethod === m.id ? "border-primary bg-primary/5" : "border-border"}`}>
+                <div className={`w-7 h-7 rounded-lg flex items-center justify-center mb-1 ${m.iconBg}`}><m.icon className="w-4 h-4" /></div>
+                <span className="text-[11px] font-bold">{m.label}</span>
+              </button>
+            ))}
           </div>
 
-          {openMethod && (
-            <div className="mt-4 pt-4 border-t border-border space-y-4">
-              {openMethod === "mobile" && (
-                <div className="space-y-3">
-                  <div className="relative">
-                    <label className="block text-[11px] font-semibold text-muted-foreground mb-1.5">Provider</label>
-                    <button type="button" onClick={() => setShowProviderDrop((v) => !v)} className="w-full flex items-center gap-2.5 border border-border rounded-xl px-3.5 py-3 bg-background hover:border-primary/50 transition-colors">
-                      <Smartphone className="w-4 h-4 text-primary flex-shrink-0" />
-                      <span className="flex-1 text-sm font-semibold text-foreground text-left">{mmProvider}</span>
-                      <ChevronDown className={`w-4 h-4 text-muted-foreground flex-shrink-0 transition-transform ${showProviderDrop ? "rotate-180" : ""}`} />
-                    </button>
-                    {showProviderDrop && (
-                      <div className="absolute left-0 right-0 top-full mt-1 z-20 bg-background border border-border rounded-xl shadow-xl overflow-hidden">
-                        {mobileNetworks.map((name) => (
-                          <button key={name} type="button" onClick={() => { setMmProvider(name); setShowProviderDrop(false); }} className={`w-full flex items-center px-4 py-3 text-left hover:bg-muted transition-colors border-b border-border last:border-0 ${mmProvider === name ? "bg-primary/5" : ""}`}>
-                            <span className={`text-sm font-semibold flex-1 ${mmProvider === name ? "text-primary" : "text-foreground"}`}>{name}</span>
-                            {mmProvider === name && <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center flex-shrink-0"><Check className="w-3 h-3 text-white" /></div>}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="block text-[11px] font-semibold text-muted-foreground">Mobile Money Number</label>
-                    <div className="flex gap-2">
-                      <div className="w-14 h-11 rounded-xl border border-border bg-muted/40 flex items-center justify-center text-sm font-bold text-foreground flex-shrink-0">+260</div>
-                      <input value={mmPhone} onChange={(e) => setMmPhone(e.target.value)} placeholder="97XXXXXXX" type="tel" className="flex-1 px-3.5 py-2.5 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
-                    </div>
-                  </div>
-                  <button onClick={handleMobileMoneyPay} disabled={isSubmitting || !mmPhone.trim()} className="w-full py-3.5 bg-primary text-white rounded-xl font-bold text-sm shadow-lg shadow-primary/20 hover:opacity-90 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50">
-                    {isSubmitting ? "Processing..." : `Pay ${format(total)}`}
-                  </button>
-                </div>
-              )}
-              {openMethod === "whatsapp" && (
-                <div className="space-y-4">
-                  <div className="p-3.5 rounded-xl bg-green-50 dark:bg-green-900/10 border border-green-100 dark:border-green-900/20">
-                    <p className="text-xs text-green-700 dark:text-green-300 leading-relaxed font-medium">
-                      Place your order first, then you will be redirected to WhatsApp to complete payment with our support team.
-                    </p>
-                  </div>
-                  <button onClick={handlePlaceOrder} disabled={isSubmitting} className="w-full py-3.5 bg-[var(--kryros-primary-hover)] text-white rounded-xl font-bold text-sm shadow-lg shadow-primary/20 hover:opacity-90 active:scale-95 transition-all flex items-center justify-center gap-2">
-                    {isSubmitting ? "Placing Order..." : `Place Order & Pay via WhatsApp`}
-                  </button>
-                </div>
-              )}
+          {openMethod === "mobile" && (
+            <div className="space-y-3 pt-2">
+              <div className="relative"><button onClick={() => setShowProviderDrop(!showProviderDrop)} className="w-full flex justify-between items-center px-4 py-3 border rounded-xl bg-background text-sm font-semibold">{mmProvider}<ChevronDown className={`w-4 h-4 transition-transform ${showProviderDrop ? "rotate-180" : ""}`} /></button>
+                {showProviderDrop && <div className="absolute top-full w-full mt-1 border rounded-xl bg-background shadow-xl z-10">{mobileNetworks.map(n => <button key={n} onClick={() => { setMmProvider(n); setShowProviderDrop(false); }} className="w-full px-4 py-3 text-left hover:bg-muted border-b last:border-0">{n}</button>)}</div>}
+              </div>
+              <div className="flex gap-2"><div className="w-14 flex items-center justify-center border rounded-xl bg-muted/40 text-sm font-bold">+260</div><input value={mmPhone} onChange={e => setMmPhone(e.target.value)} placeholder="97XXXXXXX" className="flex-1 px-3.5 py-2.5 border rounded-xl bg-background text-sm outline-none focus:ring-2 focus:ring-primary/40" /></div>
+              <button onClick={handleMobileMoneyPay} disabled={isSubmitting || !mmPhone.trim()} className="w-full py-3.5 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20">{isSubmitting ? "Processing..." : `Pay ${format(total)}`}</button>
             </div>
           )}
+          {openMethod === "whatsapp" && <button onClick={handlePlaceOrder} disabled={isSubmitting} className="w-full py-3.5 bg-green-600 text-white rounded-xl font-bold shadow-lg shadow-green-600/20">{isSubmitting ? "Processing..." : "Pay via WhatsApp"}</button>}
+          {(openMethod === "card" || openMethod === "bank") && <button onClick={handlePlaceOrder} disabled={isSubmitting} className="w-full py-3.5 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20">{isSubmitting ? "Processing..." : `Pay ${format(total)}`}</button>}
         </div>
 
-        <div className="bg-card border border-border rounded-2xl p-4">
-          <div className="space-y-2.5">
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Subtotal</span>
-              <span className="font-semibold text-foreground">{format(SUBTOTAL)}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Shipping</span>
-              <span className="font-semibold text-foreground">{format(shippingPrice)}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Processing Fee (3%)</span>
-              <span className="font-semibold text-foreground">{format(PROCESSING_FEE)}</span>
-            </div>
-            <div className="pt-2.5 border-t border-border flex justify-between items-center">
-              <span className="text-base font-bold text-foreground">Total</span>
-              <span className="text-lg font-black text-primary">{format(total)}</span>
-            </div>
-          </div>
+        <div className="bg-card border border-border rounded-2xl p-4 space-y-2.5">
+          <div className="flex justify-between text-sm text-muted-foreground"><span>Subtotal</span><span className="font-semibold text-foreground">{format(SUBTOTAL)}</span></div>
+          <div className="flex justify-between text-sm text-muted-foreground"><span>Shipping</span><span className="font-semibold text-foreground">{format(shippingPrice)}</span></div>
+          <div className="flex justify-between text-sm text-muted-foreground"><span>Processing Fee (3%)</span><span className="font-semibold text-foreground">{format(PROCESSING_FEE)}</span></div>
+          <div className="pt-2.5 border-t flex justify-between items-center font-black"><span>Total</span><span className="text-lg text-primary">{format(total)}</span></div>
         </div>
       </div>
     </div>

@@ -3,19 +3,17 @@ import { Link, useLocation, useRoute } from "wouter";
 import {
   ChevronLeft, Lock, ChevronDown, X,
   Smartphone, Check, Download, Info, AlertCircle,
-  User, Mail, Phone, MapPin, Globe, Home
+  User, Mail, Phone, MapPin, Globe, Home,
+  CreditCard, Building2
 } from "lucide-react";
 import { API_BASE, fetchSettings } from "@/lib/api";
 import { useCurrencyStore } from "@/store/currencyStore";
 
-const DEFAULT_METHODS = [
-  { id: "mobile",   label: "Mobile",   sub: "MTN, Airtel, Zamtel", icon: "phone",     comingSoon: false },
-  { id: "whatsapp", label: "WhatsApp", sub: "Pay on WhatsApp",     icon: "whatsapp",  comingSoon: false },
-];
-
 const ICON_BG: Record<string, string> = {
   phone:    "rgba(39, 185, 175, 0.12)",
   whatsapp: "rgba(37, 211, 102, 0.12)",
+  card:     "rgba(59, 130, 246, 0.12)",
+  bank:     "rgba(100, 116, 139, 0.12)",
 };
 
 function MethodIconInner({ type }: { type: string }) {
@@ -25,6 +23,8 @@ function MethodIconInner({ type }: { type: string }) {
       <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
     </svg>
   );
+  if (type === "card") return <CreditCard className="w-6 h-6 text-blue-500" />;
+  if (type === "bank") return <Building2 className="w-6 h-6 text-slate-500" />;
   return null;
 }
 
@@ -59,7 +59,7 @@ function ReceiptScreen({ receipt, onClose }: { receipt: ReceiptData; onClose: ()
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-10 bg-background">
-      <div className="w-full max-w-sm space-y-4">
+      <div className="w-full max-sm space-y-4">
         <div className="bg-card rounded-3xl overflow-hidden shadow-xl border border-card-border">
           <div className="px-6 pt-8 pb-6 text-center border-b border-card-border">
             <div className="w-16 h-16 rounded-full bg-green-500 flex items-center justify-center mx-auto mb-4">
@@ -97,7 +97,7 @@ function ReceiptScreen({ receipt, onClose }: { receipt: ReceiptData; onClose: ()
           </button>
         </Link>
         <p className="text-[11px] text-center text-muted-foreground flex items-center justify-center gap-1.5">
-          <Lock className="w-3 h-3" /> Secure · Encrypted · Safe
+          <Lock className="w-3.5 h-3.5" /> Secure · Encrypted · Safe
         </p>
       </div>
     </div>
@@ -118,25 +118,52 @@ export default function PayPage() {
   const isLinkedPayment = !!paymentLinkId || !!urlAmount;
   const [linkLoading, setLinkLoading] = useState(!!paymentLinkId);
   const [linkError, setLinkError] = useState<string | null>(null);
-  const [linkedPaymentName, setLinkedPaymentName] = useState("");
-  const [linkedExpiry, setLinkedExpiry] = useState<string | null>(null);
+
+  // Dynamic Payment Methods
+  const [activeMethods, setActiveMethods] = useState<any[]>([]);
+  const [openMethod, setOpenMethod] = useState<string | null>(null);
+  const [mobileNetworks, setMobileNetworks] = useState<string[]>(["MTN", "Airtel", "Zamtel"]);
 
   useEffect(() => {
     if (urlCurrency && allCurrencies.some(c => c.code === urlCurrency)) setGlobalCurrency(urlCurrency);
   }, [urlCurrency, allCurrencies, setGlobalCurrency]);
 
   useEffect(() => {
-    if (!paymentLinkId) {
-      setLinkLoading(false);
-      return;
-    }
+    fetch(`${API_BASE}/api/payment-config/public`)
+      .then(r => r.json())
+      .then(data => {
+        const arr = Array.isArray(data) ? data : data?.data ?? [];
+        const methods = [];
+        
+        const mobile = arr.find((m: any) => m.type === "mobile_wallet" && m.isEnabled);
+        if (mobile) {
+          methods.push({ id: "mobile", label: "Mobile", sub: "MTN, Airtel, Zamtel", icon: "phone" });
+          const nets = mobile.providers?.filter((p: any) => p.isEnabled).flatMap((p: any) => p.networks?.filter((n: any) => n.isEnabled).map((n: any) => n.name.replace(/ Mobile Money/i, ""))) || [];
+          if (nets.length > 0) setMobileNetworks(nets);
+        }
+
+        const whatsapp = arr.find((m: any) => m.type === "whatsapp" && m.isEnabled);
+        if (whatsapp) methods.push({ id: "whatsapp", label: "WhatsApp", sub: "Pay on WhatsApp", icon: "whatsapp" });
+
+        const card = arr.find((m: any) => m.type === "card" && m.isEnabled);
+        if (card) methods.push({ id: "card", label: "Card", sub: "Visa, Mastercard", icon: "card" });
+
+        const bank = arr.find((m: any) => m.type === "bank" && m.isEnabled);
+        if (bank) methods.push({ id: "bank", label: "Bank", sub: "Bank Transfer", icon: "bank" });
+
+        setActiveMethods(methods);
+        if (methods.length > 0) setOpenMethod(methods[0].id);
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (!paymentLinkId) { setLinkLoading(false); return; }
     fetch(`${API_BASE}/api/pay-links/${paymentLinkId}`)
       .then(res => res.json())
       .then((link: any) => {
         if (!link?.isActive) { setLinkError("This payment link is no longer active."); return; }
         if (link?.expiresAt && new Date(link.expiresAt) < new Date()) { setLinkError("This payment link has expired."); return; }
-        setLinkedPaymentName(link.name || "Payment Link");
-        setLinkedExpiry(link.expiresAt || null);
         setRawAmount(String(link.amount || 0));
         setNote(link.note || "");
         if (allCurrencies.some(c => c.code === String(link.currency).toUpperCase())) setGlobalCurrency(link.currency.toUpperCase());
@@ -147,9 +174,8 @@ export default function PayPage() {
 
   const [rawAmount, setRawAmount] = useState(urlAmount);
   const [note, setNote] = useState(urlNote);
-  const [openMethod, setOpenMethod] = useState<string | null>(null);
 
-  // User Details for Notifications
+  // User Details for Notifications & Shipping
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -161,7 +187,7 @@ export default function PayPage() {
   const [country, setCountry] = useState("");
 
   const amount = parseFloat(rawAmount) || 0;
-  const feeRate = 0.03;
+  const [feeRate, setFeeRate] = useState(0.03);
   const fee = Math.round(amount * feeRate * 100) / 100;
   const total = amount + fee;
 
@@ -179,6 +205,8 @@ export default function PayPage() {
   useEffect(() => {
     fetchSettings().then((settings) => {
       const arr = Array.isArray(settings) ? settings : (settings as any)?.data || [];
+      const rate = arr.find((s: any) => s.key === 'processing_fee_rate')?.value;
+      if (rate) setFeeRate(Number(rate) / 100);
       const wa = arr.find((s: any) => s.key === 'whatsapp_number')?.value;
       if (wa && wa.trim()) setWhatsappNumber(wa.replace(/[^0-9]/g, ""));
     }).catch(() => {});
@@ -186,10 +214,7 @@ export default function PayPage() {
 
   const handleMobilePay = async () => {
     if (payLoading || !mmPhone.trim()) return;
-    if (!firstName || !lastName || !email || !phone) {
-      setPayError("Please fill in all contact details for notifications.");
-      return;
-    }
+    if (!firstName || !lastName || !email || !phone) { setPayError("Please fill in contact details for notifications."); return; }
     setPayLoading(true); setPayError(null);
     try {
       const res = await fetch(`${API_BASE}/api/payments/pay-now`, {
@@ -208,9 +233,16 @@ export default function PayPage() {
     finally { setPayLoading(false); }
   };
 
-  const handleWhatsAppPay = () => {
-    const msg = encodeURIComponent(`*Payment Request*\nAmount: ${currency} ${total.toFixed(2)}\nRef: ${note || "None"}\nCustomer: ${firstName} ${lastName}\nPhone: ${phone}\nEmail: ${email}`);
-    window.open(`https://api.whatsapp.com/send?phone=${whatsappNumber}&text=${msg}`, "_blank");
+  const handleOtherPay = async () => {
+    if (payLoading) return;
+    if (!firstName || !lastName || !email || !phone) { setPayError("Please fill in contact details for notifications."); return; }
+    if (openMethod === "whatsapp") {
+      const msg = encodeURIComponent(`*Payment Request*\nAmount: ${currency} ${total.toFixed(2)}\nRef: ${note || "None"}\nCustomer: ${firstName} ${lastName}\nPhone: ${phone}\nEmail: ${email}`);
+      window.open(`https://api.whatsapp.com/send?phone=${whatsappNumber}&text=${msg}`, "_blank");
+      return;
+    }
+    // Card/Bank logic would go here if backend supported it for PayPage
+    setPayError(`${openMethod?.toUpperCase()} payment is being processed. Our team will contact you.`);
   };
 
   if (receipt) return <ReceiptScreen receipt={receipt} onClose={() => setReceipt(null)} />;
@@ -226,49 +258,51 @@ export default function PayPage() {
           </button>
           <h1 className="text-base font-bold text-foreground">Payment</h1>
           <div className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: "var(--kryros-primary)" }}>
-            <Lock className="w-3.5 h-3.5" /> Secure Payment
+            <Lock className="w-3.5 h-3.5" /> Secure
           </div>
         </div>
 
         {step === 1 ? (
           <div className="px-4 py-4 space-y-4">
-            <p className="text-sm font-bold text-foreground">Amount</p>
-            <div className="flex h-[52px] rounded-xl bg-card border border-border overflow-hidden shadow-sm">
-              <div className="min-w-[96px] flex items-center justify-center border-r border-border font-bold text-kryros-primary text-base gap-2">
-                <select value={currency} onChange={(e) => setGlobalCurrency(e.target.value)} disabled={isLinkedPayment} className="bg-transparent font-bold outline-none">
-                  {CURRENCIES.map(c => <option key={c.code} value={c.code}>{c.code}</option>)}
-                </select>
-                <ChevronDown className="w-4 h-4" />
+            <div className="space-y-1.5">
+              <p className="text-sm font-bold text-foreground">Amount</p>
+              <div className="flex h-[52px] rounded-xl bg-card border border-border overflow-hidden shadow-sm">
+                <div className="min-w-[96px] flex items-center justify-center border-r border-border font-bold text-kryros-primary text-base gap-2">
+                  <select value={currency} onChange={(e) => setGlobalCurrency(e.target.value)} disabled={isLinkedPayment} className="bg-transparent font-bold outline-none">
+                    {CURRENCIES.map(c => <option key={c.code} value={c.code}>{c.code}</option>)}
+                  </select>
+                  <ChevronDown className="w-4 h-4" />
+                </div>
+                <input value={rawAmount} onChange={(e) => !isLinkedPayment && setRawAmount(e.target.value.replace(/[^0-9.]/g, ""))} readOnly={isLinkedPayment} placeholder="0.00" className="flex-1 text-right px-3 font-extrabold text-2xl bg-transparent outline-none" />
               </div>
-              <input value={rawAmount} onChange={(e) => !isLinkedPayment && setRawAmount(e.target.value.replace(/[^0-9.]/g, ""))} readOnly={isLinkedPayment} placeholder="0.00" className="flex-1 text-right px-3 font-extrabold text-2xl bg-transparent outline-none" />
             </div>
 
             <div className="space-y-3 pt-2">
               <p className="text-sm font-bold text-foreground">Personal Information</p>
               <div className="grid grid-cols-2 gap-3">
-                <input value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="First Name" className="w-full h-[46px] rounded-xl border border-border px-3 bg-card text-sm outline-none" />
-                <input value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Last Name" className="w-full h-[46px] rounded-xl border border-border px-3 bg-card text-sm outline-none" />
+                <input value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="First Name" className="w-full h-[46px] rounded-xl border border-border px-3 bg-card text-sm outline-none focus:ring-2 focus:ring-primary/40" />
+                <input value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Last Name" className="w-full h-[46px] rounded-xl border border-border px-3 bg-card text-sm outline-none focus:ring-2 focus:ring-primary/40" />
               </div>
-              <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email Address" className="w-full h-[46px] rounded-xl border border-border px-3 bg-card text-sm outline-none" />
-              <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone Number" className="w-full h-[46px] rounded-xl border border-border px-3 bg-card text-sm outline-none" />
+              <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email Address" className="w-full h-[46px] rounded-xl border border-border px-3 bg-card text-sm outline-none focus:ring-2 focus:ring-primary/40" />
+              <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone Number" className="w-full h-[46px] rounded-xl border border-border px-3 bg-card text-sm outline-none focus:ring-2 focus:ring-primary/40" />
             </div>
 
             <div className="space-y-3 pt-2">
               <p className="text-sm font-bold text-foreground">Location Details</p>
-              <input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Street Address" className="w-full h-[46px] rounded-xl border border-border px-3 bg-card text-sm outline-none" />
+              <input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Street Address" className="w-full h-[46px] rounded-xl border border-border px-3 bg-card text-sm outline-none focus:ring-2 focus:ring-primary/40" />
               <div className="grid grid-cols-2 gap-3">
-                <input value={city} onChange={(e) => setCity(e.target.value)} placeholder="City" className="w-full h-[46px] rounded-xl border border-border px-3 bg-card text-sm outline-none" />
-                <input value={state} onChange={(e) => setState(e.target.value)} placeholder="State" className="w-full h-[46px] rounded-xl border border-border px-3 bg-card text-sm outline-none" />
+                <input value={city} onChange={(e) => setCity(e.target.value)} placeholder="City" className="w-full h-[46px] rounded-xl border border-border px-3 bg-card text-sm outline-none focus:ring-2 focus:ring-primary/40" />
+                <input value={state} onChange={(e) => setState(e.target.value)} placeholder="State" className="w-full h-[46px] rounded-xl border border-border px-3 bg-card text-sm outline-none focus:ring-2 focus:ring-primary/40" />
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <input value={zipCode} onChange={(e) => setZipCode(e.target.value)} placeholder="Postal Code" className="w-full h-[46px] rounded-xl border border-border px-3 bg-card text-sm outline-none" />
-                <input value={country} onChange={(e) => setCountry(e.target.value)} placeholder="Country" className="w-full h-[46px] rounded-xl border border-border px-3 bg-card text-sm outline-none" />
+                <input value={zipCode} onChange={(e) => setZipCode(e.target.value)} placeholder="Postal Code" className="w-full h-[46px] rounded-xl border border-border px-3 bg-card text-sm outline-none focus:ring-2 focus:ring-primary/40" />
+                <input value={country} onChange={(e) => setCountry(e.target.value)} placeholder="Country" className="w-full h-[46px] rounded-xl border border-border px-3 bg-card text-sm outline-none focus:ring-2 focus:ring-primary/40" />
               </div>
             </div>
 
             <div className="bg-card rounded-xl border border-border p-4 shadow-sm space-y-2">
               <div className="flex justify-between text-sm font-semibold text-muted-foreground"><span>Amount</span><span>{currency} {amount.toFixed(2)}</span></div>
-              <div className="flex justify-between text-sm font-semibold text-muted-foreground"><span>Fee (3%)</span><span>{currency} {fee.toFixed(2)}</span></div>
+              <div className="flex justify-between text-sm font-semibold text-muted-foreground"><span>Fee ({Math.round(feeRate*100)}%)</span><span>{currency} {fee.toFixed(2)}</span></div>
               <div className="h-px bg-border" />
               <div className="flex justify-between font-black text-foreground"><span>Total Payable</span><span className="text-lg text-primary">{currency} {total.toFixed(2)}</span></div>
             </div>
@@ -281,7 +315,7 @@ export default function PayPage() {
               <p className="text-4xl font-black text-primary">{currency} {total.toFixed(2)}</p>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              {DEFAULT_METHODS.map(m => (
+              {activeMethods.map(m => (
                 <button key={m.id} onClick={() => setOpenMethod(m.id)} className={`flex flex-col items-center py-5 rounded-2xl border bg-card transition-all ${openMethod === m.id ? "border-primary shadow-[0_0_0_1px_var(--kryros-primary)]" : "border-border"}`}>
                   <div className="w-12 h-12 rounded-full flex items-center justify-center mb-2" style={{ background: ICON_BG[m.icon] }}><MethodIconInner type={m.icon} /></div>
                   <span className="text-xs font-semibold">{m.label}</span>
@@ -295,7 +329,7 @@ export default function PayPage() {
                   <button onClick={() => setShowProviderDrop(!showProviderDrop)} className="w-full flex justify-between items-center px-4 h-[52px] rounded-xl border bg-card text-sm font-medium">{mmProvider}<ChevronDown className={`w-5 h-5 transition-transform ${showProviderDrop ? "rotate-180" : ""}`} /></button>
                   {showProviderDrop && (
                     <div className="absolute top-full w-full mt-1 border rounded-xl bg-card shadow-lg z-10">
-                      {["MTN", "Airtel", "Zamtel"].map(p => <button key={p} onClick={() => { setMmProvider(p); setShowProviderDrop(false); }} className="w-full px-4 py-3 text-left text-sm hover:bg-muted">{p}</button>)}
+                      {mobileNetworks.map(p => <button key={p} onClick={() => { setMmProvider(p); setShowProviderDrop(false); }} className="w-full px-4 py-3 text-left text-sm hover:bg-muted border-b last:border-0">{p}</button>)}
                     </div>
                   )}
                 </div>
@@ -308,7 +342,12 @@ export default function PayPage() {
             )}
             {openMethod === "whatsapp" && (
               <div className="pt-2">
-                <button onClick={handleWhatsAppPay} className="w-full h-[52px] rounded-xl bg-[#25D366] text-white font-bold transition-all active:scale-95">Pay via WhatsApp</button>
+                <button onClick={handleOtherPay} className="w-full h-[52px] rounded-xl bg-[#25D366] text-white font-bold transition-all active:scale-95">Pay via WhatsApp</button>
+              </div>
+            )}
+            {(openMethod === "card" || openMethod === "bank") && (
+              <div className="pt-2">
+                <button onClick={handleOtherPay} className="w-full h-[52px] rounded-xl bg-primary text-white font-bold transition-all active:scale-95">{`Pay via ${openMethod.toUpperCase()}`}</button>
               </div>
             )}
           </div>
