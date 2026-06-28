@@ -64,6 +64,11 @@ export interface ApiCategory {
   slug?: string;
   image?: string;
   icon?: string;
+  parentId?: string | null;
+  parent?: { id: string; name: string; slug?: string } | null;
+  children?: Array<{ id: string; name: string; slug?: string; parentId?: string | null }>;
+  isActive?: boolean;
+  showOnHome?: boolean;
   _count?: { products: number };
 }
 

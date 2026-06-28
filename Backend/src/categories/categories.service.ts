@@ -21,19 +21,68 @@ export class CategoriesService {
     ]);
   }
 
-  async findAll() {
-    const cached = await this.cacheManager.get<any[]>('categories:all');
-    if (cached) return cached;
+  private withAggregatedProductCounts(categories: any[]) {
+    const childrenByParent = new Map<string, any[]>();
 
-    const result = await this.prisma.category.findMany({
+    for (const category of categories) {
+      if (!category.parentId) continue;
+      const siblings = childrenByParent.get(category.parentId) || [];
+      siblings.push(category);
+      childrenByParent.set(category.parentId, siblings);
+    }
+
+    const memo = new Map<string, number>();
+    const countProducts = (categoryId: string): number => {
+      if (memo.has(categoryId)) {
+        return memo.get(categoryId)!;
+      }
+
+      const category = categories.find((item) => item.id === categoryId);
+      const ownCount = category?._count?.products ?? 0;
+      const childCount = (childrenByParent.get(categoryId) || []).reduce(
+        (sum, child) => sum + countProducts(child.id),
+        0,
+      );
+      const total = ownCount + childCount;
+      memo.set(categoryId, total);
+      return total;
+    };
+
+    return categories.map((category) => ({
+      ...category,
+      _count: {
+        ...category._count,
+        products: countProducts(category.id),
+      },
+    }));
+  }
+
+  private async getCategoriesWithCounts() {
+    const categories = await this.prisma.category.findMany({
       where: { isActive: true },
       include: {
+        parent: {
+          select: { id: true, name: true, slug: true },
+        },
+        children: {
+          where: { isActive: true },
+          select: { id: true, name: true, slug: true, parentId: true },
+        },
         _count: {
           select: { products: { where: { isActive: true } } }
         }
       },
       orderBy: { sortOrder: 'asc' },
     });
+
+    return this.withAggregatedProductCounts(categories);
+  }
+
+  async findAll() {
+    const cached = await this.cacheManager.get<any[]>('categories:all');
+    if (cached) return cached;
+
+    const result = await this.getCategoriesWithCounts();
     await this.cacheManager.set('categories:all', result, CACHE_TTL);
     return result;
   }
@@ -64,15 +113,9 @@ export class CategoriesService {
     const cached = await this.cacheManager.get<any[]>('categories:homepage');
     if (cached) return cached;
 
-    const result = await this.prisma.category.findMany({
-      where: { isActive: true, showOnHome: true },
-      include: {
-        _count: {
-          select: { products: { where: { isActive: true } } }
-        }
-      },
-      orderBy: { sortOrder: 'asc' },
-    });
+    const result = (await this.getCategoriesWithCounts()).filter(
+      (category) => category.showOnHome,
+    );
     await this.cacheManager.set('categories:homepage', result, CACHE_TTL);
     return result;
   }

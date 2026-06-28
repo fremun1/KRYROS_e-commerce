@@ -171,27 +171,66 @@ export default function ShopPage() {
       }
     : null;
 
+  const getCategoryTargets = (category: ApiCategory | string) => {
+    const ids = new Set<string>();
+    const keys = new Set<string>();
+
+    const selectedCategory =
+      typeof category === "string"
+        ? categories.find(
+            (item) =>
+              item.id === category ||
+              toCategoryKey(item.slug || item.name) === toCategoryKey(category)
+          )
+        : category;
+
+    if (!selectedCategory) {
+      if (typeof category === "string" && category !== "All") {
+        keys.add(toCategoryKey(category));
+      }
+      return { ids, keys };
+    }
+
+    const visit = (categoryId: string) => {
+      if (ids.has(categoryId)) return;
+      ids.add(categoryId);
+
+      const current = categories.find((item) => item.id === categoryId);
+      if (!current) return;
+
+      keys.add(toCategoryKey(current.slug || current.name));
+      categories
+        .filter((item) => item.parentId === categoryId)
+        .forEach((child) => visit(child.id));
+    };
+
+    visit(selectedCategory.id);
+    return { ids, keys };
+  };
+
   const matchesCategory = (product: Product, category: ApiCategory | string) => {
     if (typeof category === "string") {
       if (category === "All") return true;
-      const categoryKey = toCategoryKey(category);
+      const targets = getCategoryTargets(category);
       return (
-        product.categoryId === category ||
-        toCategoryKey(product.categorySlug || "") === categoryKey ||
-        toCategoryKey(product.category || "") === categoryKey
+        (!!product.categoryId && targets.ids.has(product.categoryId)) ||
+        targets.keys.has(toCategoryKey(product.categorySlug || "")) ||
+        targets.keys.has(toCategoryKey(product.category || ""))
       );
     }
 
-    const categoryKey = toCategoryKey(category.slug || category.name);
+    const targets = getCategoryTargets(category);
     return (
-      product.categoryId === category.id ||
-      toCategoryKey(product.categorySlug || "") === categoryKey ||
-      toCategoryKey(product.category || "") === categoryKey
+      (!!product.categoryId && targets.ids.has(product.categoryId)) ||
+      targets.keys.has(toCategoryKey(product.categorySlug || "")) ||
+      targets.keys.has(toCategoryKey(product.category || ""))
     );
   };
 
-  const getCategoryCount = (category: ApiCategory) =>
-    category._count?.products ?? allProducts.filter((product) => matchesCategory(product, category)).length;
+  const getCategoryCount = (category: ApiCategory) => {
+    const localCount = allProducts.filter((product) => matchesCategory(product, category)).length;
+    return Math.max(category._count?.products ?? 0, localCount);
+  };
 
   const isCategorySelected = (category: ApiCategory) =>
     selectedCat === category.id ||
