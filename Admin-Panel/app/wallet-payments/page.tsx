@@ -144,8 +144,8 @@ function WalletPaymentsContent() {
     input: dark ? '#0D1523' : '#FFFFFF',
   };
 
-  const role = normalizeRole(user?.role);
-  const canManage = role === 'ADMIN' || role === 'SUPERADMIN' || role === 'MANAGER';
+const role = normalizeRole(user?.role);
+   const canManage = ['ADMIN', 'SUPERADMIN', 'MANAGER', 'STAFF'].includes(role);
 
   type Tab = 'transactions' | 'links' | 'methods';
   const [activeTab, setActiveTab] = useState<Tab>('transactions');
@@ -616,16 +616,16 @@ function WalletPaymentsContent() {
   return (
     <AdminShell noPadding>
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: 'calc(100vh - 64px)', background: T.panel }}>
-        <div style={{ padding: '1.25rem 1.5rem', borderBottom: `1px solid ${T.border}`, background: T.panel }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem', marginBottom: '1.25rem', flexWrap: 'wrap' }}>
+        <div style={{ padding: '1rem', borderBottom: `1px solid ${T.border}`, background: T.panel }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.75rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
             <div>
-              <h1 style={{ fontSize: '1.25rem', fontWeight: 800, color: T.text, margin: 0, letterSpacing: '-0.02em' }}>Wallet & Payments</h1>
-              <p style={{ fontSize: '0.78rem', color: T.muted, margin: '0.35rem 0 0 0', maxWidth: '720px', lineHeight: 1.5 }}>
+              <h1 style={{ fontSize: '1.15rem', fontWeight: 800, color: T.text, margin: 0, letterSpacing: '-0.02em' }}>Wallet & Payments</h1>
+              <p style={{ fontSize: '0.75rem', color: T.muted, margin: '0.35rem 0 0 0', maxWidth: '100%', lineHeight: 1.5 }}>
                 Manage direct payments, payment pages, and checkout method configuration from one place.
               </p>
             </div>
 
-            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
               {activeTab === 'links' && (
                 <button onClick={() => openLinkModal()} style={actionButton('primary')}>
                   <Plus size={15} /> Create Pay Page
@@ -639,7 +639,7 @@ function WalletPaymentsContent() {
             </div>
           </div>
 
-          <div style={{ display: 'flex', gap: '1.25rem', borderBottom: `1px solid ${T.border}`, marginBottom: '-1.25rem', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: '0.75rem', borderBottom: `1px solid ${T.border}`, marginBottom: '-0.75rem', flexWrap: 'wrap', overflowX: 'auto', WebkitOverflowScrolling: 'touch', paddingBottom: '0.75rem' }}>
             {[
               { id: 'transactions', label: 'Transactions', icon: TrendingUp },
               { id: 'links', label: 'Pay Pages', icon: Link2 },
@@ -669,8 +669,8 @@ function WalletPaymentsContent() {
           </div>
         </div>
 
-        <div style={{ padding: '0.75rem 1.5rem', borderBottom: `1px solid ${T.border}`, display: 'flex', gap: '1rem', alignItems: 'center', background: T.panel, flexWrap: 'wrap' }}>
-          <div style={{ position: 'relative', flex: 1, minWidth: '220px', maxWidth: activeTab === 'methods' ? '540px' : '400px' }}>
+        <div style={{ padding: '0.75rem 1rem', borderBottom: `1px solid ${T.border}`, display: 'flex', gap: '0.75rem', alignItems: 'center', background: T.panel, flexWrap: 'wrap' }}>
+          <div style={{ position: 'relative', flex: 1, minWidth: '180px', maxWidth: '100%' }}>
             <Search size={14} color={T.muted} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)' }} />
             <input
               value={search}
@@ -690,7 +690,7 @@ function WalletPaymentsContent() {
           </button>
         </div>
 
-        <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '1rem' }}>
           {dataLoading ? (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '220px', color: T.muted, fontSize: '0.85rem' }}>
               Loading data...
@@ -726,7 +726,8 @@ function WalletPaymentsContent() {
 
               {activeTab === 'transactions' && (
                 <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: '14px', overflow: 'hidden' }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem' }}>
+                  <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+                    <table className="tx-table" style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem', minWidth: '800px' }}>
                     <thead>
                       <tr style={{ borderBottom: `1px solid ${T.border}`, background: T.surface }}>
                         <th style={tableHead(T)}>Reference</th>
@@ -768,13 +769,14 @@ function WalletPaymentsContent() {
                           </tr>
                         );
                       })}
-                      {filteredTx.length === 0 && (
-                        <tr>
-                          <td colSpan={8} style={{ padding: '3rem', textAlign: 'center', color: T.muted }}>No transactions found</td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
+{filteredTx.length === 0 && (
+                         <tr>
+                           <td colSpan={8} style={{ padding: '3rem', textAlign: 'center', color: T.muted }}>No transactions found</td>
+                         </tr>
+                       )}
+                     </tbody>
+                   </table>
+                  </div>
                 </div>
               )}
 
@@ -836,7 +838,7 @@ function WalletPaymentsContent() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxWidth: '1100px', margin: '0 auto' }}>
                   {!loading && !canManage && (
                     <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: '14px', padding: '1rem 1.15rem', color: T.muted, fontSize: '0.82rem' }}>
-                      This section is visible only to admin roles. If the buttons are missing on your live server, the account logged into the admin panel is likely not an `Admin`, `Super Admin`, or `Manager`.
+                      This section is visible only to admin roles (Admin, Manager, Staff). If buttons are missing, the account logged in may not have permission to manage payment methods.
                     </div>
                   )}
 
@@ -1128,31 +1130,34 @@ function WalletPaymentsContent() {
         </ModalShell>
       )}
 
-      <style jsx>{`
-        .animate-spin { animation: spin 1s linear infinite; }
-        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-      `}</style>
-    </AdminShell>
-  );
-}
+<style jsx>{`
+         .animate-spin { animation: spin 1s linear infinite; }
+         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+         @media (max-width: 768px) {
+           .tx-table { min-width: 600px !important; }
+         }
+       `}</style>
+     </AdminShell>
+   );
+ }
 
-function tableHead(T: Record<string, string>) {
-  return {
-    padding: '0.75rem 1rem',
-    textAlign: 'left' as const,
-    fontWeight: 800,
-    color: T.muted,
-    textTransform: 'uppercase' as const,
-    fontSize: '0.7rem',
-  };
-}
+ function tableHead(T: Record<string, string>) {
+   return {
+     padding: '0.6rem 0.8rem',
+     textAlign: 'left' as const,
+     fontWeight: 700,
+     color: T.muted,
+     textTransform: 'uppercase' as const,
+     fontSize: '0.68rem',
+   };
+ }
 
-function tableCell(T: Record<string, string>) {
-  return {
-    padding: '0.8rem 1rem',
-    color: T.text,
-  };
-}
+ function tableCell(T: Record<string, string>) {
+   return {
+     padding: '0.6rem 0.8rem',
+     color: T.text,
+   };
+ }
 
 function tableCellMuted(T: Record<string, string>) {
   return {
