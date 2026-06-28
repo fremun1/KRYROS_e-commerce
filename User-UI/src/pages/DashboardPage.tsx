@@ -114,6 +114,18 @@ interface UserProfile {
 
 type ActiveSection = "overview" | "profile" | "addresses" | "credit" | "wholesale";
 
+function buildShortOrderReference(rawId?: string | null) {
+  const clean = rawId?.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
+  if (!clean) return "ORD-UNKNOWN";
+  return `ORD-${clean.slice(-6)}`;
+}
+
+function formatOrderReference(orderNumber?: string | null, fallbackId?: string | null) {
+  if (orderNumber?.trim()) return `#${orderNumber.trim()}`;
+  if (fallbackId?.trim()) return `#${buildShortOrderReference(fallbackId)}`;
+  return "#—";
+}
+
 export default function DashboardPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
@@ -157,7 +169,7 @@ export default function DashboardPage() {
         const mapped: OrderItem[] = list.slice(0, 5).map((o: any) => ({
           id: String(o.id),
           name: o.items?.[0]?.product?.name ?? o.productName ?? "Order",
-          orderId: `#${o.orderNumber ?? o.id}`,
+          orderId: formatOrderReference(o.orderNumber, o.id),
           totalDisplay: o.totalZMW && o.currencyCode === 'ZMW' 
             ? `ZMW ${Number(o.totalZMW).toLocaleString()}` 
             : `${o.currencyCode || 'USD'} ${Number(o.total || 0).toLocaleString()}`,

@@ -22,6 +22,7 @@ export default function CartPage() {
   const shipping = items.reduce((t, i) => t + (i.shippingFee || 0) * i.qty, 0);
   const fee = subtotal * feeRate;
   const total = subtotal + shipping + fee;
+  const shippingLabel = shipping <= 0 ? "Free shipping" : format(shipping);
 
   // Calculate delivery range: use the slowest item's delivery window
   const deliveryMinDays = items.reduce(
@@ -161,7 +162,7 @@ export default function CartPage() {
               </div>
               <div className="flex justify-between text-sm lg:text-base">
                 <span className="text-muted-foreground">Shipping</span>
-                <span className="font-semibold text-foreground">{format(shipping)}</span>
+                <span className="font-semibold text-foreground">{shippingLabel}</span>
               </div>
               <div className="flex justify-between text-sm lg:text-base">
                 <span className="text-muted-foreground">Fee</span>

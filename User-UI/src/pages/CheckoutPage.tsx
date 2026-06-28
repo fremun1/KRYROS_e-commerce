@@ -152,6 +152,19 @@ function SectionHeader({ number, icon: Icon, title }: { number: number; icon: an
   );
 }
 
+function buildShortOrderReference(rawValue?: string | null) {
+  const clean = rawValue?.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
+  if (!clean) return "ORD-UNKNOWN";
+  return `ORD-${clean.slice(-6)}`;
+}
+
+function looksLikeInternalOrderId(value?: string | null) {
+  return !!value && (
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value) ||
+    value.length > 24
+  );
+}
+
 export default function CheckoutPage() {
   const [, navigate] = useLocation();
   const cartItems    = useCartStore((s) => s.items);
@@ -209,6 +222,13 @@ export default function CheckoutPage() {
   const deliveryMinDays = cartItems.reduce((max, i) => Math.max(max, i.estimatedDeliveryMinDays || 2), 0) || 2;
   const deliveryMaxDays = cartItems.reduce((max, i) => Math.max(max, i.estimatedDeliveryMaxDays || 7), 0) || 7;
   const deliveryRangeText = deliveryMinDays === deliveryMaxDays ? `Delivery in ${deliveryMaxDays} days` : `Delivery in ${deliveryMinDays}-${deliveryMaxDays} days`;
+  const shippingDisplayText = shippingPrice <= 0 ? "Free shipping" : `${format(shippingPrice)} shipping`;
+  const shippingSummaryText = shippingPrice <= 0 ? "Free shipping" : format(shippingPrice);
+  const placedOrderDisplay = placedOrderNumber
+    ? looksLikeInternalOrderId(placedOrderNumber)
+      ? `#${buildShortOrderReference(placedOrderNumber)}`
+      : `#${placedOrderNumber}`
+    : "#—";
 
   useEffect(() => {
     fetch(`${API_BASE}/api/countries`).then(r => r.json()).then(data => {
@@ -405,7 +425,7 @@ export default function CheckoutPage() {
       <div className="max-w-lg mx-auto bg-background min-h-screen flex flex-col px-6 pt-12 pb-8 text-center space-y-6">
         <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto"><Check className="w-10 h-10 text-primary" strokeWidth={3} /></div>
         <h1 className="text-2xl font-black">Order Placed!</h1>
-        <p className="text-sm text-muted-foreground">Order: <span className="font-bold text-foreground">#{placedOrderNumber}</span></p>
+        <p className="text-sm text-muted-foreground">Order: <span className="font-bold text-foreground">{placedOrderDisplay}</span></p>
         <div className="bg-card border border-border rounded-3xl p-5 space-y-3">
           {savedCartItems.map(i => <div key={i.id} className="flex justify-between text-sm"><span>{i.qty}× {i.name}</span><span className="font-semibold">{format(i.price * i.qty)}</span></div>)}
           <div className="pt-3 border-t font-black flex justify-between"><span>Total</span><span className="text-primary">{format(total)}</span></div>
@@ -498,7 +518,7 @@ export default function CheckoutPage() {
 
         <div className="bg-card border border-border rounded-2xl p-4">
           <SectionHeader number={3} icon={Truck} title="Delivery" />
-          <div className="flex items-center gap-3"><Truck className="w-6 h-6 text-primary" /><div><p className="text-sm font-bold text-primary">{format(shippingPrice)} shipping</p><p className="text-xs font-semibold">{deliveryRangeText}</p></div></div>
+          <div className="flex items-center gap-3"><Truck className="w-6 h-6 text-primary" /><div><p className="text-sm font-bold text-primary">{shippingDisplayText}</p><p className="text-xs font-semibold">{deliveryRangeText}</p></div></div>
         </div>
 
         <div className="bg-card border border-border rounded-2xl p-4">
@@ -537,7 +557,7 @@ export default function CheckoutPage() {
 
         <div className="bg-card border border-border rounded-2xl p-4 space-y-2.5">
           <div className="flex justify-between text-sm text-muted-foreground"><span>Subtotal</span><span className="font-semibold text-foreground">{format(SUBTOTAL)}</span></div>
-          <div className="flex justify-between text-sm text-muted-foreground"><span>Shipping</span><span className="font-semibold text-foreground">{format(shippingPrice)}</span></div>
+          <div className="flex justify-between text-sm text-muted-foreground"><span>Shipping</span><span className="font-semibold text-foreground">{shippingSummaryText}</span></div>
           <div className="flex justify-between text-sm text-muted-foreground"><span>Processing Fee (3%)</span><span className="font-semibold text-foreground">{format(PROCESSING_FEE)}</span></div>
           <div className="pt-2.5 border-t flex justify-between items-center font-black"><span>Total</span><span className="text-lg text-primary">{format(total)}</span></div>
         </div>

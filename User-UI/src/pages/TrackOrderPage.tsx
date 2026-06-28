@@ -49,6 +49,45 @@ interface DirectPaymentApiResult {
   trackingLink?: string;
 }
 
+function buildShortReference(prefix: string, rawId?: string | null) {
+  const clean = rawId?.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
+  if (!clean) return `${prefix}-UNKNOWN`;
+  return `${prefix}-${clean.slice(-6)}`;
+}
+
+function formatOrderReference(orderNumber?: string | null, fallbackId?: string | null, trackingNumber?: string | null) {
+  if (orderNumber?.trim()) return `#${orderNumber.trim()}`;
+  if (trackingNumber?.trim()) return `#${trackingNumber.trim()}`;
+  if (fallbackId?.trim()) return `#${buildShortReference("ORD", fallbackId)}`;
+  return "#—";
+}
+
+function formatDeliveryEstimate(order: ApiOrder) {
+  const items = order.items ?? [];
+  const minDays = items.reduce((max, item) => {
+    const candidate = Number((item as any)?.product?.estimatedDeliveryMinDays ?? (item as any)?.estimatedDeliveryMinDays ?? 0);
+    return Math.max(max, candidate);
+  }, 0);
+  const maxDays = items.reduce((max, item) => {
+    const candidate = Number((item as any)?.product?.estimatedDeliveryMaxDays ?? (item as any)?.estimatedDeliveryMaxDays ?? 0);
+    return Math.max(max, candidate);
+  }, 0);
+
+  if (minDays > 0 || maxDays > 0) {
+    const start = minDays || maxDays;
+    const end = maxDays || minDays;
+    return start === end
+      ? `Estimated delivery in ${end} day${end === 1 ? "" : "s"}`
+      : `Estimated delivery in ${start}-${end} days`;
+  }
+
+  if (order.estimatedDays) {
+    return `Estimated delivery in ${order.estimatedDays} day${order.estimatedDays === 1 ? "" : "s"}`;
+  }
+
+  return "—";
+}
+
 function normalizeDirectPayment(dp: DirectPaymentApiResult): OrderRow {
   const status = getDisplayStatus(dp.status);
   return {
@@ -127,24 +166,17 @@ function normalizeOrder(o: ApiOrder): OrderRow {
   const imgRaw = item?.product?.images?.[0];
   const image = item?.image || (typeof imgRaw === "string" ? imgRaw : (imgRaw as any)?.url ?? "");
   const status = getDisplayStatus(o.status, o.paymentStatus);
-  const estimatedDelivery = o.estimatedDelivery
-    ? new Date(o.estimatedDelivery)
-    : o.createdAt && o.estimatedDays
-      ? new Date(new Date(o.createdAt).getTime() + o.estimatedDays * 24 * 60 * 60 * 1000)
-      : null;
   return {
     id: String(o.id),
     trackingLink: (o as any).trackingLink || undefined,
     name: item?.product?.name ?? item?.name ?? "Order",
     specs: item?.product?.specs ?? "",
-    orderId: `#${o.orderNumber ?? o.id}`,
+    orderId: formatOrderReference(o.orderNumber, o.id, o.trackingNumber),
     placedOn: o.createdAt
       ? new Date(o.createdAt).toLocaleDateString("en", { month: "short", day: "numeric", year: "numeric" })
       : "",
     status,
-    estDelivery: estimatedDelivery
-      ? estimatedDelivery.toLocaleDateString("en", { month: "short", day: "numeric", year: "numeric" })
-      : "—",
+    estDelivery: formatDeliveryEstimate(o),
     image: image || (import.meta as unknown as { env: Record<string, string> }).env?.VITE_FALLBACK_IMAGE_URL || "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=200&q=80",
     timeline: getTimeline(status),
   };

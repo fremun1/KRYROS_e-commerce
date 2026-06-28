@@ -10,7 +10,7 @@ import { createUser, updateUser, deleteUser, getUsers } from '@/lib/api';
 import { useAuth } from '@/contexts/auth-context';
 import toast from 'react-hot-toast';
 
-type User = { id: string; name: string; email: string; role: string; status: string; joined: string; orders: number };
+type User = { id: string; displayId: string; name: string; email: string; role: string; status: string; joined: string; orders: number };
 
 const roles = [
   { name: 'Super Admin', permissions: 'Full Access', users: 1, color: '#ef4444' },
@@ -20,6 +20,16 @@ const roles = [
 ];
 
 const EMPTY_FORM = { name: '', email: '', role: 'Customer', status: 'Active', password: '' };
+
+function formatUserDisplayId(id?: string, email?: string) {
+  const clean = id?.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+  if (clean) return `USR-${clean.slice(-6)}`;
+
+  const emailPrefix = email?.split('@')[0]?.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+  if (emailPrefix) return `USR-${emailPrefix.slice(0, 6)}`;
+
+  return 'USR-NEW';
+}
 
 function UsersContent() {
   const { theme } = useTheme();
@@ -55,6 +65,7 @@ const canManageRoles = isSuperAdmin;
       const raw: any[] = Array.isArray(r.data?.data) ? r.data.data : Array.isArray(r.data) ? r.data : [];
       const normalized: User[] = raw.map((u: any) => ({
         id: u.id || '',
+        displayId: formatUserDisplayId(u.id, u.email),
         name: [u.firstName, u.lastName].filter(Boolean).join(' ') || u.name || u.email || '',
         email: u.email || '',
         role: normalizeRole(u.role),
@@ -110,14 +121,21 @@ const canManageRoles = isSuperAdmin;
       const firstName = nameParts[0] || form.name;
       const lastName = nameParts.slice(1).join(' ') || '-';
       const roleMap: Record<string, string> = { 'Customer': 'CUSTOMER', 'Wholesale': 'WHOLESALE', 'Manager': 'MANAGER', 'Admin': 'ADMIN', 'Super Admin': 'SUPER_ADMIN', 'Staff': 'STAFF' };
-      await createUser({
+      const createdUser = await createUser({
         firstName,
         lastName,
         email: form.email,
         password: (form as any).password,
         role: roleMap[form.role] || 'CUSTOMER',
       });
-      const newItem: User = { id: `USR${String(Date.now()).slice(-3)}`, ...form, joined: new Date().toISOString().split('T')[0], orders: 0 };
+      const created = createdUser?.data || {};
+      const newItem: User = {
+        id: created.id || `local-${Date.now()}`,
+        displayId: formatUserDisplayId(created.id, form.email),
+        ...form,
+        joined: created.createdAt ? String(created.createdAt).split('T')[0] : new Date().toISOString().split('T')[0],
+        orders: 0,
+      };
       setData(d => [...d, newItem]);
       toast.success('User added');
       setAddOpen(false);
@@ -148,7 +166,7 @@ const canManageRoles = isSuperAdmin;
         payload.password = (form as any).password;
       }
       await updateUser(editRow.id, payload);
-      setData(d => d.map(u => u.id === editRow.id ? { ...u, ...form } : u));
+      setData(d => d.map(u => u.id === editRow.id ? { ...u, ...form, displayId: formatUserDisplayId(u.id, form.email) } : u));
       toast.success('User updated');
       setEditRow(null);
     } catch (err: any) {
@@ -188,7 +206,7 @@ const canManageRoles = isSuperAdmin;
   };
 
   const columns: Column[] = [
-    { key: 'id', label: 'ID', width: '90px' },
+    { key: 'displayId', label: 'ID', width: '110px' },
     { key: 'name', label: 'Name', render: (v, row) => (
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
         <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(31,168,154,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 700, color: '#1FA89A', flexShrink: 0 }}>
