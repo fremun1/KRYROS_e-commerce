@@ -21,6 +21,12 @@ const INITIAL: Invoice[] = [
 const EMPTY = { client:'', amount:'', processingFees:'', total:'', date:'', due:'', status:'Draft' };
 const INV_STATUSES = ['Draft','Unpaid','Paid','Overdue'];
 
+function shortRef(prefix: string, value?: string | null) {
+  const clean = value?.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+  if (!clean) return `${prefix}-UNKNOWN`;
+  return `${prefix}-${clean.slice(-6)}`;
+}
+
 function InvoicingContent() {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
@@ -46,7 +52,7 @@ function InvoicingContent() {
           const d = o.createdAt ? o.createdAt.split('T')[0] : '';
           const due = o.createdAt ? new Date(new Date(o.createdAt).getTime() + 30*24*60*60*1000).toISOString().split('T')[0] : '';
           return {
-            id: `INV-${(o.orderNumber || o.id || '').toString().slice(-8)}`,
+            id: o.orderNumber ? `INV-${o.orderNumber}` : shortRef('INV', o.id),
             client: o.user ? (`${o.user.firstName||''} ${o.user.lastName||''}`.trim() || o.user.email || 'Customer') : 'Customer',
             amount: `$${amt.toLocaleString()}`,
             processingFees: `$${processingFees.toLocaleString()}`,
@@ -62,7 +68,7 @@ function InvoicingContent() {
           const dt = d.createdAt ? d.createdAt.split('T')[0] : '';
           const due = d.createdAt ? new Date(new Date(d.createdAt).getTime() + 30*24*60*60*1000).toISOString().split('T')[0] : '';
           return {
-            id: `INV-${(d.paymentNumber || d.id || '').toString().slice(-8)}`,
+            id: d.paymentNumber ? `INV-${d.paymentNumber}` : shortRef('INV', d.id),
             client: d.user ? (`${d.user.firstName||''} ${d.user.lastName||''}`.trim() || d.user.email || 'Customer') : 'Customer',
             amount: `$${amt.toLocaleString()}`,
             processingFees: '$0',

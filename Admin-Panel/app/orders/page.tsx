@@ -60,6 +60,17 @@ type OrderDetail = OrderListItem & {
   logs: OrderLog[];
 };
 
+function shortOrderRef(value?: string | null) {
+  const clean = value?.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+  if (!clean) return 'ORD-UNKNOWN';
+  return `ORD-${clean.slice(-6)}`;
+}
+
+function formatOrderRef(orderNumber?: string | null, fallbackId?: string | null) {
+  if (orderNumber?.trim()) return orderNumber.trim();
+  return shortOrderRef(fallbackId);
+}
+
 type TabDef = {
   key: string;
   label: string;
@@ -175,7 +186,7 @@ function OrdersContent() {
           : Array.isArray(r.data) ? r.data : [];
         setOrders(raw.map((o: any): OrderListItem => ({
           id: o.id || '',
-          orderNumber: o.orderNumber || o.id || '',
+          orderNumber: formatOrderRef(o.orderNumber, o.id),
           status: o.status || 'PENDING',
           paymentStatus: o.paymentStatus || 'PENDING',
           paymentMethod: o.paymentMethod || '',
@@ -669,7 +680,7 @@ function OrdersContent() {
               <h3 style={{ color: T.text, margin: '0 0 0.5rem', fontSize: '1.1rem' }}>Permanently Delete?</h3>
               <p style={{ color: T.muted, fontSize: '0.85rem', margin: '0 0 1.5rem', lineHeight: 1.5 }}>
                 {deleteConfirm === 'single'
-                  ? `Are you sure you want to delete order #${deleteTarget?.orderNumber || detail?.orderNumber}? This action cannot be undone.`
+                  ? `Are you sure you want to delete order #${formatOrderRef(deleteTarget?.orderNumber, deleteTarget?.id || detail?.id)}? This action cannot be undone.`
                   : `Are you sure you want to delete ${selectedIds.size} selected orders? This action cannot be undone.`}
               </p>
               <div style={{ display: 'flex', gap: '0.75rem' }}>

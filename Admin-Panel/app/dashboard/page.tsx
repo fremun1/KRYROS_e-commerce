@@ -37,6 +37,22 @@ const quickActions = [
   { label: "Settings",     Icon: Settings,    color: "#64748b", href: "/settings"        },
 ];
 
+function shortRef(prefix: string, value?: string | null) {
+  const clean = value?.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
+  if (!clean) return `${prefix}-UNKNOWN`;
+  return `${prefix}-${clean.slice(-6)}`;
+}
+
+function formatOrderRef(orderNumber?: string | null, fallbackId?: string | null) {
+  if (orderNumber?.trim()) return `#${orderNumber.trim()}`;
+  return `#${shortRef("ORD", fallbackId)}`;
+}
+
+function formatActivityOrderRef(id?: string | null) {
+  if (!id?.trim()) return "Transaction";
+  return `Order ${shortRef("ORD", id)}`;
+}
+
 function StatusBadge({ status }: { status: string }) {
   const s = status?.toLowerCase() || "";
   const map: Record<string, { bg: string; color: string; label: string }> = {
@@ -161,13 +177,13 @@ function DashboardContent() {
   // Activity feed — real recent transactions
   const activities: Array<{ text: string; time: string; color: string; icon: string }> = report?.recentTransactions?.length > 0
     ? report.recentTransactions.slice(0, 5).map((tx: any) => ({
-        text: `${tx.id ? `Order ${tx.id}` : "Transaction"}  ·  ${tx.customer || "Customer"}  ·  ${fmt(tx.amount)}`,
+        text: `${formatActivityOrderRef(tx.id)}  ·  ${tx.customer || "Customer"}  ·  ${fmt(tx.amount)}`,
         time: tx.date ? new Date(tx.date).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "",
         color: (tx.status === "paid" || tx.status === "delivered") ? "#1FA89A" : tx.status === "pending" ? "#FFC107" : "#6366f1",
         icon: "ShoppingBag",
       }))
     : orders.slice(0, 5).map((o, i) => ({
-        text: `${o.orderNumber || `#${o.id.slice(0,8).toUpperCase()}`}  ·  ${
+        text: `${formatOrderRef(o.orderNumber, o.id)}  ·  ${
           o.user ? `${o.user.firstName || ""} ${o.user.lastName || ""}`.trim() || o.user.email || "Customer" : "Customer"
         }  ·  ${fmt(parseFloat(o.total || "0"))}`,
         time: new Date(o.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
@@ -446,7 +462,7 @@ function DashboardContent() {
                   <div key={o.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderBottom: `1px solid ${border}` }}>
                     <div style={{ width: 30, height: 30, borderRadius: "50%", background: `${color}22`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color, flexShrink: 0 }}>{initials}</div>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: textMain }}>{o.orderNumber || `#${o.id.slice(0,8).toUpperCase()}`}</div>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: textMain }}>{formatOrderRef(o.orderNumber, o.id)}</div>
                       <div style={{ fontSize: 10.5, color: textMuted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{name}</div>
                     </div>
                     <div style={{ fontSize: 10.5, color: textMuted, whiteSpace: "nowrap" }}>{formatTime(o.createdAt)}</div>

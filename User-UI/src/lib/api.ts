@@ -260,7 +260,7 @@ function normalizeProduct(p: any): Product {
     wholesaleMoq: p.wholesaleMoq ? Number(p.wholesaleMoq) : 1,
     // New fields
     condition: p.condition,
-    shippingFee: p.shippingFee ? Number(p.shippingFee) : undefined,
+    shippingFee: p.shippingFee != null ? Number(p.shippingFee) : undefined,
     estimatedDeliveryDays: p.estimatedDeliveryDays ? Number(p.estimatedDeliveryDays) : undefined,
     estimatedDeliveryMinDays: p.estimatedDeliveryMinDays ? Number(p.estimatedDeliveryMinDays) : undefined,
     estimatedDeliveryMaxDays: p.estimatedDeliveryMaxDays ? Number(p.estimatedDeliveryMaxDays) : undefined,

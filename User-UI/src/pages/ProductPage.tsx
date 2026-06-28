@@ -247,6 +247,9 @@ export default function ProductPage() {
   // Calculate estimated delivery dates
   const deliveryMinDays = product.estimatedDeliveryMinDays || product.estimatedDeliveryDays || 2;
   const deliveryMaxDays = product.estimatedDeliveryMaxDays || product.estimatedDeliveryDays || 7;
+  const shippingLabel = product.shippingFee != null && product.shippingFee > 0
+    ? `${format(product.shippingFee)} shipping`
+    : "Free shipping";
   const today = new Date();
   const estimatedStart = new Date(today);
   estimatedStart.setDate(today.getDate() + deliveryMinDays);
@@ -432,11 +435,7 @@ export default function ProductPage() {
 
         {/* Delivery info */}
         <div className="space-y-2">
-          <span className="text-sm font-bold text-primary">
-            {product.shippingFee && product.shippingFee > 0 
-              ? `${format(product.shippingFee)} shipping`
-              : "Free shipping"}
-          </span>
+          <span className="text-sm font-bold text-primary">{shippingLabel}</span>
           <p className="text-xs font-semibold text-foreground">
             {deliveryRangeText}
           </p>
