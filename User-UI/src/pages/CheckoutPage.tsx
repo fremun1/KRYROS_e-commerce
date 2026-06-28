@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { Link, useLocation } from "wouter";
 import { useCartStore } from "@/store/cartStore";
 import { useAuthStore } from "@/store/authStore";
@@ -32,6 +32,92 @@ import {
 } from "lucide-react";
 
 const DIAL_CODES = ["+260", "+263", "+27", "+254", "+234", "+233", "+255", "+256", "+265", "+258", "+267", "+264", "+250", "+251", "+243", "+237", "+221", "+225", "+244", "+44", "+1", "+49", "+33", "+86", "+91", "+61", "+971"];
+
+interface PaymentConfigNetwork {
+  id: string;
+  name: string;
+  isEnabled: boolean;
+}
+
+interface PaymentConfigProvider {
+  id: string;
+  name: string;
+  description?: string;
+  isEnabled: boolean;
+  config?: {
+    accountName?: string;
+    accountNumber?: string;
+    bankName?: string;
+  };
+  networks: PaymentConfigNetwork[];
+}
+
+interface PaymentConfigMethod {
+  id: string;
+  name: string;
+  type: string;
+  icon?: string;
+  isEnabled: boolean;
+  providers: PaymentConfigProvider[];
+}
+
+interface MobileOption {
+  label: string;
+  providerName: string;
+  networkName: string;
+}
+
+function isWhatsAppMethod(method: Pick<PaymentConfigMethod, "type" | "name" | "icon" | "providers">) {
+  const searchable = [
+    method.type,
+    method.name,
+    method.icon,
+    ...method.providers.map((provider) => provider.name),
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+
+  return method.type === "whatsapp" || searchable.includes("whatsapp");
+}
+
+function getMethodSummary(method: PaymentConfigMethod) {
+  const names = method.providers
+    .flatMap((provider) => {
+      const enabledNetworks = provider.networks?.filter((network) => network.isEnabled) || [];
+      if (enabledNetworks.length > 0) return enabledNetworks.map((network) => network.name);
+      return [provider.name];
+    })
+    .filter(Boolean);
+
+  if (names.length > 0) return names.slice(0, 2).join(", ");
+  if (isWhatsAppMethod(method)) return "Pay on WhatsApp";
+  if (method.type === "bank") return "Bank transfer";
+  if (method.type === "card") return "Card payment";
+  if (method.type === "cash") return "Cash payment";
+  return "Payment method";
+}
+
+function MethodIcon({ method }: { method: PaymentConfigMethod }) {
+  if (isWhatsAppMethod(method)) {
+    return (
+      <svg viewBox="0 0 24 24" className="w-4 h-4 text-green-600" fill="currentColor">
+        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.788-1.653-2.086-.173-.298-.018-.459.13-.608.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.372-.025-.52-.075-.149-.669-1.612-.916-2.208-.242-.58-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.262.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.718 2.006-1.413.248-.695.248-1.291.173-1.413-.074-.123-.272-.198-.57-.347M11.886 3.004h.009c2.62 0 5.077 1.02 6.928 2.872 1.845 1.851 2.861 4.304 2.859 6.92-.004 5.394-4.394 9.78-9.79 9.78-1.676-.003-3.32-.428-4.78-1.236L3 21l.664-3.872a9.76 9.76 0 01-1.32-4.86c.003-5.39 4.394-9.78 9.78-9.78m0-2.004C5.322.999.5 5.82.498 12.135c0 2.19.576 4.326 1.668 6.2L.057 24l5.792-2.078a11.87 11.87 0 006.04 1.63h.005c6.313 0 11.44-5.128 11.445-11.438.003-3.06-1.187-5.94-3.346-8.104A11.43 11.43 0 0011.886.999z" />
+      </svg>
+    );
+  }
+
+  if (method.type === "card") return <CreditCard className="w-4 h-4 text-blue-600" />;
+  if (method.type === "bank") return <Building2 className="w-4 h-4 text-slate-600" />;
+  return <Smartphone className="w-4 h-4 text-primary" />;
+}
+
+function getMethodIconBg(method: PaymentConfigMethod) {
+  if (isWhatsAppMethod(method)) return "bg-green-50";
+  if (method.type === "card") return "bg-blue-50";
+  if (method.type === "bank") return "bg-slate-50";
+  return "bg-primary/10";
+}
 
 interface PickupStation {
   id: string;
@@ -107,12 +193,12 @@ export default function CheckoutPage() {
   const [showStationDrop, setShowStationDrop] = useState(false);
 
   // Payment Methods (Dynamic)
-  const [activeMethods, setActiveMethods] = useState<any[]>([]);
+  const [activeMethods, setActiveMethods] = useState<PaymentConfigMethod[]>([]);
   const [openMethod, setOpenMethod] = useState<string | null>(null);
   const [showProviderDrop, setShowProviderDrop] = useState(false);
-  const [mmProvider, setMmProvider] = useState("MTN");
+  const [mmProvider, setMmProvider] = useState("");
   const [mmPhone, setMmPhone] = useState("");
-  const [mobileNetworks, setMobileNetworks] = useState<string[]>(["MTN", "Airtel", "Zamtel"]);
+  const [mobileOptions, setMobileOptions] = useState<MobileOption[]>([]);
 
   const SUBTOTAL = cartItems.reduce((s, i) => s + i.price * i.qty, 0);
   const [feeRate, setFeeRate] = useState(0.03);
@@ -139,33 +225,36 @@ export default function CheckoutPage() {
     }).catch(() => {});
 
     fetch(`${API_BASE}/api/payment-config/public`).then(r => r.json()).then(data => {
-      const arr = Array.isArray(data) ? data : data?.data ?? [];
-      const methods = [];
-      
-      const mobile = arr.find((m: any) => m.type === "mobile_wallet" && m.isEnabled);
-      if (mobile) {
-        methods.push({ id: "mobile", label: "Mobile Money", sub: "MTN, Airtel, Zamtel", icon: Smartphone, iconBg: "bg-primary/10" });
-        const nets = mobile.providers?.filter((p: any) => p.isEnabled).flatMap((p: any) => p.networks?.filter((n: any) => n.isEnabled).map((n: any) => n.name.replace(/ Mobile Money/i, ""))) || [];
-        if (nets.length > 0) setMobileNetworks(nets);
-      }
-
-      const whatsapp = arr.find((m: any) => m.type === "whatsapp" && m.isEnabled);
-      if (whatsapp) {
-        methods.push({
-          id: "whatsapp", label: "WhatsApp", sub: "Pay on WhatsApp", iconBg: "bg-green-50",
-          icon: () => <svg viewBox="0 0 24 24" className="w-5 h-5 text-green-600" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.788-1.653-2.086-.173-.298-.018-.459.13-.608.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.372-.025-.52-.075-.149-.669-1.612-.916-2.208-.242-.58-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.262.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.718 2.006-1.413.248-.695.248-1.291.173-1.413-.074-.123-.272-.198-.57-.347M11.886 3.004h.009c2.62 0 5.077 1.02 6.928 2.872 1.845 1.851 2.861 4.304 2.859 6.92-.004 5.394-4.394 9.78-9.79 9.78-1.676-.003-3.32-.428-4.78-1.236L3 21l.664-3.872a9.76 9.76 0 01-1.32-4.86c.003-5.39 4.394-9.78 9.78-9.78m0-2.004C5.322.999.5 5.82.498 12.135c0 2.19.576 4.326 1.668 6.2L.057 24l5.792-2.078a11.87 11.87 0 006.04 1.63h.005c6.313 0 11.44-5.128 11.445-11.438.003-3.06-1.187-5.94-3.346-8.104A11.43 11.43 0 0011.886.999z" /></svg>
-        });
-      }
-
-      const card = arr.find((m: any) => m.type === "card" && m.isEnabled);
-      if (card) methods.push({ id: "card", label: "Card", sub: "Visa, Mastercard", icon: CreditCard, iconBg: "bg-blue-50" });
-
-      const bank = arr.find((m: any) => m.type === "bank" && m.isEnabled);
-      if (bank) methods.push({ id: "bank", label: "Bank", sub: "Bank Transfer", icon: Building2, iconBg: "bg-slate-50" });
-
+      const arr = (Array.isArray(data) ? data : data?.data ?? []) as PaymentConfigMethod[];
+      const methods = arr.filter((method) => method?.isEnabled !== false);
       setActiveMethods(methods);
-      if (methods.length > 0) setOpenMethod(methods[0].id);
-    }).catch(() => {});
+      setOpenMethod((current) => methods.some((method) => method.type === current) ? current : methods[0]?.type ?? null);
+
+      const mobileMethod = methods.find((method) => method.type === "mobile_wallet");
+      const options = (mobileMethod?.providers ?? []).flatMap((provider) => {
+        const enabledNetworks = (provider.networks ?? []).filter((network) => network.isEnabled);
+        if (enabledNetworks.length > 0) {
+          return enabledNetworks.map((network) => ({
+            label: network.name.replace(/ Mobile Money/i, ""),
+            providerName: provider.name,
+            networkName: network.name,
+          }));
+        }
+
+        return [{
+          label: provider.name,
+          providerName: provider.name,
+          networkName: provider.name,
+        }];
+      });
+
+      setMobileOptions(options);
+      setMmProvider((current) => options.some((option) => option.label === current) ? current : options[0]?.label || "");
+    }).catch(() => {
+      setActiveMethods([]);
+      setMobileOptions([]);
+      setOpenMethod(null);
+    });
 
     fetchSettings().then(s => {
       const arr = Array.isArray(s) ? s : (s as any)?.data || [];
@@ -175,6 +264,12 @@ export default function CheckoutPage() {
       if (wa) setWhatsappNumber(wa.replace(/[^0-9]/g, ""));
     }).catch(() => {});
   }, []);
+
+  useEffect(() => {
+    setOrderError(null);
+    setMmPhase("idle");
+    setShowProviderDrop(false);
+  }, [openMethod]);
 
   const [shippingCountries, setShippingCountries] = useState<any[]>([]);
 
@@ -189,15 +284,35 @@ export default function CheckoutPage() {
     return `${window.location.origin}${buildTrackingPath(orderNumber)}`;
   };
 
+  const selectedMethod = useMemo(
+    () => activeMethods.find((method) => method.type === openMethod) ?? null,
+    [activeMethods, openMethod]
+  );
+
+  const selectedMobileOption = useMemo(
+    () => mobileOptions.find((option) => option.label === mmProvider) ?? mobileOptions[0],
+    [mobileOptions, mmProvider]
+  );
+
+  const getBackendPaymentMethod = (methodType: string | null) => {
+    if (methodType === "mobile_wallet") return "MOBILE_MONEY";
+    if (isWhatsAppMethod({ type: methodType || "", name: selectedMethod?.name || "", icon: selectedMethod?.icon, providers: selectedMethod?.providers || [] })) return "WHATSAPP";
+    if (methodType === "bank") return "BANK_TRANSFER";
+    if (methodType === "card") return "CARD";
+    if (methodType === "cash") return "CASH";
+    if (methodType === "digital_wallet") return "DIGITAL_WALLET";
+    return "CARD";
+  };
+
   const buildOrderPayload = (backendPaymentMethod: string, totalZMW: number) => ({
     items: cartItems.map((item) => ({ productId: item.id, quantity: item.qty })),
     paymentMethod: backendPaymentMethod,
-    ...(openMethod === "mobile" && mmPhone ? { paymentPhone: mmPhone } : {}),
+    ...(openMethod === "mobile_wallet" && mmPhone ? { paymentPhone: mmPhone } : {}),
     totalZMW: Math.round(totalZMW * 100) / 100,
     currencyCode: selectedCurrency.code,
     currencySymbol: selectedCurrency.symbol,
     exchangeRate: selectedCurrency.exchangeRate,
-    ...(openMethod === "mobile" && mmProvider ? { notes: `Provider: ${mmProvider}` } : {}),
+    ...(openMethod === "mobile_wallet" && selectedMobileOption ? { notes: `Provider: ${selectedMobileOption.providerName} | Network: ${selectedMobileOption.networkName}` } : {}),
     addressDetails: {
       email, firstName, lastName, phone: `${dialCode}${phone}`,
       address: addressLine || `${city}, ${state}, ${country}`,
@@ -265,16 +380,15 @@ export default function CheckoutPage() {
     setIsSubmitting(true); setOrderError(null);
     try {
       const headers = { "Content-Type": "application/json", ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}) };
-      const MAP: any = { card: "CARD", bank: "BANK_TRANSFER", whatsapp: "WHATSAPP" };
       const totalLocal = total * (selectedCurrency.exchangeRate || 1);
-      const res = await fetch(`${API_BASE}/api/orders`, { method: "POST", headers, body: JSON.stringify(buildOrderPayload(MAP[openMethod!] || "CARD", totalLocal)) });
+      const res = await fetch(`${API_BASE}/api/orders`, { method: "POST", headers, body: JSON.stringify(buildOrderPayload(getBackendPaymentMethod(openMethod), totalLocal)) });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Failed");
       
       const orderNum = data.orderNumber || data.id;
       setPlacedOrderNumber(orderNum); setPlacedOrderId(data.id); setSavedCartItems([...cartItems]);
       
-      if (openMethod === "whatsapp") {
+      if (selectedMethod && isWhatsAppMethod(selectedMethod)) {
         const msg = encodeURIComponent(`*New Order:* ${orderNum}\n*Customer:* ${firstName} ${lastName}\n*Total:* ${format(total)}\n*Track:* ${buildTrackingUrl(orderNum)}`);
         setWaMessage(msg); setOrdered(true); clearCart();
         window.open(`https://api.whatsapp.com/send?phone=${whatsappNumber}&text=${msg}`, "_blank");
@@ -297,7 +411,7 @@ export default function CheckoutPage() {
           <div className="pt-3 border-t font-black flex justify-between"><span>Total</span><span className="text-primary">{format(total)}</span></div>
         </div>
         <div className="space-y-3">
-          {openMethod === "whatsapp" && <button onClick={() => window.open(`https://api.whatsapp.com/send?phone=${whatsappNumber}&text=${waMessage}`, "_blank")} className="w-full py-4 bg-primary text-white rounded-2xl font-bold">Open WhatsApp</button>}
+          {selectedMethod && isWhatsAppMethod(selectedMethod) && <button onClick={() => window.open(`https://api.whatsapp.com/send?phone=${whatsappNumber}&text=${waMessage}`, "_blank")} className="w-full py-4 bg-primary text-white rounded-2xl font-bold">Open WhatsApp</button>}
           <Link href={trackingPath}><button className="w-full py-3 rounded-2xl border border-primary/30 text-primary font-semibold">Track Payment</button></Link>
           <Link href="/"><button className="w-full py-3 rounded-2xl border border-border font-semibold">Continue Shopping</button></Link>
         </div>
@@ -389,26 +503,36 @@ export default function CheckoutPage() {
 
         <div className="bg-card border border-border rounded-2xl p-4">
           <SectionHeader number={4} icon={Smartphone} title="Payment Method" />
-          <div className="grid grid-cols-2 gap-2 mb-4">
-            {activeMethods.map(m => (
-              <button key={m.id} onClick={() => { setOpenMethod(m.id); setOrderError(null); setMmPhase("idle"); }} className={`flex flex-col items-center py-3 rounded-xl border transition-all ${openMethod === m.id ? "border-primary bg-primary/5" : "border-border"}`}>
-                <div className={`w-7 h-7 rounded-lg flex items-center justify-center mb-1 ${m.iconBg}`}><m.icon className="w-4 h-4" /></div>
-                <span className="text-[11px] font-bold">{m.label}</span>
-              </button>
-            ))}
-          </div>
-
-          {openMethod === "mobile" && (
-            <div className="space-y-3 pt-2">
-              <div className="relative"><button onClick={() => setShowProviderDrop(!showProviderDrop)} className="w-full flex justify-between items-center px-4 py-3 border rounded-xl bg-background text-sm font-semibold">{mmProvider}<ChevronDown className={`w-4 h-4 transition-transform ${showProviderDrop ? "rotate-180" : ""}`} /></button>
-                {showProviderDrop && <div className="absolute top-full w-full mt-1 border rounded-xl bg-background shadow-xl z-10">{mobileNetworks.map(n => <button key={n} onClick={() => { setMmProvider(n); setShowProviderDrop(false); }} className="w-full px-4 py-3 text-left hover:bg-muted border-b last:border-0">{n}</button>)}</div>}
-              </div>
-              <div className="flex gap-2"><div className="w-14 flex items-center justify-center border rounded-xl bg-muted/40 text-sm font-bold">+260</div><input value={mmPhone} onChange={e => setMmPhone(e.target.value)} placeholder="97XXXXXXX" className="flex-1 px-3.5 py-2.5 border rounded-xl bg-background text-sm outline-none focus:ring-2 focus:ring-primary/40" /></div>
-              <button onClick={handleMobileMoneyPay} disabled={isSubmitting || !mmPhone.trim()} className="w-full py-3.5 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20">{isSubmitting ? "Processing..." : `Pay ${format(total)}`}</button>
+          {activeMethods.length > 0 ? (
+            <div className="grid grid-cols-2 gap-2 mb-4">
+              {activeMethods.map((method) => (
+                <button key={method.id} onClick={() => setOpenMethod(method.type)} className={`flex flex-col items-center py-3 px-2 rounded-xl border transition-all ${openMethod === method.type ? "border-primary bg-primary/5" : "border-border"}`}>
+                  <div className={`w-7 h-7 rounded-lg flex items-center justify-center mb-1 ${getMethodIconBg(method)}`}>
+                    <MethodIcon method={method} />
+                  </div>
+                  <span className="text-[11px] font-bold text-center">{method.name}</span>
+                  <span className="text-[10px] text-muted-foreground text-center mt-0.5">{getMethodSummary(method)}</span>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-xl border border-border bg-background px-4 py-3 text-sm text-muted-foreground mb-4">
+              No payment methods are enabled in the admin panel yet.
             </div>
           )}
-          {openMethod === "whatsapp" && <button onClick={handlePlaceOrder} disabled={isSubmitting} className="w-full py-3.5 bg-green-600 text-white rounded-xl font-bold shadow-lg shadow-green-600/20">{isSubmitting ? "Processing..." : "Pay via WhatsApp"}</button>}
-          {(openMethod === "card" || openMethod === "bank") && <button onClick={handlePlaceOrder} disabled={isSubmitting} className="w-full py-3.5 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20">{isSubmitting ? "Processing..." : `Pay ${format(total)}`}</button>}
+
+          {openMethod === "mobile_wallet" && (
+            <div className="space-y-3 pt-2">
+              <div className="relative"><button onClick={() => setShowProviderDrop(!showProviderDrop)} className="w-full flex justify-between items-center px-4 py-3 border rounded-xl bg-background text-sm font-semibold">{selectedMobileOption?.label || "Select network"}<ChevronDown className={`w-4 h-4 transition-transform ${showProviderDrop ? "rotate-180" : ""}`} /></button>
+                {showProviderDrop && <div className="absolute top-full w-full mt-1 border rounded-xl bg-background shadow-xl z-10">{mobileOptions.map(option => <button key={`${option.providerName}-${option.networkName}`} onClick={() => { setMmProvider(option.label); setShowProviderDrop(false); }} className="w-full px-4 py-3 text-left hover:bg-muted border-b last:border-0"><div className="flex items-center justify-between gap-2"><span>{option.label}</span><span className="text-xs text-muted-foreground">{option.providerName}</span></div></button>)}</div>}
+              </div>
+              {selectedMobileOption && <div className="rounded-xl border border-border bg-background px-3.5 py-3 text-xs text-muted-foreground">Provider: <span className="font-semibold text-foreground">{selectedMobileOption.providerName}</span></div>}
+              <div className="flex gap-2"><div className="w-14 flex items-center justify-center border rounded-xl bg-muted/40 text-sm font-bold">+260</div><input value={mmPhone} onChange={e => setMmPhone(e.target.value)} placeholder="97XXXXXXX" className="flex-1 px-3.5 py-2.5 border rounded-xl bg-background text-sm outline-none focus:ring-2 focus:ring-primary/40" /></div>
+              <button onClick={handleMobileMoneyPay} disabled={isSubmitting || !mmPhone.trim() || !selectedMobileOption} className="w-full py-3.5 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20">{isSubmitting ? "Processing..." : `Pay ${format(total)}`}</button>
+            </div>
+          )}
+          {selectedMethod && isWhatsAppMethod(selectedMethod) && <button onClick={handlePlaceOrder} disabled={isSubmitting} className="w-full py-3.5 bg-green-600 text-white rounded-xl font-bold shadow-lg shadow-green-600/20">{isSubmitting ? "Processing..." : "Pay via WhatsApp"}</button>}
+          {selectedMethod && !isWhatsAppMethod(selectedMethod) && openMethod !== "mobile_wallet" && <button onClick={handlePlaceOrder} disabled={isSubmitting} className="w-full py-3.5 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20">{isSubmitting ? "Processing..." : `Pay ${format(total)}`}</button>}
         </div>
 
         <div className="bg-card border border-border rounded-2xl p-4 space-y-2.5">
