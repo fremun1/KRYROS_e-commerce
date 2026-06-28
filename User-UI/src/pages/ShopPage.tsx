@@ -22,6 +22,10 @@ function toAnchor(name: string) {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 }
 
+function toCategoryKey(value: string) {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+}
+
 const AUTO_SLIDE_INTERVAL = 3000; // 3 seconds
 
 export default function ShopPage() {
@@ -52,6 +56,11 @@ export default function ShopPage() {
 
   // Read brand query from URL (?brand=...) — reacts to URL changes without refresh
   useEffect(() => {
+    const catParam = new URLSearchParams(search).get("cat");
+    if (catParam) {
+      setSelectedCat(decodeURIComponent(catParam));
+    }
+
     const brandParam = new URLSearchParams(search).get("brand");
     if (brandParam) {
       setActiveBrandPanel(decodeURIComponent(brandParam));
@@ -159,9 +168,37 @@ export default function ShopPage() {
       }
     : null;
 
+  const matchesCategory = (product: Product, category: ApiCategory | string) => {
+    if (typeof category === "string") {
+      if (category === "All") return true;
+      const categoryKey = toCategoryKey(category);
+      return (
+        product.categoryId === category ||
+        toCategoryKey(product.category || "") === categoryKey
+      );
+    }
+
+    const categoryKey = toCategoryKey(category.slug || category.name);
+    return (
+      product.categoryId === category.id ||
+      toCategoryKey(product.category || "") === categoryKey
+    );
+  };
+
+  const getCategoryCount = (category: ApiCategory) =>
+    allProducts.filter((product) => matchesCategory(product, category)).length;
+
+  const isCategorySelected = (category: ApiCategory) =>
+    selectedCat === category.id ||
+    toCategoryKey(selectedCat) === toCategoryKey(category.slug || category.name);
+
+  const selectedCategoryLabel = selectedCat === "All"
+    ? "All Products"
+    : categories.find((cat) => isCategorySelected(cat))?.name || selectedCat;
+
   const filteredProducts = selectedCat === "All"
     ? allProducts
-    : allProducts.filter((p) => p.category === selectedCat || p.categoryId === selectedCat);
+    : allProducts.filter((p) => matchesCategory(p, selectedCat));
 
   const searchResults = searchParam
     ? allProducts.filter((p) =>
@@ -185,11 +222,11 @@ export default function ShopPage() {
     : [];
   const brandPanelFiltered = brandPanelCat === "All"
     ? brandPanelProducts
-    : brandPanelProducts.filter((p) => p.category === brandPanelCat || p.categoryId === brandPanelCat);
+    : brandPanelProducts.filter((p) => matchesCategory(p, brandPanelCat));
 
   const brandCategories = activeBrandPanel
     ? categories.filter((cat) =>
-        brandPanelProducts.some((p) => p.category === cat.name || p.categoryId === cat.id)
+        brandPanelProducts.some((p) => matchesCategory(p, cat))
       )
     : [];
 
@@ -454,11 +491,11 @@ export default function ShopPage() {
           </button>
 
           {categories.map((cat, idx) => {
-            const active = selectedCat === cat.name || selectedCat === cat.id;
+            const active = isCategorySelected(cat);
             return (
               <button
                 key={cat.id}
-                onClick={() => { setSelectedCat(cat.name); setCatIndex(idx + 1); }}
+                onClick={() => { setSelectedCat(cat.slug || cat.id || cat.name); setCatIndex(idx + 1); }}
                 className={`flex-shrink-0 snap-start relative w-36 h-36 rounded-2xl overflow-hidden transition-all md:w-44 md:h-44 lg:w-52 lg:h-52 lg:rounded-3xl ${active ? "ring-2 ring-teal-500 ring-offset-2" : ""}`}
               >
                 {cat.image ? (
@@ -471,7 +508,7 @@ export default function ShopPage() {
                   <p className="text-white font-black text-xs uppercase tracking-wide leading-tight mb-1">{cat.name}</p>
                   <div className="flex items-center gap-1.5">
                     <div className="w-5 h-0.5 bg-teal-400 rounded-full" />
-                    <span className="text-white/70 text-[10px] font-medium">{cat._count?.products ?? 0} ITEMS</span>
+                    <span className="text-white/70 text-[10px] font-medium">{getCategoryCount(cat)} ITEMS</span>
                   </div>
                 </div>
               </button>
@@ -562,7 +599,7 @@ export default function ShopPage() {
         <div className="px-3 mb-5">
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-base font-black text-foreground lg:text-xl">
-              {selectedCat === "All" ? "All Products" : selectedCat}
+              {selectedCategoryLabel}
             </h2>
             <span className="text-xs text-muted-foreground lg:text-sm">{filteredProducts.length} items</span>
           </div>
