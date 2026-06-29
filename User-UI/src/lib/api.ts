@@ -124,6 +124,7 @@ export interface ApiOrder {
   status: string;
   paymentStatus?: string;
   createdAt: string;
+  deliveredAt?: string | null;
   estimatedDelivery?: string;
   estimatedDays?: number;
   total?: number;
@@ -133,10 +134,17 @@ export interface ApiOrder {
   items?: {
     name?: string;
     image?: string;
+    specs?: string;
+    estimatedDeliveryDays?: number;
+    estimatedDeliveryMinDays?: number;
+    estimatedDeliveryMaxDays?: number;
     product?: {
       name?: string;
       specs?: string;
       images?: { url: string; isPrimary?: boolean }[] | string[];
+      estimatedDeliveryDays?: number;
+      estimatedDeliveryMinDays?: number;
+      estimatedDeliveryMaxDays?: number;
     };
     quantity?: number;
   }[];

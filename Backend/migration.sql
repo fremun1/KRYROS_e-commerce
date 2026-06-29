@@ -1498,3 +1498,13 @@ ALTER TABLE "checkout_providers" ADD CONSTRAINT "checkout_providers_checkoutMeth
 -- AddForeignKey
 ALTER TABLE "checkout_networks" ADD CONSTRAINT "checkout_networks_providerId_fkey" FOREIGN KEY ("providerId") REFERENCES "checkout_providers"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
+
+
+-- Snapshot delivery fields on existing order items
+ALTER TABLE "order_items" ADD COLUMN IF NOT EXISTS "name" TEXT;
+ALTER TABLE "order_items" ADD COLUMN IF NOT EXISTS "image" TEXT;
+ALTER TABLE "order_items" ADD COLUMN IF NOT EXISTS "specs" TEXT;
+ALTER TABLE "order_items" ADD COLUMN IF NOT EXISTS "shippingFee" DECIMAL(10, 2);
+ALTER TABLE "order_items" ADD COLUMN IF NOT EXISTS "estimatedDeliveryDays" INTEGER;
+ALTER TABLE "order_items" ADD COLUMN IF NOT EXISTS "estimatedDeliveryMinDays" INTEGER;
+ALTER TABLE "order_items" ADD COLUMN IF NOT EXISTS "estimatedDeliveryMaxDays" INTEGER;

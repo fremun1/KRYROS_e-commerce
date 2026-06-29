@@ -4,6 +4,7 @@ import { useCartStore } from "@/store/cartStore";
 import { useAuthStore } from "@/store/authStore";
 import { useCurrencyStore } from "@/store/currencyStore";
 import { API_BASE, fetchSettings } from "@/lib/api";
+import { formatDeliveryDuration, formatDeliveryWindow, resolveDeliveryWindowFromItems } from "@/lib/delivery";
 import { toast } from "sonner";
 import {
   Select,
@@ -220,9 +221,11 @@ export default function CheckoutPage() {
   const shippingPrice = cartItems.reduce((t, i) => t + (i.shippingFee || 0) * i.qty, 0);
   const total = SUBTOTAL + PROCESSING_FEE + shippingPrice;
 
-  const deliveryMinDays = cartItems.reduce((max, i) => Math.max(max, i.estimatedDeliveryMinDays || 2), 0) || 2;
-  const deliveryMaxDays = cartItems.reduce((max, i) => Math.max(max, i.estimatedDeliveryMaxDays || 7), 0) || 7;
-  const deliveryRangeText = deliveryMinDays === deliveryMaxDays ? `Delivery in ${deliveryMaxDays} days` : `Delivery in ${deliveryMinDays}-${deliveryMaxDays} days`;
+  const deliveryWindow = resolveDeliveryWindowFromItems(cartItems, 3);
+  const deliveryRangeText = deliveryWindow ? formatDeliveryDuration(deliveryWindow) : "Delivery estimate unavailable";
+  const estimatedByText = deliveryWindow
+    ? formatDeliveryWindow(new Date(), deliveryWindow, { weekday: 'short', month: 'short', day: 'numeric' })
+    : "—";
   const shippingDisplayText = shippingPrice <= 0 ? "Free shipping" : `${format(shippingPrice)} shipping`;
   const shippingSummaryText = shippingPrice <= 0 ? "Free shipping" : format(shippingPrice);
   const placedOrderDisplay = placedOrderNumber
@@ -519,7 +522,7 @@ export default function CheckoutPage() {
 
         <div className="bg-card border border-border rounded-2xl p-4">
           <SectionHeader number={3} icon={Truck} title="Delivery" />
-          <div className="flex items-center gap-3"><Truck className="w-6 h-6 text-primary" /><div><p className="text-sm font-bold text-primary">{shippingDisplayText}</p><p className="text-xs font-semibold">{deliveryRangeText}</p></div></div>
+          <div className="flex items-center gap-3"><Truck className="w-6 h-6 text-primary" /><div><p className="text-sm font-bold text-primary">{shippingDisplayText}</p><p className="text-xs font-semibold">{deliveryRangeText}</p><p className="text-[11px] text-muted-foreground mt-1">Estimated by {estimatedByText}</p></div></div>
         </div>
 
         <div className="bg-card border border-border rounded-2xl p-4">

@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { useCartStore } from "@/store/cartStore";
 import { useCurrencyStore } from "@/store/currencyStore";
 import { fetchSettings } from "@/lib/api";
+import { formatDeliveryDuration, formatDeliveryWindow, resolveDeliveryWindowFromItems } from "@/lib/delivery";
 
 // Free shipping: 50 qualifying items, each individually worth >= $100 USD
 const FREE_SHIPPING_TARGET = 50;
@@ -24,31 +25,11 @@ export default function CartPage() {
   const total = subtotal + shipping + fee;
   const shippingLabel = shipping <= 0 ? "Free shipping" : format(shipping);
 
-  // Calculate delivery range: use the slowest item's delivery window
-  const deliveryMinDays = items.reduce(
-    (max, i) => Math.max(max, i.estimatedDeliveryMinDays || i.estimatedDeliveryDays || 2),
-    0,
-  ) || 2;
-  const deliveryMaxDays = items.reduce(
-    (max, i) => Math.max(max, i.estimatedDeliveryMaxDays || i.estimatedDeliveryDays || 7),
-    0,
-  ) || 7;
-
-  // Calculate estimated delivery dates
-  const today = new Date();
-  const estimatedStart = new Date(today);
-  estimatedStart.setDate(today.getDate() + deliveryMinDays);
-  const estimatedEnd = new Date(today);
-  estimatedEnd.setDate(today.getDate() + deliveryMaxDays);
-
-  const formatDate = (date: Date) => {
-    const options: Intl.DateTimeFormatOptions = { weekday: 'short', month: 'short', day: 'numeric' };
-    return date.toLocaleDateString('en-US', options);
-  };
-
-  const deliveryRangeText = deliveryMinDays === deliveryMaxDays
-    ? `Delivery in ${deliveryMaxDays} day${deliveryMaxDays === 1 ? "" : "s"}`
-    : `Delivery in ${deliveryMinDays}-${deliveryMaxDays} days`;
+  const deliveryWindow = resolveDeliveryWindowFromItems(items, 3);
+  const deliveryRangeText = deliveryWindow ? formatDeliveryDuration(deliveryWindow) : "Delivery estimate unavailable";
+  const estimatedByText = deliveryWindow
+    ? formatDeliveryWindow(new Date(), deliveryWindow, { weekday: 'short', month: 'short', day: 'numeric' })
+    : "—";
 
   useEffect(() => {
     fetchSettings().then((settings) => {
@@ -175,7 +156,7 @@ export default function CartPage() {
                   <Truck className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-semibold text-foreground">{deliveryRangeText}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">Estimated by {formatDate(estimatedStart)} - {formatDate(estimatedEnd)}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Estimated by {estimatedByText}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 py-1 border-t border-border pt-3">

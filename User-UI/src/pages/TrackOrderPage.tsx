@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { useAuthStore } from "@/store/authStore";
 import { fetchOrders, trackOrder, type ApiOrder, API_BASE } from "@/lib/api";
 import AccountLayout from "@/components/layout/AccountLayout";
+import { formatDeliveryDate, formatDeliveryWindow, resolveDeliveryWindowFromItems } from "@/lib/delivery";
 
 const statusColors: Record<string, string> = {
   "Pending":          "bg-yellow-500/10 text-yellow-600 border-yellow-500/20",
@@ -63,29 +64,14 @@ function formatOrderReference(orderNumber?: string | null, fallbackId?: string |
 }
 
 function formatDeliveryEstimate(order: ApiOrder) {
-  const items = order.items ?? [];
-  const minDays = items.reduce((max, item) => {
-    const candidate = Number((item as any)?.product?.estimatedDeliveryMinDays ?? (item as any)?.estimatedDeliveryMinDays ?? 0);
-    return Math.max(max, candidate);
-  }, 0);
-  const maxDays = items.reduce((max, item) => {
-    const candidate = Number((item as any)?.product?.estimatedDeliveryMaxDays ?? (item as any)?.estimatedDeliveryMaxDays ?? 0);
-    return Math.max(max, candidate);
-  }, 0);
-
-  if (minDays > 0 || maxDays > 0) {
-    const start = minDays || maxDays;
-    const end = maxDays || minDays;
-    return start === end
-      ? `Estimated delivery in ${end} day${end === 1 ? "" : "s"}`
-      : `Estimated delivery in ${start}-${end} days`;
+  if (order.status?.toUpperCase?.() === "DELIVERED" && order.deliveredAt) {
+    return formatDeliveryDate(order.deliveredAt);
   }
 
-  if (order.estimatedDays) {
-    return `Estimated delivery in ${order.estimatedDays} day${order.estimatedDays === 1 ? "" : "s"}`;
-  }
+  const deliveryWindow = resolveDeliveryWindowFromItems(order.items, order.estimatedDays);
+  if (!deliveryWindow || !order.createdAt) return "—";
 
-  return "—";
+  return formatDeliveryWindow(order.createdAt, deliveryWindow);
 }
 
 function normalizeDirectPayment(dp: DirectPaymentApiResult): OrderRow {
@@ -170,7 +156,7 @@ function normalizeOrder(o: ApiOrder): OrderRow {
     id: String(o.id),
     trackingLink: (o as any).trackingLink || undefined,
     name: item?.product?.name ?? item?.name ?? "Order",
-    specs: item?.product?.specs ?? "",
+    specs: item?.specs ?? item?.product?.specs ?? "",
     orderId: formatOrderReference(o.orderNumber, o.id, o.trackingNumber),
     placedOn: o.createdAt
       ? new Date(o.createdAt).toLocaleDateString("en", { month: "short", day: "numeric", year: "numeric" })

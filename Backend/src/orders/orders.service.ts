@@ -39,27 +39,60 @@ export class OrdersService {
       { orderNumber: { not: { startsWith: 'WA-' } } }
     ];
 
+    const baseSelect = {
+      id: true,
+      orderNumber: true,
+      status: true,
+      paymentStatus: true,
+      paymentMethod: true,
+      total: true,
+      totalZMW: true,
+      currencyCode: true,
+      currencySymbol: true,
+      createdAt: true,
+      deliveredAt: true,
+      estimatedDays: true,
+      user: { select: { id: true, email: true, firstName: true, lastName: true } },
+      _count: { select: { items: true } },
+    } as const;
+
+    const ordersQuery: any = {
+      where,
+      skip,
+      take,
+      select: userId
+        ? {
+            ...baseSelect,
+            items: {
+              take: 3,
+              select: {
+                id: true,
+                name: true,
+                image: true,
+                specs: true,
+                quantity: true,
+                estimatedDeliveryDays: true,
+                estimatedDeliveryMinDays: true,
+                estimatedDeliveryMaxDays: true,
+                product: {
+                  select: {
+                    name: true,
+                    specifications: true,
+                    estimatedDeliveryDays: true,
+                    estimatedDeliveryMinDays: true,
+                    estimatedDeliveryMaxDays: true,
+                    images: { select: { url: true, isPrimary: true }, orderBy: [{ isPrimary: 'desc' }, { sortOrder: 'asc' }] },
+                  },
+                },
+              },
+            },
+          }
+        : baseSelect,
+      orderBy: { createdAt: 'desc' },
+    };
+
     const [orders, total] = await Promise.all([
-      this.prisma.order.findMany({
-        where,
-        skip,
-        take,
-        select: {
-          id: true,
-          orderNumber: true,
-          status: true,
-          paymentStatus: true,
-          paymentMethod: true,
-          total: true,
-          totalZMW: true,
-          currencyCode: true,
-          currencySymbol: true,
-          createdAt: true,
-          user: { select: { id: true, email: true, firstName: true, lastName: true } },
-          _count: { select: { items: true } }
-        },
-        orderBy: { createdAt: 'desc' },
-      }),
+      this.prisma.order.findMany(ordersQuery),
       this.prisma.order.count({ where }),
     ]);
 
@@ -160,15 +193,28 @@ export class OrdersService {
     paymentStatus: order.paymentStatus,
     paymentMethod: order.paymentMethod,
     createdAt: order.createdAt,
+    deliveredAt: order.deliveredAt,
     estimatedDays: order.estimatedDays,
     items: order.items.map(item => ({
       productId: item.productId,
-      name: item.product.name,
+      name: item.name || item.product.name,
+      specs: item.specs || item.product.specifications,
       quantity: item.quantity,
       price: Number(item.price),
       total: Number(item.total),
-      image: item.product.images?.find(i => i.isPrimary)?.url || item.product.images?.[0]?.url,
-      variant: item.variant?.name || item.variant?.value
+      image: item.image || item.product.images?.find(i => i.isPrimary)?.url || item.product.images?.[0]?.url,
+      estimatedDeliveryDays: item.estimatedDeliveryDays ?? item.product.estimatedDeliveryDays,
+      estimatedDeliveryMinDays: item.estimatedDeliveryMinDays ?? item.product.estimatedDeliveryMinDays,
+      estimatedDeliveryMaxDays: item.estimatedDeliveryMaxDays ?? item.product.estimatedDeliveryMaxDays,
+      variant: item.variant?.name || item.variant?.value,
+      product: {
+        name: item.product.name,
+        specs: item.product.specifications,
+        estimatedDeliveryDays: item.product.estimatedDeliveryDays,
+        estimatedDeliveryMinDays: item.product.estimatedDeliveryMinDays,
+        estimatedDeliveryMaxDays: item.product.estimatedDeliveryMaxDays,
+        images: item.product.images,
+      },
     })),
     subtotal: Number(order.subtotal),
     shipping: Number(order.shipping),
@@ -241,6 +287,7 @@ export class OrdersService {
       include: { 
         inventory: true, 
         variants: true,
+        images: { orderBy: [{ isPrimary: 'desc' }, { sortOrder: 'asc' }] },
         wholesalePrices: user?.wholesaleAccount ? {
           where: { 
             OR: [
@@ -322,9 +369,20 @@ export class OrdersService {
       subtotal += itemTotal;
       totalDiscount += (originalPrice - price) * item.quantity;
 
+      const primaryImage = product.images?.find((image) => image.isPrimary)?.url || product.images?.[0]?.url || null;
+      const itemEstimatedMinDays = product.estimatedDeliveryMinDays ?? product.estimatedDeliveryDays ?? 3;
+      const itemEstimatedMaxDays = product.estimatedDeliveryMaxDays ?? product.estimatedDeliveryDays ?? itemEstimatedMinDays;
+
       orderItemsData.push({
         productId: item.productId,
         variantId: item.variantId,
+        name: product.name,
+        image: primaryImage,
+        specs: product.specifications || null,
+        shippingFee: product.shippingFee != null ? Number(product.shippingFee) : null,
+        estimatedDeliveryDays: product.estimatedDeliveryDays ?? itemEstimatedMaxDays,
+        estimatedDeliveryMinDays: itemEstimatedMinDays,
+        estimatedDeliveryMaxDays: itemEstimatedMaxDays,
         quantity: item.quantity,
         price,
         total: itemTotal,

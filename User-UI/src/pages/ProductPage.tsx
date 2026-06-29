@@ -23,6 +23,7 @@ import {
 import { toast } from "sonner";
 import { fetchProductById, fetchRelatedProducts, fetchStoreStatus } from "@/lib/api";
 import type { Product } from "@/lib/api";
+import { formatDeliveryDuration, formatDeliveryWindow, resolveDeliveryWindow } from "@/lib/delivery";
 import { useCartStore } from "@/store/cartStore";
 import { useWishlistStore } from "@/store/wishlistStore";
 import { useCurrencyStore } from "@/store/currencyStore";
@@ -244,24 +245,18 @@ export default function ProductPage() {
     }
   };
 
-  // Calculate estimated delivery dates
-  const deliveryMinDays = product.estimatedDeliveryMinDays || product.estimatedDeliveryDays || 2;
-  const deliveryMaxDays = product.estimatedDeliveryMaxDays || product.estimatedDeliveryDays || 7;
+  const deliveryWindow = resolveDeliveryWindow({
+    minDays: product.estimatedDeliveryMinDays,
+    maxDays: product.estimatedDeliveryMaxDays,
+    fallbackDays: product.estimatedDeliveryDays ?? 3,
+  });
   const shippingLabel = product.shippingFee != null && product.shippingFee > 0
     ? `${format(product.shippingFee)} shipping`
     : "Free shipping";
-  const today = new Date();
-  const estimatedStart = new Date(today);
-  estimatedStart.setDate(today.getDate() + deliveryMinDays);
-  const estimatedEnd = new Date(today);
-  estimatedEnd.setDate(today.getDate() + deliveryMaxDays);
-  const formatDate = (date: Date) => {
-    const options: Intl.DateTimeFormatOptions = { weekday: 'short', month: 'short', day: 'numeric' };
-    return date.toLocaleDateString('en-US', options);
-  };
-  const deliveryRangeText = deliveryMinDays === deliveryMaxDays
-    ? `Delivery in ${deliveryMaxDays} day${deliveryMaxDays === 1 ? "" : "s"}`
-    : `Delivery in ${deliveryMinDays}-${deliveryMaxDays} days`;
+  const deliveryRangeText = deliveryWindow ? formatDeliveryDuration(deliveryWindow) : "Delivery estimate unavailable";
+  const estimatedByText = deliveryWindow
+    ? formatDeliveryWindow(new Date(), deliveryWindow, { weekday: 'short', month: 'short', day: 'numeric' })
+    : "—";
 
   return (
     <div className="min-h-screen bg-background pb-10">
@@ -440,7 +435,7 @@ export default function ProductPage() {
             {deliveryRangeText}
           </p>
           <p className="text-xs text-foreground">
-            Estimated by {formatDate(estimatedStart)} - {formatDate(estimatedEnd)}
+            Estimated by {estimatedByText}
           </p>
         </div>
 

@@ -10,6 +10,7 @@ import {
 import { useAuthStore } from "@/store/authStore";
 import { useCurrencyStore } from "@/store/currencyStore";
 import { API_BASE } from "@/lib/api";
+import { formatDeliveryWindow, resolveDeliveryWindowFromItems } from "@/lib/delivery";
 
 const footerLinks = [
   { label: "About Us", href: "/about" },
@@ -77,6 +78,7 @@ interface OrderItem {
   date: string;
   status: string;
   image: string;
+  estDelivery: string;
 }
 
 interface WishlistItem {
@@ -166,23 +168,28 @@ export default function DashboardPage() {
       .then((r) => r.json())
       .then((data) => {
         const list = Array.isArray(data) ? data : (data.data ?? data.orders ?? []);
-        const mapped: OrderItem[] = list.slice(0, 5).map((o: any) => ({
-          id: String(o.id),
-          name: o.items?.[0]?.product?.name ?? o.productName ?? "Order",
-          orderId: formatOrderReference(o.orderNumber, o.id),
-          totalDisplay: o.totalZMW && o.currencyCode === 'ZMW' 
-            ? `ZMW ${Number(o.totalZMW).toLocaleString()}` 
-            : `${o.currencyCode || 'USD'} ${Number(o.total || 0).toLocaleString()}`,
-          date: o.createdAt
-            ? new Date(o.createdAt).toLocaleDateString("en", { month: "short", day: "numeric", year: "numeric" })
-            : "",
-          status: o.status ?? "Pending",
-          image:
-            o.items?.[0]?.product?.images?.[0]?.url ??
-            o.items?.[0]?.product?.images?.[0] ??
-            ((import.meta as unknown as { env: Record<string, string> }).env?.VITE_FALLBACK_IMAGE_URL ??
-              "https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=100&q=80"),
-        }));
+        const mapped: OrderItem[] = list.slice(0, 5).map((o: any) => {
+          const deliveryWindow = resolveDeliveryWindowFromItems(o.items, o.estimatedDays);
+          return {
+            id: String(o.id),
+            name: o.items?.[0]?.name ?? o.items?.[0]?.product?.name ?? o.productName ?? "Order",
+            orderId: formatOrderReference(o.orderNumber, o.id),
+            totalDisplay: o.totalZMW && o.currencyCode === 'ZMW' 
+              ? `ZMW ${Number(o.totalZMW).toLocaleString()}` 
+              : `${o.currencyCode || 'USD'} ${Number(o.total || 0).toLocaleString()}`,
+            date: o.createdAt
+              ? new Date(o.createdAt).toLocaleDateString("en", { month: "short", day: "numeric", year: "numeric" })
+              : "",
+            status: o.status ?? "Pending",
+            image:
+              o.items?.[0]?.image ??
+              o.items?.[0]?.product?.images?.[0]?.url ??
+              o.items?.[0]?.product?.images?.[0] ??
+              ((import.meta as unknown as { env: Record<string, string> }).env?.VITE_FALLBACK_IMAGE_URL ??
+                "https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=100&q=80"),
+            estDelivery: deliveryWindow && o.createdAt ? formatDeliveryWindow(o.createdAt, deliveryWindow) : "—",
+          };
+        });
         setRecentOrders(mapped);
       })
       .catch(() => {})
@@ -993,7 +1000,7 @@ export default function DashboardPage() {
                     <div>
                       <p className="text-[10px] text-muted-foreground mb-0.5">Estimated Delivery</p>
                       <p className="text-lg font-black text-primary">
-                        {recentOrders.length > 0 ? "Check Track Page" : "No active order"}
+                        {recentOrders.length > 0 ? recentOrders[0].estDelivery : "No active order"}
                       </p>
                     </div>
                     <div className="flex-shrink-0 opacity-20">
