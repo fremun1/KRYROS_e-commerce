@@ -82,6 +82,11 @@ function isWhatsAppMethod(method: Pick<PaymentConfigMethod, "type" | "name" | "i
 }
 
 function getMethodSummary(method: PaymentConfigMethod) {
+  if (isWhatsAppMethod(method)) return "Pay on WhatsApp";
+  if (method.type === "bank") return "Bank transfer";
+  if (method.type === "card") return "Card payment";
+  if (method.type === "cash") return "Cash payment";
+
   const names = method.providers
     .flatMap((provider) => {
       const enabledNetworks = provider.networks?.filter((network) => network.isEnabled) || [];
@@ -91,10 +96,6 @@ function getMethodSummary(method: PaymentConfigMethod) {
     .filter(Boolean);
 
   if (names.length > 0) return names.slice(0, 2).join(", ");
-  if (isWhatsAppMethod(method)) return "Pay on WhatsApp";
-  if (method.type === "bank") return "Bank transfer";
-  if (method.type === "card") return "Card payment";
-  if (method.type === "cash") return "Cash payment";
   return "Payment method";
 }
 
@@ -544,10 +545,9 @@ export default function CheckoutPage() {
           {openMethod === "mobile_wallet" && (
             <div className="space-y-3 pt-2">
               <div className="relative"><button onClick={() => setShowProviderDrop(!showProviderDrop)} className="w-full flex justify-between items-center px-4 py-3 border rounded-xl bg-background text-sm font-semibold">{selectedMobileOption?.label || "Select network"}<ChevronDown className={`w-4 h-4 transition-transform ${showProviderDrop ? "rotate-180" : ""}`} /></button>
-                {showProviderDrop && <div className="absolute top-full w-full mt-1 border rounded-xl bg-background shadow-xl z-10">{mobileOptions.map(option => <button key={`${option.providerName}-${option.networkName}`} onClick={() => { setMmProvider(option.label); setShowProviderDrop(false); }} className="w-full px-4 py-3 text-left hover:bg-muted border-b last:border-0"><div className="flex items-center justify-between gap-2"><span>{option.label}</span><span className="text-xs text-muted-foreground">{option.providerName}</span></div></button>)}</div>}
+                {showProviderDrop && <div className="absolute top-full w-full mt-1 border rounded-xl bg-background shadow-xl z-10">{mobileOptions.map(option => <button key={`${option.providerName}-${option.networkName}`} onClick={() => { setMmProvider(option.label); setShowProviderDrop(false); }} className="w-full px-4 py-3 text-left hover:bg-muted border-b last:border-0"><div className="flex items-center justify-between gap-2"><span>{option.label}</span></div></button>)}</div>}
               </div>
-              {selectedMobileOption && <div className="rounded-xl border border-border bg-background px-3.5 py-3 text-xs text-muted-foreground">Provider: <span className="font-semibold text-foreground">{selectedMobileOption.providerName}</span></div>}
-              <div className="flex gap-2"><div className="w-14 flex items-center justify-center border rounded-xl bg-muted/40 text-sm font-bold">+260</div><input value={mmPhone} onChange={e => setMmPhone(e.target.value)} placeholder="97XXXXXXX" className="flex-1 px-3.5 py-2.5 border rounded-xl bg-background text-sm outline-none focus:ring-2 focus:ring-primary/40" /></div>
+              <div className="flex gap-2"><div className="w-14 flex items-center justify-center border rounded-xl bg-muted/40 text-sm font-bold">+260</div><input value={mmPhone} onChange={e => setMmPhone(e.target.value)} placeholder="Enter your mobile money number" className="flex-1 px-3.5 py-2.5 border rounded-xl bg-background text-sm outline-none focus:ring-2 focus:ring-primary/40" /></div>
               <button onClick={handleMobileMoneyPay} disabled={isSubmitting || !mmPhone.trim() || !selectedMobileOption} className="w-full py-3.5 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20">{isSubmitting ? "Processing..." : `Pay ${format(total)}`}</button>
             </div>
           )}
@@ -558,7 +558,7 @@ export default function CheckoutPage() {
         <div className="bg-card border border-border rounded-2xl p-4 space-y-2.5">
           <div className="flex justify-between text-sm text-muted-foreground"><span>Subtotal</span><span className="font-semibold text-foreground">{format(SUBTOTAL)}</span></div>
           <div className="flex justify-between text-sm text-muted-foreground"><span>Shipping</span><span className="font-semibold text-foreground">{shippingSummaryText}</span></div>
-          <div className="flex justify-between text-sm text-muted-foreground"><span>Processing Fee (3%)</span><span className="font-semibold text-foreground">{format(PROCESSING_FEE)}</span></div>
+          <div className="flex justify-between text-sm text-muted-foreground"><span>Fee</span><span className="font-semibold text-foreground">{format(PROCESSING_FEE)}</span></div>
           <div className="pt-2.5 border-t flex justify-between items-center font-black"><span>Total</span><span className="text-lg text-primary">{format(total)}</span></div>
         </div>
       </div>
