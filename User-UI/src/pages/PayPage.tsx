@@ -79,6 +79,11 @@ function getMethodIconType(method: Pick<PaymentConfigMethod, "type" | "name" | "
 }
 
 function getMethodSummary(method: PaymentConfigMethod) {
+  if (isWhatsAppMethod(method)) return "Pay on WhatsApp";
+  if (method.type === "bank") return "Bank transfer";
+  if (method.type === "card") return "Card payment";
+  if (method.type === "cash") return "Pay with cash";
+
   const names = method.providers
     .flatMap((provider) => {
       const enabledNetworks = provider.networks?.filter((network) => network.isEnabled) || [];
@@ -88,10 +93,6 @@ function getMethodSummary(method: PaymentConfigMethod) {
     .filter(Boolean);
 
   if (names.length > 0) return names.slice(0, 2).join(", ");
-  if (isWhatsAppMethod(method)) return "Pay on WhatsApp";
-  if (method.type === "bank") return "Bank transfer";
-  if (method.type === "card") return "Card payment";
-  if (method.type === "cash") return "Pay with cash";
   return "Payment method";
 }
 
@@ -645,7 +646,7 @@ export default function PayPage() {
 
             <div className="bg-card rounded-xl border border-border p-4 shadow-sm space-y-2">
               <div className="flex justify-between text-sm font-semibold text-muted-foreground"><span>Amount</span><span>{currency} {amount.toFixed(2)}</span></div>
-              <div className="flex justify-between text-sm font-semibold text-muted-foreground"><span>Fee ({Math.round(feeRate*100)}%)</span><span>{currency} {fee.toFixed(2)}</span></div>
+              <div className="flex justify-between text-sm font-semibold text-muted-foreground"><span>Fee</span><span>{currency} {fee.toFixed(2)}</span></div>
               <div className="h-px bg-border my-2" />
               <div className="flex justify-between font-black text-foreground"><span>Total Payable</span><span className="text-lg text-primary">{currency} {total.toFixed(2)}</span></div>
             </div>
@@ -706,20 +707,14 @@ export default function PayPage() {
                           className="w-full flex items-center justify-between px-4 py-3.5 text-left transition-colors text-sm border-b last:border-0"
                         >
                           <span>{option.label}</span>
-                          <span className="text-xs text-muted-foreground">{option.providerName}</span>
                         </button>
                       ))}
                     </div>
                   )}
                 </div>
-                {selectedMobileOption && (
-                  <div className="rounded-xl border border-border bg-card px-4 py-3 text-xs text-muted-foreground">
-                    Provider: <span className="font-semibold text-foreground">{selectedMobileOption.providerName}</span>
-                  </div>
-                )}
                 <div className="flex h-[52px] items-center rounded-xl border bg-card overflow-hidden">
                   <div className="px-4 h-full flex items-center border-r text-sm font-semibold text-primary">+260</div>
-                  <input value={mmPhone} onChange={(e) => setMmPhone(e.target.value.replace(/[^0-9]/g, ""))} placeholder="Enter mobile money number" inputMode="tel" className="flex-1 h-full bg-transparent outline-none px-4 text-sm font-medium text-foreground" />
+                  <input value={mmPhone} onChange={(e) => setMmPhone(e.target.value.replace(/[^0-9]/g, ""))} placeholder="Enter your mobile money number" inputMode="tel" className="flex-1 h-full bg-transparent outline-none px-4 text-sm font-medium text-foreground" />
                 </div>
                 <button onClick={handleMobilePay} disabled={payLoading || !mmPhone.trim() || !selectedMobileOption} className="w-full h-[52px] rounded-xl bg-primary text-white font-bold transition-all active:scale-95 disabled:opacity-50">{payLoading ? "Processing..." : `Pay ${currency} ${total.toFixed(2)}`}</button>
               </div>
@@ -802,11 +797,6 @@ export default function PayPage() {
                     </p>
                   </div>
                 </div>
-                {selectedMethod.providers.length > 0 && (
-                  <div className="text-xs text-muted-foreground">
-                    Providers: {selectedMethod.providers.map((provider) => provider.name).join(", ")}
-                  </div>
-                )}
               </div>
             )}
           </div>
