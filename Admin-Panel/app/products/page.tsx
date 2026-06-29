@@ -200,23 +200,40 @@ function ProductsContent() {
 
 
   // Build backend-compatible specifications array from textarea text
-  const buildSpecsPayload = (specsStr: string): { key: string; value: string }[] | string | undefined => {
+  const buildSpecsPayload = (specsStr: string): { key: string; value: string }[] | undefined => {
     if (!specsStr || !specsStr.trim()) return undefined;
+
     try {
       const parsed = JSON.parse(specsStr);
-      if (Array.isArray(parsed)) return parsed;
+      if (Array.isArray(parsed)) {
+        return parsed
+          .map((item) => ({
+            key: String(item?.key ?? '').trim(),
+            value: String(item?.value ?? '').trim(),
+          }))
+          .filter((item) => item.key && item.value);
+      }
     } catch {}
-    // Parse "Key: Value" lines
-    const lines = specsStr.split('\n').filter(l => l.trim());
-    const pairs = lines
-      .filter(l => l.includes(':'))
-      .map(l => {
-        const ci = l.indexOf(':');
-        return { key: l.substring(0, ci).trim(), value: l.substring(ci + 1).trim() };
+
+    const entries = specsStr
+      .split(/\n|\|/)
+      .map((entry) => entry.trim())
+      .filter(Boolean);
+
+    const pairs = entries
+      .map((entry) => {
+        const ci = entry.indexOf(':');
+        if (ci === -1) {
+          return { key: 'Specifications', value: entry };
+        }
+        return {
+          key: entry.substring(0, ci).trim(),
+          value: entry.substring(ci + 1).trim(),
+        };
       })
-      .filter(s => s.key && s.value);
-    if (pairs.length > 0) return pairs;
-    return specsStr.trim();
+      .filter((item) => item.key && item.value);
+
+    return pairs.length > 0 ? pairs : undefined;
   };
 
   // Build the payload that matches the backend UpdateProductDto / CreateProductDto
@@ -418,7 +435,7 @@ function ProductsContent() {
       </div>
 
       {sectionLabel('Specifications')}
-      <FormField label="Specifications" value={form.specifications} onChange={fp('specifications')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. Color: Black | RAM: 8GB | Storage: 256GB | Screen: 6.7 inch" type="textarea" />
+      <FormField label="Specifications" value={form.specifications} onChange={fp('specifications')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. Color: Black | RAM: 8GB | Storage: 256GB | Screen: 6.7 inch (or one per line)" type="textarea" />
 
       {sectionLabel('Tags')}
       <FormField label="Tags (comma-separated)" value={form.tags} onChange={fp('tags')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. apple, iphone, smartphone, 5G" />
