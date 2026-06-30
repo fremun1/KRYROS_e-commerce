@@ -6,6 +6,7 @@ import { useAuthStore } from "@/store/authStore";
 import { fetchOrders, trackOrder, type ApiOrder, API_BASE } from "@/lib/api";
 import AccountLayout from "@/components/layout/AccountLayout";
 import { formatDeliveryDate, formatDeliveryWindow, resolveDeliveryWindowFromItems } from "@/lib/delivery";
+import { formatSpecs } from "@/lib/utils";
 
 const statusColors: Record<string, string> = {
   "Pending":          "bg-yellow-500/10 text-yellow-600 border-yellow-500/20",
@@ -152,11 +153,12 @@ function normalizeOrder(o: ApiOrder): OrderRow {
   const imgRaw = item?.product?.images?.[0];
   const image = item?.image || (typeof imgRaw === "string" ? imgRaw : (imgRaw as any)?.url ?? "");
   const status = getDisplayStatus(o.status, o.paymentStatus);
+  const rawSpecs = item?.specs ?? item?.product?.specs ?? "";
   return {
     id: String(o.id),
     trackingLink: (o as any).trackingLink || undefined,
     name: item?.product?.name ?? item?.name ?? "Order",
-    specs: item?.specs ?? item?.product?.specs ?? "",
+    specs: formatSpecs(rawSpecs),
     orderId: formatOrderReference(o.orderNumber, o.id, o.trackingNumber),
     placedOn: o.createdAt
       ? new Date(o.createdAt).toLocaleDateString("en", { month: "short", day: "numeric", year: "numeric" })
