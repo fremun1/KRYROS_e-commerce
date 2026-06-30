@@ -13,6 +13,7 @@ export class PaymentsService {
   private readonly logger = new Logger(PaymentsService.name);
   private readonly testUrl = 'https://test.543.cgrate.co.zm:8443/Konik/KonikWs';
   private readonly prodUrl = 'https://543.cgrate.co.zm/Konik/KonikWs';
+  private readonly valid543PhoneRegex = /^(260)(97|77|57|76|96|95|75)\d{7}$/;
 
   constructor(
     private prisma: PrismaService,
@@ -30,6 +31,50 @@ export class PaymentsService {
 
   private buildDirectPaymentTrackingLink(paymentNumber: string) {
     return `/track-payment/${encodeURIComponent(paymentNumber)}`;
+  }
+
+  private normalizePhoneFor543(phone: string) {
+    let digits = String(phone || '').replace(/\D/g, '');
+
+    if (digits.startsWith('260')) {
+      // already in provider-required international format
+    } else if (digits.startsWith('0')) {
+      digits = `260${digits.substring(1)}`;
+    } else if (digits.length === 9) {
+      digits = `260${digits}`;
+    } else {
+      digits = `260${digits}`;
+    }
+
+    if (!this.valid543PhoneRegex.test(digits)) {
+      throw new HttpException(
+        {
+          message:
+            'Invalid mobile money number. Use a Zambia mobile number like 097xxxxxxx or 26097xxxxxxx.',
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    return digits;
+  }
+
+  private log543Error(context: string, error: unknown) {
+    if (axios.isAxiosError(error)) {
+      this.logger.error(`${context}: ${error.message}`);
+      if (error.response?.status) {
+        this.logger.error(`${context} status: ${error.response.status}`);
+      }
+      if (error.response?.data) {
+        this.logger.error(
+          `${context} body: ${typeof error.response.data === 'string' ? error.response.data : JSON.stringify(error.response.data)}`,
+        );
+      }
+      return;
+    }
+
+    const message = error instanceof Error ? error.message : String(error);
+    this.logger.error(`${context}: ${message}`);
   }
 
   private formatDirectPaymentResponse(payment: any, overrideStatus?: string) {
@@ -73,15 +118,9 @@ export class PaymentsService {
       throw new HttpException({ message: errorMsg }, HttpStatus.SERVICE_UNAVAILABLE);
     }
 
-    let formattedPhone = phone.replace(/\D/g, '');
-    // Normalize to local Zambian format (09... or 07...) for 543/cGrate
-    if (formattedPhone.startsWith('260')) {
-      formattedPhone = '0' + formattedPhone.substring(3);
-    } else if (!formattedPhone.startsWith('0')) {
-      formattedPhone = '0' + formattedPhone;
-    }
-
-    const formattedAmount = Number(amountZMW).toString();
+    const formattedPhone = this.normalizePhoneFor543(phone);
+    const formattedAmount = Number(amountZMW).toFixed(2);
+    this.logger.log(`Phone (543 format): ${formattedPhone}`);
 
     const soapRequest = `<?xml version="1.0" encoding="UTF-8"?><soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:kon="http://konik.cgrate.com"><soapenv:Header><wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd" soapenv:mustUnderstand="1"><wsse:UsernameToken xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" wsu:Id="${username}"><wsse:Username>${username}</wsse:Username><wsse:Password Type="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText">${password}</wsse:Password></wsse:UsernameToken></wsse:Security></soapenv:Header><soapenv:Body><kon:processCustomerPayment><transactionAmount>${formattedAmount}</transactionAmount><customerMobile>${formattedPhone}</customerMobile><paymentReference>${transactionId}</paymentReference></kon:processCustomerPayment></soapenv:Body></soapenv:Envelope>`;
 
@@ -159,6 +198,7 @@ export class PaymentsService {
 
       return { success: isSuccess, status: status, reference: reference, message: message };
     } catch (error) {
+      this.log543Error('543 payment init failed', error);
       await this.prisma.order.update({
         where: { id: orderId },
         data: { paymentStatus: 'FAILED' },
@@ -231,15 +271,10 @@ export class PaymentsService {
       throw new HttpException('Payment service not configured', HttpStatus.SERVICE_UNAVAILABLE);
     }
 
-    let formattedPhone = phone.replace(/\D/g, '');
-    // Normalize to local Zambian format (09... or 07...) for 543/cGrate
-    if (formattedPhone.startsWith('260')) {
-      formattedPhone = '0' + formattedPhone.substring(3);
-    } else if (!formattedPhone.startsWith('0')) {
-      formattedPhone = '0' + formattedPhone;
-    }
+    const formattedPhone = this.normalizePhoneFor543(phone);
+    this.logger.log(`Direct payment phone (543 format): ${formattedPhone}`);
 
-    const soapRequest = `<?xml version="1.0" encoding="UTF-8"?><soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:kon="http://konik.cgrate.com"><soapenv:Header><wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd" soapenv:mustUnderstand="1"><wsse:UsernameToken xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" wsu:Id="${username}"><wsse:Username>${username}</wsse:Username><wsse:Password Type="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText">${password}</wsse:Password></wsse:UsernameToken></wsse:Security></soapenv:Header><soapenv:Body><kon:processCustomerPayment><transactionAmount>${amountZMW}</transactionAmount><customerMobile>${formattedPhone}</customerMobile><paymentReference>${transactionId}</paymentReference></kon:processCustomerPayment></soapenv:Body></soapenv:Envelope>`;
+    const soapRequest = `<?xml version="1.0" encoding="UTF-8"?><soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:kon="http://konik.cgrate.com"><soapenv:Header><wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd" soapenv:mustUnderstand="1"><wsse:UsernameToken xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" wsu:Id="${username}"><wsse:Username>${username}</wsse:Username><wsse:Password Type="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText">${password}</wsse:Password></wsse:UsernameToken></wsse:Security></soapenv:Header><soapenv:Body><kon:processCustomerPayment><transactionAmount>${Number(amountZMW).toFixed(2)}</transactionAmount><customerMobile>${formattedPhone}</customerMobile><paymentReference>${transactionId}</paymentReference></kon:processCustomerPayment></soapenv:Body></soapenv:Envelope>`;
 
     try {
       const response = await axios.post(this.apiUrl, soapRequest, {
@@ -267,6 +302,7 @@ export class PaymentsService {
 
       return { success: isSuccess, status: status, reference: reference };
     } catch (error) {
+      this.log543Error('543 direct payment init failed', error);
       await this.prisma.directPayment.update({
         where: { id: paymentId },
         data: { status: 'FAILED' },
@@ -456,7 +492,7 @@ export class PaymentsService {
             updateData.receiptNumber = `REC-${Date.now().toString(36).toUpperCase()}`;
           }
           const updatedPayment = await this.prisma.directPayment.update({
-            where: { id: paymentId },
+            where: { id: payment.id },
             data: updateData,
           });
           return this.formatDirectPaymentResponse(updatedPayment, newStatus);
@@ -464,7 +500,7 @@ export class PaymentsService {
         return this.formatDirectPaymentResponse(payment, newStatus);
       }
     } catch (error) {
-      this.logger.error(`Status Check Error: ${error.message}`);
+      this.log543Error('Status Check Error', error);
     }
     return this.formatDirectPaymentResponse(payment);
   }
@@ -525,7 +561,7 @@ export class PaymentsService {
         return { status: newStatus.toLowerCase() };
       }
     } catch (error) {
-      this.logger.error(`Status Check Error: ${error.message}`);
+      this.log543Error('Order Status Check Error', error);
     }
     return { status: order.paymentStatus.toLowerCase() };
   }
