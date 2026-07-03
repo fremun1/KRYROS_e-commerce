@@ -298,6 +298,8 @@ function AppRoutes() {
       "/get-now",
       "/apply-credit",
       "/wholesale-checkout",
+      "/track",
+      "/track-order",
     ].includes(location);
 
   return (

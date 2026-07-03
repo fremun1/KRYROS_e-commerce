@@ -19,6 +19,9 @@ type Product = {
   showGuaranteeBadge: boolean; showReturnsBadge: boolean;
   tags: string; metaTitle: string; metaDescription: string; imageUrl: string; specifications: string;
   images: string[];
+  allowCredit: boolean;
+  creditMessage: string;
+  creditMinimum: string;
   condition: string;
   shippingFee: string;
   estimatedDeliveryDays: string;
@@ -47,6 +50,7 @@ const EMPTY_FORM = {
   price: '', salePrice: '', stock: '0', weight: '', status: 'Active',
   featured: 'No',
   isFlashSale: 'No', flashSalePrice: '', flashSaleEnd: '',
+  allowCredit: 'No', creditMessage: '', creditMinimum: '',
   showGuaranteeBadge: 'No', showReturnsBadge: 'No',
   tags: '', metaTitle: '', metaDescription: '', imageUrl: '', specifications: '',
   condition: 'New',
@@ -105,6 +109,9 @@ function ProductsContent() {
         metaDescription: p.metaDescription || '',
         imageUrl: p.images?.[0]?.url || p.images?.[0] || '',
         images: Array.isArray(p.images) ? p.images.map((img: any) => img?.url || img || '').filter(Boolean) : [],
+        allowCredit: !!p.allowCredit,
+        creditMessage: p.creditMessage || '',
+        creditMinimum: p.creditMinimum != null ? String(Number(p.creditMinimum)) : '',
         specifications: p.specifications || '',
         condition: p.condition || 'New',
         shippingFee: p.shippingFee != null ? String(Number(p.shippingFee)) : '',
@@ -174,6 +181,9 @@ function ProductsContent() {
       isFlashSale: boolToStr(r.isFlashSale),
       flashSalePrice: r.flashSalePrice || '',
       flashSaleEnd: r.flashSaleEnd || '',
+      allowCredit: boolToStr(r.allowCredit),
+      creditMessage: r.creditMessage || '',
+      creditMinimum: r.creditMinimum || '',
       showGuaranteeBadge: boolToStr(r.showGuaranteeBadge),
       showReturnsBadge: boolToStr(r.showReturnsBadge),
       tags: r.tags || '', metaTitle: r.metaTitle || '', metaDescription: r.metaDescription || '',
@@ -251,6 +261,11 @@ function ProductsContent() {
       isActive: form.status !== 'Inactive',
       isFeatured: strToBool(form.featured),
       isFlashSale: strToBool(form.isFlashSale),
+      allowCredit: strToBool(form.allowCredit),
+      creditMessage: strToBool(form.allowCredit) ? (form.creditMessage || undefined) : undefined,
+      creditMinimum: strToBool(form.allowCredit)
+        ? (form.creditMinimum ? Number(form.creditMinimum) : 0)
+        : undefined,
       flashSalePrice: strToBool(form.isFlashSale) && form.flashSalePrice ? Number(form.flashSalePrice) : null,
       flashSaleEnd: strToBool(form.isFlashSale) && form.flashSaleEnd ? form.flashSaleEnd : null,
       hasFiveYearGuarantee: strToBool(form.showGuaranteeBadge),
@@ -292,6 +307,9 @@ function ProductsContent() {
         stock: Number(form.stock), sold: 0,
         featured: strToBool(form.featured),
         isFlashSale: strToBool(form.isFlashSale),
+        allowCredit: strToBool(form.allowCredit),
+        creditMessage: form.creditMessage,
+        creditMinimum: form.creditMinimum,
         showGuaranteeBadge: strToBool(form.showGuaranteeBadge),
         showReturnsBadge: strToBool(form.showReturnsBadge),
       };
@@ -317,6 +335,9 @@ function ProductsContent() {
         stock: Number(form.stock),
         featured: strToBool(form.featured),
         isFlashSale: strToBool(form.isFlashSale),
+        allowCredit: strToBool(form.allowCredit),
+        creditMessage: form.creditMessage,
+        creditMinimum: form.creditMinimum,
         showGuaranteeBadge: strToBool(form.showGuaranteeBadge),
         showReturnsBadge: strToBool(form.showReturnsBadge),
       } : p));
@@ -457,6 +478,14 @@ function ProductsContent() {
         </>
       )}
 
+      {sectionLabel('Credit / Get Now')}
+      <FormField label="Allow Credit Purchase" value={form.allowCredit} onChange={fp('allowCredit')} options={BOOL_OPTS} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+      {strToBool(form.allowCredit) && (
+        <>
+          <FormField label="Credit Message" value={form.creditMessage} onChange={fp('creditMessage')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. Get Now, Pay Later" />
+          <FormField label="Minimum Deposit" value={form.creditMinimum} onChange={fp('creditMinimum')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 200" />
+        </>
+      )}
 
       {sectionLabel('Trust & Guarantee Badges')}
       <FormField label="Show Guarantee Badge" value={form.showGuaranteeBadge} onChange={fp('showGuaranteeBadge')} options={BOOL_OPTS} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />

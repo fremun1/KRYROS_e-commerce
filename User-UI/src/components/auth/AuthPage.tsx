@@ -9,7 +9,7 @@ interface AuthPageProps {
 }
 
 export default function AuthPage({ initialTab = "login" }: AuthPageProps) {
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState<"login" | "register" | "forgot">(initialTab);
   const [showPassword, setShowPassword] = useState(false);
   const [showRegisterPassword, setShowRegisterPassword] = useState(false);
@@ -35,7 +35,29 @@ export default function AuthPage({ initialTab = "login" }: AuthPageProps) {
     setShowRegisterPassword(false);
     setNotice("");
     clearError();
-  }, [activeTab]);
+  }, [activeTab, clearError]);
+
+  useEffect(() => {
+    setActiveTab(initialTab);
+
+    if (initialTab !== "forgot") {
+      setForgotStep(1);
+      return;
+    }
+
+    const tokenFromUrl = typeof window !== "undefined"
+      ? new URLSearchParams(window.location.search).get("token")?.trim() || ""
+      : "";
+
+    if (tokenFromUrl) {
+      setResetToken(tokenFromUrl);
+      setForgotStep(2);
+      setNotice("Enter your new password to finish resetting your account.");
+      return;
+    }
+
+    setForgotStep(1);
+  }, [initialTab, location]);
 
   const parsedRegisterName = useMemo(() => {
     const parts = registerFullName.trim().split(/\s+/).filter(Boolean);
@@ -108,6 +130,11 @@ export default function AuthPage({ initialTab = "login" }: AuthPageProps) {
         return;
       }
       setNotice("Password reset successful. You can now log in.");
+      setResetToken("");
+      setResetPassword("");
+      setForgotIdentifier("");
+      setForgotStep(1);
+      setLocation("/login");
       setActiveTab("login");
     } catch {
       setNotice("Network error. Please check your connection.");
@@ -311,15 +338,27 @@ export default function AuthPage({ initialTab = "login" }: AuthPageProps) {
 
         {/* Tab switcher */}
         <div className="bg-muted rounded-[12px] p-1 flex gap-[3px] mb-[18px]">
-          {(["login", "register", "forgot"] as const).map(tab => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`flex-1 py-2 px-1 border-none rounded-[9px] text-[13px] cursor-pointer transition-all ${activeTab === tab ? "font-semibold bg-primary text-white" : "font-medium text-muted-foreground"}`}
-            >
-              {tab === "login" ? "Login" : tab === "register" ? "Register" : "Forgot"}
-            </button>
-          ))}
+          {(["login", "register", "forgot"] as const).map(tab => {
+            const route = tab === "login" ? "/login" : tab === "register" ? "/register" : "/forgot-password";
+            return (
+              <button
+                key={tab}
+                type="button"
+                onClick={() => {
+                  setActiveTab(tab);
+                  if (tab !== "forgot") {
+                    setForgotStep(1);
+                    setResetToken("");
+                    setResetPassword("");
+                  }
+                  setLocation(route);
+                }}
+                className={`flex-1 py-2 px-1 border-none rounded-[9px] text-[13px] cursor-pointer transition-all ${activeTab === tab ? "font-semibold bg-primary text-white" : "font-medium text-muted-foreground"}`}
+              >
+                {tab === "login" ? "Login" : tab === "register" ? "Register" : "Forgot"}
+              </button>
+            );
+          })}
         </div>
 
         {/* Form */}

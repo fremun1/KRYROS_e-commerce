@@ -21,6 +21,18 @@ async function registerFcmToken(authToken: string | null, fcmToken: string | nul
   }
 }
 
+async function hydrateNotifications(authToken: string | null) {
+  if (!authToken) return;
+  try {
+    const { messaging } = await initFirebase();
+    messagingInstance = messaging;
+    const fcmToken = await requestNotificationPermission(messagingInstance);
+    await registerFcmToken(authToken, fcmToken);
+  } catch {
+    // Notification setup must never block auth flows
+  }
+}
+
 export interface AuthUser {
   id: string;
   email: string;
@@ -88,10 +100,7 @@ export const useAuthStore = create<AuthState>()(
             isLoading: false,
             error: null,
           });
-          const { messaging } = await initFirebase();
-          messagingInstance = messaging;
-          const fcmToken = await requestNotificationPermission(messagingInstance);
-          registerFcmToken(data.accessToken, fcmToken);
+          void hydrateNotifications(data.accessToken);
           return { success: true };
         } catch {
           const msg = 'Network error. Please check your connection.';
@@ -133,10 +142,7 @@ export const useAuthStore = create<AuthState>()(
               isLoading: false,
               error: null,
             });
-            const { messaging } = await initFirebase();
-            messagingInstance = messaging;
-            const fcmToken = await requestNotificationPermission(messagingInstance);
-            registerFcmToken(json.accessToken, fcmToken);
+            void hydrateNotifications(json.accessToken);
             return { success: true };
           }
           set({ isLoading: false, error: null });
@@ -190,10 +196,7 @@ export const useAuthStore = create<AuthState>()(
                 if (retryRes.ok) {
                   const user = await retryRes.json();
                   set({ user });
-                  const { messaging } = await initFirebase();
-                  messagingInstance = messaging;
-                  const fcmToken = await requestNotificationPermission(messagingInstance);
-                  registerFcmToken(newAccess, fcmToken);
+                  void hydrateNotifications(newAccess);
                   return;
                 }
               }
@@ -209,10 +212,7 @@ export const useAuthStore = create<AuthState>()(
           }
           const user = await res.json();
           set({ user });
-          const { messaging } = await initFirebase();
-          messagingInstance = messaging;
-          const fcmToken = await requestNotificationPermission(messagingInstance);
-          registerFcmToken(token, fcmToken);
+          void hydrateNotifications(token);
         } catch {
           /* silent */
         }

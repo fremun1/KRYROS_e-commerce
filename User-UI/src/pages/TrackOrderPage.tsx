@@ -272,7 +272,7 @@ export default function TrackOrderPage() {
   });
 
   return (
-    <AccountLayout showTopBar={false}>
+    <AccountLayout showTopBar={true}>
       <h1 className="text-2xl font-black text-foreground mb-0.5">Track Order</h1>
         <p className="text-muted-foreground text-xs mb-5">Stay updated with your order status in real time</p>
 

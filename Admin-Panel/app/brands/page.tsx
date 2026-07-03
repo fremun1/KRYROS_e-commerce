@@ -74,10 +74,23 @@ export default function BrandsPage() {
     if (!form.name.trim()) { toast.error('Brand name is required'); return; }
     setSaving(true);
     try {
-      const slug = form.slug || toSlug(form.name);
+      const slug = toSlug(form.slug || form.name);
       const payload = { name: form.name.trim(), slug, country: form.country, isActive: form.status === 'Active', website: form.website, description: form.description };
-      if (editRow) { await updateBrand(editRow.id, payload); toast.success('Brand updated'); }
-      else         { await createBrand(payload);             toast.success('Brand created'); }
+      const existingBrand = !editRow
+        ? brands.find((b) => toSlug(b.slug || b.name) === slug)
+        : null;
+
+      if (editRow) {
+        await updateBrand(editRow.id, payload);
+        toast.success('Brand updated');
+      } else if (existingBrand) {
+        await updateBrand(existingBrand.id, payload);
+        toast.success('Brand already existed — details updated');
+      } else {
+        await createBrand(payload);
+        toast.success('Brand created');
+      }
+
       // Save promotional banner if any banner field is filled
       if (bannerForm.tagline || bannerForm.bannerDesc || bannerForm.ctaText || bannerForm.ctaLink) {
         await createCmsBrandBanner({ brandSlug: slug, brandName: form.name.trim(), tagline: bannerForm.tagline, description: bannerForm.bannerDesc, bgColor: bannerForm.bgColor, bgGradient: bannerForm.brandColor, ctaText: bannerForm.ctaText, ctaLink: bannerForm.ctaLink, isActive: true });

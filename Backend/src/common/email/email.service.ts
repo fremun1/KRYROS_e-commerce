@@ -36,7 +36,7 @@ export class EmailService {
 
   async sendPasswordReset(to: string, rawToken: string): Promise<void> {
     const appUrl = this.configService.get<string>('APP_URL', 'https://kryros.com');
-    const link = `${appUrl}/reset-password?token=${rawToken}`;
+    const link = `${appUrl}/forgot-password?token=${rawToken}`;
 
     await this.send(to, 'Reset Your KRYROS Password', `
       <div style="font-family:Arial,sans-serif;max-width:480px;margin:auto;padding:32px;background:#f9f9f9;border-radius:8px;">
