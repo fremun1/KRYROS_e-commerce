@@ -1,27 +1,117 @@
-import React, { useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { Mail, Lock, User, Eye, EyeOff } from "lucide-react";
+import { useLocation } from "wouter";
+import { useAuthStore } from "@/store/authStore";
+import { API_BASE } from "@/lib/api";
 
 interface AuthPageProps {
   initialTab?: "login" | "register" | "forgot";
 }
 
 export default function AuthPage({ initialTab = "login" }: AuthPageProps) {
+  const [, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState<"login" | "register" | "forgot">(initialTab);
   const [showPassword, setShowPassword] = useState(false);
   const [showRegisterPassword, setShowRegisterPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [forgotStep, setForgotStep] = useState(1);
+  const [notice, setNotice] = useState<string>("");
+
+  const { login, register, isLoading, error, clearError } = useAuthStore();
+
+  // ── Form state ────────────────────────────────────────────────────────────
+  const [loginIdentifier, setLoginIdentifier] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+
+  const [registerFullName, setRegisterFullName] = useState("");
+  const [registerIdentifier, setRegisterIdentifier] = useState("");
+  const [registerPassword, setRegisterPassword] = useState("");
+
+  const [forgotIdentifier, setForgotIdentifier] = useState("");
+  const [resetToken, setResetToken] = useState("");
+  const [resetPassword, setResetPassword] = useState("");
 
   useEffect(() => {
     setShowPassword(false);
     setShowRegisterPassword(false);
+    setNotice("");
+    clearError();
   }, [activeTab]);
 
-  const handleSubmit = async (e: React.FormEvent, action: string) => {
+  const parsedRegisterName = useMemo(() => {
+    const parts = registerFullName.trim().split(/\s+/).filter(Boolean);
+    if (parts.length < 2) return null;
+    return { firstName: parts[0], lastName: parts.slice(1).join(" ") };
+  }, [registerFullName]);
+
+  const submitLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    await new Promise(r => setTimeout(r, 900));
-    setIsLoading(false);
+    setNotice("");
+    const res = await login(loginIdentifier.trim(), loginPassword);
+    if (res.success) setLocation("/dashboard");
+  };
+
+  const submitRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setNotice("");
+    if (!parsedRegisterName) {
+      setNotice("Please enter your first name and last name.");
+      return;
+    }
+    const res = await register({
+      identifier: registerIdentifier.trim(),
+      password: registerPassword,
+      firstName: parsedRegisterName.firstName,
+      lastName: parsedRegisterName.lastName,
+    });
+    if (res.success) setLocation("/dashboard");
+  };
+
+  const submitForgot = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setNotice("");
+
+    // Step 1: request reset token email/SMS
+    if (forgotStep === 1) {
+      try {
+        const res = await fetch(`${API_BASE}/api/auth/forgot-password`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ identifier: forgotIdentifier.trim() }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          const msg =
+            Array.isArray(data.message) ? data.message.join(", ") : data.message || "Failed to send reset link.";
+          setNotice(msg);
+          return;
+        }
+        setNotice("If an account exists, a reset token has been sent. Paste the token below to reset your password.");
+        setForgotStep(2);
+      } catch {
+        setNotice("Network error. Please check your connection.");
+      }
+      return;
+    }
+
+    // Step 2: reset password using token
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/reset-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: resetToken.trim(), newPassword: resetPassword }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const msg =
+          Array.isArray(data.message) ? data.message.join(", ") : data.message || "Password reset failed.";
+        setNotice(msg);
+        return;
+      }
+      setNotice("Password reset successful. You can now log in.");
+      setActiveTab("login");
+    } catch {
+      setNotice("Network error. Please check your connection.");
+    }
   };
 
   const inputClass = `
@@ -47,19 +137,35 @@ export default function AuthPage({ initialTab = "login" }: AuthPageProps) {
   );
 
   const renderLoginForm = () => (
-    <form onSubmit={e => handleSubmit(e, "login")} className="flex flex-col gap-3">
+    <form onSubmit={submitLogin} className="flex flex-col gap-3">
       <div>
         <FieldLabel text="Email or Phone" />
         <div className="relative">
           <Mail className="absolute left-[14px] top-1/2 -translate-y-1/2 w-5 h-5 text-primary opacity-70" />
-          <input type="text" placeholder="Enter your email or phone number" required className={inputClass} style={{ paddingLeft: "44px", paddingRight: "14px" }} />
+          <input
+            type="text"
+            placeholder="Enter your email or phone number"
+            required
+            value={loginIdentifier}
+            onChange={(e) => setLoginIdentifier(e.target.value)}
+            className={inputClass}
+            style={{ paddingLeft: "44px", paddingRight: "14px" }}
+          />
         </div>
       </div>
       <div>
         <FieldLabel text="Password" />
         <div className="relative">
           <Lock className="absolute left-[14px] top-1/2 -translate-y-1/2 w-5 h-5 text-primary opacity-70" />
-          <input type={showPassword ? "text" : "password"} placeholder="Enter your password" required className={inputClass} style={{ paddingLeft: "44px", paddingRight: "44px" }} />
+          <input
+            type={showPassword ? "text" : "password"}
+            placeholder="Enter your password"
+            required
+            value={loginPassword}
+            onChange={(e) => setLoginPassword(e.target.value)}
+            className={inputClass}
+            style={{ paddingLeft: "44px", paddingRight: "44px" }}
+          />
           <button type="button" onClick={() => setShowPassword(v => !v)} className="absolute right-[14px] top-1/2 -translate-y-1/2 bg-none border-none cursor-pointer text-primary p-0 flex">
             {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
           </button>
@@ -70,44 +176,79 @@ export default function AuthPage({ initialTab = "login" }: AuthPageProps) {
   );
 
   const renderRegisterForm = () => (
-    <form onSubmit={e => handleSubmit(e, "register")} className="flex flex-col gap-3">
+    <form onSubmit={submitRegister} className="flex flex-col gap-3">
       <div>
         <FieldLabel text="Full Name" />
         <div className="relative">
           <User className="absolute left-[14px] top-1/2 -translate-y-1/2 w-5 h-5 text-primary opacity-70" />
-          <input type="text" placeholder="Enter your full name" required className={inputClass} style={{ paddingLeft: "44px", paddingRight: "14px" }} />
+          <input
+            type="text"
+            placeholder="Enter your full name"
+            required
+            value={registerFullName}
+            onChange={(e) => setRegisterFullName(e.target.value)}
+            className={inputClass}
+            style={{ paddingLeft: "44px", paddingRight: "14px" }}
+          />
         </div>
       </div>
       <div>
         <FieldLabel text="Email or Phone" />
         <div className="relative">
           <Mail className="absolute left-[14px] top-1/2 -translate-y-1/2 w-5 h-5 text-primary opacity-70" />
-          <input type="text" placeholder="Enter your email or phone number" required className={inputClass} style={{ paddingLeft: "44px", paddingRight: "14px" }} />
+          <input
+            type="text"
+            placeholder="Enter your email or phone number"
+            required
+            value={registerIdentifier}
+            onChange={(e) => setRegisterIdentifier(e.target.value)}
+            className={inputClass}
+            style={{ paddingLeft: "44px", paddingRight: "14px" }}
+          />
         </div>
       </div>
       <div>
         <FieldLabel text="Password" />
         <div className="relative">
           <Lock className="absolute left-[14px] top-1/2 -translate-y-1/2 w-5 h-5 text-primary opacity-70" />
-          <input type={showRegisterPassword ? "text" : "password"} placeholder="Create a password" required className={inputClass} style={{ paddingLeft: "44px", paddingRight: "44px" }} />
+          <input
+            type={showRegisterPassword ? "text" : "password"}
+            placeholder="Create a password"
+            required
+            value={registerPassword}
+            onChange={(e) => setRegisterPassword(e.target.value)}
+            className={inputClass}
+            style={{ paddingLeft: "44px", paddingRight: "44px" }}
+          />
           <button type="button" onClick={() => setShowRegisterPassword(v => !v)} className="absolute right-[14px] top-1/2 -translate-y-1/2 bg-none border-none cursor-pointer text-primary p-0 flex">
             {showRegisterPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
           </button>
         </div>
+        <p className="text-[11px] text-muted-foreground mt-1 mb-0">
+          Password must be at least 8 characters and include uppercase, lowercase, and a number.
+        </p>
       </div>
       <SubmitButton label="Create account" loadingLabel="Creating account..." />
     </form>
   );
 
   const renderForgotForm = () => (
-    <form onSubmit={e => handleSubmit(e, "forgot")} className="flex flex-col gap-3">
+    <form onSubmit={submitForgot} className="flex flex-col gap-3">
       {forgotStep === 1 ? (
         <>
           <div>
             <FieldLabel text="Email or Phone" />
             <div className="relative">
               <Mail className="absolute left-[14px] top-1/2 -translate-y-1/2 w-5 h-5 text-primary opacity-70" />
-              <input type="text" placeholder="Enter your email or phone number" required className={inputClass} style={{ paddingLeft: "44px", paddingRight: "14px" }} />
+              <input
+                type="text"
+                placeholder="Enter your email or phone number"
+                required
+                value={forgotIdentifier}
+                onChange={(e) => setForgotIdentifier(e.target.value)}
+                className={inputClass}
+                style={{ paddingLeft: "44px", paddingRight: "14px" }}
+              />
             </div>
           </div>
           <SubmitButton label="Send Reset Link" loadingLabel="Sending..." />
@@ -115,20 +256,43 @@ export default function AuthPage({ initialTab = "login" }: AuthPageProps) {
       ) : (
         <>
           <div>
-            <FieldLabel text="Verification Code" />
-            <input type="text" maxLength={6} placeholder="000000" required className={inputClass} style={{ textAlign: "center", letterSpacing: "0.4em", fontSize: "20px", paddingLeft: "14px", paddingRight: "14px" }} />
+            <FieldLabel text="Reset Token" />
+            <input
+              type="text"
+              placeholder="Paste the token from your email/SMS"
+              required
+              value={resetToken}
+              onChange={(e) => setResetToken(e.target.value)}
+              className={inputClass}
+              style={{ paddingLeft: "14px", paddingRight: "14px" }}
+            />
           </div>
           <div>
             <FieldLabel text="New Password" />
             <div className="relative">
               <Lock className="absolute left-[14px] top-1/2 -translate-y-1/2 w-5 h-5 text-primary opacity-70" />
-              <input type={showPassword ? "text" : "password"} placeholder="Enter new password" required className={inputClass} style={{ paddingLeft: "44px", paddingRight: "44px" }} />
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="Enter new password"
+                required
+                value={resetPassword}
+                onChange={(e) => setResetPassword(e.target.value)}
+                className={inputClass}
+                style={{ paddingLeft: "44px", paddingRight: "44px" }}
+              />
               <button type="button" onClick={() => setShowPassword(v => !v)} className="absolute right-[14px] top-1/2 -translate-y-1/2 bg-none border-none cursor-pointer text-primary p-0 flex">
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
           </div>
           <SubmitButton label="Reset Password" loadingLabel="Resetting..." />
+          <button
+            type="button"
+            onClick={() => setForgotStep(1)}
+            className="text-xs text-muted-foreground hover:text-primary transition-colors text-left"
+          >
+            Back
+          </button>
         </>
       )}
     </form>
@@ -160,6 +324,12 @@ export default function AuthPage({ initialTab = "login" }: AuthPageProps) {
 
         {/* Form */}
         <div>
+          {(notice || error) && (
+            <div className="mb-3 text-[12px] leading-snug">
+              {error && <p className="m-0 text-red-500 font-medium">{error}</p>}
+              {notice && <p className={`m-0 ${error ? "text-muted-foreground mt-1" : "text-muted-foreground"}`}>{notice}</p>}
+            </div>
+          )}
           {activeTab === "login" && renderLoginForm()}
           {activeTab === "register" && renderRegisterForm()}
           {activeTab === "forgot" && renderForgotForm()}

@@ -390,6 +390,12 @@ export class ProductsService {
           isActive: dto.isActive === false ? false : true,
           isFeatured: dto.isFeatured === true,
           isFlashSale: dto.isFlashSale === true,
+          allowCredit: dto.allowCredit === true,
+          creditMessage: dto.creditMessage ?? null,
+          creditMinimum:
+            dto.creditMinimum !== undefined && dto.creditMinimum !== null
+              ? (isNaN(Number(dto.creditMinimum)) ? null : Number(dto.creditMinimum))
+              : null,
           stockTotal: isNaN(Number(dto.stockTotal)) ? 0 : Number(dto.stockTotal),
           stockCurrent: isNaN(Number(dto.stockCurrent)) ? 0 : Number(dto.stockCurrent),
           hasFiveYearGuarantee: dto.hasFiveYearGuarantee === true,
@@ -537,6 +543,12 @@ export class ProductsService {
           isActive: dto.isActive === false ? false : true,
           isFeatured: dto.isFeatured === true,
           isFlashSale: dto.isFlashSale === true,
+          allowCredit: dto.allowCredit === true,
+          creditMessage: dto.creditMessage ?? null,
+          creditMinimum:
+            dto.creditMinimum !== undefined && dto.creditMinimum !== null
+              ? (isNaN(Number(dto.creditMinimum)) ? null : Number(dto.creditMinimum))
+              : null,
           flashSalePrice: dto.flashSalePrice ? Number(dto.flashSalePrice) : null,
           flashSaleEnd: (dto.flashSaleEnd && dto.flashSaleEnd.trim() && !isNaN(new Date(dto.flashSaleEnd).getTime())) ? new Date(dto.flashSaleEnd) : null,
           stockTotal: isNaN(Number(dto.stockTotal)) ? 0 : Number(dto.stockTotal),
@@ -696,6 +708,12 @@ export class ProductsService {
         isActive: typeof dto.isActive === 'boolean' ? dto.isActive : undefined,
         isFeatured: typeof dto.isFeatured === 'boolean' ? dto.isFeatured : undefined,
         isFlashSale: typeof dto.isFlashSale === 'boolean' ? dto.isFlashSale : undefined,
+        allowCredit: typeof dto.allowCredit === 'boolean' ? dto.allowCredit : undefined,
+        creditMessage: dto.creditMessage !== undefined ? dto.creditMessage : undefined,
+        creditMinimum:
+          dto.creditMinimum !== undefined
+            ? (isNaN(Number(dto.creditMinimum)) ? null : Number(dto.creditMinimum))
+            : undefined,
         flashSalePrice: dto.flashSalePrice !== undefined ? (isNaN(Number(dto.flashSalePrice)) ? null : Number(dto.flashSalePrice)) : undefined,
         flashSaleEnd: (dto.flashSaleEnd && dto.flashSaleEnd.trim() && !isNaN(new Date(dto.flashSaleEnd).getTime())) ? new Date(dto.flashSaleEnd) : (dto.flashSaleEnd === null || dto.flashSaleEnd === "" ? null : undefined),
         stockTotal: dto.stockTotal !== undefined ? (isNaN(Number(dto.stockTotal)) ? 0 : Number(dto.stockTotal)) : undefined,

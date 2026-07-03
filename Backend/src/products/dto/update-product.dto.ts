@@ -67,6 +67,22 @@ export class UpdateProductDto {
   @Transform(({ value }) => value === 'true' || value === true)
   isFlashSale?: boolean;
 
+  // ── Credit / "Get Now Pay Later" fields ───────────────────────────────────
+  @IsOptional()
+  @IsBoolean()
+  @Transform(({ value }) => value === 'true' || value === true)
+  allowCredit?: boolean;
+
+  @IsOptional()
+  @IsString()
+  creditMessage?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Type(() => Number)
+  creditMinimum?: number;
+
   @IsOptional()
   @IsNumber()
   @Type(() => Number)

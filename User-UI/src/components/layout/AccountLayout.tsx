@@ -32,9 +32,14 @@ const sidebarItems = [
 
 interface AccountLayoutProps {
   children: React.ReactNode;
+  /**
+   * Controls whether the internal account top bar is shown.
+   * Some pages already render the global site header, so showing both creates a double top bar.
+   */
+  showTopBar?: boolean;
 }
 
-export default function AccountLayout({ children }: AccountLayoutProps) {
+export default function AccountLayout({ children, showTopBar = true }: AccountLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [location, setLocation] = useLocation();
 
@@ -130,61 +135,63 @@ export default function AccountLayout({ children }: AccountLayoutProps) {
 
       {/* Main content */}
       <main className="flex-1 min-w-0 overflow-y-auto">
-        {/* Top bar */}
-        <div className="sticky top-0 z-20 bg-background border-b border-border flex items-center justify-between px-4 md:px-6 py-3">
-          <button
-            className="lg:hidden w-8 h-8 flex items-center justify-center rounded-xl hover:bg-muted transition-colors"
-            onClick={() => setSidebarOpen(true)}
-          >
-            <Menu className="w-5 h-5 text-foreground" />
-          </button>
-          <div className="hidden lg:block" />
+        {/* Top bar (optional) */}
+        {showTopBar && (
+          <div className="sticky top-0 z-20 bg-background border-b border-border flex items-center justify-between px-4 md:px-6 py-3">
+            <button
+              className="lg:hidden w-8 h-8 flex items-center justify-center rounded-xl hover:bg-muted transition-colors"
+              onClick={() => setSidebarOpen(true)}
+            >
+              <Menu className="w-5 h-5 text-foreground" />
+            </button>
+            <div className="hidden lg:block" />
 
-          <div className="flex items-center gap-3">
-            <Link href="/shop">
-              <button className="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-muted transition-colors">
-                <Search style={{ width: 18, height: 18 }} className="text-foreground" />
-              </button>
-            </Link>
-
-            <Link href="/wishlist">
-              <button className="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-muted transition-colors">
-                <Heart style={{ width: 18, height: 18 }} className="text-foreground" />
-              </button>
-            </Link>
-
-            <Link href="/cart">
-              <button className="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-muted transition-colors">
-                <ShoppingBag style={{ width: 18, height: 18 }} className="text-foreground" />
-              </button>
-            </Link>
-
-            <Link href="/track">
-              <button className="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-muted transition-colors">
-                <Bell style={{ width: 18, height: 18 }} className="text-foreground" />
-              </button>
-            </Link>
-
-            <div className="flex items-center gap-1.5">
-              <Link href="/dashboard">
-                <button className="flex items-center gap-1.5 cursor-pointer">
-                  <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0 ring-2 ring-primary/30 text-white text-xs font-black">
-                    {initials}
-                  </div>
-                  <span className="hidden md:block text-sm font-semibold text-foreground max-w-[100px] truncate">{displayName}</span>
-                  <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+            <div className="flex items-center gap-3">
+              <Link href="/shop">
+                <button className="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-muted transition-colors">
+                  <Search style={{ width: 18, height: 18 }} className="text-foreground" />
                 </button>
               </Link>
-              <button
-                onClick={handleLogout}
-                className="p-1.5 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/20 text-muted-foreground hover:text-red-500 transition-colors"
-                title="Logout"
-              >
-                <LogOut className="w-4 h-4" />
-              </button>
+
+              <Link href="/wishlist">
+                <button className="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-muted transition-colors">
+                  <Heart style={{ width: 18, height: 18 }} className="text-foreground" />
+                </button>
+              </Link>
+
+              <Link href="/cart">
+                <button className="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-muted transition-colors">
+                  <ShoppingBag style={{ width: 18, height: 18 }} className="text-foreground" />
+                </button>
+              </Link>
+
+              <Link href="/track">
+                <button className="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-muted transition-colors">
+                  <Bell style={{ width: 18, height: 18 }} className="text-foreground" />
+                </button>
+              </Link>
+
+              <div className="flex items-center gap-1.5">
+                <Link href="/dashboard">
+                  <button className="flex items-center gap-1.5 cursor-pointer">
+                    <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0 ring-2 ring-primary/30 text-white text-xs font-black">
+                      {initials}
+                    </div>
+                    <span className="hidden md:block text-sm font-semibold text-foreground max-w-[100px] truncate">{displayName}</span>
+                    <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+                  </button>
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="p-1.5 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/20 text-muted-foreground hover:text-red-500 transition-colors"
+                  title="Logout"
+                >
+                  <LogOut className="w-4 h-4" />
+                </button>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Page content */}
         <div className="max-w-5xl mx-auto px-4 md:px-6 py-6 pb-28 lg:pb-10">

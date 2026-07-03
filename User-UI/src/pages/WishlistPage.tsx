@@ -38,24 +38,28 @@ function adaptProduct(p: WishlistProduct): Product {
     p.comparePrice && p.comparePrice > p.price
       ? Math.round(((p.comparePrice - p.price) / p.comparePrice) * 100)
       : 0;
+  const primaryImage = getImage(p);
   return {
     id: p.id,
     name: p.name,
+    brand: "",
+    category: "",
     price: p.price,
     oldPrice: p.comparePrice ?? p.price,
     discount,
     image: getImage(p),
+    images: [primaryImage],
     stock: 1,
     rating: 0,
     reviewCount: 0,
     isWholesaleOnly: false,
     allowCredit: false,
     specs: "",
+    description: "",
     creditMessage: "",
     wholesalePrice: 0,
     wholesaleMoq: 0,
-    slug: p.slug ?? p.id,
-  } as Product;
+  };
 }
 
 export default function WishlistPage() {

@@ -3,7 +3,7 @@ import { persist } from 'zustand/middleware';
 import { API_BASE } from '@/lib/api';
 import { initFirebase, requestNotificationPermission } from '@/lib/firebase';
 
-let messagingInstance: ReturnType<typeof initFirebase>['messaging'] | null = null;
+let messagingInstance: Awaited<ReturnType<typeof initFirebase>>['messaging'] | null = null;
 
 async function registerFcmToken(authToken: string | null, fcmToken: string | null) {
   if (!fcmToken || !authToken) return;
@@ -41,11 +41,10 @@ interface AuthState {
   error: string | null;
   login: (identifier: string, password: string, captchaToken?: string) => Promise<{ success: boolean; error?: string }>;
   register: (data: {
-    email: string;
+    identifier: string; // email or phone
     password: string;
     firstName: string;
     lastName: string;
-    phone?: string;
   }, captchaToken?: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
   getMe: () => Promise<void>;
@@ -89,7 +88,7 @@ export const useAuthStore = create<AuthState>()(
             isLoading: false,
             error: null,
           });
-          const { messaging } = initFirebase();
+          const { messaging } = await initFirebase();
           messagingInstance = messaging;
           const fcmToken = await requestNotificationPermission(messagingInstance);
           registerFcmToken(data.accessToken, fcmToken);
@@ -104,15 +103,16 @@ export const useAuthStore = create<AuthState>()(
       register: async (data, captchaToken?: string) => {
         set({ isLoading: true, error: null });
         try {
+          const identifier = data.identifier?.trim() || "";
+          const isEmail = identifier.includes("@");
           const res = await fetch(`${API_BASE}/api/auth/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              email: data.email,
+              ...(isEmail ? { email: identifier } : { phone: identifier }),
               password: data.password,
               firstName: data.firstName,
               lastName: data.lastName,
-              ...(data.phone ? { phone: data.phone } : {}),
               ...(captchaToken ? { captchaToken } : {}),
             }),
           });
@@ -133,14 +133,14 @@ export const useAuthStore = create<AuthState>()(
               isLoading: false,
               error: null,
             });
-            const { messaging } = initFirebase();
+            const { messaging } = await initFirebase();
             messagingInstance = messaging;
             const fcmToken = await requestNotificationPermission(messagingInstance);
             registerFcmToken(json.accessToken, fcmToken);
             return { success: true };
           }
           set({ isLoading: false, error: null });
-          return get().login(data.email, data.password, captchaToken);
+          return get().login(identifier, data.password, captchaToken);
         } catch {
           const msg = 'Network error. Please check your connection.';
           set({ isLoading: false, error: msg });
@@ -190,7 +190,7 @@ export const useAuthStore = create<AuthState>()(
                 if (retryRes.ok) {
                   const user = await retryRes.json();
                   set({ user });
-                  const { messaging } = initFirebase();
+                  const { messaging } = await initFirebase();
                   messagingInstance = messaging;
                   const fcmToken = await requestNotificationPermission(messagingInstance);
                   registerFcmToken(newAccess, fcmToken);
@@ -209,7 +209,7 @@ export const useAuthStore = create<AuthState>()(
           }
           const user = await res.json();
           set({ user });
-          const { messaging } = initFirebase();
+          const { messaging } = await initFirebase();
           messagingInstance = messaging;
           const fcmToken = await requestNotificationPermission(messagingInstance);
           registerFcmToken(token, fcmToken);
