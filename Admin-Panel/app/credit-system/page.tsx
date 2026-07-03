@@ -113,12 +113,39 @@ function CreditContent() {
   const [addProdOpen, setAddProdOpen] = useState(false);
   const [editProd, setEditProd] = useState<InstProduct|null>(null);
   const [deleteProd, setDeleteProd] = useState<InstProduct|null>(null);
+  const [prodSaving, setProdSaving] = useState(false);
   const [prodForm, setProdForm] = useState({ 
     name:'', sku:'', price:'', status:'Active', 
     description:'', specifications:'', creditMessage:'', creditMinimum:'',
     stockTotal: '100', stockCurrent: '100'
   });
   const [prodImages, setProdImages] = useState<string[]>([]);
+
+  const appendUploadedImage = (url?: string) => {
+    if (!url) return;
+    setProdImages(prev => prev.includes(url) ? prev : [...prev, url]);
+  };
+
+  const parseSpecifications = (value: string) => {
+    const entries = value
+      .split(/\n|\|/)
+      .map(item => item.trim())
+      .filter(Boolean)
+      .map(item => {
+        const separatorIndex = item.indexOf(':');
+        if (separatorIndex === -1) {
+          return { key: 'Specifications', value: item };
+        }
+
+        return {
+          key: item.slice(0, separatorIndex).trim(),
+          value: item.slice(separatorIndex + 1).trim(),
+        };
+      })
+      .filter(item => item.key && item.value);
+
+    return entries.length > 0 ? entries : undefined;
+  };
 
   const loadCreditProducts = () => {
     getProducts({ allowCredit: 'true', take: 100 }).then(r => {
@@ -148,11 +175,50 @@ function CreditContent() {
   }, [activeTab]);
 
   const handleAddProd = async () => {
-    if (!prodForm.name.trim()) { toast.error('Product name required'); return; }
+    if (!prodForm.name.trim() || !prodForm.sku.trim()) {
+      toast.error('Product name and SKU are required');
+      return;
+    }
+    setProdSaving(true);
     try {
       await createProduct({
         name: prodForm.name,
-        sku: prodForm.sku,
+        sku: prodForm.sku.trim(),
+        price: Number(prodForm.price) || 0,
+        isActive: prodForm.status === 'Active',
+        allowCredit: true,
+        categorySlug: 'general',
+        description: prodForm.description,
+        creditMessage: prodForm.creditMessage,
+        creditMinimum: Number(prodForm.creditMinimum) || 0,
+        stockTotal: Number(prodForm.stockTotal) || 0,
+        stockCurrent: Number(prodForm.stockCurrent) || 0,
+        imageDataUrls: prodImages,
+        replaceImages: prodImages.length > 0,
+        specifications: parseSpecifications(prodForm.specifications),
+      });
+      toast.success('Credit product added');
+      setAddProdOpen(false);
+      loadCreditProducts();
+    } catch (err: any) {
+      const msg = err?.response?.data?.message;
+      toast.error(Array.isArray(msg) ? msg.join(', ') : (msg || 'Failed to add product'));
+    } finally {
+      setProdSaving(false);
+    }
+  };
+
+  const handleEditProd = async () => {
+    if (!editProd) return;
+    if (!prodForm.name.trim() || !prodForm.sku.trim()) {
+      toast.error('Product name and SKU are required');
+      return;
+    }
+    setProdSaving(true);
+    try {
+      await updateProduct(editProd.id, {
+        name: prodForm.name,
+        sku: prodForm.sku.trim(),
         price: Number(prodForm.price) || 0,
         isActive: prodForm.status === 'Active',
         allowCredit: true,
@@ -162,38 +228,17 @@ function CreditContent() {
         stockTotal: Number(prodForm.stockTotal) || 0,
         stockCurrent: Number(prodForm.stockCurrent) || 0,
         imageDataUrls: prodImages,
-        specifications: prodForm.specifications ? [{ key: 'Specifications', value: prodForm.specifications }] : undefined
-      });
-      toast.success('Credit product added');
-      setAddProdOpen(false);
-      loadCreditProducts();
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message || 'Failed to add product');
-    }
-  };
-
-  const handleEditProd = async () => {
-    if (!editProd) return;
-    try {
-      await updateProduct(editProd.id, {
-        name: prodForm.name,
-        sku: prodForm.sku,
-        price: Number(prodForm.price) || 0,
-        isActive: prodForm.status === 'Active',
-        description: prodForm.description,
-        creditMessage: prodForm.creditMessage,
-        creditMinimum: Number(prodForm.creditMinimum) || 0,
-        stockTotal: Number(prodForm.stockTotal) || 0,
-        stockCurrent: Number(prodForm.stockCurrent) || 0,
-        imageDataUrls: prodImages,
-        replaceImages: true,
-        specifications: prodForm.specifications ? [{ key: 'Specifications', value: prodForm.specifications }] : undefined
+        replaceImages: prodImages.length > 0,
+        specifications: parseSpecifications(prodForm.specifications),
       });
       toast.success('Credit product updated');
       setEditProd(null);
       loadCreditProducts();
     } catch (err: any) {
-      toast.error(err?.response?.data?.message || 'Failed to update product');
+      const msg = err?.response?.data?.message;
+      toast.error(Array.isArray(msg) ? msg.join(', ') : (msg || 'Failed to update product'));
+    } finally {
+      setProdSaving(false);
     }
   };
 
@@ -498,9 +543,9 @@ function CreditContent() {
           <label style={{ display: 'block', fontSize: '11.5px', fontWeight: 600, color: textMuted, marginBottom: '8px', textTransform: 'uppercase' }}>Product Images</label>
           <CloudinaryUpload
             value={prodImages[0] || ''}
-            onChange={(url) => setProdImages(prev => url ? [...prev, url] : prev)}
+            onChange={(url) => appendUploadedImage(url)}
             multiple
-            onUrlChange={(url) => setProdImages(prev => url ? [...prev, url] : prev)}
+            showUrlInput={false}
           />
         </div>
         <FormField label="Description" value={prodForm.description} onChange={v => setProdForm(f => ({ ...f, description: v }))} type="textarea" isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Detailed product description..." />
@@ -516,7 +561,7 @@ function CreditContent() {
         <FormField label="Credit Minimum Deposit" value={prodForm.creditMinimum} onChange={v => setProdForm(f => ({ ...f, creditMinimum: v }))} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 500" />
         <FormField label="Specifications" value={prodForm.specifications} onChange={v => setProdForm(f => ({ ...f, specifications: v }))} type="textarea" isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Key: Value (one per line)" />
         <FormField label="Status" value={prodForm.status} onChange={v => setProdForm(f => ({ ...f, status: v }))} options={['Active', 'Inactive']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-        <ModalFooter onClose={() => setAddProdOpen(false)} onSubmit={handleAddProd} loading={false} submitLabel="Add Product" isDark={isDark} border={border} textMain={textMain} />
+        <ModalFooter onClose={() => setAddProdOpen(false)} onSubmit={handleAddProd} loading={prodSaving} submitLabel="Add Product" isDark={isDark} border={border} textMain={textMain} />
       </Modal>
 
       {editProd && (
@@ -544,7 +589,7 @@ function CreditContent() {
 
             <CloudinaryUpload
               multiple
-              onUrlChange={(url) => setProdImages(prev => url ? [...prev, url] : prev)}
+              onChange={(url) => appendUploadedImage(url)}
               showUrlInput={false}
             />
           </div>
@@ -561,7 +606,7 @@ function CreditContent() {
           <FormField label="Credit Minimum Deposit" value={prodForm.creditMinimum} onChange={v => setProdForm(f => ({ ...f, creditMinimum: v }))} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 500" />
           <FormField label="Specifications" value={prodForm.specifications} onChange={v => setProdForm(f => ({ ...f, specifications: v }))} type="textarea" isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Key: Value (one per line)" />
           <FormField label="Status" value={prodForm.status} onChange={v => setProdForm(f => ({ ...f, status: v }))} options={['Active', 'Inactive']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-          <ModalFooter onClose={() => setEditProd(null)} onSubmit={handleEditProd} loading={false} submitLabel="Save Changes" isDark={isDark} border={border} textMain={textMain} />
+          <ModalFooter onClose={() => setEditProd(null)} onSubmit={handleEditProd} loading={prodSaving} submitLabel="Save Changes" isDark={isDark} border={border} textMain={textMain} />
         </Modal>
       )}
 

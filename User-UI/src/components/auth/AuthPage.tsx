@@ -65,10 +65,22 @@ export default function AuthPage({ initialTab = "login" }: AuthPageProps) {
     return { firstName: parts[0], lastName: parts.slice(1).join(" ") };
   }, [registerFullName]);
 
+  const normalizeIdentifier = (value: string) => {
+    const trimmed = value.trim();
+    if (!trimmed || trimmed.includes("@")) return trimmed.toLowerCase();
+
+    const normalizedPhone = trimmed.replace(/[^\d+]/g, "");
+    if (normalizedPhone.startsWith("+")) {
+      return `+${normalizedPhone.slice(1).replace(/\D/g, "")}`;
+    }
+
+    return normalizedPhone.replace(/\D/g, "");
+  };
+
   const submitLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setNotice("");
-    const res = await login(loginIdentifier.trim(), loginPassword);
+    const res = await login(normalizeIdentifier(loginIdentifier), loginPassword);
     if (res.success) setLocation("/dashboard");
   };
 
@@ -80,7 +92,7 @@ export default function AuthPage({ initialTab = "login" }: AuthPageProps) {
       return;
     }
     const res = await register({
-      identifier: registerIdentifier.trim(),
+      identifier: normalizeIdentifier(registerIdentifier),
       password: registerPassword,
       firstName: parsedRegisterName.firstName,
       lastName: parsedRegisterName.lastName,
@@ -98,7 +110,7 @@ export default function AuthPage({ initialTab = "login" }: AuthPageProps) {
         const res = await fetch(`${API_BASE}/api/auth/forgot-password`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ identifier: forgotIdentifier.trim() }),
+          body: JSON.stringify({ identifier: normalizeIdentifier(forgotIdentifier) }),
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok) {
@@ -198,6 +210,18 @@ export default function AuthPage({ initialTab = "login" }: AuthPageProps) {
           </button>
         </div>
       </div>
+      <button
+        type="button"
+        onClick={() => {
+          setActiveTab("forgot");
+          setForgotStep(1);
+          setNotice("");
+          setLocation("/forgot-password");
+        }}
+        className="self-end text-xs text-muted-foreground hover:text-primary transition-colors"
+      >
+        Forgot password?
+      </button>
       <SubmitButton label="Login" loadingLabel="Logging in..." />
     </form>
   );

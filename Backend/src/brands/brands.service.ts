@@ -35,58 +35,45 @@ export class BrandsService {
   async create(dto: CreateBrandDto) {
     const slug = dto.slug || this.slugify(dto.name);
 
-    const existing = await this.prisma.brand.findUnique({ where: { slug } });
-    if (existing) {
-      // If the brand was previously "deleted" (soft delete), revive it instead of throwing 409.
-      // This prevents admins from getting stuck when re-adding a brand they removed earlier.
-      if (existing.isActive === false) {
-        try {
-          let logoData = this.resolveLogo(dto);
-          if (logoData && logoData.startsWith('data:image')) {
-            logoData = await compressImage(logoData, 300, 120, 80);
-          }
-          const revived = await this.prisma.brand.update({
-            where: { id: existing.id },
-            data: {
-              name: dto.name,
-              slug,
-              logo: logoData ?? null,
-              description: dto.description || null,
-              website: dto.website || null,
-              country: dto.country || null,
-              isActive: dto.isActive !== undefined ? dto.isActive : true,
-              categoryId: dto.categoryId || null,
-            },
-          });
-          await this.invalidateBrandCache();
-          return revived;
-        } catch (e: any) {
-          throw new InternalServerErrorException(`Failed to revive brand: ${e.message}`);
-        }
-      }
-      throw new ConflictException(`Brand with slug "${slug}" already exists`);
-    }
-
     try {
       let logoData = this.resolveLogo(dto);
       if (logoData && logoData.startsWith('data:image')) {
         logoData = await compressImage(logoData, 300, 120, 80);
       }
-      const brand = await this.prisma.brand.create({
-        data: {
-          name: dto.name,
-          slug,
-          logo: logoData ?? null,
-          description: dto.description || null,
-          website: dto.website || null,
-          country: dto.country || null,
-          isActive: dto.isActive !== undefined ? dto.isActive : true,
-          categoryId: dto.categoryId || null,
+
+      const existing = await this.prisma.brand.findFirst({
+        where: {
+          OR: [
+            { slug },
+            { name: { equals: dto.name.trim(), mode: 'insensitive' } },
+          ],
         },
       });
+
+      const brandData = {
+        name: dto.name.trim(),
+        slug,
+        logo: logoData ?? null,
+        description: dto.description || null,
+        website: dto.website || null,
+        country: dto.country || null,
+        isActive: dto.isActive !== undefined ? dto.isActive : true,
+        categoryId: dto.categoryId || null,
+      };
+
+      const brand = existing
+        ? await this.prisma.brand.update({
+            where: { id: existing.id },
+            data: brandData,
+          })
+        : await this.prisma.brand.create({
+            data: brandData,
+          });
+
       await this.invalidateBrandCache();
       return brand;
     } catch (e: any) {
+      if (e instanceof ConflictException) throw e;
       throw new InternalServerErrorException(`Failed to create brand: ${e.message}`);
     }
   }

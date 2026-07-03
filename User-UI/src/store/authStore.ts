@@ -5,6 +5,18 @@ import { initFirebase, requestNotificationPermission } from '@/lib/firebase';
 
 let messagingInstance: Awaited<ReturnType<typeof initFirebase>>['messaging'] | null = null;
 
+function normalizeIdentifier(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed || trimmed.includes('@')) return trimmed.toLowerCase();
+
+  const normalizedPhone = trimmed.replace(/[^\d+]/g, '');
+  if (normalizedPhone.startsWith('+')) {
+    return `+${normalizedPhone.slice(1).replace(/\D/g, '')}`;
+  }
+
+  return normalizedPhone.replace(/\D/g, '');
+}
+
 async function registerFcmToken(authToken: string | null, fcmToken: string | null) {
   if (!fcmToken || !authToken) return;
   try {
@@ -79,10 +91,11 @@ export const useAuthStore = create<AuthState>()(
       login: async (identifier, password, captchaToken?: string) => {
         set({ isLoading: true, error: null });
         try {
+          const normalizedIdentifier = normalizeIdentifier(identifier);
           const res = await fetch(`${API_BASE}/api/auth/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ identifier, password, ...(captchaToken ? { captchaToken } : {}) }),
+            body: JSON.stringify({ identifier: normalizedIdentifier, password, ...(captchaToken ? { captchaToken } : {}) }),
           });
           const data = await res.json().catch(() => ({}));
           if (!res.ok) {
@@ -112,7 +125,7 @@ export const useAuthStore = create<AuthState>()(
       register: async (data, captchaToken?: string) => {
         set({ isLoading: true, error: null });
         try {
-          const identifier = data.identifier?.trim() || "";
+          const identifier = normalizeIdentifier(data.identifier || "");
           const isEmail = identifier.includes("@");
           const res = await fetch(`${API_BASE}/api/auth/register`, {
             method: 'POST',

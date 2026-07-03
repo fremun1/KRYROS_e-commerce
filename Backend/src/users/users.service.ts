@@ -9,6 +9,19 @@ import { compressImage } from '../common/utils/image.util';
 
 const BCRYPT_ROUNDS = 12;
 
+function normalizeIdentifier(value?: string | null) {
+  const trimmed = value?.trim() || '';
+  if (!trimmed) return trimmed;
+  if (trimmed.includes('@')) return trimmed.toLowerCase();
+
+  const normalizedPhone = trimmed.replace(/[^\d+]/g, '');
+  if (normalizedPhone.startsWith('+')) {
+    return `+${normalizedPhone.slice(1).replace(/\D/g, '')}`;
+  }
+
+  return normalizedPhone.replace(/\D/g, '');
+}
+
 @Injectable()
 export class UsersService {
   constructor(
@@ -21,6 +34,10 @@ export class UsersService {
     // columns (role, isVerified, isActive). Role defaults to CUSTOMER — callers that need
     // a different role (e.g. auth.service after SUPER_ADMIN validation) pass it explicitly.
     const { avatar, role = UserRole.CUSTOMER, ...coreFields } = createUserDto;
+    const normalizedEmail =
+      typeof coreFields.email === 'string' ? normalizeIdentifier(coreFields.email) : undefined;
+    const normalizedPhone =
+      typeof coreFields.phone === 'string' ? normalizeIdentifier(coreFields.phone) : undefined;
 
     let avatarUrl: string | undefined = avatar;
     if (avatar && CloudinaryService.isBase64(avatar)) {
@@ -30,6 +47,8 @@ export class UsersService {
     return this.prisma.user.create({
       data: {
         ...coreFields,
+        ...(normalizedEmail !== undefined ? { email: normalizedEmail } : {}),
+        ...(normalizedPhone !== undefined ? { phone: normalizedPhone } : {}),
         role,
         ...(avatarUrl !== undefined ? { avatar: avatarUrl } : {}),
       },
@@ -109,23 +128,24 @@ export class UsersService {
 
   async findByEmail(email: string) {
     return this.prisma.user.findUnique({
-      where: { email },
+      where: { email: normalizeIdentifier(email) },
     });
   }
 
   async findByPhone(phone: string) {
     return this.prisma.user.findUnique({
-      where: { phone },
+      where: { phone: normalizeIdentifier(phone) },
     });
   }
 
   async findByIdentifier(identifier: string) {
+    const normalized = normalizeIdentifier(identifier);
     // Check if identifier is email or phone
     return this.prisma.user.findFirst({
       where: {
         OR: [
-          { email: identifier },
-          { phone: identifier }
+          { email: normalized },
+          { phone: normalized }
         ]
       }
     });
