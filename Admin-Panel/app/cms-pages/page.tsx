@@ -250,11 +250,9 @@ const SECTION_FIELDS: Record<string, Array<{ key: string; label: string; type: s
     { key: 'badge4_subtitle', label: 'Badge 4 Subtitle', type: 'text' },
   ],
   'Flash Sale': [
-    { key: 'title', label: 'Section Title (Heading)', type: 'text', icon: 'type' },
-    { key: 'timer_title', label: 'Timer Card Title (Inside Card)', type: 'text', icon: 'type' },
-    { key: 'endTime', label: 'End Time (ISO Date, e.g. 2026-12-31T23:59:59Z)', type: 'text', icon: 'clock' },
-    { key: 'limit', label: 'Product Limit', type: 'text', icon: 'type' },
-    { key: 'discount_text', label: 'Discount Badge (e.g. UP TO 50% OFF)', type: 'text', icon: 'tag' },
+    { key: 'title', label: 'Section Title — shown in the orange header bar (e.g. Flash Sales)', type: 'text', icon: 'type' },
+    { key: 'endTime', label: 'Sale End Time — drives the countdown timer (ISO 8601, e.g. 2026-12-31T23:59:59Z)', type: 'text', icon: 'clock' },
+    { key: 'limit', label: 'Max Products to Display (default: 8)', type: 'text', icon: 'type' },
   ],
 };
 const PAGE_SECTION_NAME: Record<string, string> = {
