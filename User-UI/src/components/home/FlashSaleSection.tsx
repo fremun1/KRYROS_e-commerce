@@ -1,16 +1,14 @@
 import { useState, useEffect } from "react";
 import { Link } from "wouter";
-import { Zap, ChevronRight } from "lucide-react";
+import { Zap } from "lucide-react";
 import { fetchFlashSaleProducts, fetchHomepageSections, type ApiHomepageSection } from "@/lib/api";
 import type { Product } from "@/lib/api";
 import UnifiedProductCard from "@/components/UnifiedProductCard";
 
 interface FlashSaleConfig {
   title: string;
-  timer_title: string;
   endTime: string;
   limit: number;
-  discount_text: string;
 }
 
 function useCountdown(endTimeStr: string) {
@@ -49,10 +47,8 @@ function homepageSectionToFlashSale(sec: ApiHomepageSection): FlashSaleConfig | 
   }
   return {
     title: cfg.title || sec.title || "Flash Sales",
-    timer_title: cfg.timer_title || cfg.title || sec.title || "Flash Sales",
     endTime: cfg.endTime || "",
     limit: parseInt(cfg.limit) || 8,
-    discount_text: cfg.discount_text || "UP TO 50% OFF",
   };
 }
 
@@ -81,43 +77,40 @@ export default function FlashSaleSection() {
   const displayTitle = config?.title || "Flash Sales";
 
   return (
-    <section className="max-w-7xl mx-auto px-4 md:px-6 py-4">
-      {/* ── Jumia-style header bar ── */}
-      <div
-        className="rounded-t-2xl overflow-hidden"
-        style={{ background: "#c0392b" }}
-      >
-        <div className="flex items-center justify-between px-4 py-2.5 gap-2">
-          {/* Left: icon + title stacked with timer below */}
-          <div className="flex items-start gap-2 min-w-0 flex-1">
-            <Zap className="w-5 h-5 fill-yellow-400 text-yellow-400 flex-shrink-0 mt-0.5" />
-            <div className="flex flex-col min-w-0">
-              <span className="text-white font-black text-sm md:text-base tracking-tight uppercase leading-tight">
-                {displayTitle}
-              </span>
-              {hasTimer && (
-                <span className="text-white text-[11px] font-semibold tracking-wide leading-tight mt-0.5 tabular-nums">
-                  TIME LEFT:&nbsp;
-                  {String(hours).padStart(2, "0")}h&nbsp;:&nbsp;
-                  {String(mins).padStart(2, "0")}m&nbsp;:&nbsp;
-                  {String(secs).padStart(2, "0")}s
-                </span>
-              )}
-            </div>
+    <section className="w-full px-0 md:px-4 py-4">
+      {/* ── Jumia-style RED banner header ── */}
+      <div className="w-full py-3 px-4 md:px-6" style={{ background: "linear-gradient(to right, #D91C45, #E8334D)" }}>
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
+          {/* Left: Icon + Title */}
+          <div className="flex items-center gap-2 min-w-0 flex-1">
+            <Zap className="w-6 h-6 md:w-7 md:h-7 fill-yellow-300 text-yellow-300 flex-shrink-0" />
+            <h2 className="text-white font-black text-lg md:text-2xl tracking-tight leading-none">
+              {displayTitle}
+            </h2>
           </div>
 
-          {/* Right: See All */}
-          <Link href="/shop">
-            <span className="text-white font-bold text-sm whitespace-nowrap cursor-pointer select-none hover:underline">
-              See All
-            </span>
-          </Link>
+          {/* Right: Timer (if exists) and See All */}
+          <div className="flex items-center gap-3 flex-shrink-0">
+            {hasTimer && (
+              <div className="text-white text-xs md:text-sm font-semibold tabular-nums whitespace-nowrap">
+                TIME LEFT:{" "}
+                <span className="font-bold">
+                  {String(hours).padStart(2, "0")}h : {String(mins).padStart(2, "0")}m : {String(secs).padStart(2, "0")}s
+                </span>
+              </div>
+            )}
+            <Link href="/shop">
+              <span className="text-white font-bold text-sm md:text-base whitespace-nowrap cursor-pointer hover:underline">
+                See All
+              </span>
+            </Link>
+          </div>
         </div>
       </div>
 
       {/* ── Products horizontal scroll ── */}
-      <div className="border border-t-0 border-border dark:border-border/40 rounded-b-2xl overflow-hidden bg-card">
-        <div className="flex overflow-x-auto no-scrollbar">
+      <div className="w-full overflow-x-auto no-scrollbar px-4 md:px-6 py-4 bg-white dark:bg-slate-950">
+        <div className="max-w-7xl mx-auto flex gap-3 pb-2">
           {products.map((p) => {
             // Compute sold % from stockTotal / stockCurrent on the raw product
             const raw = p as any;
@@ -130,19 +123,16 @@ export default function FlashSaleSection() {
             return (
               <div
                 key={p.id}
-                className="flex-shrink-0 w-[calc(50vw-16px)] md:w-[180px] lg:w-[200px] border-r border-border dark:border-border/40 last:border-r-0 flex flex-col"
+                className="flex-shrink-0 w-[140px] md:w-[160px] lg:w-[180px] flex flex-col"
               >
-                {/* Product card — no rounding/shadow so it tiles cleanly */}
-                <div className="flex-1">
-                  <UnifiedProductCard
-                    product={p}
-                    className="rounded-none border-0 shadow-none"
-                  />
+                {/* Product card — use the standard card styling */}
+                <div className="flex-1 mb-2">
+                  <UnifiedProductCard product={p} />
                 </div>
 
-                {/* ── Sold progress bar ── */}
-                <div className="px-2.5 pb-3 pt-0">
-                  <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+                {/* ── Sold progress bar (Jumia-style) ── */}
+                <div className="px-2">
+                  <div className="h-2 w-full bg-gray-300 dark:bg-gray-600 rounded-full overflow-hidden">
                     <div
                       className="h-full rounded-full transition-all duration-300"
                       style={{
@@ -156,14 +146,8 @@ export default function FlashSaleSection() {
                       }}
                     />
                   </div>
-                  <p className="text-[10px] mt-1 font-semibold">
-                    {soldPct >= 80 ? (
-                      <span className="text-red-500">🔥 {soldPct}% sold</span>
-                    ) : soldPct > 0 ? (
-                      <span className="text-muted-foreground">{soldPct}% sold</span>
-                    ) : (
-                      <span className="text-green-600 dark:text-green-400">In Stock</span>
-                    )}
+                  <p className="text-xs mt-1 font-semibold text-gray-700 dark:text-gray-300">
+                    {soldPct} items left
                   </p>
                 </div>
               </div>
