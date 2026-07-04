@@ -85,58 +85,31 @@ export default function FlashSaleSection() {
       {/* ── Jumia-style header bar ── */}
       <div
         className="rounded-t-2xl overflow-hidden"
-        style={{ background: "linear-gradient(135deg, #f26522 0%, #e04e0a 100%)" }}
+        style={{ background: "#c0392b" }}
       >
-        <div className="flex items-center justify-between px-4 py-3 gap-2">
-          {/* Left: icon + title + countdown */}
-          <div className="flex items-center gap-2 min-w-0 flex-1">
-            <Zap className="w-4 h-4 fill-white text-white flex-shrink-0" />
-            <span className="text-white font-black text-sm md:text-base tracking-tight uppercase whitespace-nowrap">
-              {displayTitle}
-            </span>
-
-            {hasTimer && (
-              <div className="flex items-center gap-1 ml-1">
-                <span className="text-white/70 text-[10px] font-semibold whitespace-nowrap hidden sm:inline mr-0.5">
-                  Ends in
+        <div className="flex items-center justify-between px-4 py-2.5 gap-2">
+          {/* Left: icon + title stacked with timer below */}
+          <div className="flex items-start gap-2 min-w-0 flex-1">
+            <Zap className="w-5 h-5 fill-yellow-400 text-yellow-400 flex-shrink-0 mt-0.5" />
+            <div className="flex flex-col min-w-0">
+              <span className="text-white font-black text-sm md:text-base tracking-tight uppercase leading-tight">
+                {displayTitle}
+              </span>
+              {hasTimer && (
+                <span className="text-white text-[11px] font-semibold tracking-wide leading-tight mt-0.5 tabular-nums">
+                  TIME LEFT:&nbsp;
+                  {String(hours).padStart(2, "0")}h&nbsp;:&nbsp;
+                  {String(mins).padStart(2, "0")}m&nbsp;:&nbsp;
+                  {String(secs).padStart(2, "0")}s
                 </span>
-                {/* Hours */}
-                <div className="flex flex-col items-center">
-                  <span className="bg-black/35 text-white font-black text-sm tabular-nums leading-none px-1.5 py-0.5 rounded-md min-w-[26px] text-center">
-                    {String(hours).padStart(2, "0")}
-                  </span>
-                  <span className="text-white/50 text-[7px] font-bold tracking-wider uppercase mt-0.5">
-                    H
-                  </span>
-                </div>
-                <span className="text-white/50 font-black text-sm pb-3">:</span>
-                {/* Minutes */}
-                <div className="flex flex-col items-center">
-                  <span className="bg-black/35 text-white font-black text-sm tabular-nums leading-none px-1.5 py-0.5 rounded-md min-w-[26px] text-center">
-                    {String(mins).padStart(2, "0")}
-                  </span>
-                  <span className="text-white/50 text-[7px] font-bold tracking-wider uppercase mt-0.5">
-                    M
-                  </span>
-                </div>
-                <span className="text-white/50 font-black text-sm pb-3">:</span>
-                {/* Seconds */}
-                <div className="flex flex-col items-center">
-                  <span className="bg-black/35 text-white font-black text-sm tabular-nums leading-none px-1.5 py-0.5 rounded-md min-w-[26px] text-center">
-                    {String(secs).padStart(2, "0")}
-                  </span>
-                  <span className="text-white/50 text-[7px] font-bold tracking-wider uppercase mt-0.5">
-                    S
-                  </span>
-                </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
 
           {/* Right: See All */}
           <Link href="/shop">
-            <span className="flex items-center gap-0.5 text-white font-bold text-xs whitespace-nowrap bg-white/25 hover:bg-white/35 active:bg-white/40 transition-colors px-2.5 py-1 rounded-full cursor-pointer select-none">
-              See All <ChevronRight className="w-3 h-3" />
+            <span className="text-white font-bold text-sm whitespace-nowrap cursor-pointer select-none hover:underline">
+              See All
             </span>
           </Link>
         </div>
