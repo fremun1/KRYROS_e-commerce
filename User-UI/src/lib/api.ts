@@ -29,6 +29,10 @@ export interface Product {
   isBestSeller?: boolean;
   isFeatured?: boolean;
   isFlashSale?: boolean;
+  flashSalePrice?: number | null;
+  flashSaleEnd?: string | null;
+  stockTotal?: number;
+  stockCurrent?: number;
   // Credit / Get Now
   allowCredit?: boolean;
   creditMessage?: string | null;
@@ -178,6 +182,9 @@ export interface ApiHomepageSection {
   id: string;
   type: string;
   title?: string;
+  subtitle?: string;
+  link?: string;
+  linkText?: string;
   isActive: boolean;
   config?: Record<string, unknown>;
   order?: number;
@@ -258,6 +265,10 @@ function normalizeProduct(p: any): Product {
     isBestSeller: !!(p.isBestSeller),
     isFeatured: !!(p.isFeatured),
     isFlashSale: !!(p.isFlashSale),
+    flashSalePrice: p.flashSalePrice != null ? Number(p.flashSalePrice) : null,
+    flashSaleEnd: p.flashSaleEnd ?? null,
+    stockTotal: p.stockTotal != null ? Number(p.stockTotal) : undefined,
+    stockCurrent: p.stockCurrent != null ? Number(p.stockCurrent) : undefined,
     // Credit
     allowCredit: !!(p.allowCredit),
     creditMessage: p.creditMessage ?? null,

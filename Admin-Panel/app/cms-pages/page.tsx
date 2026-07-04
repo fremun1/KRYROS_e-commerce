@@ -250,8 +250,11 @@ const SECTION_FIELDS: Record<string, Array<{ key: string; label: string; type: s
     { key: 'badge4_subtitle', label: 'Badge 4 Subtitle', type: 'text' },
   ],
   'Flash Sale': [
-    { key: 'title', label: 'Section Title — shown in the orange header bar (e.g. Flash Sales)', type: 'text', icon: 'type' },
-    { key: 'endTime', label: 'Sale End Time — drives the countdown timer (ISO 8601, e.g. 2026-12-31T23:59:59Z)', type: 'text', icon: 'clock' },
+    { key: 'title', label: 'Section Title — shown in the flash sale header', type: 'text', icon: 'type' },
+    { key: 'countdownLabel', label: 'Countdown Label — e.g. Time Left', type: 'text', icon: 'clock' },
+    { key: 'endTime', label: 'Sale End Time — ISO 8601 or datetime value used for the countdown', type: 'text', icon: 'clock' },
+    { key: 'ctaText', label: 'Button Text — e.g. See All', type: 'text', icon: 'mouse' },
+    { key: 'ctaLink', label: 'Button Link — e.g. /shop', type: 'text', icon: 'link' },
     { key: 'limit', label: 'Max Products to Display (default: 8)', type: 'text', icon: 'type' },
   ],
 };
@@ -418,7 +421,7 @@ function ItemFormModal({ sectionName, pageTitle, initialValues, onClose, onSave,
           {fields.map(field => (
             <div key={field.key} style={{ marginBottom: '16px' }}>
               <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11.5px', fontWeight: 600, color: textMuted, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>
-                {field.icon === 'type' && <Type size={10} />}{field.icon === 'align' && <AlignLeft size={10} />}{field.icon === 'mouse' && <MousePointer size={10} />}{field.icon === 'link' && <Link2 size={10} />}
+                {field.icon === 'type' && <Type size={10} />}{field.icon === 'align' && <AlignLeft size={10} />}{field.icon === 'mouse' && <MousePointer size={10} />}{field.icon === 'link' && <Link2 size={10} />}{field.icon === 'clock' && <Clock size={10} />}
                 {field.label}
               </label>
               {field.type === 'file' ? (
@@ -516,6 +519,12 @@ function CMSContent() {
                     });
                   }
                 } catch {}
+              }
+              if (sec.type === 'FlashSale') {
+                _rawContent.title = _rawContent.title || String(sec.title || 'Flash Sales');
+                _rawContent.countdownLabel = _rawContent.countdownLabel || 'Time Left';
+                _rawContent.ctaText = _rawContent.ctaText || String(sec.linkText || 'See All');
+                _rawContent.ctaLink = _rawContent.ctaLink || String(sec.link || '/shop');
               }
               const newItem = {
                 id: sec.id,
@@ -647,7 +656,13 @@ function CMSContent() {
             finalConfig.items = items;
           }
         }
-        updateCmsHomepageSection(itemId, { config: finalConfig, isActive: true })
+        const homepagePayload: any = { config: finalConfig, isActive: true };
+        if (secName === 'Flash Sale') {
+          homepagePayload.title = finalConfig.title || undefined;
+          homepagePayload.linkText = finalConfig.ctaText || undefined;
+          homepagePayload.link = finalConfig.ctaLink || undefined;
+        }
+        updateCmsHomepageSection(itemId, homepagePayload)
           .then(() => {
             // Update local state to reflect changes immediately
             setData(prev => prev.map(p => p.id !== pageId ? p : {
@@ -717,7 +732,13 @@ function CMSContent() {
         createCmsBanner({ title: content.title, subtitle: content.subtitle, ...(_isVidC ? { videoUrl: _mUrlC, mediaType: 'video' } : { image: _mUrlC, mediaType: 'image' }), link: content.button_link, linkText: content.button_text, isActive: true, ...(_durC ? { duration: _durC } : {}) }).catch(() => {});
       } else {
         const type = HP_SECTION_TYPE[secName] || secName;
-        createCmsHomepageSection({ type, config: { ...content, ...(mediaUrl ? { media: mediaUrl } : {}) }, isActive: true }).catch(() => {});
+        const homepagePayload: any = { type, config: { ...content, ...(mediaUrl ? { media: mediaUrl } : {}) }, isActive: true };
+        if (secName === 'Flash Sale') {
+          homepagePayload.title = content.title || 'Flash Sales';
+          homepagePayload.linkText = content.ctaText || 'See All';
+          homepagePayload.link = content.ctaLink || '/shop';
+        }
+        createCmsHomepageSection(homepagePayload).catch(() => {});
       }
     } else {
       // Convert display name → backend type code (e.g. 'Members Banner' → 'MembersBanner')

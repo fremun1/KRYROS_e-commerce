@@ -174,6 +174,10 @@ export class CMSService {
         backgroundColor: '#f8fafc',
         animation: 'zoomIn',
         config: {
+          title: 'Flash Sale',
+          countdownLabel: 'Time Left',
+          ctaText: 'See All',
+          ctaLink: '/shop',
           limit: 8,
           endTime: new Date(Date.now() + 86400000).toISOString()
         }
