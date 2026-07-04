@@ -1,203 +1,208 @@
-import { useEffect, useMemo, useState } from "react";
-import { Link } from "wouter";
-import { Zap } from "lucide-react";
-import { fetchFlashSaleProducts, fetchHomepageSections, type ApiHomepageSection } from "@/lib/api";
-import type { Product } from "@/lib/api";
-import UnifiedProductCard from "@/components/UnifiedProductCard";
+'use client';
 
-interface FlashSaleConfig {
-  title: string;
-  endTime: string;
-  limit: number;
-  countdownLabel: string;
-  ctaText: string;
-  ctaLink: string;
+import { useState, useEffect } from 'react';
+import { ChevronRight } from 'lucide-react';
+
+interface FlashSalesProduct {
+  id: string;
+  name: string;
+  price: number;
+  discount: number;
+  stock: number;
+  image: string;
 }
 
-function parseCountdownDate(value?: string | null): Date | null {
-  if (!value || !value.trim()) return null;
-
-  const trimmed = value.trim();
-  const asNumber = Number(trimmed);
-  const date = Number.isFinite(asNumber) && /^\d+$/.test(trimmed)
-    ? new Date(asNumber > 1e12 ? asNumber : asNumber * 1000)
-    : new Date(trimmed);
-
-  return Number.isNaN(date.getTime()) ? null : date;
+interface Category {
+  id: string;
+  name: string;
+  image: string;
 }
 
-function useCountdown(targetDate: Date | null) {
-  const [total, setTotal] = useState(0);
+export default function FlashSales() {
+  const [timeLeft, setTimeLeft] = useState({
+    hours: 1,
+    minutes: 14,
+    seconds: 5,
+  });
+
+  // Sample featured products - replace with real data
+  const featuredProducts: FlashSalesProduct[] = [
+    {
+      id: '1',
+      name: 'EASYPIE 20000mAh Ultra...',
+      price: 7100,
+      discount: 51,
+      stock: 50,
+      image: '/product1.jpg',
+    },
+    {
+      id: '2',
+      name: 'Nexus 16 Inches Standi...',
+      price: 24500,
+      discount: 21,
+      stock: 20,
+      image: '/product2.jpg',
+    },
+    {
+      id: '3',
+      name: 'LESIA L176 1...',
+      price: 7382,
+      discount: 0,
+      stock: 20,
+      image: '/product3.jpg',
+    },
+  ];
+
+  const categories: Category[] = [
+    { id: '1', name: 'Phones &\nTablets', image: '/cat1.jpg' },
+    { id: '2', name: 'Appliances\ndeals', image: '/cat2.jpg' },
+    { id: '3', name: 'TV & Audio', image: '/cat3.jpg' },
+    { id: '4', name: 'Sneakers', image: '/cat4.jpg' },
+    { id: '5', name: 'Fashion', image: '/cat5.jpg' },
+    { id: '6', name: 'Home & Office', image: '/cat6.jpg' },
+    { id: '7', name: 'Beverages\ndeals', image: '/cat7.jpg' },
+    { id: '8', name: 'Pay Small\nSmall', image: '/cat8.jpg' },
+  ];
 
   useEffect(() => {
-    const calculateTotal = () => {
-      if (!targetDate) return 0;
-      const diff = Math.floor((targetDate.getTime() - Date.now()) / 1000);
-      return diff > 0 ? diff : 0;
-    };
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => {
+        let { hours, minutes, seconds } = prev;
 
-    setTotal(calculateTotal());
-    const timer = setInterval(() => setTotal(calculateTotal()), 1000);
+        if (seconds > 0) {
+          seconds--;
+        } else if (minutes > 0) {
+          minutes--;
+          seconds = 59;
+        } else if (hours > 0) {
+          hours--;
+          minutes = 59;
+          seconds = 59;
+        } else {
+          // Reset or handle completion
+          hours = 1;
+          minutes = 14;
+          seconds = 5;
+        }
+
+        return { hours, minutes, seconds };
+      });
+    }, 1000);
+
     return () => clearInterval(timer);
-  }, [targetDate?.getTime()]);
-
-  const days = Math.floor(total / 86400);
-  const hours = Math.floor((total % 86400) / 3600);
-  const mins = Math.floor((total % 3600) / 60);
-  const secs = total % 60;
-
-  return { days, hours, mins, secs, total };
-}
-
-function homepageSectionToFlashSale(sec: ApiHomepageSection): FlashSaleConfig | null {
-  let cfg = (sec.config || {}) as Record<string, any>;
-  if (typeof cfg === "string") {
-    try {
-      cfg = JSON.parse(cfg);
-    } catch {
-      return null;
-    }
-  }
-
-  return {
-    title: cfg.title || sec.title || "Flash Sales",
-    endTime: cfg.endTime || "",
-    limit: Number.parseInt(String(cfg.limit ?? "8"), 10) || 8,
-    countdownLabel: cfg.countdownLabel || "Time Left",
-    ctaText: cfg.ctaText || sec.linkText || "See All",
-    ctaLink: cfg.ctaLink || sec.link || "/shop",
-  };
-}
-
-function getFallbackProductEndTime(products: Product[]): Date | null {
-  const futureTimes = products
-    .map((product) => parseCountdownDate(product.flashSaleEnd))
-    .filter((date): date is Date => !!date && date.getTime() > Date.now())
-    .sort((a, b) => a.getTime() - b.getTime());
-
-  return futureTimes[0] || null;
-}
-
-function CountdownUnit({ value, label }: { value: number; label: string }) {
-  return (
-    <div className="min-w-[54px] rounded-md bg-white/15 px-2 py-1 text-center backdrop-blur-sm">
-      <div className="text-sm md:text-base font-black leading-none text-white tabular-nums">
-        {String(value).padStart(2, "0")}
-      </div>
-      <div className="mt-1 text-[10px] md:text-[11px] font-semibold uppercase tracking-[0.14em] text-white/80">
-        {label}
-      </div>
-    </div>
-  );
-}
-
-export default function FlashSaleSection() {
-  const [config, setConfig] = useState<FlashSaleConfig | null>(null);
-  const [products, setProducts] = useState<Product[]>([]);
-
-  useEffect(() => {
-    fetchHomepageSections("FlashSale").then((sections) => {
-      if (sections.length > 0) {
-        setConfig(homepageSectionToFlashSale(sections[0]));
-      }
-    });
   }, []);
 
-  useEffect(() => {
-    const limit = config?.limit || 8;
-    fetchFlashSaleProducts().then((data) => setProducts(data.slice(0, limit)));
-  }, [config?.limit]);
-
-  const countdownTarget = useMemo(() => {
-    const cmsDate = parseCountdownDate(config?.endTime);
-    if (cmsDate && cmsDate.getTime() > Date.now()) return cmsDate;
-    return getFallbackProductEndTime(products);
-  }, [config?.endTime, products]);
-
-  const { days, hours, mins, secs, total: countdownTotal } = useCountdown(countdownTarget);
-  const hasTimer = countdownTotal > 0;
-
-  if (products.length === 0) return null;
-
-  const displayTitle = config?.title || "Flash Sales";
-  const countdownLabel = (config?.countdownLabel || "Time Left").toUpperCase();
-  const ctaText = config?.ctaText || "See All";
-  const ctaLink = config?.ctaLink || "/shop";
+  const formatTime = (value: number) => String(value).padStart(2, '0');
 
   return (
-    <section className="w-full px-0 md:px-4 py-4">
-      <div className="w-full py-3 px-4 md:px-6" style={{ background: "linear-gradient(to right, #D91C45, #E8334D)" }}>
-        <div className="max-w-7xl mx-auto flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex items-center gap-2 min-w-0">
-            <Zap className="w-6 h-6 md:w-7 md:h-7 fill-yellow-300 text-yellow-300 flex-shrink-0" />
-            <h2 className="text-white font-black text-lg md:text-2xl tracking-tight leading-none truncate">
-              {displayTitle}
-            </h2>
+    <section className="w-full bg-white">
+      {/* Header with red background */}
+      <div className="bg-[#C1304B] px-4 py-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <span className="text-2xl sm:text-3xl">🏷️</span>
+            <h2 className="text-2xl sm:text-3xl font-bold text-white">Flash Sales</h2>
           </div>
+          <a
+            href="#"
+            className="text-white hover:text-gray-100 transition text-sm sm:text-base font-medium flex items-center gap-1"
+          >
+            See All <ChevronRight size={20} />
+          </a>
+        </div>
 
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between lg:justify-end lg:flex-1">
-            {hasTimer && (
-              <div className="flex flex-col gap-2 sm:items-end">
-                <span className="text-[11px] md:text-xs font-semibold uppercase tracking-[0.16em] text-white/85">
-                  {countdownLabel}
-                </span>
-                <div className="flex items-center gap-2 flex-wrap">
-                  {days > 0 && <CountdownUnit value={days} label="Days" />}
-                  <CountdownUnit value={hours} label="Hrs" />
-                  <CountdownUnit value={mins} label="Mins" />
-                  <CountdownUnit value={secs} label="Secs" />
-                </div>
-              </div>
-            )}
-
-            <Link href={ctaLink}>
-              <span className="inline-flex items-center justify-center rounded-md border border-white/30 px-4 py-2 text-white font-bold text-sm md:text-base whitespace-nowrap cursor-pointer hover:bg-white/10 transition-colors">
-                {ctaText}
-              </span>
-            </Link>
+        {/* Timer Section */}
+        <div className="mt-3 flex items-center gap-2 sm:gap-3">
+          <span className="text-white text-sm sm:text-base font-medium">TIME LEFT:</span>
+          <div className="flex items-center gap-1 sm:gap-2 font-bold">
+            <span className="text-white text-lg sm:text-xl bg-white/20 px-2 sm:px-3 py-1 rounded">
+              {formatTime(timeLeft.hours)}h
+            </span>
+            <span className="text-white">:</span>
+            <span className="text-white text-lg sm:text-xl bg-white/20 px-2 sm:px-3 py-1 rounded">
+              {formatTime(timeLeft.minutes)}m
+            </span>
+            <span className="text-white">:</span>
+            <span className="text-white text-lg sm:text-xl bg-white/20 px-2 sm:px-3 py-1 rounded">
+              {formatTime(timeLeft.seconds)}s
+            </span>
           </div>
         </div>
       </div>
 
-      <div className="w-full overflow-x-auto no-scrollbar px-4 md:px-6 py-4 bg-white dark:bg-slate-950">
-        <div className="max-w-7xl mx-auto flex gap-3 pb-2">
-          {products.map((p) => {
-            const stockTotal: number = p.stockTotal ?? p.stockCurrent ?? p.stock ?? 50;
-            const stockCurrent: number = p.stockCurrent ?? p.stock ?? stockTotal;
-            const soldUnits = Math.max(0, stockTotal - stockCurrent);
-            const soldPct = stockTotal > 0 ? Math.min(100, Math.round((soldUnits / stockTotal) * 100)) : 0;
-
-            return (
-              <div
-                key={p.id}
-                className="flex-shrink-0 w-[140px] md:w-[160px] lg:w-[180px] flex flex-col"
-              >
-                <div className="flex-1 mb-2">
-                  <UnifiedProductCard product={p} />
+      {/* Featured Products Grid */}
+      <div className="px-4 py-6 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8">
+          {featuredProducts.map((product) => (
+            <div key={product.id} className="bg-gray-50 rounded-lg overflow-hidden hover:shadow-lg transition">
+              {/* Product Image Container */}
+              <div className="relative bg-white aspect-square overflow-hidden">
+                <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                  <span className="text-gray-400 text-sm">[Product Image]</span>
                 </div>
 
-                <div className="px-2">
-                  <div className="h-2 w-full bg-gray-300 dark:bg-gray-600 rounded-full overflow-hidden">
-                    <div
-                      className="h-full rounded-full transition-all duration-300"
-                      style={{
-                        width: `${soldPct}%`,
-                        background:
-                          soldPct >= 80
-                            ? "#ef4444"
-                            : soldPct >= 50
-                              ? "#f26522"
-                              : "#22c55e",
-                      }}
-                    />
+                {/* Discount Badge */}
+                {product.discount > 0 && (
+                  <div className="absolute top-2 right-2 bg-orange-500 text-white px-2 py-1 rounded text-sm sm:text-base font-bold">
+                    -{product.discount}%
                   </div>
-                  <p className="text-xs mt-1 font-semibold text-gray-700 dark:text-gray-300">
-                    {soldPct} items left
+                )}
+              </div>
+
+              {/* Product Info */}
+              <div className="p-3 sm:p-4">
+                <h3 className="text-sm sm:text-base font-medium text-gray-800 mb-2 line-clamp-2">
+                  {product.name}
+                </h3>
+
+                {/* Price */}
+                <div className="mb-2">
+                  <p className="text-lg sm:text-xl font-bold text-gray-900">
+                    ₦{product.price.toLocaleString()}
                   </p>
                 </div>
+
+                {/* Stock Indicator */}
+                <div className="mb-2">
+                  <p className="text-xs sm:text-sm text-gray-600 mb-2">
+                    {product.stock} items left
+                  </p>
+                  <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                    <div
+                      className="bg-orange-500 h-full rounded-full transition-all"
+                      style={{ width: `${(product.stock / 50) * 100}%` }}
+                    />
+                  </div>
+                </div>
               </div>
-            );
-          })}
+            </div>
+          ))}
+        </div>
+
+        {/* Categories Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+          {categories.map((category) => (
+            <a
+              key={category.id}
+              href="#"
+              className="group relative overflow-hidden rounded-lg aspect-square cursor-pointer"
+            >
+              {/* Category Image Background */}
+              <div className="absolute inset-0 bg-gradient-to-br from-gray-300 to-gray-400 flex items-center justify-center">
+                <span className="text-gray-500 text-xs text-center px-2">[Category Image]</span>
+              </div>
+
+              {/* Overlay */}
+              <div className="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition" />
+
+              {/* Category Name */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <p className="text-white text-center font-semibold text-sm sm:text-base leading-snug whitespace-pre-line">
+                  {category.name}
+                </p>
+              </div>
+            </a>
+          ))}
         </div>
       </div>
     </section>
