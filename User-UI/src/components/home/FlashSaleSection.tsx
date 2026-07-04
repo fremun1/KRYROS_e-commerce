@@ -1,210 +1,205 @@
-'use client';
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ChevronRight } from 'lucide-react';
+import { fetchFlashSaleProducts, fetchHomepageCategories } from '@/lib/api';
+import type { Product, ApiCategory } from '@/lib/api';
+import UnifiedProductCard from '@/components/UnifiedProductCard';
 
-interface FlashSalesProduct {
-  id: string;
-  name: string;
-  price: number;
-  discount: number;
-  stock: number;
-  image: string;
+// ─── Timer helpers ────────────────────────────────────────────────────────────
+function secondsUntil(end: Date): number {
+  return Math.max(0, Math.floor((end.getTime() - Date.now()) / 1000));
 }
 
-interface Category {
-  id: string;
-  name: string;
-  image: string;
+function decompose(total: number) {
+  return {
+    hours: Math.floor(total / 3600),
+    minutes: Math.floor((total % 3600) / 60),
+    seconds: total % 60,
+  };
 }
 
-export default function FlashSales() {
-  const [timeLeft, setTimeLeft] = useState({
-    hours: 1,
-    minutes: 14,
-    seconds: 5,
-  });
+// ─────────────────────────────────────────────────────────────────────────────
+export default function FlashSaleSection() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<ApiCategory[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0 });
+  const [saleEnded, setSaleEnded] = useState(false);
+  const endDateRef = useRef<Date | null>(null);
 
-  // Sample featured products - replace with real data
-  const featuredProducts: FlashSalesProduct[] = [
-    {
-      id: '1',
-      name: 'EASYPIE 20000mAh Ultra...',
-      price: 7100,
-      discount: 51,
-      stock: 50,
-      image: '/product1.jpg',
-    },
-    {
-      id: '2',
-      name: 'Nexus 16 Inches Standi...',
-      price: 24500,
-      discount: 21,
-      stock: 20,
-      image: '/product2.jpg',
-    },
-    {
-      id: '3',
-      name: 'LESIA L176 1...',
-      price: 7382,
-      discount: 0,
-      stock: 20,
-      image: '/product3.jpg',
-    },
-  ];
-
-  const categories: Category[] = [
-    { id: '1', name: 'Phones &\nTablets', image: '/cat1.jpg' },
-    { id: '2', name: 'Appliances\ndeals', image: '/cat2.jpg' },
-    { id: '3', name: 'TV & Audio', image: '/cat3.jpg' },
-    { id: '4', name: 'Sneakers', image: '/cat4.jpg' },
-    { id: '5', name: 'Fashion', image: '/cat5.jpg' },
-    { id: '6', name: 'Home & Office', image: '/cat6.jpg' },
-    { id: '7', name: 'Beverages\ndeals', image: '/cat7.jpg' },
-    { id: '8', name: 'Pay Small\nSmall', image: '/cat8.jpg' },
-  ];
-
+  // ── Fetch flash-sale products + homepage categories on mount ─────────────
   useEffect(() => {
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => {
-        let { hours, minutes, seconds } = prev;
+    Promise.all([
+      fetchFlashSaleProducts(),
+      fetchHomepageCategories(),
+    ]).then(([prods, cats]) => {
+      setProducts(prods);
+      setCategories(cats);
 
-        if (seconds > 0) {
-          seconds--;
-        } else if (minutes > 0) {
-          minutes--;
-          seconds = 59;
-        } else if (hours > 0) {
-          hours--;
-          minutes = 59;
-          seconds = 59;
-        } else {
-          // Reset or handle completion
-          hours = 1;
-          minutes = 14;
-          seconds = 5;
-        }
+      // Derive end date from the earliest flashSaleEnd across all products
+      const timestamps = prods
+        .filter((p) => p.flashSaleEnd)
+        .map((p) => new Date(p.flashSaleEnd!).getTime());
 
-        return { hours, minutes, seconds };
-      });
-    }, 1000);
+      let end: Date;
+      if (timestamps.length > 0) {
+        end = new Date(Math.min(...timestamps));
+      } else {
+        // Fallback: end of today if no explicit end date is set
+        end = new Date();
+        end.setHours(23, 59, 59, 999);
+      }
 
-    return () => clearInterval(timer);
+      endDateRef.current = end;
+      const secs = secondsUntil(end);
+      setTimeLeft(decompose(secs));
+      if (secs === 0) setSaleEnded(true);
+      setLoading(false);
+    });
   }, []);
 
-  const formatTime = (value: number) => String(value).padStart(2, '0');
+  // ── Live countdown tick ──────────────────────────────────────────────────
+  useEffect(() => {
+    if (loading || !endDateRef.current) return;
+
+    const tick = setInterval(() => {
+      const secs = secondsUntil(endDateRef.current!);
+      setTimeLeft(decompose(secs));
+      if (secs === 0) {
+        setSaleEnded(true);
+        clearInterval(tick);
+      }
+    }, 1000);
+
+    return () => clearInterval(tick);
+  }, [loading]);
+
+  const fmt = (v: number) => String(v).padStart(2, '0');
+
+  // Hide section entirely when there are no active flash-sale products
+  if (!loading && products.length === 0) return null;
 
   return (
     <section className="w-full bg-white">
-      {/* Header with red background */}
+
+      {/* ── Red header bar ─────────────────────────────────────────────── */}
       <div className="bg-[#C1304B] px-4 py-4 sm:px-6 lg:px-8">
+
+        {/* Title row */}
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <span className="text-2xl sm:text-3xl">🏷️</span>
+            <span className="text-2xl sm:text-3xl" aria-hidden>🏷️</span>
             <h2 className="text-2xl sm:text-3xl font-bold text-white">Flash Sales</h2>
           </div>
           <a
-            href="#"
-            className="text-white hover:text-gray-100 transition text-sm sm:text-base font-medium flex items-center gap-1"
+            href="/shop?isFlashSale=true"
+            className="flex items-center gap-1 text-white hover:text-gray-100 transition text-sm sm:text-base font-medium"
           >
             See All <ChevronRight size={20} />
           </a>
         </div>
 
-        {/* Timer Section */}
+        {/* Timer row */}
         <div className="mt-3 flex items-center gap-2 sm:gap-3">
           <span className="text-white text-sm sm:text-base font-medium">TIME LEFT:</span>
-          <div className="flex items-center gap-1 sm:gap-2 font-bold">
-            <span className="text-white text-lg sm:text-xl bg-white/20 px-2 sm:px-3 py-1 rounded">
-              {formatTime(timeLeft.hours)}h
-            </span>
-            <span className="text-white">:</span>
-            <span className="text-white text-lg sm:text-xl bg-white/20 px-2 sm:px-3 py-1 rounded">
-              {formatTime(timeLeft.minutes)}m
-            </span>
-            <span className="text-white">:</span>
-            <span className="text-white text-lg sm:text-xl bg-white/20 px-2 sm:px-3 py-1 rounded">
-              {formatTime(timeLeft.seconds)}s
-            </span>
+
+          {saleEnded ? (
+            <span className="text-white text-sm font-bold opacity-80">Sale ended</span>
+          ) : loading ? (
+            /* Skeleton while data loads */
+            <div className="flex items-center gap-1 sm:gap-2 font-bold">
+              {['--h', '--m', '--s'].map((lbl, i) => (
+                <span key={i} className="text-white text-lg sm:text-xl bg-white/20 px-2 sm:px-3 py-1 rounded opacity-60">
+                  {lbl}
+                </span>
+              ))}
+            </div>
+          ) : (
+            <div className="flex items-center gap-1 sm:gap-2 font-bold">
+              <span className="text-white text-lg sm:text-xl bg-white/20 px-2 sm:px-3 py-1 rounded">
+                {fmt(timeLeft.hours)}h
+              </span>
+              <span className="text-white">:</span>
+              <span className="text-white text-lg sm:text-xl bg-white/20 px-2 sm:px-3 py-1 rounded">
+                {fmt(timeLeft.minutes)}m
+              </span>
+              <span className="text-white">:</span>
+              <span className="text-white text-lg sm:text-xl bg-white/20 px-2 sm:px-3 py-1 rounded">
+                {fmt(timeLeft.seconds)}s
+              </span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ── Flash-sale products (horizontal scroll) ────────────────────── */}
+      <div className="px-4 pt-4 pb-2 sm:px-6 lg:px-8">
+        {loading ? (
+          /* Loading skeleton */
+          <div className="flex gap-3 overflow-hidden">
+            {[1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className="shrink-0 w-[calc(50vw-20px)] sm:w-56 aspect-[3/4] bg-gray-100 rounded-2xl animate-pulse"
+              />
+            ))}
+          </div>
+        ) : (
+          <div
+            className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory"
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' } as React.CSSProperties}
+          >
+            {products.map((product) => (
+              <div
+                key={product.id}
+                className="snap-start shrink-0 w-[calc(50vw-20px)] sm:w-56"
+              >
+                <UnifiedProductCard
+                  product={product}
+                  className="w-full"
+                  imageStyle="contain"
+                />
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* ── Homepage categories grid ───────────────────────────────────── */}
+      {!loading && categories.length > 0 && (
+        <div className="px-4 py-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+            {categories.map((cat) => (
+              <a
+                key={cat.id}
+                href={cat.slug ? `/shop?categorySlug=${cat.slug}` : '/shop'}
+                className="group relative overflow-hidden rounded-lg aspect-square cursor-pointer block"
+              >
+                {/* Category image */}
+                {cat.image ? (
+                  <img
+                    src={cat.image}
+                    alt={cat.name}
+                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                ) : (
+                  <div className="absolute inset-0 bg-gradient-to-br from-gray-300 to-gray-400" />
+                )}
+
+                {/* Dark overlay */}
+                <div className="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition" />
+
+                {/* Category name */}
+                <div className="absolute inset-0 flex items-center justify-center px-2">
+                  <p className="text-white text-center font-semibold text-sm sm:text-base leading-snug">
+                    {cat.name}
+                  </p>
+                </div>
+              </a>
+            ))}
           </div>
         </div>
-      </div>
+      )}
 
-      {/* Featured Products Grid */}
-      <div className="px-4 py-6 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8">
-          {featuredProducts.map((product) => (
-            <div key={product.id} className="bg-gray-50 rounded-lg overflow-hidden hover:shadow-lg transition">
-              {/* Product Image Container */}
-              <div className="relative bg-white aspect-square overflow-hidden">
-                <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                  <span className="text-gray-400 text-sm">[Product Image]</span>
-                </div>
-
-                {/* Discount Badge */}
-                {product.discount > 0 && (
-                  <div className="absolute top-2 right-2 bg-orange-500 text-white px-2 py-1 rounded text-sm sm:text-base font-bold">
-                    -{product.discount}%
-                  </div>
-                )}
-              </div>
-
-              {/* Product Info */}
-              <div className="p-3 sm:p-4">
-                <h3 className="text-sm sm:text-base font-medium text-gray-800 mb-2 line-clamp-2">
-                  {product.name}
-                </h3>
-
-                {/* Price */}
-                <div className="mb-2">
-                  <p className="text-lg sm:text-xl font-bold text-gray-900">
-                    ₦{product.price.toLocaleString()}
-                  </p>
-                </div>
-
-                {/* Stock Indicator */}
-                <div className="mb-2">
-                  <p className="text-xs sm:text-sm text-gray-600 mb-2">
-                    {product.stock} items left
-                  </p>
-                  <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
-                    <div
-                      className="bg-orange-500 h-full rounded-full transition-all"
-                      style={{ width: `${(product.stock / 50) * 100}%` }}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Categories Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-          {categories.map((category) => (
-            <a
-              key={category.id}
-              href="#"
-              className="group relative overflow-hidden rounded-lg aspect-square cursor-pointer"
-            >
-              {/* Category Image Background */}
-              <div className="absolute inset-0 bg-gradient-to-br from-gray-300 to-gray-400 flex items-center justify-center">
-                <span className="text-gray-500 text-xs text-center px-2">[Category Image]</span>
-              </div>
-
-              {/* Overlay */}
-              <div className="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition" />
-
-              {/* Category Name */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <p className="text-white text-center font-semibold text-sm sm:text-base leading-snug whitespace-pre-line">
-                  {category.name}
-                </p>
-              </div>
-            </a>
-          ))}
-        </div>
-      </div>
     </section>
   );
 }
