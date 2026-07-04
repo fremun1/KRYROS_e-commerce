@@ -257,8 +257,11 @@ export class ProductsService {
         isFlashSale: true,
         isActive: true,
         isWholesaleOnly: false,
-        allowCredit: false,
-        flashSaleEnd: { gt: now },
+        // Allow products with no end date OR a future end date
+        OR: [
+          { flashSaleEnd: null },
+          { flashSaleEnd: { gt: now } },
+        ],
       },
       include: {
         category: true,
@@ -266,8 +269,10 @@ export class ProductsService {
         images: { orderBy: { sortOrder: 'asc' }, take: 1 },
         inventory: true,
         productRelations: {
-          include: { related: { include: { images: { orderBy: { sortOrder: 'asc' }, take: 1 } } } } },
+          include: { related: { include: { images: { orderBy: { sortOrder: 'asc' }, take: 1 } } } },
+        },
       },
+      orderBy: { createdAt: 'desc' },
     });
   }
 
