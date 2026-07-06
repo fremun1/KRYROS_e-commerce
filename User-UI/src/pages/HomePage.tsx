@@ -1,5 +1,6 @@
 import HeroSection from "@/components/home/HeroSection";
 import TrustBadges from "@/components/home/TrustBadges";
+import BrandsSection from "@/components/home/BrandsSection";
 import CategorySection from "@/components/home/CategorySection";
 import FlashSaleSection from "@/components/home/FlashSaleSection";
 import RecentlyViewedSection from "@/components/home/RecentlyViewedSection";
@@ -26,6 +27,7 @@ export default function HomePage() {
       <HeroSection />
 
       {/* 2. Top Brands */}
+      <BrandsSection />
       <TrustBadges />
 
       {/* 3. Category cards */}
