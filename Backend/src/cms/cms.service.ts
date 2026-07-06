@@ -109,21 +109,23 @@ export class CMSService {
 
   async seedHomePageSections() {
     // Sections that match the current User-UI frontend exactly:
-    // 1. HeroSection       → type: HeroSlider       (reads from cms_banners via /api/cms/banners)
-    // 2. BrandsSection     → type: Brands           (reads from /api/brands)
-    // 3. TrustBadges       → type: TrustBadges      (reads from site-config/trust-badges)
-    // 4. CategorySection   → type: CategoriesGrid    (reads from /api/categories)
-    // 5. FlashSaleSection  → type: FlashSale         (reads flash-sale products)
-    // 6. RecentlyViewed    → type: RecentlyViewed    (client-side, localStorage)
-    // 7. TopSelling        → type: TopSelling        (auto-picked by order count)
-    // 8. UpgradeBanner     → type: UpgradeBanner     (reads from site-config/upgrade-banner)
-    // 9. PromoBanners      → type: PromoBanners      (reads from cms_banners filtered by tag)
-    // 10. NewestArrivals    → type: NewestArrivals    (auto-picked by createdAt)
-    // 11. BestSellers       → type: BestSellers       (auto-picked by order count)
-    // 12. Trending          → type: Trending          (auto-picked by orderItems + wishlists)
-    // 13. CategoryPromoBanners → type: CategoryPromoBanners
-    // 14. RecommendedProducts → type: RecommendedProducts
-    // 15. Newsletter        → type: Newsletter        (popup subscription)
+    // 1.  HeroSection          → type: HeroSlider          (reads from cms_banners via /api/cms/banners)
+    // 2.  TrustBadges          → type: TrustBadges         (reads from site-config/trust-badges)
+    // 3.  CategorySection      → type: CategoriesGrid      (reads from /api/categories)
+    // 4.  FlashSaleSection     → type: FlashSale           (reads flash-sale products)
+    // 5.  RecentlyViewed       → type: RecentlyViewed      (client-side, localStorage)
+    // 6.  TopSelling           → type: TopSelling          (auto-picked by order count)
+    // 7.  LimitedStockDeal     → type: LimitedStockDeal    (configurable discount % banner + products)
+    // 8.  AppliancesDeal       → type: AppliancesDeal      (appliance products)
+    // 9.  TopExpress           → type: TopExpress          (express/trending products)
+    // 10. UpgradeBanner        → type: UpgradeBanner       (image-only carousel)
+    // 11. PromoBanners         → type: PromoBanners        (reads from cms_banners filtered by tag)
+    // 12. NewestArrivals       → type: NewestArrivals      (auto-picked by createdAt)
+    // 13. BestSellers          → type: BestSellers         (auto-picked by order count)
+    // 14. Trending             → type: Trending            (auto-picked by orderItems + wishlists)
+    // 15. CategoryPromoBanners → type: CategoryPromoBanners
+    // 16. RecommendedProducts  → type: RecommendedProducts
+    // 17. Newsletter           → type: Newsletter          (popup subscription)
     const defaultSections = [
       {
         type: 'HeroSlider',
@@ -186,15 +188,7 @@ export class CMSService {
           endTime: new Date(Date.now() + 86400000).toISOString()
         }
       },
-      {
-        type: 'UpgradeBanner',
-        order: 6,
-        isActive: true,
-        title: 'Upgrade Banner',
-        subtitle: 'Promotional banner — managed via CMS → Upgrade Banner',
-        animation: 'fadeIn',
-        config: { source: 'site-config', key: 'upgrade-banner' }
-      },
+
       {
         type: 'PromoBanners',
         order: 7,
@@ -244,8 +238,66 @@ export class CMSService {
         config: { limit: 8, popularity: 'bestseller', scroll: true }
       },
       {
-        type: 'NewestArrivals',
+        type: 'LimitedStockDeal',
         order: 9,
+        isActive: true,
+        title: 'Limited Stock Deal',
+        subtitle: 'Grab them before they\'re gone — configurable discount banner',
+        animation: 'slideUp',
+        config: {
+          title: 'Limited Stock Deal',
+          discountText: 'Up to 70% Off',
+          discountPercent: 70,
+          ctaText: 'Shop Now',
+          ctaLink: '/shop',
+          limit: 8,
+          scroll: true,
+          popularity: 'bestseller'
+        }
+      },
+      {
+        type: 'AppliancesDeal',
+        order: 10,
+        isActive: true,
+        title: 'Appliances Deal',
+        subtitle: 'Home appliances at unbeatable prices',
+        animation: 'slideUp',
+        config: {
+          title: 'Appliances Deal',
+          ctaText: 'View All',
+          ctaLink: '/shop',
+          limit: 8,
+          scroll: true
+        }
+      },
+      {
+        type: 'TopExpress',
+        order: 11,
+        isActive: true,
+        title: 'Top Express',
+        subtitle: 'Fast delivery, top picks',
+        animation: 'slideUp',
+        config: {
+          title: 'Top Express',
+          ctaText: 'View All',
+          ctaLink: '/shop',
+          limit: 8,
+          scroll: true,
+          popularity: 'trending'
+        }
+      },
+      {
+        type: 'UpgradeBanner',
+        order: 12,
+        isActive: true,
+        title: 'Upgrade Banner',
+        subtitle: 'Image-only carousel — upload multiple banner images via CMS',
+        animation: 'fadeIn',
+        config: { images: [], autoSlide: true, interval: 4000 }
+      },
+      {
+        type: 'NewestArrivals',
+        order: 15,
         isActive: true,
         title: 'Newest Arrivals',
         subtitle: 'The latest products added to our store',
@@ -254,7 +306,7 @@ export class CMSService {
       },
       {
         type: 'BestSellers',
-        order: 10,
+        order: 16,
         isActive: true,
         title: 'Best Sellers',
         subtitle: 'Our most popular products',
@@ -263,7 +315,7 @@ export class CMSService {
       },
       {
         type: 'Trending',
-        order: 11,
+        order: 17,
         isActive: true,
         title: 'Trending Now',
         subtitle: 'Hot products right now',
@@ -272,7 +324,7 @@ export class CMSService {
       },
       {
         type: 'CategoryPromoBanners',
-        order: 12,
+        order: 18,
         isActive: true,
         title: 'Category Deals',
         subtitle: 'Special category promotions',

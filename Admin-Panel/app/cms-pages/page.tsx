@@ -285,6 +285,36 @@ const SECTION_FIELDS: Record<string, Array<{ key: string; label: string; type: s
     { key: 'limit', label: 'Max Products to Display (default: 8)', type: 'text', icon: 'type' },
     { key: 'scroll', label: 'Scroll Mode (horizontal scroll on desktop)', type: 'select', options: ['true', 'false'] },
   ],
+  'Limited Stock Deal': [
+    { key: 'title', label: 'Section Title', type: 'text', icon: 'type' },
+    { key: 'discountText', label: 'Discount Label — e.g. Up to 70% Off', type: 'text', icon: 'tag' },
+    { key: 'discountPercent', label: 'Discount Percent (number) — e.g. 70', type: 'text', icon: 'tag' },
+    { key: 'ctaText', label: 'Button Text — e.g. Shop Now', type: 'text', icon: 'mouse' },
+    { key: 'ctaLink', label: 'Button Link — e.g. /shop', type: 'text', icon: 'link' },
+    { key: 'limit', label: 'Max Products to Display (default: 8)', type: 'text', icon: 'type' },
+    { key: 'scroll', label: 'Scroll Mode (horizontal scroll on desktop)', type: 'select', options: ['true', 'false'] },
+  ],
+  'Appliances Deal': [
+    { key: 'title', label: 'Section Title', type: 'text', icon: 'type' },
+    { key: 'ctaText', label: 'Button Text — e.g. View All', type: 'text', icon: 'mouse' },
+    { key: 'ctaLink', label: 'Button Link — e.g. /shop', type: 'text', icon: 'link' },
+    { key: 'limit', label: 'Max Products to Display (default: 8)', type: 'text', icon: 'type' },
+    { key: 'scroll', label: 'Scroll Mode (horizontal scroll on desktop)', type: 'select', options: ['true', 'false'] },
+  ],
+  'Top Express': [
+    { key: 'title', label: 'Section Title', type: 'text', icon: 'type' },
+    { key: 'ctaText', label: 'Button Text — e.g. View All', type: 'text', icon: 'mouse' },
+    { key: 'ctaLink', label: 'Button Link — e.g. /shop', type: 'text', icon: 'link' },
+    { key: 'limit', label: 'Max Products to Display (default: 8)', type: 'text', icon: 'type' },
+    { key: 'scroll', label: 'Scroll Mode (horizontal scroll on desktop)', type: 'select', options: ['true', 'false'] },
+  ],
+  'Upgrade Banner': [
+    { key: 'title', label: 'Section Title (for admin reference)', type: 'text', icon: 'type' },
+    { key: 'images', label: 'Banner Images (comma-separated URLs or use media upload)', type: 'textarea', icon: 'image' },
+    { key: 'media', label: 'Fallback: Single image URL (comma-separated for multiple)', type: 'text', icon: 'image' },
+    { key: 'autoSlide', label: 'Auto-slide enabled', type: 'select', options: ['true', 'false'] },
+    { key: 'interval', label: 'Slide interval in ms (default: 4000)', type: 'text', icon: 'clock' },
+  ],
 };
 const PAGE_SECTION_NAME: Record<string, string> = {
   MembersBanner: 'Members Banner',
@@ -420,7 +450,7 @@ const INITIAL_PAGES: CmsPage[] = [
 ];
 
 const EMPTY_PAGE_FORM = { title: '', slug: '', status: 'Published' };
-const ADD_SECTION_NAMES = ['Hero Banner','Promo Banner','Promo Banners','Promotions','Newsletter','Company Story','Team','Mission & Vision','Contact Form','Location Map','Business Hours','Terms Text','Policy Text','Products Grid','Sale Banner','Category Promo Banners','Upgrade Banner','Members Banner','Shop Filters','Product Grid','Wholesale Hero','Wholesale Features','Get Now Hero','Get Now Features','Page Hero','FAQ Accordion','Product Gallery','Related Products','Testimonials','Flash Sale','Trust Badges','Top Selling','Newest Arrivals','Best Sellers','Trending','Custom Section'];
+const ADD_SECTION_NAMES = ['Hero Banner','Promo Banner','Promo Banners','Promotions','Newsletter','Company Story','Team','Mission & Vision','Contact Form','Location Map','Business Hours','Terms Text','Policy Text','Products Grid','Sale Banner','Category Promo Banners','Upgrade Banner','Members Banner','Shop Filters','Product Grid','Wholesale Hero','Wholesale Features','Get Now Hero','Get Now Features','Page Hero','FAQ Accordion','Product Gallery','Related Products','Testimonials','Flash Sale','Trust Badges','Top Selling','Newest Arrivals','Best Sellers','Trending','Limited Stock Deal','Appliances Deal','Top Express','Custom Section'];
 
 // FileUpload is now the shared CloudinaryUpload component
 
@@ -518,6 +548,8 @@ function CMSContent() {
           RecentlyViewed: 'What You Viewed', UpgradeBanner: 'Upgrade Banner',
           TopSelling: 'Top Selling', NewestArrivals: 'Newest Arrivals',
           BestSellers: 'Best Sellers', Trending: 'Trending',
+          LimitedStockDeal: 'Limited Stock Deal', AppliancesDeal: 'Appliances Deal',
+          TopExpress: 'Top Express',
         };
         const cmsPages: CmsPage[] = await Promise.all(apiPages.map(async (p: any) => {
           const isHome = p.slug === '/' || p.slug === 'home';
@@ -753,6 +785,8 @@ function CMSContent() {
     'What You Viewed': 'RecentlyViewed', 'Recently Viewed': 'RecentlyViewed', 'Upgrade Banner': 'UpgradeBanner',
     'Top Selling': 'TopSelling', 'Newest Arrivals': 'NewestArrivals',
     'Best Sellers': 'BestSellers', 'Trending': 'Trending',
+    'Limited Stock Deal': 'LimitedStockDeal', 'Appliances Deal': 'AppliancesDeal',
+    'Top Express': 'TopExpress',
     'Recommended For You': 'RecommendedProducts',
   };
   const _apiCreate = (pageId: string, secName: string, content: SectionData, mediaUrl?: string) => {
@@ -787,6 +821,29 @@ function CMSContent() {
           homepagePayload.title = content.title || 'Trending Now';
           homepagePayload.linkText = content.ctaText || 'View All';
           homepagePayload.link = content.ctaLink || '/shop';
+        } else if (secName === 'Limited Stock Deal') {
+          homepagePayload.title = content.title || 'Limited Stock Deal';
+          homepagePayload.linkText = content.ctaText || 'Shop Now';
+          homepagePayload.link = content.ctaLink || '/shop';
+          if (content.discountPercent) homepagePayload.config.discountPercent = Number(content.discountPercent);
+          if (content.discountText) homepagePayload.config.discountText = content.discountText;
+        } else if (secName === 'Appliances Deal') {
+          homepagePayload.title = content.title || 'Appliances Deal';
+          homepagePayload.linkText = content.ctaText || 'View All';
+          homepagePayload.link = content.ctaLink || '/shop';
+        } else if (secName === 'Top Express') {
+          homepagePayload.title = content.title || 'Top Express';
+          homepagePayload.linkText = content.ctaText || 'View All';
+          homepagePayload.link = content.ctaLink || '/shop';
+        } else if (secName === 'Upgrade Banner') {
+          homepagePayload.title = content.title || 'Upgrade Banner';
+          // Store images as comma-separated in media field
+          if (content.images) {
+            homepagePayload.config.images = content.images.split(',').map((s: string) => s.trim()).filter(Boolean);
+          }
+          if (content.media) {
+            homepagePayload.config.media = content.media;
+          }
         }
         createCmsHomepageSection(homepagePayload).catch(() => {});
       }

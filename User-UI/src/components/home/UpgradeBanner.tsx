@@ -1,90 +1,137 @@
-import { useEffect, useState } from "react";
-import { Link } from "wouter";
-import { ArrowRight } from "lucide-react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { fetchHomepageSections, type ApiHomepageSection } from "@/lib/api";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
-interface UpgradeBannerConfig {
-  heading: string;
-  subtitle: string;
-  ctaText: string;
-  ctaLink: string;
-  discountText: string;
-  discountSubtext: string;
-  bgImage: string;
-}
-
-function homepageSectionToUpgradeBanner(sec: ApiHomepageSection): UpgradeBannerConfig | null {
-  const cfg = (sec.config || {}) as Record<string, any>;
-  // Only show if admin has configured a background image
-  const bgImage = cfg.media || cfg.bgImage || cfg.image || "";
-  if (!bgImage) return null;
-  return {
-    heading: cfg.heading || cfg.button_text || "",
-    subtitle: cfg.subtitle || "",
-    ctaText: cfg.button_text || cfg.cta || "Shop Now",
-    ctaLink: cfg.button_link || cfg.href || cfg.link || "/shop",
-    discountText: cfg.discount_text || "",
-    discountSubtext: cfg.discount_subtext || "",
-    bgImage,
-  };
+interface BannerImage {
+  url: string;
+  link?: string;
 }
 
 export default function UpgradeBanner() {
-  const [cfg, setCfg] = useState<UpgradeBannerConfig | null>(null);
+  const [images, setImages] = useState<BannerImage[]>([]);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const autoRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const SLIDE_INTERVAL = 4000;
+
+  // Stop auto-slide
+  const stopAuto = useCallback(() => {
+    if (autoRef.current) clearInterval(autoRef.current);
+  }, []);
+
+  // Start auto-slide
+  const startAuto = useCallback(() => {
+    stopAuto();
+    if (images.length > 1) {
+      autoRef.current = setInterval(() => {
+        setActiveIndex((prev) => (prev + 1) % images.length);
+      }, SLIDE_INTERVAL);
+    }
+  }, [images.length, stopAuto]);
 
   useEffect(() => {
     fetchHomepageSections("UpgradeBanner")
       .then((sections) => {
         if (sections.length > 0) {
-          const mapped = homepageSectionToUpgradeBanner(sections[0]);
-          if (mapped) setCfg(mapped);
+          const cfg = (sections[0].config || {}) as Record<string, any>;
+          // Support multiple images: 'media' can be comma-separated URLs,
+          // or we also support 'images' as a JSON array, or 'image' as single
+          let rawImages: string[] = [];
+          if (cfg.images && Array.isArray(cfg.images)) {
+            rawImages = cfg.images.map((i: any) => typeof i === "string" ? i : i.url || "").filter(Boolean);
+          } else if (cfg.media) {
+            rawImages = String(cfg.media).split(",").map((s: string) => s.trim()).filter(Boolean);
+          } else if (cfg.image) {
+            rawImages = [String(cfg.image)];
+          } else if (cfg.bgImage) {
+            rawImages = [String(cfg.bgImage)];
+          }
+
+          const parsed = rawImages.map((url) => {
+            const parts = url.split("|");
+            return {
+              url: parts[0].trim(),
+              link: parts[1]?.trim() || undefined,
+            };
+          }).filter((i) => i.url);
+
+          if (parsed.length > 0) setImages(parsed);
         }
+        setLoading(false);
       })
-      .catch(() => {});
+      .catch(() => setLoading(false));
   }, []);
 
-  if (!cfg) return null;
+  // Auto-slide effect
+  useEffect(() => {
+    if (images.length > 1) startAuto();
+    return stopAuto;
+  }, [images.length, startAuto, stopAuto]);
+
+  const goTo = (index: number) => {
+    setActiveIndex((index + images.length) % images.length);
+    startAuto(); // reset timer
+  };
+
+  if (loading || images.length === 0) return null;
+
+  const current = images[activeIndex];
 
   return (
     <section className="max-w-7xl mx-auto px-4 md:px-6 mb-6">
-      <div className="relative rounded-2xl overflow-hidden" style={{ height: 185 }}>
-        <img
-          src={cfg.bgImage}
-          alt=""
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-        <div
-          className="absolute inset-0"
-          style={{ background: "linear-gradient(100deg, rgba(5,15,30,0.92) 0%, rgba(5,20,40,0.70) 55%, rgba(5,40,40,0.28) 100%)" }}
-        />
-        <div className="relative z-10 flex items-center justify-between h-full px-5 py-5 gap-2">
-          <div className="flex flex-col justify-center gap-2 min-w-0 flex-1">
-            {cfg.heading && (
-              <h2 className="text-[15px] md:text-2xl font-black text-white leading-snug">{cfg.heading}</h2>
-            )}
-            {cfg.subtitle && (
-              <p className="text-[10px] text-white/60 leading-relaxed">{cfg.subtitle}</p>
-            )}
-            {cfg.ctaLink && (
-              <Link href={cfg.ctaLink}>
-                <button className="flex items-center gap-1.5 px-4 py-2 bg-teal-500 text-white rounded-xl text-[11px] font-bold hover:bg-teal-400 transition-all active:scale-95 w-fit">
-                  {cfg.ctaText || "Shop Now"} <ArrowRight className="w-3 h-3" />
-                </button>
-              </Link>
-            )}
+      <div className="relative rounded-2xl overflow-hidden w-full" style={{ height: images.length === 1 ? 185 : 185 }}>
+        {/* Image */}
+        {current.link ? (
+          <a href={current.link} className="block w-full h-full">
+            <img
+              src={current.url}
+              alt=""
+              className="w-full h-full object-cover"
+            />
+          </a>
+        ) : (
+          <img
+            src={current.url}
+            alt=""
+            className="w-full h-full object-cover"
+          />
+        )}
+
+        {/* Navigation arrows — only show if multiple images */}
+        {images.length > 1 && (
+          <>
+            <button
+              onClick={() => goTo(activeIndex - 1)}
+              className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/60 transition-colors z-10"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => goTo(activeIndex + 1)}
+              className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/60 transition-colors z-10"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </>
+        )}
+
+        {/* Dots indicator — only show if multiple images */}
+        {images.length > 1 && (
+          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+            {images.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => goTo(i)}
+                className={`w-2 h-2 rounded-full transition-all ${
+                  i === activeIndex
+                    ? "bg-white w-5"
+                    : "bg-white/50"
+                }`}
+              />
+            ))}
           </div>
-          {(cfg.discountText || cfg.discountSubtext) && (
-            <div className="text-right flex-shrink-0 pl-2">
-              <p className="text-[9px] font-semibold text-white/50 uppercase tracking-widest mb-0.5">Up to</p>
-              {cfg.discountText && (
-                <p className="text-5xl md:text-6xl font-black text-teal-400 leading-none">{cfg.discountText}</p>
-              )}
-              {cfg.discountSubtext && (
-                <p className="text-2xl md:text-3xl font-black text-teal-400 -mt-1">{cfg.discountSubtext}</p>
-              )}
-            </div>
-          )}
-        </div>
+        )}
       </div>
     </section>
   );

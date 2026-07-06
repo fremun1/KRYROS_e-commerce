@@ -2,64 +2,72 @@ import HeroSection from "@/components/home/HeroSection";
 import TrustBadges from "@/components/home/TrustBadges";
 import CategorySection from "@/components/home/CategorySection";
 import FlashSaleSection from "@/components/home/FlashSaleSection";
-import UpgradeBanner from "@/components/home/UpgradeBanner";
-import PromoBanners from "@/components/home/PromoBanners";
-import CategoryPromoBanners from "@/components/home/CategoryPromoBanners";
-import BrandsSection from "@/components/home/BrandsSection";
 import RecentlyViewedSection from "@/components/home/RecentlyViewedSection";
 import TopSellingSection from "@/components/home/TopSellingSection";
+import LimitedStockDealSection from "@/components/home/LimitedStockDealSection";
+import AppliancesDealSection from "@/components/home/AppliancesDealSection";
+import TopExpressSection from "@/components/home/TopExpressSection";
+import UpgradeBanner from "@/components/home/UpgradeBanner";
+import PromoBanners from "@/components/home/PromoBanners";
 import NewestArrivalsSection from "@/components/home/NewestArrivalsSection";
 import BestSellersSection from "@/components/home/BestSellersSection";
 import TrendingSection from "@/components/home/TrendingSection";
+import CategoryPromoBanners from "@/components/home/CategoryPromoBanners";
 import ProductSection from "@/components/home/ProductSection";
 import NewsletterPopup from "@/components/NewsletterPopup";
 
 export default function HomePage() {
   return (
     <div>
-      {/* Newsletter popup — shows on every homepage visit unless already subscribed */}
+      {/* Newsletter popup */}
       <NewsletterPopup />
 
       {/* 1. Hero slider */}
       <HeroSection />
 
-      {/* 2. Top Brands — right after hero */}
-      <BrandsSection />
-
-      {/* 3. Trust badges */}
+      {/* 2. Top Brands */}
       <TrustBadges />
 
-      {/* 4. Category cards horizontal scroll */}
+      {/* 3. Category cards */}
       <CategorySection />
 
-      {/* 5. Flash Sale banner + Flash Deals horizontal scroll */}
+      {/* 4. Flash Sales */}
       <FlashSaleSection />
 
-      {/* 6. What You Viewed — products the user recently browsed */}
+      {/* 5. What You Viewed */}
       <RecentlyViewedSection />
 
-      {/* 7. Top Selling Items — auto-picked by sales performance */}
+      {/* 6. Top Selling Items */}
       <TopSellingSection />
 
-      {/* 8. Upgrade Your Tech Game banner */}
+      {/* 7. Limited Stock Deal (up to configurable % off) */}
+      <LimitedStockDealSection />
+
+      {/* 8. Appliances Deal */}
+      <AppliancesDealSection />
+
+      {/* 9. Top Express */}
+      <TopExpressSection />
+
+      {/* 10. Upgrade Banner (image-only carousel) */}
       <UpgradeBanner />
 
-      {/* 9. Promo banners: Get Now + Free Shipping */}
+      {/* 11. Promo Banners */}
       <PromoBanners />
 
-      {/* 10. Newest Arrivals */}
+      {/* 12. Newest Arrivals */}
       <NewestArrivalsSection />
 
-      {/* 11. Best Sellers */}
+      {/* 13. Best Sellers */}
       <BestSellersSection />
 
-      {/* 12. Trending Now */}
+      {/* 14. Trending Now */}
       <TrendingSection />
 
-      {/* 13. Category promotional banners */}
+      {/* 15. Category Promo Banners */}
       <CategoryPromoBanners />
 
-      {/* 14. Recommended For You — horizontal scroll */}
+      {/* 16. Recommended For You */}
       <ProductSection
         title="Recommended For You"
         viewAllHref="/shop"
