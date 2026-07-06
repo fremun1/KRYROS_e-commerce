@@ -1,690 +1,327 @@
-import { useState, useEffect, useRef } from "react";
-import { Link, useSearch } from "wouter";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Link } from "wouter";
+import { ChevronRight } from "lucide-react";
 import {
-  Heart, ShoppingCart, Star, ChevronRight, Zap, Headphones, X, ChevronDown,
-} from "lucide-react";
-import { toast } from "sonner";
-import { useCartStore } from "@/store/cartStore";
-import { useWishlistStore } from "@/store/wishlistStore";
-import { useCurrencyStore } from "@/store/currencyStore";
-import { fetchProducts, fetchCategories, fetchBrands, fetchAllBrandBanners, API_BASE } from "@/lib/api";
-import type { Product, ApiCategory, ApiBrand, ApiBrandBanner } from "@/lib/api";
-import UnifiedProductCard from "@/components/UnifiedProductCard";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+  fetchCategories,
+  fetchPageSections,
+  fetchSiteConfig,
+} from "@/lib/api";
+import type { ApiCMSSection, ApiCategory } from "@/lib/api";
+import ProductSection from "@/components/home/ProductSection";
 
-/** Convert brand name to a safe anchor slug */
-function toAnchor(name: string) {
-  return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+type ShopSiteConfig = {
+  heroBanner?: {
+    tagline?: string;
+    subtitle?: string;
+    bgColor?: string;
+    brandColor?: string;
+    ctaText?: string;
+    ctaLink?: string;
+    imageUrl?: string;
+  };
+  membersBanner?: {
+    tag?: string;
+    title?: string;
+    subtitle?: string;
+    ctaText?: string;
+    ctaLink?: string;
+    imageUrl?: string;
+  };
+};
+
+function toBool(v: unknown, fallback = false) {
+  if (typeof v === "boolean") return v;
+  if (typeof v === "string") return v.toLowerCase() === "true";
+  if (typeof v === "number") return v === 1;
+  return fallback;
 }
 
-function toCategoryKey(value: string) {
-  return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+function toNum(v: unknown, fallback: number) {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : fallback;
 }
 
-const AUTO_SLIDE_INTERVAL = 3000; // 3 seconds
+function toStr(v: unknown, fallback = "") {
+  if (typeof v === "string") return v;
+  if (v == null) return fallback;
+  return String(v);
+}
 
-export default function ShopPage() {
-  const search = useSearch();
-  const [selectedCat, setSelectedCat] = useState<string>("All");
-  const [selectedBrand, setSelectedBrand] = useState<string>("");
-  const [heroDot, setHeroDot] = useState(0);
-  const [brandBanners, setBrandBanners] = useState<Record<string, ApiBrandBanner>>({});
-  const [membersBanner, setMembersBanner] = useState<{tag?: string; title?: string; subtitle?: string; ctaText?: string; ctaLink?: string; imageUrl?: string} | null>(null);
-  const [shopHeroBanner, setShopHeroBanner] = useState<{tagline?: string; subtitle?: string; bgColor?: string; brandColor?: string; ctaText?: string; ctaLink?: string; imageUrl?: string} | null>(null);
-  const [categories, setCategories] = useState<ApiCategory[]>([]);
-  const [brands, setBrands] = useState<ApiBrand[]>([]);
-  const [allProducts, setAllProducts] = useState<Product[]>([]);
+function CategoryCarousel({ categories }: { categories: ApiCategory[] }) {
+  const scrollerRef = useRef<HTMLDivElement>(null);
+  const [active, setActive] = useState(0);
 
-  // Category auto-slide
-  const catScrollRef = useRef<HTMLDivElement>(null);
-  const catAutoRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const [catIndex, setCatIndex] = useState(0);
+  const allCards = useMemo(() => [{ id: "__all__", name: "All", slug: "" } as any].concat(categories), [categories]);
 
-  // Brand panel state
-  const [activeBrandPanel, setActiveBrandPanel] = useState<string | null>(null);
-  const [brandPanelCat, setBrandPanelCat] = useState<string>("All");
-
-  // Read search query from URL (?search=...)
-  const searchParam = typeof window !== "undefined"
-    ? new URLSearchParams(window.location.search).get("search") || ""
-    : "";
-
-  // Read brand query from URL (?brand=...) — reacts to URL changes without refresh
-  useEffect(() => {
-    const params = new URLSearchParams(search);
-    const catParam = params.get("cat") || params.get("category");
-    if (catParam) {
-      setSelectedCat(decodeURIComponent(catParam));
-    } else {
-      setSelectedCat("All");
-    }
-
-    const brandParam = params.get("brand");
-    if (brandParam) {
-      setActiveBrandPanel(decodeURIComponent(brandParam));
-    } else {
-      setActiveBrandPanel(null);
-    }
-  }, [search]);
-
-  useEffect(() => {
-    fetchCategories().then((cats) => {
-      setCategories(cats.filter((c: any) => c.isActive !== false));
-    });
-    fetchBrands().then((bs) => {
-      setBrands(bs);
-      if (bs.length > 0) setSelectedBrand(bs[0].name);
-    });
-    const searchQ = new URLSearchParams(search).get("search") || "";
-    fetchProducts({ take: 500, search: searchQ || undefined }).then(setAllProducts);
-    fetchAllBrandBanners().then((banners) => {
-      const bySlug: Record<string, ApiBrandBanner> = {};
-      banners.forEach((b) => { bySlug[b.brandSlug] = b; });
-      setBrandBanners(bySlug);
-    });
-    fetch(`${API_BASE}/api/cms/site-config/shop`, { cache: "no-store" })
-      .then((r) => r.ok ? r.json() : null)
-      .then((d) => {
-        if (d?.value?.membersBanner) setMembersBanner(d.value.membersBanner);
-        if (d?.value?.heroBanner) setShopHeroBanner(d.value.heroBanner);
-      })
-      .catch(() => {});
-    fetch(`${API_BASE}/api/cms/site-config/shop-brand-banners`, { cache: "no-store" })
-      .then((r) => r.ok ? r.json() : null)
-      .then((d) => {
-        if (Array.isArray(d?.value)) {
-          const fromConfig: Record<string, ApiBrandBanner> = {};
-          (d.value as any[]).forEach((b: any) => {
-            const slug = (b.slug || b.brandSlug || '').toLowerCase();
-            if (slug) fromConfig[slug] = { id: b.id || slug, brandSlug: slug, brandName: b.name || b.brandName || slug, tagline: b.tagline, description: b.description, bgColor: b.bgColor, bgGradient: b.bgGradient, ctaText: b.ctaText, ctaLink: b.buttonLink || b.ctaLink, imageUrl: b.imageUrl || '' };
-          });
-          setBrandBanners(prev => ({ ...fromConfig, ...prev }));
-        }
-      })
-      .catch(() => {});
-  }, []);
-
-  // Category auto-slide effect
-  useEffect(() => {
-    const totalItems = categories.length + 1; // +1 for "All"
-    if (totalItems <= 1) return;
-
-    catAutoRef.current = setInterval(() => {
-      setCatIndex((prev) => {
-        const next = (prev + 1) % totalItems;
-        if (catScrollRef.current) {
-          // Dynamic: read actual card width so auto-slide works on all breakpoints
-          const firstCard = catScrollRef.current?.children[0] as HTMLElement | undefined;
-          const itemWidth = firstCard ? firstCard.offsetWidth + 12 : 156;
-          catScrollRef.current.scrollTo({ left: next * itemWidth, behavior: "smooth" });
-        }
-        return next;
-      });
-    }, AUTO_SLIDE_INTERVAL);
-
-    return () => {
-      if (catAutoRef.current) clearInterval(catAutoRef.current);
-    };
-  }, [categories]);
-
-  // Pause auto-slide on user touch
-  const handleCatTouchStart = () => {
-    if (catAutoRef.current) clearInterval(catAutoRef.current);
-  };
-
-  // Reset panel category filter when brand changes
-  useEffect(() => {
-    setBrandPanelCat("All");
-  }, [activeBrandPanel]);
-
-  const brandSlug = selectedBrand ? selectedBrand.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : '';
-  const cmsBanner = brandSlug ? brandBanners[brandSlug] : undefined;
-  const hero = cmsBanner && (cmsBanner.tagline || cmsBanner.description || cmsBanner.bgColor || cmsBanner.imageUrl) ? { pre: cmsBanner.tagline || '', brand: cmsBanner.brandName ? cmsBanner.brandName + '.' : '', sub: cmsBanner.description || '', bg: cmsBanner.bgColor || '#f5f5f5', brandColor: cmsBanner.bgGradient || 'var(--kryros-primary)', ctaText: cmsBanner.ctaText, ctaLink: cmsBanner.ctaLink, imageUrl: cmsBanner.imageUrl || '' } : null;
-
-  const panelSlug = activeBrandPanel
-    ? activeBrandPanel.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
-    : '';
-  const panelCmsBanner = panelSlug
-    ? (brandBanners[panelSlug]
-       || brandBanners['/' + panelSlug]
-       || Object.values(brandBanners).find(
-           (b) => (b.brandSlug || '').replace(/^\//, '').toLowerCase() === panelSlug
-         )
-      )
-    : undefined;
-  const panelHero = panelCmsBanner
-    ? {
-        pre: panelCmsBanner.tagline || '',
-        brand: panelCmsBanner.brandName || '',
-        sub: panelCmsBanner.description || '',
-        bg: panelCmsBanner.bgColor || panelCmsBanner.bgGradient || '#f5f5f5',
-        brandColor: panelCmsBanner.bgGradient || panelCmsBanner.bgColor || 'var(--kryros-primary)',
-        ctaText: panelCmsBanner.ctaText,
-        ctaLink: panelCmsBanner.ctaLink,
-        imageUrl: panelCmsBanner.imageUrl || '',
-        hasImage: !!(panelCmsBanner.imageUrl),
-      }
-    : null;
-
-  const getCategoryTargets = (category: ApiCategory | string) => {
-    const ids = new Set<string>();
-    const keys = new Set<string>();
-
-    const selectedCategory =
-      typeof category === "string"
-        ? categories.find(
-            (item) =>
-              item.id === category ||
-              toCategoryKey(item.slug || item.name) === toCategoryKey(category)
-          )
-        : category;
-
-    if (!selectedCategory) {
-      if (typeof category === "string" && category !== "All") {
-        keys.add(toCategoryKey(category));
-      }
-      return { ids, keys };
-    }
-
-    const visit = (categoryId: string) => {
-      if (ids.has(categoryId)) return;
-      ids.add(categoryId);
-
-      const current = categories.find((item) => item.id === categoryId);
-      if (!current) return;
-
-      keys.add(toCategoryKey(current.slug || current.name));
-      categories
-        .filter((item) => item.parentId === categoryId)
-        .forEach((child) => visit(child.id));
-    };
-
-    visit(selectedCategory.id);
-    return { ids, keys };
-  };
-
-  const matchesCategory = (product: Product, category: ApiCategory | string) => {
-    if (typeof category === "string") {
-      if (category === "All") return true;
-      const targets = getCategoryTargets(category);
-      return (
-        (!!product.categoryId && targets.ids.has(product.categoryId)) ||
-        targets.keys.has(toCategoryKey(product.categorySlug || "")) ||
-        targets.keys.has(toCategoryKey(product.category || ""))
-      );
-    }
-
-    const targets = getCategoryTargets(category);
-    return (
-      (!!product.categoryId && targets.ids.has(product.categoryId)) ||
-      targets.keys.has(toCategoryKey(product.categorySlug || "")) ||
-      targets.keys.has(toCategoryKey(product.category || ""))
-    );
-  };
-
-  const getCategoryCount = (category: ApiCategory) => {
-    const localCount = allProducts.filter((product) => matchesCategory(product, category)).length;
-    return Math.max(category._count?.products ?? 0, localCount);
-  };
-
-  const isCategorySelected = (category: ApiCategory) =>
-    selectedCat === category.id ||
-    toCategoryKey(selectedCat) === toCategoryKey(category.slug || category.name);
-
-  const selectedCategoryLabel = selectedCat === "All"
-    ? "All Products"
-    : categories.find((cat) => isCategorySelected(cat))?.name || selectedCat;
-
-  const filteredProducts = selectedCat === "All"
-    ? allProducts
-    : allProducts.filter((p) => matchesCategory(p, selectedCat));
-
-  const searchResults = searchParam
-    ? allProducts.filter((p) =>
-        p.name?.toLowerCase().includes(searchParam.toLowerCase()) ||
-        p.brand?.toLowerCase().includes(searchParam.toLowerCase()) ||
-        p.category?.toLowerCase().includes(searchParam.toLowerCase()) ||
-        p.specs?.toLowerCase().includes(searchParam.toLowerCase())
-      )
-    : [];
-
-  const uniqueBrands = Array.from(new Set(allProducts.map((p) => p.brand).filter(Boolean)));
-
-  // Normalize to slug for comparison — sidebar sends brand.slug, p.brand is the display name
-  const toSlug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
-
-  const brandPanelProducts = activeBrandPanel
-    ? allProducts.filter((p) =>
-        p.brand === activeBrandPanel ||
-        toSlug(p.brand || "") === toSlug(activeBrandPanel)
-      )
-    : [];
-  const brandPanelFiltered = brandPanelCat === "All"
-    ? brandPanelProducts
-    : brandPanelProducts.filter((p) => matchesCategory(p, brandPanelCat));
-
-  const brandCategories = activeBrandPanel
-    ? categories.filter((cat) =>
-        brandPanelProducts.some((p) => matchesCategory(p, cat))
-      )
-    : [];
-
-  const openBrandPanel = (brandName: string) => {
-    setSelectedBrand(brandName);
-    setHeroDot(0);
-    setActiveBrandPanel(brandName);
-  };
-
-  // Resolve the real display name from matched products (URL may have slug like "samsung")
-  const brandDisplayName = brandPanelProducts.length > 0
-    ? brandPanelProducts[0].brand
-    : activeBrandPanel
-      ? activeBrandPanel.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
-      : "";
-
-  const closeBrandPanel = () => {
-    setActiveBrandPanel(null);
-    setBrandPanelCat("All");
+  const scrollTo = (index: number) => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    const firstCard = el.children[0] as HTMLElement | undefined;
+    const itemWidth = firstCard ? firstCard.offsetWidth + 12 : 156;
+    el.scrollTo({ left: index * itemWidth, behavior: "smooth" });
   };
 
   return (
-    <div className="pb-24 md:pb-10 max-w-7xl mx-auto">
-
-      {/* ── Brand Panel (Bottom Sheet) ── */}
-      <Sheet open={!!activeBrandPanel} onOpenChange={(open) => { if (!open) closeBrandPanel(); }}>
-        <SheetContent
-          side="bottom"
-          className="h-[88vh] rounded-t-3xl px-0 pb-0 flex flex-col"
-        >
-          {/* Panel Header */}
-          <SheetHeader className="px-4 pt-2 pb-3 border-b border-border flex-shrink-0">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-                  Shop by Brand
-                </p>
-                <SheetTitle className="text-lg font-black text-foreground leading-tight mt-0.5">
-                  {brandDisplayName}
-                </SheetTitle>
-                <p className="text-[11px] text-muted-foreground mt-0.5">
-                  {brandPanelProducts.length} product{brandPanelProducts.length !== 1 ? "s" : ""}
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={closeBrandPanel}
-                  className="flex items-center gap-1 text-xs font-bold text-teal-600 bg-teal-50 dark:bg-teal-950/40 px-3 py-1.5 rounded-full border border-teal-200 dark:border-teal-800"
-                >
-                  All Products
-                </button>
-                <button
-                  onClick={closeBrandPanel}
-                  className="w-8 h-8 rounded-full bg-muted flex items-center justify-center"
-                >
-                  <X className="w-4 h-4 text-foreground" />
-                </button>
-              </div>
-            </div>
-
-            {brandCategories.length > 0 && (
-              <div className="flex gap-2 overflow-x-auto no-scrollbar pt-3 pb-1">
-                <button
-                  onClick={() => setBrandPanelCat("All")}
-                  className={`flex-shrink-0 px-3.5 py-1.5 rounded-full border text-xs font-semibold transition-all ${
-                    brandPanelCat === "All"
-                      ? "bg-foreground text-background border-foreground"
-                      : "bg-card border-border text-foreground hover:border-teal-600/50"
-                  }`}
-                >
-                  All
-                </button>
-                {brandCategories.map((cat) => {
-                  const active = brandPanelCat === cat.name || brandPanelCat === cat.id;
-                  return (
-                    <button
-                      key={cat.id}
-                      onClick={() => setBrandPanelCat(cat.name)}
-                      className={`flex-shrink-0 px-3.5 py-1.5 rounded-full border text-xs font-semibold transition-all ${
-                        active
-                          ? "bg-foreground text-background border-foreground"
-                          : "bg-card border-border text-foreground hover:border-teal-600/50"
-                      }`}
-                    >
-                      {cat.name}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </SheetHeader>
-
-          {panelHero && (
-            <div className="mx-3 mt-3 mb-1 rounded-2xl overflow-hidden flex-shrink-0">
-              {panelHero.hasImage ? (
-                <div className="relative h-[160px] sm:h-[190px] md:h-[220px]">
-                  <img
-                    src={panelHero.imageUrl}
-                    alt={panelHero.brand}
-                    className="absolute inset-0 w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.18) 55%, transparent 100%)' }} />
-                  <div className="absolute inset-0 flex flex-col justify-end p-3 z-10">
-                    {panelHero.pre && (
-                      <p className="text-[10px] font-bold uppercase tracking-widest text-white/70 mb-0.5">
-                        {panelHero.pre}
-                      </p>
-                    )}
-                    <h2 className="text-base font-black leading-tight text-white">
-                      {panelHero.brand}
-                    </h2>
-                    {panelHero.sub && (
-                      <p className="text-[10px] text-white/80 leading-snug mt-0.5 line-clamp-1">
-                        {panelHero.sub}
-                      </p>
-                    )}
-                    {panelHero.ctaLink && (
-                      <div className="mt-2">
-                        <Link href={panelHero.ctaLink}>
-                          <button className="inline-flex items-center gap-1 bg-white text-teal-700 text-[11px] font-bold px-3 py-1.5 rounded-full hover:opacity-90 transition-opacity">
-                            {panelHero.ctaText || `Shop ${brandDisplayName}`}
-                            <ChevronRight className="w-3 h-3" />
-                          </button>
-                        </Link>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ) : (
-                <div
-                  className="flex flex-col justify-center px-4 py-3 min-h-[72px]"
-                  style={{ background: panelHero.bg }}
-                >
-                  {panelHero.pre && (
-                    <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5"
-                      style={{ color: '#9ca3af' }}>
-                      {panelHero.pre}
-                    </p>
-                  )}
-                  <h2 className="text-base font-black leading-tight"
-                    style={{ color: panelHero.brandColor }}>
-                    {panelHero.brand}
-                  </h2>
-                  {panelHero.sub && (
-                    <p className="text-[11px] mt-0.5 leading-relaxed line-clamp-1"
-                      style={{ color: '#6b7280' }}>
-                      {panelHero.sub}
-                    </p>
-                  )}
-                  {panelHero.ctaLink && (
-                    <div className="mt-2">
-                      <Link href={panelHero.ctaLink}>
-                        <button className="inline-flex items-center gap-1 bg-foreground text-background text-[11px] font-bold px-3 py-1.5 rounded-full hover:opacity-90 transition-opacity">
-                          {panelHero.ctaText || `Shop ${brandDisplayName}`}
-                          <ChevronRight className="w-3 h-3" />
-                        </button>
-                      </Link>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Panel Product Grid (scrollable) */}
-          <div className="flex-1 overflow-y-auto px-3 pt-3 pb-8">
-            {brandPanelFiltered.length > 0 ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
-                {brandPanelFiltered.map((p) => (
-                  <UnifiedProductCard key={p.id} product={p} />
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-16 text-muted-foreground">
-                <p className="text-sm font-semibold">No products found</p>
-                <p className="text-xs mt-1">Try a different category</p>
-              </div>
-            )}
-          </div>
-        </SheetContent>
-      </Sheet>
-
-      {/* ── Search Results Section ── */}
-      {searchParam && (
-        <div className="px-3 pt-4 pb-2">
-          <div className="flex items-center justify-between mb-3">
-            <div>
-              <h2 className="text-base font-black text-foreground lg:text-xl">
-                Results for &ldquo;{searchParam}&rdquo;
-              </h2>
-              <p className="text-[11px] text-muted-foreground mt-0.5">
-                {searchResults.length} product{searchResults.length !== 1 ? "s" : ""} found
-              </p>
-            </div>
-            <a href="/shop" className="text-xs text-primary font-semibold hover:underline">Clear ✕</a>
-          </div>
-          {searchResults.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2">
-              {searchResults.map((p) => <UnifiedProductCard key={p.id} product={p} />)}
-            </div>
-          ) : (
-            <div className="text-center py-12 text-muted-foreground">
-              <p className="text-sm font-semibold">No products found</p>
-              <p className="text-xs mt-1">Try a different search term</p>
-            </div>
-          )}
+    <section className="pt-4 pb-2">
+      <div className="px-4 mb-2 flex items-end justify-between">
+        <div>
+          <h2 className="text-base font-black text-foreground lg:text-xl">Browse Categories</h2>
+          <p className="text-[11px] text-muted-foreground mt-0.5 lg:text-sm">Pick a category to explore</p>
         </div>
-      )}
-
-      {/* ── Normal Shop (hidden when search active) ── */}
-      {!searchParam && (
-      <>
-      {shopHeroBanner && (
-      <div className="mx-4 mt-4 mb-4 rounded-2xl overflow-hidden" style={shopHeroBanner.imageUrl ? { backgroundImage: `url(${shopHeroBanner.imageUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' } : { background: shopHeroBanner.bgColor || "linear-gradient(135deg, var(--kryros-primary) 0%, #0a7c72 100%)" }}>
-        <div className="flex items-center min-h-[180px] relative overflow-hidden p-4 sm:min-h-[210px] lg:min-h-[260px] lg:p-10">
-          {shopHeroBanner.imageUrl && (
-            <div className="absolute inset-0 z-0" style={{ background: 'linear-gradient(135deg, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.38) 60%, transparent 100%)' }} />
-          )}
-          <div className="flex-1 z-10">
-            <p className="text-[10px] font-bold uppercase tracking-widest mb-1 text-white/70">KRYROS Store</p>
-            {shopHeroBanner.tagline && <h2 className="text-xl font-black leading-tight mb-1 text-white lg:text-4xl lg:mb-3">{shopHeroBanner.tagline}</h2>}
-            {shopHeroBanner.subtitle && <p className="text-[11px] mb-3 leading-relaxed text-white/80 lg:text-base lg:mb-5">{shopHeroBanner.subtitle}</p>}
-            {shopHeroBanner.ctaLink && (
-              <Link href={shopHeroBanner.ctaLink}>
-                <button className="flex items-center gap-1.5 bg-white text-teal-700 text-xs font-bold px-4 py-2 rounded-full hover:bg-white/90 transition-opacity lg:px-6 lg:py-3 lg:text-sm">
-                  {shopHeroBanner.ctaText || "Explore Now"} <ChevronRight className="w-3.5 h-3.5" />
-                </button>
-              </Link>
-            )}
-          </div>
-          <div className="flex-shrink-0 w-16 h-16 rounded-2xl bg-white/15 flex items-center justify-center ml-3 lg:w-28 lg:h-28 lg:rounded-3xl lg:ml-8">
-            <Zap className="w-8 h-8 text-white/80 lg:w-14 lg:h-14" />
-          </div>
-        </div>
-      </div>
-      )}
-      <div className="text-center pt-2 pb-3 px-4">
-        <h2 className="text-base font-black text-foreground tracking-tight lg:text-2xl">Shop All Products</h2>
-        <p className="text-[11px] text-muted-foreground mt-0.5 lg:text-sm lg:mt-1">Browse our full collection by category</p>
+        <Link href="/shop/section/all">
+          <span className="text-xs text-primary font-semibold cursor-pointer hover:underline flex items-center gap-0.5 whitespace-nowrap">
+            All products <ChevronRight className="w-3.5 h-3.5" />
+          </span>
+        </Link>
       </div>
 
-      {/* Category cards — auto-sliding */}
-      {categories.length > 0 && (
-        <div
-          ref={catScrollRef}
-          onTouchStart={handleCatTouchStart}
-          className="flex gap-3 overflow-x-auto no-scrollbar px-4 pb-4"
-          style={{ scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch", scrollBehavior: "smooth" }}
-        >
-          <button
-            onClick={() => { setSelectedCat("All"); setCatIndex(0); }}
-            className={`flex-shrink-0 snap-start relative w-36 h-36 rounded-2xl overflow-hidden transition-all bg-gradient-to-br from-teal-600 to-teal-800 flex items-center justify-center md:w-44 md:h-44 lg:w-52 lg:h-52 lg:rounded-3xl ${selectedCat === "All" ? "ring-2 ring-teal-500 ring-offset-2" : ""}`}
-          >
-            <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(10,20,30,0.92) 0%, rgba(10,20,30,0.55) 55%, rgba(10,20,30,0.15) 100%)" }} />
-            <div className="absolute bottom-0 left-0 right-0 p-2.5">
-              <p className="text-white font-black text-xs uppercase tracking-wide leading-tight mb-1">All</p>
-              <div className="flex items-center gap-1.5">
-                <div className="w-5 h-0.5 bg-teal-400 rounded-full" />
-                <span className="text-white/70 text-[10px] font-medium">{allProducts.length} ITEMS</span>
-              </div>
-            </div>
-          </button>
-
-          {categories.map((cat, idx) => {
-            const active = isCategorySelected(cat);
-            return (
-              <button
-                key={cat.id}
-                onClick={() => { setSelectedCat(cat.slug || cat.id || cat.name); setCatIndex(idx + 1); }}
-                className={`flex-shrink-0 snap-start relative w-36 h-36 rounded-2xl overflow-hidden transition-all md:w-44 md:h-44 lg:w-52 lg:h-52 lg:rounded-3xl ${active ? "ring-2 ring-teal-500 ring-offset-2" : ""}`}
-              >
+      <div
+        ref={scrollerRef}
+        className="flex gap-3 overflow-x-auto no-scrollbar px-4 pb-3"
+        style={{ scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch" }}
+        onScroll={() => {
+          const el = scrollerRef.current;
+          if (!el) return;
+          const firstCard = el.children[0] as HTMLElement | undefined;
+          const itemWidth = firstCard ? firstCard.offsetWidth + 12 : 156;
+          const idx = Math.round(el.scrollLeft / itemWidth);
+          setActive(Math.max(0, Math.min(idx, allCards.length - 1)));
+        }}
+      >
+        {allCards.map((cat: ApiCategory, idx: number) => {
+          const href = idx === 0 ? "/shop/section/all" : `/shop/section/${encodeURIComponent(cat.slug || cat.id)}`;
+          return (
+            <Link key={cat.id} href={href}>
+              <a className="flex-shrink-0 snap-start relative w-36 h-36 rounded-2xl overflow-hidden transition-all md:w-44 md:h-44 lg:w-52 lg:h-52 lg:rounded-3xl">
                 {cat.image ? (
                   <img src={cat.image} alt={cat.name} className="w-full h-full object-cover" />
                 ) : (
                   <div className="w-full h-full bg-gradient-to-br from-gray-700 to-gray-900" />
                 )}
-                <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(10,20,30,0.92) 0%, rgba(10,20,30,0.55) 55%, rgba(10,20,30,0.15) 100%)" }} />
+                <div
+                  className="absolute inset-0"
+                  style={{ background: "linear-gradient(to top, rgba(10,20,30,0.92) 0%, rgba(10,20,30,0.55) 55%, rgba(10,20,30,0.15) 100%)" }}
+                />
                 <div className="absolute bottom-0 left-0 right-0 p-2.5">
-                  <p className="text-white font-black text-xs uppercase tracking-wide leading-tight mb-1">{cat.name}</p>
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-5 h-0.5 bg-teal-400 rounded-full" />
-                    <span className="text-white/70 text-[10px] font-medium">{getCategoryCount(cat)} ITEMS</span>
-                  </div>
+                  <p className="text-white font-black text-xs uppercase tracking-wide leading-tight mb-1">
+                    {cat.name}
+                  </p>
+                  <div className="w-5 h-0.5 bg-teal-400 rounded-full" />
                 </div>
+              </a>
+            </Link>
+          );
+        })}
+      </div>
+
+      <div className="flex justify-center gap-1.5 pb-2 -mt-1 md:hidden">
+        {allCards.map((_, i) => (
+          <button
+            key={i}
+            onClick={() => scrollTo(i)}
+            className={`rounded-full transition-all ${active === i ? "w-4 h-1.5 bg-teal-600" : "w-1.5 h-1.5 bg-gray-300 dark:bg-gray-600"}`}
+          />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function ShopHero({ hero }: { hero: ShopSiteConfig["heroBanner"] }) {
+  if (!hero) return null;
+  const style = hero.imageUrl
+    ? { backgroundImage: `url(${hero.imageUrl})`, backgroundSize: "cover", backgroundPosition: "center" }
+    : { background: hero.bgColor || "linear-gradient(135deg, var(--kryros-primary) 0%, #0a7c72 100%)" };
+
+  return (
+    <section className="mx-4 mt-4 mb-4 rounded-2xl overflow-hidden" style={style as any}>
+      <div className="flex items-center min-h-[180px] relative overflow-hidden p-4 sm:min-h-[210px] lg:min-h-[260px] lg:p-10">
+        {hero.imageUrl && (
+          <div
+            className="absolute inset-0 z-0"
+            style={{ background: "linear-gradient(135deg, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.38) 60%, transparent 100%)" }}
+          />
+        )}
+        <div className="flex-1 z-10">
+          <p className="text-[10px] font-bold uppercase tracking-widest mb-1 text-white/70">KRYROS Store</p>
+          {hero.tagline && <h1 className="text-xl font-black leading-tight mb-1 text-white lg:text-4xl lg:mb-3">{hero.tagline}</h1>}
+          {hero.subtitle && <p className="text-[11px] mb-3 leading-relaxed text-white/80 lg:text-base lg:mb-5">{hero.subtitle}</p>}
+          {hero.ctaLink && (
+            <Link href={hero.ctaLink}>
+              <button className="flex items-center gap-1.5 bg-white text-teal-700 text-xs font-bold px-4 py-2 rounded-full hover:bg-white/90 transition-opacity lg:px-6 lg:py-3 lg:text-sm">
+                {hero.ctaText || "Explore Now"} <ChevronRight className="w-3.5 h-3.5" />
               </button>
-            );
-          })}
+            </Link>
+          )}
         </div>
-      )}
+      </div>
+    </section>
+  );
+}
 
-      {/* Category dot indicators */}
-      {categories.length > 0 && (
-        <div className="flex justify-center gap-1.5 pb-3 -mt-1 md:hidden">
-          {[0, ...categories.map((_, i) => i + 1)].map((i) => (
-            <button
-              key={i}
-              onClick={() => {
-                setCatIndex(i);
-                if (catScrollRef.current) {
-                  const firstCard = catScrollRef.current?.children[0] as HTMLElement | undefined;
-                  const itemWidth = firstCard ? firstCard.offsetWidth + 12 : 156;
-                  catScrollRef.current.scrollTo({ left: i * itemWidth, behavior: "smooth" });
-                }
-              }}
-              className={`rounded-full transition-all ${catIndex === i ? "w-4 h-1.5 bg-teal-600" : "w-1.5 h-1.5 bg-gray-300 dark:bg-gray-600"}`}
-            />
-          ))}
-        </div>
-      )}
+function MembersBanner({ banner }: { banner: ShopSiteConfig["membersBanner"] }) {
+  if (!banner) return null;
 
-      <div className="mx-4 mb-4 border-t border-border" />
-
-      {/* Hero banner for selected brand */}
-      {hero && (
-        <div className="mx-4 mb-5 rounded-2xl overflow-hidden" style={cmsBanner?.imageUrl ? { backgroundImage: `url(${cmsBanner.imageUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' } : { background: hero.bg }}>
-          <div className="flex items-center min-h-[200px] relative overflow-hidden p-4 sm:min-h-[220px] lg:min-h-[300px] lg:p-10">
-            {cmsBanner?.imageUrl && (
-              <div className="absolute inset-0 z-0" style={{ background: 'linear-gradient(135deg, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.38) 60%, transparent 100%)' }} />
-            )}
-            <div className="flex-1 z-10">
-              <p className={`text-xs font-medium lg:text-sm ${cmsBanner?.imageUrl ? 'text-white/70' : 'text-gray-600'}`}>{hero.pre}</p>
-              <h2 className="text-2xl font-black leading-tight mb-1 lg:text-5xl lg:mb-2" style={{ color: cmsBanner?.imageUrl ? '#fff' : hero.brandColor }}>{hero.brand}</h2>
-              <p className={`text-[11px] mb-3 leading-relaxed whitespace-pre-line lg:text-sm lg:mb-5 ${cmsBanner?.imageUrl ? 'text-white/75' : 'text-gray-600'}`}>{hero.sub}</p>
-              <button
-                onClick={() => openBrandPanel(selectedBrand)}
-                className="flex items-center gap-1.5 bg-foreground text-background text-xs font-bold px-4 py-2 rounded-full hover:opacity-90 transition-opacity lg:px-6 lg:py-3 lg:text-sm"
-              >
-                Shop {selectedBrand} <ChevronRight className="w-3.5 h-3.5" />
+  return (
+    <section
+      className="mx-4 my-6 rounded-2xl overflow-hidden"
+      style={
+        banner.imageUrl
+          ? { backgroundImage: `url(${banner.imageUrl})`, backgroundSize: "cover", backgroundPosition: "center" }
+          : { background: "linear-gradient(135deg, var(--kryros-primary) 0%, #0f766e 100%)" }
+      }
+    >
+      <div className="flex items-center p-4 gap-3">
+        <div className="flex-1">
+          {banner.tag && (
+            <p className="text-[10px] font-bold text-white/70 uppercase tracking-wider mb-0.5">{banner.tag}</p>
+          )}
+          {banner.title && <h3 className="text-xl font-black text-white leading-tight lg:text-3xl">{banner.title}</h3>}
+          {banner.subtitle && <p className="text-[11px] text-white/80 mb-3 lg:text-sm lg:mb-5">{banner.subtitle}</p>}
+          {banner.ctaLink && (
+            <Link href={banner.ctaLink}>
+              <button className="flex items-center gap-1.5 bg-white text-teal-700 text-xs font-bold px-4 py-2 rounded-full hover:bg-white/90 transition-opacity">
+                {banner.ctaText || "Join Now"} <ChevronRight className="w-3.5 h-3.5" />
               </button>
-            </div>
-          </div>
-          <div className="flex justify-center gap-1.5 pb-3">
-            {[0, 1, 2, 3].map((i) => (
-              <button key={i} onClick={() => setHeroDot(i)} className={`rounded-full transition-all ${heroDot === i ? "w-4 h-1.5 bg-teal-600" : "w-1.5 h-1.5 bg-gray-300"}`} />
-            ))}
-          </div>
+            </Link>
+          )}
         </div>
-      )}
+      </div>
+    </section>
+  );
+}
 
-      <div className="mx-4 mb-4 border-t border-border" />
+function PromoBannerBlock({ cfg }: { cfg: Record<string, unknown> }) {
+  const tag = toStr(cfg.tag);
+  const title = toStr(cfg.title);
+  const subtitle = toStr(cfg.subtitle);
+  const ctaText = toStr(cfg.ctaText, "Shop Now");
+  const ctaLink = toStr(cfg.ctaLink, "/shop/section/all");
+  const imageUrl = toStr(cfg.imageUrl);
+  const bg = toStr(cfg.bgColor, "linear-gradient(135deg, #0f4c35 0%, #1a7a52 50%, #0d9488 100%)");
 
-      {/* Shop by Brand */}
-      {uniqueBrands.length > 0 && (
-        <div className="px-4 mb-5">
-          <p className="text-sm font-bold text-foreground mb-2.5 lg:text-lg lg:mb-4">Shop by Brand</p>
-          <div className="flex gap-2 overflow-x-auto no-scrollbar md:flex-wrap md:overflow-visible md:gap-3">
-            {uniqueBrands.slice(0, 8).map((name) => {
-              const active = selectedBrand === name;
-              return (
-                <button
-                  key={name}
-                  onClick={() => openBrandPanel(name!)}
-                  className={`flex-shrink-0 px-3.5 py-2 rounded-full border text-xs font-semibold transition-all ${active ? "bg-foreground text-background border-foreground" : "bg-card border-border text-foreground hover:border-teal-600/50"}`}
-                >
-                  {name}
-                </button>
-              );
-            })}
-          </div>
-          <p className="text-[10px] text-muted-foreground mt-2 flex items-center gap-1 md:hidden">
-            <ChevronDown className="w-3 h-3" /> Tap a brand to browse its products
-          </p>
-        </div>
-      )}
-
-      <div className="mx-4 mb-4 border-t border-border" />
-
-      {/* Products grid */}
-      {filteredProducts.length > 0 ? (
-        <div className="px-3 mb-5">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-base font-black text-foreground lg:text-xl">
-              {selectedCategoryLabel}
-            </h2>
-            <span className="text-xs text-muted-foreground lg:text-sm">{filteredProducts.length} items</span>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 pb-4">
-            {filteredProducts.map((p) => <UnifiedProductCard key={p.id} product={p} />)}
-          </div>
-        </div>
-      ) : (
-        allProducts.length === 0 && (
-          <div className="text-center py-12 text-muted-foreground text-sm">Loading products...</div>
-        )
-      )}
-
-      {membersBanner && (
-      <div className="mx-4 mb-5 rounded-2xl overflow-hidden" style={membersBanner.imageUrl ? { backgroundImage: `url(${membersBanner.imageUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' } : { background: "linear-gradient(135deg, var(--kryros-primary) 0%, #0f766e 100%)" }}>
-        <div className="flex items-center p-4 gap-3">
-          <div className="flex-1">
-            {membersBanner.tag && <p className="text-[10px] font-bold text-white/70 uppercase tracking-wider mb-0.5">{membersBanner.tag}</p>}
-            {membersBanner.title && <h3 className="text-xl font-black text-white leading-tight lg:text-3xl">{membersBanner.title}</h3>}
-            {membersBanner.subtitle && <p className="text-[11px] text-white/80 mb-3 lg:text-sm lg:mb-5">{membersBanner.subtitle}</p>}
-            {membersBanner.ctaLink && (
-              <Link href={membersBanner.ctaLink}>
-                <button className="flex items-center gap-1.5 bg-white text-teal-700 text-xs font-bold px-4 py-2 rounded-full hover:bg-white/90 transition-opacity">
-                  {membersBanner.ctaText || "Join Now"} <ChevronRight className="w-3.5 h-3.5" />
-                </button>
-              </Link>
-            )}
-          </div>
-          <div className="flex-shrink-0 flex flex-col items-center gap-1 text-right">
-            <div className="bg-white/15 rounded-xl p-2 mb-1 lg:p-4 lg:rounded-2xl">
-              <Headphones className="w-8 h-8 text-white lg:w-12 lg:h-12" />
-            </div>
-            <p className="text-[9px] font-bold text-white/80 text-center">Members Only</p>
-            <p className="text-[9px] text-white/60 text-center">Exclusive Deals</p>
-            <p className="text-[10px] font-black text-white">KRY<span className="text-teal-200">ROS</span></p>
+  return (
+    <section className="mx-4 my-6 rounded-2xl overflow-hidden" style={imageUrl ? { backgroundImage: `url(${imageUrl})`, backgroundSize: "cover", backgroundPosition: "center" } : { background: bg }}>
+      <div className="relative p-4 sm:p-6">
+        {imageUrl && <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.45)" }} />}
+        <div className="relative">
+          {tag && <p className="text-[10px] font-bold text-white/80 uppercase tracking-widest">{tag}</p>}
+          {title && <h3 className="text-xl font-black text-white mt-1">{title}</h3>}
+          {subtitle && <p className="text-[11px] text-white/80 mt-1 max-w-xl">{subtitle}</p>}
+          <div className="mt-3">
+            <Link href={ctaLink}>
+              <button className="inline-flex items-center gap-1.5 bg-white text-teal-700 text-xs font-bold px-4 py-2 rounded-full hover:bg-white/90 transition-opacity">
+                {ctaText} <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            </Link>
           </div>
         </div>
       </div>
-      )}
-      </>
-      )}
+    </section>
+  );
+}
+
+export default function ShopPage() {
+  const [sections, setSections] = useState<ApiCMSSection[]>([]);
+  const [categories, setCategories] = useState<ApiCategory[]>([]);
+  const [siteCfg, setSiteCfg] = useState<ShopSiteConfig | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    Promise.all([
+      fetchPageSections("shop"),
+      fetchCategories(),
+      fetchSiteConfig<ShopSiteConfig>("shop"),
+    ])
+      .then(([secs, cats, shopCfg]) => {
+        setSections((secs || []).filter((s) => s.isActive !== false).sort((a, b) => (a.order || 0) - (b.order || 0)));
+        setCategories((cats || []).filter((c: any) => c.isActive !== false));
+        setSiteCfg(shopCfg || null);
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (!loading && sections.length === 0) {
+    return (
+      <div className="max-w-3xl mx-auto px-4 py-10">
+        <h2 className="text-lg font-black text-foreground">Shop is not configured yet</h2>
+        <p className="text-sm text-muted-foreground mt-1">
+          Go to Admin Panel → CMS Pages → Shop → Reset sections to defaults.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="pb-24 md:pb-10 max-w-7xl mx-auto">
+      {sections.map((sec) => {
+        const cfg = (sec.config ?? {}) as Record<string, unknown>;
+
+        // Shop hero: by default uses site-config "shop.heroBanner"
+        if (sec.type === "ShopHero") {
+          const fromSite = siteCfg?.heroBanner;
+          const hero = fromSite || {
+            tagline: toStr(cfg.tagline || cfg.title, "Shop the Best Deals"),
+            subtitle: toStr(cfg.subtitle, "Discover products section by section"),
+            bgColor: toStr(cfg.bgColor),
+            brandColor: toStr(cfg.brandColor),
+            ctaText: toStr(cfg.ctaText),
+            ctaLink: toStr(cfg.ctaLink),
+            imageUrl: toStr(cfg.imageUrl),
+          };
+          return <ShopHero key={sec.id} hero={hero} />;
+        }
+
+        // Categories row
+        if (sec.type === "ShopCategories") {
+          return <CategoryCarousel key={sec.id} categories={categories} />;
+        }
+
+        // Promo banner
+        if (sec.type === "ShopPromoBanner") {
+          return <PromoBannerBlock key={sec.id} cfg={cfg} />;
+        }
+
+        // Members banner: uses site-config "shop.membersBanner"
+        if (sec.type === "MembersBanner") {
+          return <MembersBanner key={sec.id} banner={siteCfg?.membersBanner} />;
+        }
+
+        // Product shelf
+        if (sec.type === "ShopProductShelf") {
+          const sectionSlug = toStr(cfg.sectionSlug);
+          const title = toStr(cfg.title, sec.title || "Products");
+          const viewAllHref = toStr(cfg.ctaLink) || (sectionSlug ? `/shop/section/${encodeURIComponent(sectionSlug)}` : "/shop/section/all");
+          const limit = toNum(cfg.limit, 10);
+          const scroll = toBool(cfg.scroll, true);
+
+          const params: any = {};
+          const categorySlug = toStr(cfg.categorySlug);
+          const popularity = toStr(cfg.popularity);
+          const isFlashSale = cfg.isFlashSale;
+          const featured = cfg.featured;
+
+          if (categorySlug) params.categorySlug = categorySlug;
+          if (popularity) params.popularity = popularity;
+          if (isFlashSale !== undefined) params.isFlashSale = toBool(isFlashSale);
+          if (featured !== undefined) params.featured = toBool(featured);
+
+          return (
+            <div key={sec.id}>
+              <ProductSection
+                title={title}
+                viewAllHref={viewAllHref}
+                params={params}
+                limit={limit}
+                scroll={scroll}
+              />
+            </div>
+          );
+        }
+
+        return null;
+      })}
     </div>
   );
 }
+

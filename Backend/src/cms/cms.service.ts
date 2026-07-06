@@ -641,9 +641,24 @@ export class CMSService {
     // Sections per page matching the current frontend exactly
     const PAGE_SECTIONS: Record<string, { type: string; title: string; subtitle?: string; order: number; isActive: boolean; config?: any }[]> = {
       shop: [
-        { type: 'MembersBanner',    title: 'Members Banner',    subtitle: 'Join KRYROS for exclusive deals', order: 1, isActive: true, config: { source: 'site-config', key: 'members-banner' } },
-        { type: 'ShopFilters',      title: 'Shop Filters',      subtitle: 'Filter & sort products',          order: 2, isActive: true, config: {} },
-        { type: 'ProductGrid',      title: 'Product Grid',      subtitle: 'All products listing',            order: 3, isActive: true, config: { limit: 20 } },
+        // Shop page is now a curated "storefront" composed of blocks.
+        // Admin can add/remove/re-order blocks from CMS → Pages → Shop → Sections.
+        { type: 'ShopHero',         title: 'Shop Hero',         subtitle: 'Top hero banner (managed via CMS → Shop Hero Banner)', order: 1, isActive: true, config: { source: 'site-config', key: 'shop', path: 'heroBanner' } },
+        { type: 'ShopCategories',   title: 'Shop Categories',   subtitle: 'Horizontal category browsing row',                        order: 2, isActive: true, config: { mode: 'carousel' } },
+
+        // Product shelves (horizontal)
+        { type: 'ShopProductShelf', title: 'Top Selling',       subtitle: 'Best sellers shelf',                                    order: 3, isActive: true, config: { sectionSlug: 'top-selling', title: 'Top Selling Products', ctaText: 'See All', limit: 10, scroll: true, popularity: 'bestseller' } },
+        { type: 'ShopProductShelf', title: 'Flash Sales',       subtitle: 'Flash sale deals shelf',                                 order: 4, isActive: true, config: { sectionSlug: 'flash-sales', title: 'Flash Sales', ctaText: 'See All', limit: 10, scroll: true, isFlashSale: true } },
+
+        // Promo banner between shelves
+        { type: 'ShopPromoBanner',  title: 'Mid Promo Banner',  subtitle: 'Break up shelves with a promo banner',                    order: 5, isActive: true, config: { tag: 'LIMITED TIME', title: 'Mega Deals', subtitle: 'Up to 50% Off Selected Items', ctaText: 'Shop Now', ctaLink: '/shop/section/flash-sales', bgColor: 'linear-gradient(135deg, #0f4c35 0%, #1a7a52 50%, #0d9488 100%)' } },
+
+        // Category shelves (examples — update categorySlug to match your categories)
+        { type: 'ShopProductShelf', title: 'Smartphones',       subtitle: 'Top smartphone picks',                                   order: 6, isActive: true, config: { sectionSlug: 'smartphones', title: 'Smartphones', ctaText: 'See All', limit: 10, scroll: true, categorySlug: 'smartphones' } },
+        { type: 'ShopProductShelf', title: 'Accessories',       subtitle: 'Headphones, cases, chargers, and more',                   order: 7, isActive: true, config: { sectionSlug: 'accessories', title: 'Accessories', ctaText: 'See All', limit: 10, scroll: true, categorySlug: 'accessories' } },
+
+        // Members banner near the bottom (managed in CMS → Shop Members Banner)
+        { type: 'MembersBanner',    title: 'Members Banner',    subtitle: 'Join KRYROS for exclusive deals',                          order: 100, isActive: true, config: { source: 'site-config', key: 'shop', path: 'membersBanner' } },
       ],
       'product-detail': [
         { type: 'ProductGallery',   title: 'Product Gallery',   subtitle: 'Images & media',        order: 1, isActive: true, config: {} },

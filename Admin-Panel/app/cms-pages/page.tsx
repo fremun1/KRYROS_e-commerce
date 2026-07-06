@@ -306,8 +306,46 @@ const SECTION_FIELDS: Record<string, Array<{ key: string; label: string; type: s
     { key: 'autoSlide', label: 'Auto-slide enabled', type: 'select', options: ['true', 'false'] },
     { key: 'interval', label: 'Slide interval in ms (default: 4000)', type: 'text', icon: 'clock' },
   ],
+  // ── Shop Layout Blocks (CMS Sections → pageSlug: shop) ─────────────────────────
+  'Shop Hero': [
+    { key: 'tagline', label: 'Main Heading (tagline)', type: 'text', icon: 'type' },
+    { key: 'subtitle', label: 'Subtitle', type: 'text', icon: 'type' },
+    { key: 'ctaText', label: 'Button Text', type: 'text', icon: 'mouse' },
+    { key: 'ctaLink', label: 'Button Link', type: 'text', icon: 'link' },
+    { key: 'bgColor', label: 'Background Color / Gradient CSS', type: 'text', icon: 'align' },
+    { key: 'imageUrl', label: 'Background Image', type: 'file', icon: 'image' },
+  ],
+  'Shop Categories': [
+    { key: 'mode', label: 'Mode', type: 'select', options: ['carousel', 'grid'] },
+  ],
+  'Shop Product Shelf': [
+    { key: 'sectionSlug', label: 'Section Slug (used for /shop/section/:slug)', type: 'text', icon: 'tag' },
+    { key: 'title', label: 'Shelf Title', type: 'text', icon: 'type' },
+    { key: 'subtitle', label: 'Shelf Subtitle (optional)', type: 'text', icon: 'type' },
+    { key: 'ctaText', label: 'See All Button Text', type: 'text', icon: 'mouse' },
+    { key: 'ctaLink', label: 'Optional Override Link (leave empty to auto-generate)', type: 'text', icon: 'link' },
+    { key: 'limit', label: 'Products to Display (default: 10)', type: 'text', icon: 'type' },
+    { key: 'scroll', label: 'Horizontal Scroll', type: 'select', options: ['true', 'false'] },
+    { key: 'categorySlug', label: 'Category Slug Filter (optional)', type: 'text', icon: 'tag' },
+    { key: 'popularity', label: 'Popularity Filter (optional)', type: 'select', options: ['', 'trending', 'bestseller', 'new', 'hot', 'sale'] },
+    { key: 'isFlashSale', label: 'Flash Sale Only', type: 'select', options: ['', 'true', 'false'] },
+    { key: 'featured', label: 'Featured Only', type: 'select', options: ['', 'true', 'false'] },
+  ],
+  'Shop Promo Banner': [
+    { key: 'tag', label: 'Tag / Badge (e.g. LIMITED TIME)', type: 'text', icon: 'tag' },
+    { key: 'title', label: 'Banner Title', type: 'text', icon: 'type' },
+    { key: 'subtitle', label: 'Subtitle', type: 'text', icon: 'type' },
+    { key: 'ctaText', label: 'Button Text', type: 'text', icon: 'mouse' },
+    { key: 'ctaLink', label: 'Button Link', type: 'text', icon: 'link' },
+    { key: 'bgColor', label: 'Background Color / Gradient CSS', type: 'text', icon: 'align' },
+    { key: 'imageUrl', label: 'Background Image', type: 'file', icon: 'image' },
+  ],
 };
 const PAGE_SECTION_NAME: Record<string, string> = {
+  ShopHero: 'Shop Hero',
+  ShopCategories: 'Shop Categories',
+  ShopProductShelf: 'Shop Product Shelf',
+  ShopPromoBanner: 'Shop Promo Banner',
   MembersBanner: 'Members Banner',
   ShopFilters: 'Shop Filters',
   ProductGrid: 'Product Grid',
@@ -441,7 +479,7 @@ const INITIAL_PAGES: CmsPage[] = [
 ];
 
 const EMPTY_PAGE_FORM = { title: '', slug: '', status: 'Published' };
-const ADD_SECTION_NAMES = ['Hero Banner','Promo Banner','Promo Banners','Promotions','Newsletter','Company Story','Team','Mission & Vision','Contact Form','Location Map','Business Hours','Terms Text','Policy Text','Products Grid','Sale Banner','Category Promo Banners','Upgrade Banner','Members Banner','Shop Filters','Product Grid','Wholesale Hero','Wholesale Features','Get Now Hero','Get Now Features','Page Hero','FAQ Accordion','Product Gallery','Related Products','Testimonials','Flash Sale','Trust Badges','Top Selling','Newest Arrivals','Best Sellers','Trending','Limited Stock Deal','Appliances Deal','Top Express','Custom Section'];
+const ADD_SECTION_NAMES = ['Hero Banner','Promo Banner','Promo Banners','Promotions','Newsletter','Company Story','Team','Mission & Vision','Contact Form','Location Map','Business Hours','Terms Text','Policy Text','Products Grid','Sale Banner','Category Promo Banners','Upgrade Banner','Shop Hero','Shop Categories','Shop Product Shelf','Shop Promo Banner','Members Banner','Shop Filters','Product Grid','Wholesale Hero','Wholesale Features','Get Now Hero','Get Now Features','Page Hero','FAQ Accordion','Product Gallery','Related Products','Testimonials','Flash Sale','Trust Badges','Top Selling','Newest Arrivals','Best Sellers','Trending','Limited Stock Deal','Appliances Deal','Top Express','Custom Section'];
 
 // FileUpload is now the shared CloudinaryUpload component
 
@@ -1745,4 +1783,3 @@ function CMSContent() {
 }
 
 export default function CMSPagesPage() { return <AdminShell><CMSContent /></AdminShell>; }
-

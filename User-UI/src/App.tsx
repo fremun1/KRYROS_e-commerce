@@ -18,6 +18,7 @@ import AuthPage from "@/components/auth/AuthPage";
 // ── Route-based code splitting ─────────────────────────────────────────────────
 const HomePage = lazy(() => import("@/pages/HomePage"));
 const ShopPage = lazy(() => import("@/pages/ShopPage"));
+const ShopSectionPage = lazy(() => import("@/pages/ShopSectionPage"));
 const ProductPage = lazy(() => import("@/pages/ProductPage"));
 const CartPage = lazy(() => import("@/pages/CartPage"));
 const CheckoutPage = lazy(() => import("@/pages/CheckoutPage"));
@@ -309,6 +310,7 @@ function AppRoutes() {
       <Suspense fallback={<PageLoader />}>
         <Switch>
           <Route path="/" component={HomePage} />
+          <Route path="/shop/section/:slug" component={ShopSectionPage} />
           <Route path="/shop" component={ShopPage} />
           <Route path="/product/:slug" component={ProductPage} />
           <Route path="/cart" component={CartPage} />
