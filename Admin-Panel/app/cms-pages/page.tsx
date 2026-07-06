@@ -142,15 +142,6 @@ const SECTION_FIELDS: Record<string, Array<{ key: string; label: string; type: s
     { key: 'color_theme', label: 'Color Theme (used if no image)', type: 'select', options: ['Green/Teal', 'Blue', 'Purple', 'Red'] },
     { key: 'image', label: 'Background Image (overrides color)', type: 'file' },
   ],
-  'Upgrade Banner': [
-    { key: 'heading', label: 'Banner Heading', type: 'text', icon: 'type' },
-    { key: 'subtitle', label: 'Subtitle', type: 'text', icon: 'type' },
-    { key: 'button_text', label: 'Button Text', type: 'text', icon: 'mouse' },
-    { key: 'button_link', label: 'Button Link (URL)', type: 'text', icon: 'link' },
-    { key: 'discount_text', label: 'Discount Value (e.g. 30%)', type: 'text', icon: 'type' },
-    { key: 'discount_subtext', label: 'Discount Label (e.g. OFF)', type: 'text', icon: 'type' },
-    { key: 'media', label: 'Background Image', type: 'file' },
-  ],
   'Members Banner': [
     { key: 'heading', label: 'Banner Heading', type: 'text', icon: 'type' },
     { key: 'subtitle', label: 'Subtitle', type: 'text', icon: 'type' },
