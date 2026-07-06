@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useRoute } from "wouter";
-import { ChevronLeft } from "lucide-react";
+import { ArrowLeft, LayoutGrid, Filter } from "lucide-react";
 import { fetchCategories, fetchPageSections, fetchProducts } from "@/lib/api";
 import type { ApiCMSSection, ApiCategory, Product } from "@/lib/api";
 import UnifiedProductCard from "@/components/UnifiedProductCard";
@@ -21,6 +21,20 @@ function toStr(v: unknown, fallback = "") {
   return String(v);
 }
 
+// Product card skeleton
+function CardSkeleton() {
+  return (
+    <div className="rounded-2xl bg-card border border-border overflow-hidden animate-pulse">
+      <div className="aspect-square bg-muted" />
+      <div className="p-2.5 space-y-2">
+        <div className="h-3 bg-muted rounded w-3/4" />
+        <div className="h-4 bg-muted rounded w-1/2" />
+        <div className="h-7 bg-muted rounded mt-2" />
+      </div>
+    </div>
+  );
+}
+
 export default function ShopSectionPage() {
   const [, params] = useRoute("/shop/section/:slug");
   const slug = params?.slug ? decodeURIComponent(params.slug) : "all";
@@ -34,6 +48,7 @@ export default function ShopSectionPage() {
   const [take] = useState(24);
   const [totalLoaded, setTotalLoaded] = useState(0);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [initialLoad, setInitialLoad] = useState(true);
 
   useEffect(() => {
     setLoading(true);
@@ -46,18 +61,17 @@ export default function ShopSectionPage() {
   }, []);
 
   const resolved = useMemo(() => {
-    // 1) explicit CMS shelf slug
     const matchByCfg = sections.find((s) => {
       const cfg = (s.config ?? {}) as Record<string, unknown>;
       return toStr(cfg.sectionSlug).toLowerCase() === slug.toLowerCase();
     });
     if (matchByCfg) return { kind: "cms" as const, section: matchByCfg };
 
-    // 2) category slug
-    const matchCat = categories.find((c) => (c.slug || c.id).toLowerCase() === slug.toLowerCase());
+    const matchCat = categories.find(
+      (c) => (c.slug || c.id).toLowerCase() === slug.toLowerCase()
+    );
     if (matchCat) return { kind: "category" as const, category: matchCat };
 
-    // 3) fallback all
     return { kind: "all" as const };
   }, [sections, categories, slug]);
 
@@ -71,14 +85,11 @@ export default function ShopSectionPage() {
       if (popularity) q.popularity = popularity;
       if (cfg.isFlashSale !== undefined) q.isFlashSale = toBool(cfg.isFlashSale);
       if (cfg.featured !== undefined) q.featured = toBool(cfg.featured);
-      // Always exclude wholesale-only products by default (client api.ts already does)
       return q;
     }
-
     if (resolved.kind === "category") {
       return { categorySlug: resolved.category.slug || resolved.category.id };
     }
-
     return {};
   }, [resolved]);
 
@@ -91,11 +102,14 @@ export default function ShopSectionPage() {
     return "All Products";
   }, [resolved]);
 
-  const canLoadMore = useMemo(() => {
-    // We don't have server total in this page without changing fetchProducts typing,
-    // so we just keep loading until the API returns < take items.
-    return products.length === totalLoaded;
-  }, [products.length, totalLoaded]);
+  // Detect flash sale for accent color
+  const isFlashSale = useMemo(() => {
+    if (resolved.kind !== "cms") return false;
+    const cfg = (resolved.section.config ?? {}) as Record<string, unknown>;
+    return toBool(cfg.isFlashSale);
+  }, [resolved]);
+
+  const accentColor = isFlashSale ? "#ef4444" : "var(--color-primary, #0d9488)";
 
   const load = async (nextSkip: number, append: boolean) => {
     const result = await fetchProducts({ ...buildQuery, take, skip: nextSkip });
@@ -104,12 +118,12 @@ export default function ShopSectionPage() {
   };
 
   useEffect(() => {
-    // Reset paging when slug changes
     setSkip(0);
     setProducts([]);
     setTotalLoaded(0);
+    setInitialLoad(true);
     if (!loading) {
-      load(0, false);
+      load(0, false).finally(() => setInitialLoad(false));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug, loading, JSON.stringify(buildQuery)]);
@@ -125,59 +139,104 @@ export default function ShopSectionPage() {
     }
   };
 
-  const showLoadMore = useMemo(() => {
-    // If the last request returned less than take, no more data
-    return totalLoaded === take;
-  }, [totalLoaded, take]);
+  const showLoadMore = totalLoaded === take;
 
   return (
-    <div className="pb-24 md:pb-10 max-w-7xl mx-auto px-3 md:px-6 pt-4">
-      <div className="flex items-center gap-3 mb-4">
-        <Link href="/shop">
-          <a className="inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline">
-            <ChevronLeft className="w-4 h-4" />
-            Back to shop
-          </a>
-        </Link>
-      </div>
+    <div className="pb-24 md:pb-10 min-h-screen">
+      {/* ── Sticky header ── */}
+      <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm border-b border-border">
+        <div className="max-w-7xl mx-auto px-3 md:px-6 h-14 flex items-center gap-3">
+          {/* Back */}
+          <Link href="/shop">
+            <a className="flex items-center justify-center w-8 h-8 rounded-xl bg-muted hover:bg-muted/80 transition-colors flex-shrink-0">
+              <ArrowLeft className="w-4 h-4 text-foreground" />
+            </a>
+          </Link>
 
-      <div className="flex items-end justify-between gap-3 mb-3">
-        <div>
-          <h1 className="text-lg md:text-2xl font-black text-foreground">{pageTitle}</h1>
-          {resolved.kind === "cms" && (
-            <p className="text-xs text-muted-foreground mt-1">
-              Browsing a curated section
-            </p>
-          )}
+          {/* Title */}
+          <div className="flex items-center gap-2 min-w-0 flex-1">
+            {/* Accent bar */}
+            <div
+              className="flex-shrink-0 w-1 h-5 rounded-full"
+              style={{ background: accentColor }}
+            />
+            <div className="min-w-0">
+              <h1 className="text-sm md:text-base font-black text-foreground truncate leading-tight">
+                {pageTitle}
+              </h1>
+              {products.length > 0 && !initialLoad && (
+                <p className="text-[10px] text-muted-foreground leading-none">
+                  {products.length}
+                  {showLoadMore ? "+" : ""} products
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Grid icon */}
+          <div className="flex items-center justify-center w-8 h-8 rounded-xl bg-muted flex-shrink-0">
+            <LayoutGrid className="w-4 h-4 text-muted-foreground" />
+          </div>
         </div>
       </div>
 
-      {loading ? (
-        <div className="py-10 text-sm text-muted-foreground">Loading…</div>
-      ) : products.length === 0 ? (
-        <div className="py-10 text-sm text-muted-foreground">No products found.</div>
-      ) : (
-        <>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 pb-4">
-            {products.map((p) => (
-              <UnifiedProductCard key={p.id} product={p} className="w-full" />
+      {/* ── Content ── */}
+      <div className="max-w-7xl mx-auto px-3 md:px-6 pt-4">
+        {initialLoad ? (
+          /* Skeleton grid */
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5 pb-4">
+            {[...Array(8)].map((_, i) => (
+              <CardSkeleton key={i} />
             ))}
           </div>
-
-          {showLoadMore && (
-            <div className="flex justify-center pb-6">
-              <button
-                onClick={handleLoadMore}
-                disabled={loadingMore}
-                className="px-5 py-2.5 rounded-full bg-foreground text-background text-sm font-bold disabled:opacity-60"
-              >
-                {loadingMore ? "Loading…" : "Load more"}
-              </button>
+        ) : products.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16 text-center">
+            <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
+              <LayoutGrid className="w-7 h-7 text-muted-foreground" />
             </div>
-          )}
-        </>
-      )}
+            <p className="text-base font-bold text-foreground">No products found</p>
+            <p className="text-sm text-muted-foreground mt-1 max-w-xs">
+              This section doesn't have any products yet. Check back soon!
+            </p>
+            <Link href="/shop">
+              <a className="mt-4 inline-flex items-center gap-1.5 bg-primary text-white text-sm font-bold px-5 py-2.5 rounded-full hover:bg-primary/90 transition-colors">
+                ← Back to Shop
+              </a>
+            </Link>
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5 pb-4">
+              {products.map((p) => (
+                <UnifiedProductCard key={p.id} product={p} className="w-full" />
+              ))}
+            </div>
+
+            {/* Load More */}
+            {showLoadMore && (
+              <div className="flex justify-center pb-6">
+                <button
+                  onClick={handleLoadMore}
+                  disabled={loadingMore}
+                  className="group flex items-center gap-2 px-6 py-2.5 rounded-full border-2 border-primary text-primary text-sm font-bold hover:bg-primary hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loadingMore ? (
+                    <>
+                      <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      </svg>
+                      Loading…
+                    </>
+                  ) : (
+                    "Load More Products"
+                  )}
+                </button>
+              </div>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 }
-
