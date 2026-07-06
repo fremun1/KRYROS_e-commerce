@@ -1,112 +1,93 @@
-# KRYROS Homepage Update — Deployment Instructions
+# KRYROS Homepage Update — Deployment Instructions (Batch 2)
 
 ## Overview
 
-This update reorganizes the homepage sections and adds new product recommendation sections. All changes are committed and pushed to `main` on the repository.
+This update adds three new product sections, simplifies the Upgrade Banner, and updates the CMS/Admin Panel accordingly. All changes are committed and pushed to `main`.
 
-## Changes Made
+## New Homepage Section Order
 
-### 1. Homepage Section Order (New)
 1. Hero Slider
-2. Top Brands
-3. Trust Badges
-4. Category Section
-5. **Flash Sales** *(existing)*
-6. **What You Viewed** *(NEW — after Flash Sales, shows products the user recently clicked on)*
-7. **Top Selling Items** *(NEW — auto-picked by order count performance)*
-8. Upgrade Banner
-9. Promo Banners
-10. **Newest Arrivals** *(NEW — separate section, sorted by createdAt)*
-11. **Best Sellers** *(NEW — separate section, sorted by orderItems count)*
-12. **Trending Now** *(NEW — separate section, sorted by orders + wishlists)*
-13. Category Promo Banners
-14. Recommended For You
+2. Trust Badges
+3. Category Section
+4. **Flash Sales** *(existing)*
+5. **What You Viewed** *(from previous batch)*
+6. **Top Selling Items** *(from previous batch)*
+7. **Limited Stock Deal** *(NEW — configurable discount %, e.g. "Up to 70% Off")*
+8. **Appliances Deal** *(NEW — appliance products)*
+9. **Top Express** *(NEW — trending/express products)*
+10. **Upgrade Banner** *(simplified — image-only carousel, no text overlay)*
+11. Promo Banners
+12. Newest Arrivals
+13. Best Sellers
+14. Trending Now
+15. Category Promo Banners
+16. Recommended For You
 
-### 2. Removed / Replaced
-- **Featured Products** tabbed section has been **removed entirely**
-- Its four tabs (Flash Deals, Trending, Best Sellers, New Arrivals) are now **separate dedicated sections**
+## What Changed
 
-### 3. Product View Tracking
-- `ProductPage.tsx` now calls `useRecentlyViewedStore.addProduct()` when a product loads
-- This means the **What You Viewed** section will show products only after the user has visited at least one product page
+### 1. Limited Stock Deal Section
+- Shows products with a configurable discount percentage banner
+- Admin controls the discount percent (e.g., 70) from the CMS — the label displays as "Up to 70% Off"
+- Products with 20%+ discount show a "Limited Stock" badge
+- Uses standard `UnifiedProductCard`
 
-### 4. Admin Panel CMS
-- Four new section types are now available in the CMS:
-  - **Top Selling** — configure title, CTA text/link, limit, scroll mode
-  - **Newest Arrivals** — configure title, CTA text/link, limit, scroll mode
-  - **Best Sellers** — configure title, CTA text/link, limit, scroll mode
-  - **Trending** — configure title, CTA text/link, limit, scroll mode
-- The old "Featured Products" section has been removed from the CMS
-- You can toggle each section on/off, reorder them, and configure their display from the Admin Panel CMS
+### 2. Appliances Deal Section
+- Auto-detects appliance-related categories (fridge, microwave, cooker, etc.) and shows products from them
+- Falls back to best-selling products if no appliance category is found
+- Uses standard `UnifiedProductCard`
+
+### 3. Top Express Section
+- Shows trending products with an express/fast-delivery icon
+- Uses standard `UnifiedProductCard`
+
+### 4. Upgrade Banner — Simplified to Image-Only Carousel
+- **Removed all text/overlay content** (heading, subtitle, discount text, CTA button)
+- Now displays **only images** in a sliding carousel
+- Supports **multiple images** — admin uploads them via comma-separated URLs in the CMS
+- Images auto-slide every 4 seconds (configurable)
+- Shows navigation arrows and dot indicators when multiple images
+
+## Admin Panel CMS — New Section Configs
+
+| Section | CMS Fields |
+|---------|-----------|
+| **Limited Stock Deal** | Title, Discount Label, Discount Percent, CTA Text, CTA Link, Limit, Scroll |
+| **Appliances Deal** | Title, CTA Text, CTA Link, Limit, Scroll |
+| **Top Express** | Title, CTA Text, CTA Link, Limit, Scroll |
+| **Upgrade Banner** | Title, Images (comma-separated URLs), Auto-slide, Interval (ms) |
 
 ## Deployment Steps (Run on Your Server)
 
-### Step 1: SSH into your DigitalOcean server
-
 ```bash
+# SSH into server
 ssh asaphisvm@your-server-ip
-```
 
-### Step 2: Pull the latest code
+# Pull latest code
+cd /app && git fetch origin && git reset --hard origin/main
 
-```bash
-cd /app && git pull origin main
-```
-
-### Step 3: Rebuild the Backend
-
-```bash
+# Rebuild all services
 cd /app/Backend && npm install && npm run build && pm2 restart backend
-```
-
-### Step 4: Rebuild the Admin Panel
-
-```bash
 cd /app/Admin-Panel && npm install && npm run build && pm2 restart admin-panel
-```
-
-### Step 5: Rebuild the User-UI (Frontend)
-
-```bash
 cd /app/User-UI && pnpm install && pnpm build && pm2 restart user-ui
-```
 
-### Step 6: Check PM2 status (verify all services are running)
-
-```bash
+# Verify
 pm2 status
 ```
-
-Expected output should show all three services as `online`:
-- `backend` on port 4000
-- `admin-panel` on port 3001
-- `user-ui` on port 3000
-
-### Step 7: Seed new CMS sections (run once)
-
-Go to your Admin Panel CMS (`admin.kryros.com/cms-pages`), find the **Home** page, and either:
-- Click **"Reset & Seed"** to regenerate all homepage sections with defaults, OR
-- Manually add the new sections: **Top Selling**, **Newest Arrivals**, **Best Sellers**, **Trending**
-
-The backend seed (`cms.service.ts`) will also auto-create these sections if the database is empty on restart.
 
 ## Files Changed
 
 | File | Changes |
 |------|---------|
-| `User-UI/src/pages/HomePage.tsx` | Replaced FeaturedProductsSection with 4 separate sections; moved RecentlyViewed after Flash Sales |
-| `User-UI/src/pages/ProductPage.tsx` | Added product view tracking via recentlyViewedStore |
-| `User-UI/src/components/home/TopSellingSection.tsx` | NEW — auto-picked top selling products |
-| `User-UI/src/components/home/NewestArrivalsSection.tsx` | NEW — newest products by createdAt |
-| `User-UI/src/components/home/BestSellersSection.tsx` | NEW — best selling products by order count |
-| `User-UI/src/components/home/TrendingSection.tsx` | NEW — trending products by orders + wishlists |
-| `Backend/src/cms/cms.service.ts` | Updated seed with new section types; updated order numbers |
-| `Admin-Panel/app/cms-pages/page.tsx` | Added CMS field configs, HP_NAME mapping, HP_SECTION_TYPE mapping, and save handlers for new section types |
+| `User-UI/src/components/home/LimitedStockDealSection.tsx` | NEW — configurable discount banner + products |
+| `User-UI/src/components/home/AppliancesDealSection.tsx` | NEW — appliance products section |
+| `User-UI/src/components/home/TopExpressSection.tsx` | NEW — trending/express products |
+| `User-UI/src/components/home/UpgradeBanner.tsx` | Rewritten — image-only carousel, no text overlay |
+| `User-UI/src/pages/HomePage.tsx` | Updated section order with new sections |
+| `Backend/src/cms/cms.service.ts` | Added LimitedStockDeal, AppliancesDeal, TopExpress seeds; updated UpgradeBanner config |
+| `Admin-Panel/app/cms-pages/page.tsx` | Added CMS field configs, HP_NAME, HP_SECTION_TYPE, and save handlers for all new sections |
 
 ## Notes
 
-- All new sections use the **standard `UnifiedProductCard`** component — no separate card designs
-- All sections are **fully dynamic** — admin can control visibility, order, titles, limits, and scroll mode from the CMS panel
-- The **Top Selling Items** section uses the existing `popularity=bestseller` query (sorted by orderItems count)
-- The **Newest Arrivals** section uses `popularity=new` (sorted by createdAt desc)
-- The **Trending Now** section uses `popularity=trending` (sorted by orderItems count + wishlists count)
+- After deploying, go to Admin Panel CMS → Home page and click **"Reset & Seed"** to auto-create the new sections
+- For **Upgrade Banner images**: in the CMS, paste comma-separated image URLs (e.g., `https://img1.jpg, https://img2.jpg, https://img3.jpg`). Each URL can optionally include a link by appending `\|URL` (e.g., `https://img1.jpg\|/shop`)
+- All sections are fully toggleable, reorderable, and configurable from the Admin Panel
