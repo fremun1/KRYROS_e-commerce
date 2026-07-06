@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { fetchProductById, fetchRelatedProducts, fetchStoreStatus } from "@/lib/api";
+import { useRecentlyViewedStore } from "@/store/recentlyViewedStore";
 import type { Product } from "@/lib/api";
 import { formatDeliveryDuration, formatDeliveryWindow, resolveDeliveryWindow } from "@/lib/delivery";
 import { useCartStore } from "@/store/cartStore";
@@ -187,6 +188,15 @@ export default function ProductPage() {
       <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
     </div>
   );
+
+  const addProduct = useRecentlyViewedStore((s) => s.addProduct);
+
+  // Track this product in recently viewed
+  useEffect(() => {
+    if (product) {
+      addProduct(product);
+    }
+  }, [product]);
 
   if (!product) return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-background p-6 text-center">

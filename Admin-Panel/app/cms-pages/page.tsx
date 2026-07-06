@@ -257,6 +257,34 @@ const SECTION_FIELDS: Record<string, Array<{ key: string; label: string; type: s
     { key: 'ctaLink', label: 'Button Link — e.g. /shop', type: 'text', icon: 'link' },
     { key: 'limit', label: 'Max Products to Display (default: 8)', type: 'text', icon: 'type' },
   ],
+  'Top Selling': [
+    { key: 'title', label: 'Section Title', type: 'text', icon: 'type' },
+    { key: 'ctaText', label: 'Button Text — e.g. View All', type: 'text', icon: 'mouse' },
+    { key: 'ctaLink', label: 'Button Link — e.g. /shop', type: 'text', icon: 'link' },
+    { key: 'limit', label: 'Max Products to Display (default: 8)', type: 'text', icon: 'type' },
+    { key: 'scroll', label: 'Scroll Mode (horizontal scroll on desktop)', type: 'select', options: ['true', 'false'] },
+  ],
+  'Newest Arrivals': [
+    { key: 'title', label: 'Section Title', type: 'text', icon: 'type' },
+    { key: 'ctaText', label: 'Button Text — e.g. View All', type: 'text', icon: 'mouse' },
+    { key: 'ctaLink', label: 'Button Link — e.g. /shop', type: 'text', icon: 'link' },
+    { key: 'limit', label: 'Max Products to Display (default: 8)', type: 'text', icon: 'type' },
+    { key: 'scroll', label: 'Scroll Mode (horizontal scroll on desktop)', type: 'select', options: ['true', 'false'] },
+  ],
+  'Best Sellers': [
+    { key: 'title', label: 'Section Title', type: 'text', icon: 'type' },
+    { key: 'ctaText', label: 'Button Text — e.g. View All', type: 'text', icon: 'mouse' },
+    { key: 'ctaLink', label: 'Button Link — e.g. /shop', type: 'text', icon: 'link' },
+    { key: 'limit', label: 'Max Products to Display (default: 8)', type: 'text', icon: 'type' },
+    { key: 'scroll', label: 'Scroll Mode (horizontal scroll on desktop)', type: 'select', options: ['true', 'false'] },
+  ],
+  'Trending': [
+    { key: 'title', label: 'Section Title', type: 'text', icon: 'type' },
+    { key: 'ctaText', label: 'Button Text — e.g. View All', type: 'text', icon: 'mouse' },
+    { key: 'ctaLink', label: 'Button Link — e.g. /shop', type: 'text', icon: 'link' },
+    { key: 'limit', label: 'Max Products to Display (default: 8)', type: 'text', icon: 'type' },
+    { key: 'scroll', label: 'Scroll Mode (horizontal scroll on desktop)', type: 'select', options: ['true', 'false'] },
+  ],
 };
 const PAGE_SECTION_NAME: Record<string, string> = {
   MembersBanner: 'Members Banner',
@@ -392,7 +420,7 @@ const INITIAL_PAGES: CmsPage[] = [
 ];
 
 const EMPTY_PAGE_FORM = { title: '', slug: '', status: 'Published' };
-const ADD_SECTION_NAMES = ['Hero Banner','Promo Banner','Promo Banners','Featured Products','Promotions','Newsletter','Company Story','Team','Mission & Vision','Contact Form','Location Map','Business Hours','Terms Text','Policy Text','Products Grid','Sale Banner','Category Promo Banners','Upgrade Banner','Members Banner','Shop Filters','Product Grid','Wholesale Hero','Wholesale Features','Get Now Hero','Get Now Features','Page Hero','FAQ Accordion','Product Gallery','Related Products','Testimonials','Flash Sale','Trust Badges','Custom Section'];
+const ADD_SECTION_NAMES = ['Hero Banner','Promo Banner','Promo Banners','Promotions','Newsletter','Company Story','Team','Mission & Vision','Contact Form','Location Map','Business Hours','Terms Text','Policy Text','Products Grid','Sale Banner','Category Promo Banners','Upgrade Banner','Members Banner','Shop Filters','Product Grid','Wholesale Hero','Wholesale Features','Get Now Hero','Get Now Features','Page Hero','FAQ Accordion','Product Gallery','Related Products','Testimonials','Flash Sale','Trust Badges','Top Selling','Newest Arrivals','Best Sellers','Trending','Custom Section'];
 
 // FileUpload is now the shared CloudinaryUpload component
 
@@ -483,12 +511,13 @@ function CMSContent() {
         const HP_NAME: Record<string, string> = {
           HeroSlider: 'Hero Slider', Brands: 'Featured Brands', TrustBadges: 'Trust Badges',
           CategorySection: 'Category Section', CategoriesGrid: 'Category Section',
-          FeaturedProducts: 'Featured Products',
           FlashSale: 'Flash Sale', PromoBanners: 'Promo Banners',
           promo_banners: 'Category Promo Banners',
           CategoryPromoBanners: 'Category Promo Banners', ProductSection: 'Products Section',
           RecommendedProducts: 'Recommended For You',
-          RecentlyViewed: 'Recently Viewed', UpgradeBanner: 'Upgrade Banner',
+          RecentlyViewed: 'What You Viewed', UpgradeBanner: 'Upgrade Banner',
+          TopSelling: 'Top Selling', NewestArrivals: 'Newest Arrivals',
+          BestSellers: 'Best Sellers', Trending: 'Trending',
         };
         const cmsPages: CmsPage[] = await Promise.all(apiPages.map(async (p: any) => {
           const isHome = p.slug === '/' || p.slug === 'home';
@@ -718,10 +747,13 @@ function CMSContent() {
 
   const HP_SECTION_TYPE: Record<string, string> = {
     'Hero Slider': 'HeroSlider', 'Featured Brands': 'Brands', 'Trust Badges': 'TrustBadges',
-    'Category Section': 'CategorySection', 'Featured Products': 'FeaturedProducts',
+    'Category Section': 'CategoriesGrid',
     'Flash Sale': 'FlashSale', 'Promo Banners': 'PromoBanners', 'Promo Banner': 'promo_banners',
     'Category Promo Banners': 'CategoryPromoBanners', 'Products Section': 'ProductSection',
-    'Recently Viewed': 'RecentlyViewed', 'Upgrade Banner': 'UpgradeBanner',
+    'What You Viewed': 'RecentlyViewed', 'Recently Viewed': 'RecentlyViewed', 'Upgrade Banner': 'UpgradeBanner',
+    'Top Selling': 'TopSelling', 'Newest Arrivals': 'NewestArrivals',
+    'Best Sellers': 'BestSellers', 'Trending': 'Trending',
+    'Recommended For You': 'RecommendedProducts',
   };
   const _apiCreate = (pageId: string, secName: string, content: SectionData, mediaUrl?: string) => {
     if (_isHome(pageId)) {
@@ -736,6 +768,24 @@ function CMSContent() {
         if (secName === 'Flash Sale') {
           homepagePayload.title = content.title || 'Flash Sales';
           homepagePayload.linkText = content.ctaText || 'See All';
+          homepagePayload.link = content.ctaLink || '/shop';
+        } else if (secName === 'What You Viewed') {
+          homepagePayload.title = content.title || 'What You Viewed';
+        } else if (secName === 'Top Selling') {
+          homepagePayload.title = content.title || 'Top Selling Items';
+          homepagePayload.linkText = content.ctaText || 'View All';
+          homepagePayload.link = content.ctaLink || '/shop';
+        } else if (secName === 'Newest Arrivals') {
+          homepagePayload.title = content.title || 'Newest Arrivals';
+          homepagePayload.linkText = content.ctaText || 'View All';
+          homepagePayload.link = content.ctaLink || '/shop';
+        } else if (secName === 'Best Sellers') {
+          homepagePayload.title = content.title || 'Best Sellers';
+          homepagePayload.linkText = content.ctaText || 'View All';
+          homepagePayload.link = content.ctaLink || '/shop';
+        } else if (secName === 'Trending') {
+          homepagePayload.title = content.title || 'Trending Now';
+          homepagePayload.linkText = content.ctaText || 'View All';
           homepagePayload.link = content.ctaLink || '/shop';
         }
         createCmsHomepageSection(homepagePayload).catch(() => {});

@@ -109,17 +109,21 @@ export class CMSService {
 
   async seedHomePageSections() {
     // Sections that match the current User-UI frontend exactly:
-    // 1. HeroSection       → type: HeroSlider  (reads from cms_banners via /api/cms/banners)
-    // 2. BrandsSection     → type: Brands       (reads from /api/brands)
-    // 3. TrustBadges       → type: TrustBadges  (reads from site-config/trust-badges)
-    // 4. CategorySection   → type: CategoriesGrid (reads from /api/categories)
-    // 5. FlashSaleSection  → type: FlashSale    (reads flash-sale products)
-    // 6. UpgradeBanner     → type: UpgradeBanner (reads from site-config/upgrade-banner)
-    // 7. PromoBanners      → type: PromoBanners  (reads from cms_banners filtered by tag)
-    // 8. FeaturedProductsSection → type: FeaturedProducts
-    // 9. CategoryPromoBanners    → type: promo_banners (fetched via homepage-sections?type=promo_banners)
-    // 10. RecentlyViewedSection  → type: RecentlyViewed (client-side, localStorage)
-    // 11. ProductSection("Recommended For You") → type: RecommendedProducts
+    // 1. HeroSection       → type: HeroSlider       (reads from cms_banners via /api/cms/banners)
+    // 2. BrandsSection     → type: Brands           (reads from /api/brands)
+    // 3. TrustBadges       → type: TrustBadges      (reads from site-config/trust-badges)
+    // 4. CategorySection   → type: CategoriesGrid    (reads from /api/categories)
+    // 5. FlashSaleSection  → type: FlashSale         (reads flash-sale products)
+    // 6. RecentlyViewed    → type: RecentlyViewed    (client-side, localStorage)
+    // 7. TopSelling        → type: TopSelling        (auto-picked by order count)
+    // 8. UpgradeBanner     → type: UpgradeBanner     (reads from site-config/upgrade-banner)
+    // 9. PromoBanners      → type: PromoBanners      (reads from cms_banners filtered by tag)
+    // 10. NewestArrivals    → type: NewestArrivals    (auto-picked by createdAt)
+    // 11. BestSellers       → type: BestSellers       (auto-picked by order count)
+    // 12. Trending          → type: Trending          (auto-picked by orderItems + wishlists)
+    // 13. CategoryPromoBanners → type: CategoryPromoBanners
+    // 14. RecommendedProducts → type: RecommendedProducts
+    // 15. Newsletter        → type: Newsletter        (popup subscription)
     const defaultSections = [
       {
         type: 'HeroSlider',
@@ -222,13 +226,58 @@ export class CMSService {
         }
       },
       {
-        type: 'FeaturedProducts',
-        order: 8,
+        type: 'RecentlyViewed',
+        order: 6,
         isActive: true,
-        title: 'Featured Products',
-        subtitle: 'Tabbed section — products marked isFeatured=true',
+        title: 'What You Viewed',
+        subtitle: 'Products you recently browsed — client-side (localStorage)',
         animation: 'slideUp',
-        config: { tabs: ['All', 'New Arrivals', 'Best Selling', 'Top Rated'], limit: 8 }
+        config: { limit: 8, clientSide: true }
+      },
+      {
+        type: 'TopSelling',
+        order: 7,
+        isActive: true,
+        title: 'Top Selling Items',
+        subtitle: 'Auto-picked based on sales performance — most ordered products',
+        animation: 'slideUp',
+        config: { limit: 8, popularity: 'bestseller', scroll: true }
+      },
+      {
+        type: 'NewestArrivals',
+        order: 9,
+        isActive: true,
+        title: 'Newest Arrivals',
+        subtitle: 'The latest products added to our store',
+        animation: 'slideUp',
+        config: { limit: 8, popularity: 'new', scroll: true }
+      },
+      {
+        type: 'BestSellers',
+        order: 10,
+        isActive: true,
+        title: 'Best Sellers',
+        subtitle: 'Our most popular products',
+        animation: 'slideUp',
+        config: { limit: 8, popularity: 'bestseller', scroll: true }
+      },
+      {
+        type: 'Trending',
+        order: 11,
+        isActive: true,
+        title: 'Trending Now',
+        subtitle: 'Hot products right now',
+        animation: 'slideUp',
+        config: { limit: 8, popularity: 'trending', scroll: true }
+      },
+      {
+        type: 'CategoryPromoBanners',
+        order: 12,
+        isActive: true,
+        title: 'Category Deals',
+        subtitle: 'Special category promotions',
+        animation: 'slideUp',
+        config: {}
       },
       {
         type: 'promo_banners',
@@ -305,15 +354,6 @@ export class CMSService {
           gradient: 'linear-gradient(135deg, #7c1d1d 0%, #b91c1c 50%, #ef4444 100%)',
           emoji: '⚡'
         }
-      },
-      {
-        type: 'RecentlyViewed',
-        order: 13,
-        isActive: true,
-        title: 'Recently Viewed',
-        subtitle: 'Products you recently browsed — client-side (localStorage)',
-        animation: 'slideUp',
-        config: { limit: 8, clientSide: true }
       },
       {
         type: 'RecommendedProducts',
