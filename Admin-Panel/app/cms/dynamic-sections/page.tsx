@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import AdminShell from '@/components/admin/admin-shell';
 import PageHeader from '@/components/admin/page-header';
 import { Modal, ConfirmDialog, FormField, ModalFooter } from '@/components/admin/modal';
+import { useTheme } from '@/contexts/theme-context';
 import {
   Plus, Edit, Trash2, GripVertical, Eye, EyeOff, ChevronDown,
   Zap, Grid3x3, Image as ImageIcon, ShoppingBag, Users, TrendingUp
@@ -10,8 +11,25 @@ import {
 import toast from 'react-hot-toast';
 import { getCmsSections, createCmsSection, updateCmsSection, deleteCmsSection, reorderCmsSections } from '@/lib/api';
 
+type SectionField = {
+  key: string;
+  label: string;
+  type: 'text' | 'number' | 'datetime' | 'select' | 'color' | 'file';
+  default?: string | number;
+  options?: string[];
+};
+
+type SectionTypeConfig = {
+  label: string;
+  icon: any;
+  description: string;
+  color: string;
+  bgColor: string;
+  fields: SectionField[];
+};
+
 // Section type definitions with their configuration schemas
-const SECTION_TYPES: Record<string, any> = {
+const SECTION_TYPES: Record<string, SectionTypeConfig> = {
   FlashSale: {
     label: 'Flash Sale',
     icon: Zap,
@@ -101,9 +119,16 @@ const PAGES = [
 ];
 
 export default function DynamicSectionsPage() {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+  const border = isDark ? '#1E293B' : '#E2E8F0';
+  const textMain = isDark ? '#FFFFFF' : '#0F172A';
+  const textMuted = isDark ? '#8E9AAF' : '#64748B';
+  const surface = isDark ? '#0D1523' : '#FFFFFF';
   const [sections, setSections] = useState<any[]>([]);
   const [selectedPage, setSelectedPage] = useState('home');
   const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [showTypeSelector, setShowTypeSelector] = useState(false);
   const [selectedType, setSelectedType] = useState<string | null>(null);
@@ -160,6 +185,7 @@ export default function DynamicSectionsPage() {
 
   const handleSaveSection = async () => {
     try {
+      setSaving(true);
       if (editingSection) {
         await updateCmsSection(editingSection.id, formData);
         toast.success('Section updated successfully');
@@ -172,6 +198,8 @@ export default function DynamicSectionsPage() {
     } catch (error) {
       toast.error('Failed to save section');
       console.error(error);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -331,7 +359,7 @@ export default function DynamicSectionsPage() {
 
       {/* Type Selector Modal */}
       {showTypeSelector && (
-        <Modal isOpen={showTypeSelector} onClose={() => setShowTypeSelector(false)} title="Select Section Type">
+        <Modal open={showTypeSelector} onClose={() => setShowTypeSelector(false)} title="Select Section Type">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-96 overflow-y-auto">
             {Object.entries(SECTION_TYPES).map(([key, config]) => {
               const Icon = config.icon;
@@ -353,7 +381,7 @@ export default function DynamicSectionsPage() {
 
       {/* Configuration Modal */}
       {showModal && currentType && (
-        <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={`${editingSection ? 'Edit' : 'Create'} ${currentType.label}`}>
+        <Modal open={showModal} onClose={() => setShowModal(false)} title={`${editingSection ? 'Edit' : 'Create'} ${currentType.label}`}>
           <div className="space-y-4 max-h-96 overflow-y-auto">
             {/* Common Fields */}
             <FormField
@@ -361,28 +389,48 @@ export default function DynamicSectionsPage() {
               value={formData.name || ''}
               onChange={(value) => setFormData({ ...formData, name: value })}
               placeholder="e.g., Homepage Flash Sales"
+              isDark={isDark}
+              border={border}
+              textMain={textMain}
+              textMuted={textMuted}
+              surface={surface}
             />
             <FormField
               label="Display Title"
               value={formData.title || ''}
               onChange={(value) => setFormData({ ...formData, title: value })}
               placeholder="Title shown to customers"
+              isDark={isDark}
+              border={border}
+              textMain={textMain}
+              textMuted={textMuted}
+              surface={surface}
             />
             <FormField
               label="Subtitle"
               value={formData.subtitle || ''}
               onChange={(value) => setFormData({ ...formData, subtitle: value })}
               placeholder="Optional subtitle"
+              isDark={isDark}
+              border={border}
+              textMain={textMain}
+              textMuted={textMuted}
+              surface={surface}
             />
             <FormField
               label="Dedicated Page Slug"
               value={formData.dedicatedPageSlug || ''}
               onChange={(value) => setFormData({ ...formData, dedicatedPageSlug: value })}
               placeholder="e.g., flash-sales (for /shop/flash-sales)"
+              isDark={isDark}
+              border={border}
+              textMain={textMain}
+              textMuted={textMuted}
+              surface={surface}
             />
 
             {/* Type-Specific Fields */}
-            {typeFields.map(field => (
+            {typeFields.map((field: SectionField) => (
               <div key={field.key}>
                 {field.type === 'text' && (
                   <FormField
@@ -392,7 +440,12 @@ export default function DynamicSectionsPage() {
                       ...formData,
                       config: { ...formData.config, [field.key]: value }
                     })}
-                    placeholder={field.default}
+                    placeholder={field.default != null ? String(field.default) : undefined}
+                    isDark={isDark}
+                    border={border}
+                    textMain={textMain}
+                    textMuted={textMuted}
+                    surface={surface}
                   />
                 )}
                 {field.type === 'number' && (
@@ -404,6 +457,11 @@ export default function DynamicSectionsPage() {
                       ...formData,
                       config: { ...formData.config, [field.key]: parseInt(value) }
                     })}
+                    isDark={isDark}
+                    border={border}
+                    textMain={textMain}
+                    textMuted={textMuted}
+                    surface={surface}
                   />
                 )}
                 {field.type === 'select' && (
@@ -432,6 +490,11 @@ export default function DynamicSectionsPage() {
                       ...formData,
                       config: { ...formData.config, [field.key]: value }
                     })}
+                    isDark={isDark}
+                    border={border}
+                    textMain={textMain}
+                    textMuted={textMuted}
+                    surface={surface}
                   />
                 )}
                 {field.type === 'color' && (
@@ -464,8 +527,13 @@ export default function DynamicSectionsPage() {
             </div>
           </div>
           <ModalFooter
-            onSave={handleSaveSection}
-            onCancel={() => setShowModal(false)}
+            onClose={() => setShowModal(false)}
+            onSubmit={handleSaveSection}
+            loading={saving}
+            submitLabel={editingSection ? 'Save Changes' : 'Create Section'}
+            isDark={isDark}
+            border={border}
+            textMain={textMain}
           />
         </Modal>
       )}
