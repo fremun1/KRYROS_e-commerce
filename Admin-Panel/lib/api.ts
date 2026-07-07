@@ -218,6 +218,8 @@ export const updateCmsSection = (id: string, data: Record<string, unknown>) =>
   api.put(`/api/cms/sections/${id}`, data);
 export const deleteCmsSection = (id: string) =>
   api.delete(`/api/cms/sections/${id}`);
+export const reorderCmsSections = (pageSlug: string, idsInOrder: string[]) =>
+  api.post("/api/cms/sections/reorder", { pageSlug, idsInOrder });
 export const seedCmsSections = () =>
   api.post("/api/cms/sections/seed");
 export const resetSeedCmsSections = (slug: string) =>

@@ -8,7 +8,7 @@ import {
   Zap, Grid3x3, Image as ImageIcon, ShoppingBag, Users, TrendingUp
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { getCmsSections, createCmsSection, updateCmsSection, deleteCmsSection } from '@/lib/api';
+import { getCmsSections, createCmsSection, updateCmsSection, deleteCmsSection, reorderCmsSections } from '@/lib/api';
 
 // Section type definitions with their configuration schemas
 const SECTION_TYPES: Record<string, any> = {
@@ -119,8 +119,8 @@ export default function DynamicSectionsPage() {
   const fetchSections = async () => {
     try {
       setLoading(true);
-      const data = await getCmsSections(selectedPage);
-      setSections(data || []);
+      const response = await getCmsSections(selectedPage);
+      setSections(response.data || []);
     } catch (error) {
       toast.error('Failed to load sections');
       console.error(error);
@@ -227,7 +227,7 @@ export default function DynamicSectionsPage() {
     // Call reorder API
     try {
       const idsInOrder = newSections.map(s => s.id);
-      // await reorderSections(selectedPage, idsInOrder);
+      await reorderCmsSections(selectedPage, idsInOrder);
       toast.success('Sections reordered');
     } catch (error) {
       toast.error('Failed to reorder sections');
