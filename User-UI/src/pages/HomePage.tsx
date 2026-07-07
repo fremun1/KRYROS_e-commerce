@@ -29,6 +29,7 @@ export default function HomePage() {
       {/* 2. Top Brands */}
       <BrandsSection />
       <TrustBadges />
+      <BrandsSection />
 
       {/* 3. Category cards */}
       <CategorySection />

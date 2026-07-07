@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { API_BASE } from "@/lib/api";
+import { fetchSiteConfig } from "@/lib/api";
 
 interface CmsBrand {
   name: string;
@@ -16,11 +16,9 @@ export default function BrandsSection() {
   const lastTimeRef = useRef(0);
 
   useEffect(() => {
-    fetch(`${API_BASE}/api/cms/site-config/trusted-brands`, { cache: "no-store" })
-      .then((r) => r.ok ? r.json() : null)
-      .then((d) => {
-        if (!d) return;
-        const v = d?.value;
+    fetchSiteConfig<any>("trusted-brands")
+      .then((v) => {
+        if (!v) return;
         const raw: any[] = Array.isArray(v) ? v : Array.isArray(v?.items) ? v.items : [];
         if (raw.length > 0) {
           setBrands(raw.map((b: any) => ({
