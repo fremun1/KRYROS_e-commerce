@@ -244,7 +244,7 @@ export default function DynamicSectionsPage() {
         <PageHeader
           title="Dynamic Sections Manager"
           subtitle="Create, configure, and manage product sections across your store"
-          icon={<Grid3x3 className="w-8 h-8" />}
+          icon={Grid3x3}
         />
 
         {/* Page Selector */}
