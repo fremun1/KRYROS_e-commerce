@@ -33,6 +33,7 @@ import { NewsletterModule } from './newsletter/newsletter.module';
 import { PaymentConfigModule } from './payment-config/payment-config.module';
 import { PaymentLinksModule } from './payment-links/payment-links.module';
 
+
 const logger = new Logger('AppModule');
 
 /**
@@ -124,7 +125,7 @@ function buildThrottlerConfig() {
     NewsletterModule,
     PaymentConfigModule,
     PaymentLinksModule,
-  ],
+    ],
   providers: [
     {
       provide: APP_GUARD,

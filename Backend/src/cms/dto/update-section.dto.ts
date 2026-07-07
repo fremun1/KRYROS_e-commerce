@@ -29,4 +29,16 @@ export class UpdateSectionDto {
   @IsInt()
   @Min(0)
   order?: number;
+
+  @IsOptional()
+  @IsString()
+  dedicatedPageSlug?: string;
+
+  @IsOptional()
+  @IsString()
+  name?: string;
+
+  @IsOptional()
+  @IsString()
+  description?: string;
 }

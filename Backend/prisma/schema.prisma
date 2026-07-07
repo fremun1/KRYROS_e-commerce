@@ -748,6 +748,7 @@ model CMSSection {
   pageName        String?
   pageSlug        String?
   textColor       String?
+  dedicatedPageSlug String?
 
   @@index([pageSlug])
   @@map("cms_sections")
@@ -1400,3 +1401,5 @@ model DirectPayment {
 
   @@map("direct_payments")
 }
+
+

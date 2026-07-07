@@ -743,6 +743,17 @@ export class CMSService {
     return this.prisma.cMSSection.delete({ where: { id } });
   }
 
+  async reorderSections(pageSlug: string, idsInOrder: string[]) {
+    const updates = idsInOrder.map((id, index) =>
+      this.prisma.cMSSection.update({
+        where: { id },
+        data: { order: index },
+      }),
+    );
+    await Promise.all(updates);
+    return { success: true, message: 'Sections reordered successfully' };
+  }
+
   async seedSections() {
     // Ensure a Categories Grid section exists and enabled
     const section = await this.prisma.cMSSection.findFirst({

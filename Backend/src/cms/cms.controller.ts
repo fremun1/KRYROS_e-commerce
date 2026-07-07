@@ -195,6 +195,15 @@ export class CMSController {
     return this.cmsService.resetAndSeedSectionsBySlug(body.slug);
   }
 
+  @Post('sections/reorder')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Reorder sections for a given pageSlug' })
+  reorderSections(@Body() body: { pageSlug: string; idsInOrder: string[] }) {
+    return this.cmsService.reorderSections(body.pageSlug, body.idsInOrder);
+  }
+
   @Get('pages/:slug')
   @ApiOperation({ summary: 'Get CMS page by slug' })
   getPage(@Param('slug') slug: string) {
