@@ -498,37 +498,7 @@ function WalletPaymentsContent() {
     }
   };
 
-  const openMethodModal = (method?: PayMethod) => {
-    setEditingMethod(method || null);
-    setMethodForm({
-      name: method?.name || '',
-      type: method?.type || 'mobile_wallet',
-      isEnabled: method?.isEnabled ?? true,
-    });
-    setShowMethodModal(true);
-  };
 
-  const saveMethod = async () => {
-    if (!methodForm.name.trim()) {
-      toast.error('Method name is required');
-      return;
-    }
-    try {
-      if (editingMethod) {
-        await updatePaymentMethod(editingMethod.id, methodForm);
-        toast.success('Payment method updated');
-      } else {
-        await createPaymentMethod(methodForm);
-        toast.success('Payment method added');
-      }
-      setShowMethodModal(false);
-      setEditingMethod(null);
-      setMethodForm({ name: '', type: 'mobile_wallet', isEnabled: true });
-      fetchData();
-    } catch {
-      toast.error('Failed to save payment method');
-    }
-  };
 
   const handleDeleteMethod = async (method: PayMethod) => {
     if (!confirm(`Delete "${method.name}" and all of its providers?`)) return;
