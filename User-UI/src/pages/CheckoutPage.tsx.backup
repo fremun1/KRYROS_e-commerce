@@ -343,24 +343,11 @@ export default function CheckoutPage() {
     return "CARD";
   };
 
-  // Calculate proper ZMW amount for payment gateway
-  const calculateGatewayTotal = () => {
-    const selectedRate = selectedCurrency.exchangeRate || 1;
-    const zmwCurrency = allCurrencies.find((item) => item.code === "ZMW");
-    const zmwRate = zmwCurrency?.exchangeRate || 1;
-    if (selectedCurrency.code === "ZMW") {
-      return total; // Already in ZMW
-    }
-    // Convert: USD amount = total / selectedRate, then USD to ZMW = * zmwRate
-    const usdAmount = total / selectedRate;
-    return Math.round(usdAmount * zmwRate * 100) / 100;
-  };
-
-  const buildOrderPayload = (backendPaymentMethod: string) => ({
+  const buildOrderPayload = (backendPaymentMethod: string, totalZMW: number) => ({
     items: cartItems.map((item) => ({ productId: item.id, quantity: item.qty })),
     paymentMethod: backendPaymentMethod,
     ...(openMethod === "mobile_wallet" && mmPhone ? { paymentPhone: mmPhone } : {}),
-    totalZMW: calculateGatewayTotal(),
+    totalZMW: Math.round(totalZMW * 100) / 100,
     currencyCode: selectedCurrency.code,
     currencySymbol: selectedCurrency.symbol,
     exchangeRate: selectedCurrency.exchangeRate,
@@ -391,7 +378,8 @@ export default function CheckoutPage() {
     setIsSubmitting(true); setOrderError(null);
     try {
       const headers = { "Content-Type": "application/json", ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}) };
-      const res = await fetch(`${API_BASE}/api/orders`, { method: "POST", headers, body: JSON.stringify(buildOrderPayload("MOBILE_MONEY")) });
+      const totalLocal = total * (selectedCurrency.exchangeRate || 1);
+      const res = await fetch(`${API_BASE}/api/orders`, { method: "POST", headers, body: JSON.stringify(buildOrderPayload("MOBILE_MONEY", totalLocal)) });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Failed to place order");
       
@@ -400,8 +388,7 @@ export default function CheckoutPage() {
       setSavedCartItems([...cartItems]);
       setMmPhase("initializing");
       
-      const phoneWithDialCode = `${dialCode}${mmPhone}`;
-      const initRes = await fetch(`${API_BASE}/api/payments/initialize`, { method: "POST", headers, body: JSON.stringify({ orderId, phone: phoneWithDialCode, countryCode: detectedCountryCode, amount: Math.round(calculateGatewayTotal() * 100) / 100 }) });
+      const initRes = await fetch(`${API_BASE}/api/payments/initialize`, { method: "POST", headers, body: JSON.stringify({ orderId, phone: `260${mmPhone.replace(/^0/, "")}`, amount: Math.round(totalLocal * 100) / 100 }) });
       if (!initRes.ok) throw new Error("Payment init failed");
       
       setMmPhase("waiting");
@@ -432,8 +419,8 @@ export default function CheckoutPage() {
     setIsSubmitting(true); setOrderError(null);
     try {
       const headers = { "Content-Type": "application/json", ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}) };
-      
-      const res = await fetch(`${API_BASE}/api/orders`, { method: "POST", headers, body: JSON.stringify(buildOrderPayload(getBackendPaymentMethod(openMethod))) });
+      const totalLocal = total * (selectedCurrency.exchangeRate || 1);
+      const res = await fetch(`${API_BASE}/api/orders`, { method: "POST", headers, body: JSON.stringify(buildOrderPayload(getBackendPaymentMethod(openMethod), totalLocal)) });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Failed");
       

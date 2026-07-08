@@ -15,40 +15,6 @@ export class PaymentsService {
   private readonly prodUrl = 'https://543.cgrate.co.zm/Konik/KonikWs';
   private readonly valid543PhoneRegex = /^(260)(97|77|57|76|96|95|75)\d{7}$/;
 
-  // Country-specific phone validation patterns
-  private readonly countryPhonePatterns: Record<string, { regex: RegExp; countryCode: string; description: string }> = {
-    ZM: {
-      regex: /^(260)(97|77|57|76|96|95|75)\d{7}$/,
-      countryCode: '260',
-      description: 'Zambian mobile number (260 + 9-digit number)',
-    },
-    NG: {
-      regex: /^(234)(70|71|72|73|74|75|76|77|78|79|80|81|90|91)\d{8}$/,
-      countryCode: '234',
-      description: 'Nigerian mobile number (234 + 10-digit number)',
-    },
-    GH: {
-      regex: /^(233)(20|24|25|26|27|28|50|51|52|53|54|55|56|57|58|59)\d{7}$/,
-      countryCode: '233',
-      description: 'Ghanaian mobile number (233 + 9-digit number)',
-    },
-    KE: {
-      regex: /^(254)(7)\d{8}$/,
-      countryCode: '254',
-      description: 'Kenyan mobile number (254 + 9-digit number)',
-    },
-    TZ: {
-      regex: /^(255)(6|7)\d{8}$/,
-      countryCode: '255',
-      description: 'Tanzanian mobile number (255 + 9-digit number)',
-    },
-    UG: {
-      regex: /^(256)(7)\d{8}$/,
-      countryCode: '256',
-      description: 'Ugandan mobile number (256 + 9-digit number)',
-    },
-  };
-
   constructor(
     private prisma: PrismaService,
     private configService: ConfigService,
@@ -67,76 +33,30 @@ export class PaymentsService {
     return `/track-payment/${encodeURIComponent(paymentNumber)}`;
   }
 
-  /**
-   * Normalize phone number for a specific country
-   * Supports multiple African countries with their respective phone formats
-   */
-  private normalizePhoneForCountry(phone: string, countryCode?: string): { formatted: string; country: string } {
+  private normalizePhoneFor543(phone: string) {
     let digits = String(phone || '').replace(/\D/g, '');
 
-    // Try to detect country from phone number if not provided
-    let detectedCountry = countryCode;
-
-    if (!detectedCountry) {
-      // Try to match against known country codes
-      for (const [country, pattern] of Object.entries(this.countryPhonePatterns)) {
-        const countryDialCode = pattern.countryCode;
-        if (digits.startsWith(countryDialCode)) {
-          detectedCountry = country;
-          break;
-        }
-      }
-    }
-
-    // If still not detected, default to Zambia for backward compatibility
-    if (!detectedCountry) {
-      detectedCountry = 'ZM';
-    }
-
-    const pattern = this.countryPhonePatterns[detectedCountry];
-    if (!pattern) {
-      throw new HttpException(
-        {
-          message: `Unsupported country code: ${detectedCountry}. Supported countries: ${Object.keys(this.countryPhonePatterns).join(', ')}`,
-        },
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-
-    // Normalize the phone number
-    if (digits.startsWith(pattern.countryCode)) {
-      // Already in international format
+    if (digits.startsWith('260')) {
+      // already in provider-required international format
     } else if (digits.startsWith('0')) {
-      // Local format starting with 0
-      digits = `${pattern.countryCode}${digits.substring(1)}`;
-    } else if (digits.length === 9 || digits.length === 10) {
-      // Just the local number without country code
-      digits = `${pattern.countryCode}${digits}`;
+      digits = `260${digits.substring(1)}`;
+    } else if (digits.length === 9) {
+      digits = `260${digits}`;
     } else {
-      // Try to prepend country code
-      digits = `${pattern.countryCode}${digits}`;
+      digits = `260${digits}`;
     }
 
-    // Validate against the country's pattern
-    if (!pattern.regex.test(digits)) {
+    if (!this.valid543PhoneRegex.test(digits)) {
       throw new HttpException(
         {
-          message: `Invalid ${detectedCountry} mobile number. ${pattern.description}. You provided: ${phone}`,
+          message:
+            'Invalid mobile money number. Use a Zambia mobile number like 097xxxxxxx or 26097xxxxxxx.',
         },
         HttpStatus.BAD_REQUEST,
       );
     }
 
-    return { formatted: digits, country: detectedCountry };
-  }
-
-  /**
-   * Normalize phone for 543 payment gateway (Zambia-specific)
-   * Kept for backward compatibility
-   */
-  private normalizePhoneFor543(phone: string) {
-    const { formatted } = this.normalizePhoneForCountry(phone, 'ZM');
-    return formatted;
+    return digits;
   }
 
   private log543Error(context: string, error: unknown) {
@@ -179,17 +99,17 @@ export class PaymentsService {
     };
   }
 
-  async process543Payment(orderId: string, phone: string, amountZMW: number, countryCode?: string) {
+  async process543Payment(orderId: string, phone: string, amountZMW: number) {
     const username = this.configService.get('CGRATE_USERNAME');
     const password = this.configService.get('CGRATE_PASSWORD');
     const transactionId = `KRYROS_${Date.now()}`;
     const paymentNumber = `ORD-${Date.now().toString(36).toUpperCase()}`;
 
+
     this.logger.log('=== Starting 543 Payment Process ===');
     this.logger.log(`Order ID: ${orderId}`);
     this.logger.log(`Phone (raw): ${phone}`);
     this.logger.log(`Amount (ZMW): ${amountZMW}`);
-    this.logger.log(`Country Code: ${countryCode || 'auto-detect'}`);
     this.logger.log(`Transaction ID: ${transactionId}`);
 
     if (!username || !password) {
@@ -198,17 +118,9 @@ export class PaymentsService {
       throw new HttpException({ message: errorMsg }, HttpStatus.SERVICE_UNAVAILABLE);
     }
 
-    // Normalize phone for the specified or detected country
-    let formattedPhone: string;
-    try {
-      const result = this.normalizePhoneForCountry(phone, countryCode);
-      formattedPhone = result.formatted;
-      this.logger.log(`Phone (normalized for ${result.country}): ${formattedPhone}`);
-    } catch (error) {
-      throw error;
-    }
-
+    const formattedPhone = this.normalizePhoneFor543(phone);
     const formattedAmount = Number(amountZMW).toFixed(2);
+    this.logger.log(`Phone (543 format): ${formattedPhone}`);
 
     const soapRequest = `<?xml version="1.0" encoding="UTF-8"?><soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:kon="http://konik.cgrate.com"><soapenv:Header><wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd" soapenv:mustUnderstand="1"><wsse:UsernameToken xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" wsu:Id="${username}"><wsse:Username>${username}</wsse:Username><wsse:Password Type="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText">${password}</wsse:Password></wsse:UsernameToken></wsse:Security></soapenv:Header><soapenv:Body><kon:processCustomerPayment><transactionAmount>${formattedAmount}</transactionAmount><customerMobile>${formattedPhone}</customerMobile><paymentReference>${transactionId}</paymentReference></kon:processCustomerPayment></soapenv:Body></soapenv:Envelope>`;
 
@@ -306,7 +218,6 @@ export class PaymentsService {
     customerEmail?: string,
     originalAmount?: number,
     originalCurrency?: string,
-    countryCode?: string,
   ) {
     this.logger.log(`=== Direct Payment (no order) for user: ${userId} ===`);
 
@@ -336,14 +247,13 @@ export class PaymentsService {
         metadata: {
           originalAmount: originalAmount || amountZMW,
           originalCurrency: originalCurrency || currency,
-          countryCode: countryCode,
         }
       },
     });
 
     this.logger.log(`Created direct payment record: ${directPayment.id} (${paymentNumber})`);
 
-    const result = await this.initiate543Direct(directPayment.id, phone, amountZMW, countryCode);
+    const result = await this.initiate543Direct(directPayment.id, phone, amountZMW);
     return {
       paymentId: directPayment.id,
       paymentNumber,
@@ -352,7 +262,7 @@ export class PaymentsService {
     };
   }
 
-  private async initiate543Direct(paymentId: string, phone: string, amountZMW: number, countryCode?: string) {
+  private async initiate543Direct(paymentId: string, phone: string, amountZMW: number) {
     const username = this.configService.get('CGRATE_USERNAME');
     const password = this.configService.get('CGRATE_PASSWORD');
     const transactionId = `KRYROS_DP_${Date.now()}`;
@@ -361,15 +271,8 @@ export class PaymentsService {
       throw new HttpException('Payment service not configured', HttpStatus.SERVICE_UNAVAILABLE);
     }
 
-    // Normalize phone for the specified or detected country
-    let formattedPhone: string;
-    try {
-      const result = this.normalizePhoneForCountry(phone, countryCode);
-      formattedPhone = result.formatted;
-      this.logger.log(`Direct payment phone (normalized for ${result.country}): ${formattedPhone}`);
-    } catch (error) {
-      throw error;
-    }
+    const formattedPhone = this.normalizePhoneFor543(phone);
+    this.logger.log(`Direct payment phone (543 format): ${formattedPhone}`);
 
     const soapRequest = `<?xml version="1.0" encoding="UTF-8"?><soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:kon="http://konik.cgrate.com"><soapenv:Header><wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd" soapenv:mustUnderstand="1"><wsse:UsernameToken xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" wsu:Id="${username}"><wsse:Username>${username}</wsse:Username><wsse:Password Type="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText">${password}</wsse:Password></wsse:UsernameToken></wsse:Security></soapenv:Header><soapenv:Body><kon:processCustomerPayment><transactionAmount>${Number(amountZMW).toFixed(2)}</transactionAmount><customerMobile>${formattedPhone}</customerMobile><paymentReference>${transactionId}</paymentReference></kon:processCustomerPayment></soapenv:Body></soapenv:Envelope>`;
 
@@ -418,7 +321,6 @@ export class PaymentsService {
     paymentLinkId?: string,
     originalAmount?: number,
     originalCurrency?: string,
-    countryCode?: string,
   ) {
     this.logger.log(`=== WhatsApp Direct Payment for user: ${userId}, ref: ${reference}`);
 
@@ -446,7 +348,6 @@ export class PaymentsService {
         metadata: {
           originalAmount: originalAmount || amountZMW,
           originalCurrency: originalCurrency || currency,
-          countryCode: countryCode,
         }
       },
     });
@@ -462,26 +363,206 @@ export class PaymentsService {
 
   async findAllDirect() {
     return this.prisma.directPayment.findMany({
+      include: {
+        user: { select: { firstName: true, lastName: true, email: true } },
+        paymentLink: { select: { name: true } },
+        order: { select: { orderNumber: true } },
+      },
       orderBy: { createdAt: 'desc' },
+      take: 200,
     });
   }
 
-  async findDirectById(id: string) {
-    return this.prisma.directPayment.findUnique({
-      where: { id },
+  async updateDirectPaymentStatus(paymentId: string, status: PaymentStatus, adminNotes?: string) {
+    const payment = await this.prisma.directPayment.findUnique({ where: { id: paymentId } });
+    if (!payment) {
+      throw new HttpException('Direct payment not found', HttpStatus.NOT_FOUND);
+    }
+
+    const updateData: Prisma.DirectPaymentUpdateInput = { status: status };
+    if (adminNotes) {
+      updateData.adminNotes = adminNotes;
+    }
+    if (status === 'PAID' && !payment.paidAt) {
+      updateData.paidAt = new Date();
+      updateData.receiptNumber = `REC-${Date.now().toString(36).toUpperCase()}`;
+    }
+
+    const updatedPayment = await this.prisma.directPayment.update({
+      where: { id: paymentId },
+      data: updateData,
     });
+
+    // If this direct payment is linked to an order, update the order status as well
+    if (updatedPayment.orderId) {
+      await this.prisma.order.update({
+        where: { id: updatedPayment.orderId },
+        data: {
+          paymentStatus: status,
+          status: status === 'PAID' ? OrderStatus.CONFIRMED : OrderStatus.PENDING,
+        },
+      });
+    }
+
+    // Send notification if payment is paid or failed
+    if (status === 'PAID' || status === 'FAILED') {
+      const user = updatedPayment.userId ? await this.prisma.user.findUnique({ where: { id: updatedPayment.userId } }) : null;
+      const customerName =
+        updatedPayment.customerName ||
+        [user?.firstName, user?.lastName].filter(Boolean).join(' ').trim() ||
+        'Customer';
+      const customerEmail = updatedPayment.customerEmail || user?.email;
+      const customerPhone = updatedPayment.paymentPhone || user?.phone;
+
+      if (customerEmail || customerPhone) {
+        this.notificationsService.sendPaymentStatusNotification({
+          email: customerEmail,
+          phone: customerPhone,
+          status: status,
+          amount: updatedPayment.amount.toNumber(),
+          currency: updatedPayment.currency,
+          paymentNumber: updatedPayment.paymentNumber,
+          paymentMethod: updatedPayment.paymentMethod || 'Direct Payment',
+          customerName: customerName,
+          receiptNumber: updatedPayment.receiptNumber,
+          trackingLink: updatedPayment.trackingLink,
+        });
+      }
+    }
+
+    return updatedPayment;
   }
 
-  async findDirectByPaymentNumber(paymentNumber: string) {
-    return this.prisma.directPayment.findUnique({
-      where: { paymentNumber },
+  async checkDirectStatus(paymentId: string) {
+    const payment = await this.prisma.directPayment.findFirst({
+      where: {
+        OR: [
+          { id: paymentId },
+          { paymentNumber: paymentId },
+          { order: { orderNumber: paymentId } },
+        ],
+      },
     });
+    if (!payment) return null;
+
+    // If it's a WhatsApp payment, status is manual
+    if (payment.paymentMethod === 'WHATSAPP') {
+      return this.formatDirectPaymentResponse(payment);
+    }
+
+    if (!payment.paymentReference) {
+      return this.formatDirectPaymentResponse(payment);
+    }
+
+    if (payment.status === 'PAID' || payment.status === 'FAILED') {
+      return this.formatDirectPaymentResponse(payment);
+    }
+
+    const username = this.configService.get('CGRATE_USERNAME');
+    const password = this.configService.get('CGRATE_PASSWORD');
+    const soapRequest = `<?xml version="1.0" encoding="UTF-8"?><soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:kon="http://konik.cgrate.com"><soapenv:Header><wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd" soapenv:mustUnderstand="1"><wsse:UsernameToken xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" wsu:Id="${username}"><wsse:Username>${username}</wsse:Username><wsse:Password Type="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText">${password}</wsse:Password></wsse:UsernameToken></wsse:Security></soapenv:Header><soapenv:Body><kon:queryCustomerPayment><paymentReference>${payment.paymentReference}</paymentReference></kon:queryCustomerPayment></soapenv:Body></soapenv:Envelope>`;
+
+    try {
+      const response = await axios.post(this.apiUrl, soapRequest, {
+        headers: { 'Content-Type': 'text/xml;charset=UTF-8', 'SOAPAction': '', 'Accept': 'text/xml' },
+      });
+
+      const parser = new XMLParser({ ignoreAttributes: true, removeNSPrefix: true });
+      const result = parser.parse(response.data);
+      const txReturn = result.Envelope?.Body?.queryCustomerPaymentResponse?.return;
+
+      if (txReturn) {
+        let newStatus = 'PENDING';
+        const code = String(txReturn.responseCode);
+        const msg = String(txReturn.responseMessage || '').toLowerCase();
+        const rawStatus = String(txReturn.status || '').toUpperCase();
+        
+        if (code === '0') {
+           if (rawStatus === 'FAILED' || msg.includes('fail') || msg.includes('cancel')) newStatus = 'FAILED';
+           else if (rawStatus === 'PENDING' || msg.includes('pending')) newStatus = 'PENDING';
+           else newStatus = 'PAID';
+        } else if (code !== '114') {
+           newStatus = 'FAILED';
+        }
+        
+        if (newStatus !== payment.status) {
+          const updateData: Prisma.DirectPaymentUpdateInput = { status: newStatus as PaymentStatus };
+          if (newStatus === 'PAID' && !payment.paidAt) {
+            updateData.paidAt = new Date();
+            updateData.receiptNumber = `REC-${Date.now().toString(36).toUpperCase()}`;
+          }
+          const updatedPayment = await this.prisma.directPayment.update({
+            where: { id: payment.id },
+            data: updateData,
+          });
+          return this.formatDirectPaymentResponse(updatedPayment, newStatus);
+        }
+        return this.formatDirectPaymentResponse(payment, newStatus);
+      }
+    } catch (error) {
+      this.log543Error('Status Check Error', error);
+    }
+    return this.formatDirectPaymentResponse(payment);
   }
 
-  async updateDirectPaymentStatus(id: string, status: PaymentStatus, paidAt?: Date) {
-    return this.prisma.directPayment.update({
-      where: { id },
-      data: { status, paidAt },
-    });
+  async checkStatus(orderId: string) {
+    const order = await this.prisma.order.findUnique({ where: { id: orderId } });
+    if (!order) return null;
+
+    // For order payments, we can also check the associated direct payment if it exists
+    const directPayment = await this.prisma.directPayment.findFirst({ where: { orderId: orderId } });
+    if (directPayment) {
+      // If there's a direct payment, its status is more authoritative for direct payment methods
+      return this.checkDirectStatus(directPayment.id);
+    }
+
+    if (!order.paymentReference) return null;
+
+    if (order.paymentStatus === 'PAID' || order.paymentStatus === 'FAILED') {
+      return { status: order.paymentStatus.toLowerCase() };
+    }
+
+    const username = this.configService.get('CGRATE_USERNAME');
+    const password = this.configService.get('CGRATE_PASSWORD');
+    const soapRequest = `<?xml version="1.0" encoding="UTF-8"?><soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:kon="http://konik.cgrate.com"><soapenv:Header><wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd" soapenv:mustUnderstand="1"><wsse:UsernameToken xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" wsu:Id="${username}"><wsse:Username>${username}</wsse:Username><wsse:Password Type="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText">${password}</wsse:Password></wsse:UsernameToken></wsse:Security></soapenv:Header><soapenv:Body><kon:queryCustomerPayment><paymentReference>${order.paymentReference}</paymentReference></kon:queryCustomerPayment></soapenv:Body></soapenv:Envelope>`;
+
+    try {
+      const response = await axios.post(this.apiUrl, soapRequest, {
+        headers: { 'Content-Type': 'text/xml;charset=UTF-8', 'SOAPAction': '', 'Accept': 'text/xml' },
+      });
+
+      const parser = new XMLParser({ ignoreAttributes: true, removeNSPrefix: true });
+      const result = parser.parse(response.data);
+      const txReturn = result.Envelope?.Body?.queryCustomerPaymentResponse?.return;
+
+      if (txReturn) {
+        let newStatus = 'PENDING';
+        const code = String(txReturn.responseCode);
+        const msg = String(txReturn.responseMessage || '').toLowerCase();
+        const rawStatus = String(txReturn.status || '').toUpperCase();
+        
+        if (code === '0') {
+           if (rawStatus === 'FAILED' || msg.includes('fail') || msg.includes('cancel')) newStatus = 'FAILED';
+           else if (rawStatus === 'PENDING' || msg.includes('pending')) newStatus = 'PENDING';
+           else newStatus = 'PAID';
+        } else if (code !== '114') {
+           newStatus = 'FAILED';
+        }
+        
+        if (newStatus !== order.paymentStatus) {
+          await this.prisma.order.update({
+            where: { id: orderId },
+            data: {
+              paymentStatus: newStatus as PaymentStatus,
+              status: newStatus === 'PAID' ? OrderStatus.CONFIRMED : OrderStatus.PENDING,
+            },
+          });
+        }
+        return { status: newStatus.toLowerCase() };
+      }
+    } catch (error) {
+      this.log543Error('Order Status Check Error', error);
+    }
+    return { status: order.paymentStatus.toLowerCase() };
   }
 }

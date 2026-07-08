@@ -205,7 +205,7 @@ export default function PayPage() {
   const [, navigate] = useLocation();
   const paymentLinkId = params?.linkId;
   const [step, setStep] = useState<1 | 2>(1);
-  const { selected: selectedCurrency, currencies: allCurrencies, setCurrency: setGlobalCurrency } = useCurrencyStore();
+  const { selected: selectedCurrency, currencies: allCurrencies, setCurrency: setGlobalCurrency, detectedCountryCode } = useCurrencyStore();
 
   const urlParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : new URLSearchParams();
   const urlAmount = urlParams.get("amount") || "";
@@ -316,10 +316,17 @@ export default function PayPage() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [dialCode, setDialCode] = useState("+260");
+
+  // Map country codes to dial codes
+  const dialCodeMap: Record<string, string> = {
+    'ZM': '+260', 'NG': '+234', 'GH': '+233', 'KE': '+254',
+    'TZ': '+255', 'UG': '+256', 'ZA': '+27', 'MW': '+265',
+  };
   const [showDialDrop, setShowDialDrop] = useState(false);
 
   useEffect(() => {
-    fetch(`${API_BASE}/api/payment-config/public`)
+    const countryParam = detectedCountryCode ? `?countryCode=${detectedCountryCode}` : '';
+    fetch(`${API_BASE}/api/payment-config/public${countryParam}`)
       .then(r => r.json())
       .then((data: any) => {
         const arr = (Array.isArray(data) ? data : data?.data ?? []) as PaymentConfigMethod[];
@@ -364,6 +371,13 @@ export default function PayPage() {
       if (rate) setFeeRate(Number(rate) / 100);
       const wa = arr.find((s: any) => s.key === 'whatsapp_number')?.value;
       if (wa && wa.trim()) setWhatsappNumber(wa.replace(/[^0-9]/g, ""));
+
+  // Update dial code when country is detected
+  useEffect(() => {
+    if (detectedCountryCode && dialCodeMap[detectedCountryCode]) {
+      setDialCode(dialCodeMap[detectedCountryCode]);
+    }
+  }, [detectedCountryCode]);
     }).catch(() => {});
   }, []);
 
@@ -477,7 +491,8 @@ export default function PayPage() {
         body: JSON.stringify({
           amount: gatewayTotal,
           currency: "ZMW",
-          phone: `260${mmPhone.replace(/^0/, "")}`,
+          phone: `${dialCode}${mmPhone}`,
+          countryCode: detectedCountryCode,
           note: note || linkedPaymentName || `Payment ${payRef}`,
           paymentLinkId,
           customerName: `${firstName} ${lastName}`.trim(),
@@ -519,6 +534,7 @@ export default function PayPage() {
           amount: gatewayTotal,
           currency: "ZMW",
           phone: `${dialCode}${phone}`,
+          countryCode: detectedCountryCode,
           note: note || linkedPaymentName || `Payment ${payRef}`,
           reference: payRef,
           paymentLinkId,
