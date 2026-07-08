@@ -977,6 +977,7 @@ model Country {
   paymentMethods  CountryPaymentMethod[]
   shippingZones   ShippingZone[]
   states          State[]
+  checkoutMethods CheckoutMethod[]
 
   @@map("countries")
 }
@@ -1127,9 +1128,11 @@ model CheckoutMethod {
   icon      String?
   sortOrder Int                @default(0)
   isEnabled Boolean            @default(true)
+  countryId String?
   createdAt DateTime           @default(now())
   updatedAt DateTime           @updatedAt
   providers CheckoutProvider[]
+  country   Country?           @relation(fields: [countryId], references: [id])
 
   @@map("checkout_methods")
 }
