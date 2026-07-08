@@ -14,7 +14,9 @@ export interface GeoLocationData {
 @Injectable()
 export class GeolocationService {
   private readonly logger = new Logger(GeolocationService.name);
-  private readonly PRIMARY_GEO_API = 'https://ipapi.co/json/';
+  // ipapi: https://ipapi.co/<ip>/json/
+  // ip-api: https://ip-api.com/json/<ip>
+  private readonly PRIMARY_GEO_API = 'https://ipapi.co';
   private readonly FALLBACK_GEO_API = 'https://ip-api.com/json/';
 
   /**
@@ -24,16 +26,18 @@ export class GeolocationService {
    * @returns GeoLocationData with country code and other location info
    */
   async detectCountryByIp(ipAddress: string): Promise<GeoLocationData | null> {
+    const normalizedIp = this.normalizeIp(ipAddress);
+
     // Validate IP format (basic check)
-    if (!this.isValidIp(ipAddress)) {
+    if (!this.isValidIp(normalizedIp)) {
       this.logger.warn(`Invalid IP address format: ${ipAddress}`);
       return null;
     }
 
     // Try primary provider
     try {
-      this.logger.debug(`Attempting geolocation for IP ${ipAddress} via primary provider`);
-      const response = await axios.get(`${this.PRIMARY_GEO_API}${ipAddress}`, {
+      this.logger.debug(`Attempting geolocation for IP ${normalizedIp} via primary provider`);
+      const response = await axios.get(`${this.PRIMARY_GEO_API}/${normalizedIp}/json/`, {
         timeout: 5000,
       });
 
@@ -54,8 +58,8 @@ export class GeolocationService {
 
     // Try fallback provider
     try {
-      this.logger.debug(`Attempting geolocation for IP ${ipAddress} via fallback provider`);
-      const response = await axios.get(`${this.FALLBACK_GEO_API}${ipAddress}`, {
+      this.logger.debug(`Attempting geolocation for IP ${normalizedIp} via fallback provider`);
+      const response = await axios.get(`${this.FALLBACK_GEO_API}${normalizedIp}`, {
         timeout: 5000,
       });
 
@@ -74,7 +78,7 @@ export class GeolocationService {
       this.logger.error(`Fallback geolocation provider failed: ${fallbackError.message}`);
     }
 
-    this.logger.warn(`Could not detect location for IP: ${ipAddress}`);
+    this.logger.warn(`Could not detect location for IP: ${normalizedIp}`);
     return null;
   }
 
@@ -89,7 +93,7 @@ export class GeolocationService {
     const forwarded = request.headers['x-forwarded-for'];
     if (forwarded) {
       // x-forwarded-for can contain multiple IPs, take the first one
-      return forwarded.split(',')[0].trim();
+      return this.normalizeIp(forwarded.split(',')[0].trim());
     }
 
     // Check other common proxy headers
@@ -99,7 +103,7 @@ export class GeolocationService {
                      request.connection.remoteAddress ||
                      request.ip;
 
-    return clientIp || 'unknown';
+    return this.normalizeIp(clientIp || 'unknown');
   }
 
   /**
@@ -123,5 +127,25 @@ export class GeolocationService {
     // IPv6 regex (simplified)
     const ipv6Regex = /^([\da-f]{0,4}:){2,7}[\da-f]{0,4}$/i;
     return ipv6Regex.test(ip);
+  }
+
+  /**
+   * Normalize common proxy / Node formats:
+   * - "::ffff:1.2.3.4"  -> "1.2.3.4"
+   * - remove surrounding brackets, trim spaces
+   */
+  private normalizeIp(ip: string): string {
+    if (!ip || typeof ip !== 'string') return 'unknown';
+    let value = ip.trim();
+
+    // In some setups request.ip can be "::ffff:1.2.3.4"
+    if (value.startsWith('::ffff:')) value = value.slice('::ffff:'.length);
+
+    // Strip brackets that might appear with IPv6 in some headers
+    if (value.startsWith('[') && value.endsWith(']')) {
+      value = value.slice(1, -1);
+    }
+
+    return value;
   }
 }

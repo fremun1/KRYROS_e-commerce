@@ -256,6 +256,18 @@ export default function CheckoutPage() {
       setPickupStations(list.filter((s: any) => s.isActive !== false).map(normalizePickupStation));
     }).catch(() => {});
 
+    fetchSettings().then(s => {
+      const arr = Array.isArray(s) ? s : (s as any)?.data || [];
+      const rate = arr.find((i: any) => i.key === 'processing_fee_rate')?.value;
+      if (rate) setFeeRate(Number(rate) / 100);
+      const wa = arr.find((i: any) => i.key === 'whatsapp_number')?.value;
+      if (wa) setWhatsappNumber(wa.replace(/[^0-9]/g, ""));
+    }).catch(() => {});
+  }, []);
+
+  // Fetch enabled payment methods once we know the detected country.
+  // If we fetch too early (before detection), the API returns "global" methods and Zambia-only methods may show everywhere.
+  useEffect(() => {
     const countryParam = detectedCountryCode ? `?countryCode=${detectedCountryCode}` : '';
     fetch(`${API_BASE}/api/payment-config/public${countryParam}`).then(r => r.json()).then(data => {
       const arr = (Array.isArray(data) ? data : data?.data ?? []) as PaymentConfigMethod[];
@@ -288,15 +300,7 @@ export default function CheckoutPage() {
       setMobileOptions([]);
       setOpenMethod(null);
     });
-
-    fetchSettings().then(s => {
-      const arr = Array.isArray(s) ? s : (s as any)?.data || [];
-      const rate = arr.find((i: any) => i.key === 'processing_fee_rate')?.value;
-      if (rate) setFeeRate(Number(rate) / 100);
-      const wa = arr.find((i: any) => i.key === 'whatsapp_number')?.value;
-      if (wa) setWhatsappNumber(wa.replace(/[^0-9]/g, ""));
-    }).catch(() => {});
-  }, []);
+  }, [detectedCountryCode]);
 
   useEffect(() => {
     setOrderError(null);
@@ -578,7 +582,7 @@ export default function CheckoutPage() {
               <div className="relative"><button onClick={() => setShowProviderDrop(!showProviderDrop)} className="w-full flex justify-between items-center px-4 py-3 border rounded-xl bg-background text-sm font-semibold">{selectedMobileOption?.label || "Select network"}<ChevronDown className={`w-4 h-4 transition-transform ${showProviderDrop ? "rotate-180" : ""}`} /></button>
                 {showProviderDrop && <div className="absolute top-full w-full mt-1 border rounded-xl bg-background shadow-xl z-10">{mobileOptions.map(option => <button key={`${option.providerName}-${option.networkName}`} onClick={() => { setMmProvider(option.label); setShowProviderDrop(false); }} className="w-full px-4 py-3 text-left hover:bg-muted border-b last:border-0"><div className="flex items-center justify-between gap-2"><span>{option.label}</span></div></button>)}</div>}
               </div>
-              <div className="flex gap-2"><div className="w-14 flex items-center justify-center border rounded-xl bg-muted/40 text-sm font-bold">+260</div><input value={mmPhone} onChange={e => setMmPhone(e.target.value)} placeholder="Enter your mobile money number" className="flex-1 px-3.5 py-2.5 border rounded-xl bg-background text-sm outline-none focus:ring-2 focus:ring-primary/40" /></div>
+              <div className="flex gap-2"><div className="w-14 flex items-center justify-center border rounded-xl bg-muted/40 text-sm font-bold">{dialCode}</div><input value={mmPhone} onChange={e => setMmPhone(e.target.value)} placeholder="Enter your mobile money number" className="flex-1 px-3.5 py-2.5 border rounded-xl bg-background text-sm outline-none focus:ring-2 focus:ring-primary/40" /></div>
               <button onClick={handleMobileMoneyPay} disabled={isSubmitting || !mmPhone.trim() || !selectedMobileOption} className="w-full py-3.5 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20">{isSubmitting ? "Processing..." : `Pay ${format(total)}`}</button>
             </div>
           )}

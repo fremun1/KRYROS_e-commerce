@@ -128,7 +128,12 @@ export const useCurrencyStore = create<CurrencyState>()(
             set({
               currencies,
               selected: selectedCurrency,
-              detectedCountryCode: geoData.geoData?.countryCode,
+              // Backend can return either `geoData.countryCode` or `detectedCountryCode`
+              detectedCountryCode:
+                geoData?.geoData?.countryCode ??
+                geoData?.detectedCountryCode ??
+                geoData?.geoData?.country_code ??
+                undefined,
               isLoading: false,
             });
           } else {

@@ -362,7 +362,7 @@ export default function PayPage() {
         setBankProviders([]);
         setMobileOptions([]);
       });
-  }, []);
+  }, [detectedCountryCode]);
 
   useEffect(() => {
     fetchSettings().then((settings) => {
@@ -371,6 +371,8 @@ export default function PayPage() {
       if (rate) setFeeRate(Number(rate) / 100);
       const wa = arr.find((s: any) => s.key === 'whatsapp_number')?.value;
       if (wa && wa.trim()) setWhatsappNumber(wa.replace(/[^0-9]/g, ""));
+    }).catch(() => {});
+  }, []);
 
   // Update dial code when country is detected
   useEffect(() => {
@@ -378,8 +380,6 @@ export default function PayPage() {
       setDialCode(dialCodeMap[detectedCountryCode]);
     }
   }, [detectedCountryCode]);
-    }).catch(() => {});
-  }, []);
 
   useEffect(() => {
     if (!showCurrencyDrop) return;
@@ -729,7 +729,7 @@ export default function PayPage() {
                   )}
                 </div>
                 <div className="flex h-[52px] items-center rounded-xl border bg-card overflow-hidden">
-                  <div className="px-4 h-full flex items-center border-r text-sm font-semibold text-primary">+260</div>
+                  <div className="px-4 h-full flex items-center border-r text-sm font-semibold text-primary">{dialCode}</div>
                   <input value={mmPhone} onChange={(e) => setMmPhone(e.target.value.replace(/[^0-9]/g, ""))} placeholder="Enter your mobile money number" inputMode="tel" className="flex-1 h-full bg-transparent outline-none px-4 text-sm font-medium text-foreground" />
                 </div>
                 <button onClick={handleMobilePay} disabled={payLoading || !mmPhone.trim() || !selectedMobileOption} className="w-full h-[52px] rounded-xl bg-primary text-white font-bold transition-all active:scale-95 disabled:opacity-50">{payLoading ? "Processing..." : `Pay ${currency} ${total.toFixed(2)}`}</button>

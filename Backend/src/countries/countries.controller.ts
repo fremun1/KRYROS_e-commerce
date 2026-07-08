@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, UseInterceptors, Req } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, UseInterceptors, Req, Header } from '@nestjs/common';
 import { CacheInterceptor } from '@nestjs/cache-manager';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { CountriesService } from './countries.service';
@@ -13,7 +13,6 @@ import { GeolocationService } from '../common/services/geolocation.service';
 
 @ApiTags('Countries')
 @Controller('countries')
-@UseInterceptors(CacheInterceptor)
 export class CountriesController {
   constructor(
     private readonly countriesService: CountriesService,
@@ -31,12 +30,14 @@ export class CountriesController {
 
   @Get()
   @ApiOperation({ summary: 'List all countries (Public)' })
+  @UseInterceptors(CacheInterceptor)
   findAll() {
     return this.countriesService.findAll();
   }
 
   @Get('detect/by-ip')
   @ApiOperation({ summary: 'Detect user country by IP and get currency (Public)' })
+  @Header('Cache-Control', 'no-store')
   async detectCountryByIp(@Req() request: any) {
     const clientIp = this.geolocationService.getClientIp(request);
     const geoData = await this.geolocationService.detectCountryByIp(clientIp);
@@ -99,6 +100,7 @@ export class CountriesController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get a single country (Public)' })
+  @UseInterceptors(CacheInterceptor)
   findOne(@Param('id') id: string) {
     return this.countriesService.findOne(id);
   }
