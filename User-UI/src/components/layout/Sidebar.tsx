@@ -52,6 +52,7 @@ interface SidebarProps {
 
 export default function Sidebar({ open, onClose }: SidebarProps) {
   const [catSearch, setCatSearch] = useState("");
+  const [expandedSection, setExpandedSection] = useState<string | null>("account");
   const [expandedCat, setExpandedCat] = useState<string | number | null>(null);
   const [location, setLocation] = useLocation();
   const { theme, toggleTheme } = useThemeStore();
@@ -123,6 +124,10 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
     await logout();
   };
 
+  const toggleSection = (section: string) => {
+    setExpandedSection(expandedSection === section ? null : section);
+  };
+
   return (
     <AnimatePresence>
       {open && (
@@ -156,168 +161,261 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
               </button>
             </div>
 
-            {/* Content - Single unified menu */}
+            {/* Content - Unified Accordion Menu */}
             <div className="flex-1 overflow-y-auto">
-              <div className="p-4">
+              <div className="p-2">
                 
                 {/* MY ACCOUNT Section */}
-                <div className="mb-6">
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3 px-2">My Account</p>
-                  <div className="space-y-0.5">
-                    <Link href="/dashboard" onClick={onClose}>
-                      <div className={`flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-muted text-foreground transition-all cursor-pointer`}>
-                        <LayoutDashboard className="w-5 h-5" />
-                        <span className="text-sm font-medium">Dashboard</span>
-                      </div>
-                    </Link>
-                    <Link href="/wishlist" onClick={onClose}>
-                      <div className={`flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-muted text-foreground transition-all cursor-pointer`}>
-                        <Heart className="w-5 h-5" />
-                        <span className="text-sm font-medium">Wishlist</span>
-                      </div>
-                    </Link>
-                    {token && (
-                      <button onClick={handleLogout} className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-destructive/10 text-destructive transition-all cursor-pointer">
-                        <LogOut className="w-5 h-5" />
-                        <span className="text-sm font-medium">Logout</span>
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                {/* Main Menu Items */}
-                <div className="space-y-0.5 mb-6">
-                  {menuItems.map(({ label, icon: Icon, href }) => {
-                    const isActive = location === href || (href !== "/" && location.startsWith(href));
-                    return (
-                      <Link key={href} href={href} onClick={onClose}>
-                        <div
-                          className={`flex items-center justify-between px-3 py-3 rounded-xl transition-all cursor-pointer group ${
-                            isActive
-                              ? "bg-primary text-primary-foreground"
-                              : "hover:bg-muted text-foreground"
-                          }`}
-                        >
-                          <div className="flex items-center gap-3">
-                            <Icon className="w-5 h-5" />
-                            <span className="text-sm font-medium">{label}</span>
-                          </div>
-                          <ChevronRight className="w-4 h-4 opacity-50 group-hover:opacity-100 transition-opacity" />
-                        </div>
-                      </Link>
-                    );
-                  })}
-                </div>
-
-                {/* Categories Section */}
-                <div className="mb-6">
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3 px-2">Categories</p>
-                  <div className="relative mb-3">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <input
-                      type="text"
-                      placeholder="Search categories..."
-                      value={catSearch}
-                      onChange={(e) => setCatSearch(e.target.value)}
-                      className="w-full pl-9 pr-3 py-2 bg-muted rounded-lg text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                    />
-                  </div>
-                  <div className="space-y-0.5">
-                    {filteredCats.map((cat) => {
-                      const catBrands = brandsByCategory[cat.id] || [];
-                      const isExpanded = expandedCat === cat.id;
-                      return (
-                        <div key={cat.id}>
-                          <button
-                            onClick={() => setExpandedCat(isExpanded ? null : cat.id)}
-                            className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-muted transition-colors text-foreground text-sm font-medium"
-                          >
-                            <span>{cat.name}</span>
-                            {catBrands.length > 0 && (
-                              <ChevronDown
-                                className={`w-4 h-4 transition-transform ${isExpanded ? "rotate-180" : ""}`}
-                              />
-                            )}
-                          </button>
-                          {isExpanded && catBrands.length > 0 && (
-                            <div className="pl-4 space-y-1 mt-1">
-                              {catBrands.map((brand) => (
-                                <Link key={brand.id} href={`/shop?brand=${encodeURIComponent(brand.slug)}`} onClick={onClose}>
-                                  <div className="px-3 py-1.5 rounded-lg hover:bg-muted transition-colors text-foreground text-xs cursor-pointer">
-                                    {brand.name}
-                                  </div>
-                                </Link>
-                              ))}
+                <div className="border-b border-border/50 last:border-0">
+                  <button 
+                    onClick={() => toggleSection("account")}
+                    className="w-full flex items-center justify-between px-4 py-4 text-sm font-bold text-foreground uppercase tracking-tight hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <User className="w-5 h-5 text-primary" />
+                      <span>My Account</span>
+                    </div>
+                    <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${expandedSection === "account" ? "rotate-180" : ""}`} />
+                  </button>
+                  <AnimatePresence>
+                    {expandedSection === "account" && (
+                      <motion.div 
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        className="overflow-hidden bg-muted/20"
+                      >
+                        <div className="pb-2">
+                          <Link href="/dashboard" onClick={onClose}>
+                            <div className="flex items-center gap-3 px-10 py-3 text-sm font-medium text-foreground hover:bg-muted transition-colors cursor-pointer">
+                              <LayoutDashboard className="w-4 h-4" />
+                              <span>Dashboard</span>
                             </div>
+                          </Link>
+                          <Link href="/wishlist" onClick={onClose}>
+                            <div className="flex items-center gap-3 px-10 py-3 text-sm font-medium text-foreground hover:bg-muted transition-colors cursor-pointer">
+                              <Heart className="w-4 h-4" />
+                              <span>Wishlist</span>
+                            </div>
+                          </Link>
+                          {token && (
+                            <button onClick={handleLogout} className="w-full flex items-center gap-3 px-10 py-3 text-sm font-medium text-destructive hover:bg-destructive/5 transition-colors cursor-pointer">
+                              <LogOut className="w-4 h-4" />
+                              <span>Logout</span>
+                            </button>
                           )}
                         </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Preferences Section */}
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3 px-2">Preferences</p>
-                <div className="space-y-0.5 mb-6">
-                  <div className="relative">
-                    <button
-                      onClick={() => setExpandedCat(expandedCat === "currency" ? null : "currency")}
-                      className="w-full flex items-center justify-between px-3 py-3 rounded-xl hover:bg-muted cursor-pointer"
-                    >
-                      <div className="flex items-center gap-3 text-foreground">
-                        <DollarSign className="w-5 h-5" />
-                        <span className="text-sm font-medium">Currency</span>
-                      </div>
-                      <div className="flex items-center gap-1 text-muted-foreground text-sm">
-                        <span>{selected.code} ({selected.symbol})</span>
-                        <ChevronDown className={`w-4 h-4 transition-transform ${expandedCat === "currency" ? "rotate-180" : ""}`} />
-                      </div>
-                    </button>
-                    {expandedCat === "currency" && (
-                      <div className="mt-1 mx-2 bg-background border border-border rounded-xl shadow-lg overflow-hidden max-h-44 overflow-y-auto z-10">
-                        {currencies.map((c) => (
-                          <button
-                            key={c.code}
-                            onClick={() => { setCurrency(c.code); setExpandedCat(null); }}
-                            className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors text-left ${c.code === selected.code ? "bg-primary/10 text-primary font-semibold" : "text-foreground"}`}
-                          >
-                            <span className="font-medium">{c.code}</span>
-                            <span className="text-muted-foreground text-xs ml-auto">{c.symbol}</span>
-                          </button>
-                        ))}
-                      </div>
+                      </motion.div>
                     )}
-                  </div>
-                  <div className="flex items-center justify-between px-3 py-3 rounded-xl hover:bg-muted cursor-pointer" onClick={toggleTheme}>
-                    <div className="flex items-center gap-3 text-foreground">
-                      {theme === "dark" ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
-                      <span className="text-sm font-medium">Theme</span>
-                    </div>
-                    <div
-                      className={`w-11 h-6 rounded-full transition-all duration-300 relative ${theme === "dark" ? "bg-primary" : "bg-muted-foreground/30"}`}
-                    >
-                      <div
-                        className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all duration-300 ${theme === "dark" ? "left-[22px]" : "left-0.5"}`}
-                      />
-                    </div>
-                  </div>
+                  </AnimatePresence>
                 </div>
 
-                {/* Information Section */}
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3 px-2">Information</p>
-                <div className="space-y-0.5">
-                  {infoItems.map(({ label, icon: Icon, href }) => (
-                    <Link key={href} href={href} onClick={onClose}>
-                      <div className="flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-muted cursor-pointer group text-foreground">
-                        <div className="flex items-center gap-3">
-                          <Icon className="w-4 h-4 text-muted-foreground" />
-                          <span className="text-sm">{label}</span>
+                {/* BROWSE / MAIN MENU Section */}
+                <div className="border-b border-border/50 last:border-0">
+                  <button 
+                    onClick={() => toggleSection("browse")}
+                    className="w-full flex items-center justify-between px-4 py-4 text-sm font-bold text-foreground uppercase tracking-tight hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <ShoppingBag className="w-5 h-5 text-primary" />
+                      <span>Browse Store</span>
+                    </div>
+                    <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${expandedSection === "browse" ? "rotate-180" : ""}`} />
+                  </button>
+                  <AnimatePresence>
+                    {expandedSection === "browse" && (
+                      <motion.div 
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        className="overflow-hidden bg-muted/20"
+                      >
+                        <div className="pb-2">
+                          {menuItems.map(({ label, icon: Icon, href }) => (
+                            <Link key={href} href={href} onClick={onClose}>
+                              <div className="flex items-center gap-3 px-10 py-3 text-sm font-medium text-foreground hover:bg-muted transition-colors cursor-pointer">
+                                <Icon className="w-4 h-4" />
+                                <span>{label}</span>
+                              </div>
+                            </Link>
+                          ))}
                         </div>
-                        <ChevronRight className="w-4 h-4 text-muted-foreground opacity-50 group-hover:opacity-100" />
-                      </div>
-                    </Link>
-                  ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
+
+                {/* CATEGORIES Section */}
+                <div className="border-b border-border/50 last:border-0">
+                  <button 
+                    onClick={() => toggleSection("categories")}
+                    className="w-full flex items-center justify-between px-4 py-4 text-sm font-bold text-foreground uppercase tracking-tight hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Grid2x2 className="w-5 h-5 text-primary" />
+                      <span>Our Categories</span>
+                    </div>
+                    <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${expandedSection === "categories" ? "rotate-180" : ""}`} />
+                  </button>
+                  <AnimatePresence>
+                    {expandedSection === "categories" && (
+                      <motion.div 
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        className="overflow-hidden bg-muted/20"
+                      >
+                        <div className="p-3">
+                          <div className="relative mb-3">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                            <input
+                              type="text"
+                              placeholder="Search categories..."
+                              value={catSearch}
+                              onChange={(e) => setCatSearch(e.target.value)}
+                              className="w-full pl-9 pr-3 py-2 bg-background border border-border rounded-lg text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                            />
+                          </div>
+                          <div className="space-y-0.5">
+                            {filteredCats.map((cat) => {
+                              const catBrands = brandsByCategory[cat.id] || [];
+                              const isCatExpanded = expandedCat === cat.id;
+                              return (
+                                <div key={cat.id}>
+                                  <button
+                                    onClick={() => setExpandedCat(isCatExpanded ? null : cat.id)}
+                                    className="w-full flex items-center justify-between px-4 py-2.5 rounded-lg hover:bg-muted transition-colors text-foreground text-sm font-medium"
+                                  >
+                                    <span>{cat.name}</span>
+                                    {catBrands.length > 0 && (
+                                      <ChevronRight
+                                        className={`w-3 h-3 transition-transform ${isCatExpanded ? "rotate-90" : ""}`}
+                                      />
+                                    )}
+                                  </button>
+                                  {isCatExpanded && catBrands.length > 0 && (
+                                    <div className="pl-6 space-y-1 mt-1 mb-2 border-l-2 border-primary/20 ml-4">
+                                      {catBrands.map((brand) => (
+                                        <Link key={brand.id} href={`/shop?brand=${encodeURIComponent(brand.slug)}`} onClick={onClose}>
+                                          <div className="px-3 py-1.5 rounded-lg hover:bg-muted transition-colors text-foreground text-xs cursor-pointer">
+                                            {brand.name}
+                                          </div>
+                                        </Link>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* PREFERENCES Section */}
+                <div className="border-b border-border/50 last:border-0">
+                  <button 
+                    onClick={() => toggleSection("preferences")}
+                    className="w-full flex items-center justify-between px-4 py-4 text-sm font-bold text-foreground uppercase tracking-tight hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Globe className="w-5 h-5 text-primary" />
+                      <span>Preferences</span>
+                    </div>
+                    <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${expandedSection === "preferences" ? "rotate-180" : ""}`} />
+                  </button>
+                  <AnimatePresence>
+                    {expandedSection === "preferences" && (
+                      <motion.div 
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        className="overflow-hidden bg-muted/20"
+                      >
+                        <div className="pb-2">
+                          {/* Currency */}
+                          <div className="relative">
+                            <button
+                              onClick={() => setExpandedCat(expandedCat === "currency" ? null : "currency")}
+                              className="w-full flex items-center justify-between px-10 py-3 hover:bg-muted transition-colors cursor-pointer"
+                            >
+                              <div className="flex items-center gap-3 text-foreground">
+                                <DollarSign className="w-4 h-4" />
+                                <span className="text-sm font-medium">Currency</span>
+                              </div>
+                              <div className="flex items-center gap-1 text-muted-foreground text-xs">
+                                <span>{selected.code}</span>
+                                <ChevronRight className={`w-3 h-3 transition-transform ${expandedCat === "currency" ? "rotate-90" : ""}`} />
+                              </div>
+                            </button>
+                            {expandedCat === "currency" && (
+                              <div className="mx-10 my-2 bg-background border border-border rounded-xl shadow-lg overflow-hidden max-h-44 overflow-y-auto z-10">
+                                {currencies.map((c) => (
+                                  <button
+                                    key={c.code}
+                                    onClick={() => { setCurrency(c.code); setExpandedCat(null); }}
+                                    className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors text-left ${c.code === selected.code ? "bg-primary/10 text-primary font-semibold" : "text-foreground"}`}
+                                  >
+                                    <span className="font-medium">{c.code}</span>
+                                    <span className="text-muted-foreground text-xs ml-auto">{c.symbol}</span>
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                          {/* Theme */}
+                          <div className="flex items-center justify-between px-10 py-3 hover:bg-muted transition-colors cursor-pointer" onClick={toggleTheme}>
+                            <div className="flex items-center gap-3 text-foreground">
+                              {theme === "dark" ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+                              <span className="text-sm font-medium">Theme</span>
+                            </div>
+                            <div className={`w-9 h-5 rounded-full transition-all duration-300 relative ${theme === "dark" ? "bg-primary" : "bg-muted-foreground/30"}`}>
+                              <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-all duration-300 ${theme === "dark" ? "left-[18px]" : "left-0.5"}`} />
+                            </div>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* INFORMATION Section */}
+                <div className="border-b border-border/50 last:border-0">
+                  <button 
+                    onClick={() => toggleSection("info")}
+                    className="w-full flex items-center justify-between px-4 py-4 text-sm font-bold text-foreground uppercase tracking-tight hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Info className="w-5 h-5 text-primary" />
+                      <span>Need Help?</span>
+                    </div>
+                    <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${expandedSection === "info" ? "rotate-180" : ""}`} />
+                  </button>
+                  <AnimatePresence>
+                    {expandedSection === "info" && (
+                      <motion.div 
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        className="overflow-hidden bg-muted/20"
+                      >
+                        <div className="pb-2">
+                          {infoItems.map(({ label, icon: Icon, href }) => (
+                            <Link key={href} href={href} onClick={onClose}>
+                              <div className="flex items-center gap-3 px-10 py-3 text-sm font-medium text-foreground hover:bg-muted transition-colors cursor-pointer">
+                                <Icon className="w-4 h-4" />
+                                <span>{label}</span>
+                              </div>
+                            </Link>
+                          ))}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
               </div>
             </div>
           </motion.div>
