@@ -64,7 +64,7 @@ type PayMethod = {
   providers: PayProvider[];
 };
 
-type MethodForm = { name: string; type: string; isEnabled: boolean };
+type MethodForm = { name: string; type: string; isEnabled: boolean; countryId?: string | null };
 type LinkForm = {
   name: string;
   amount: string;
@@ -165,7 +165,8 @@ function WalletPaymentsContent() {
 
   const [showMethodModal, setShowMethodModal] = useState(false);
   const [editingMethod, setEditingMethod] = useState<PayMethod | null>(null);
-  const [methodForm, setMethodForm] = useState<MethodForm>({ name: '', type: 'mobile_wallet', isEnabled: true });
+  const [methodForm, setMethodForm] = useState<MethodForm>({ name: '', type: 'mobile_wallet', isEnabled: true, countryId: null });
+  const [countries, setCountries] = useState<any[]>([]);
 
   const [showProviderModal, setShowProviderModal] = useState(false);
   const [editingProvider, setEditingProvider] = useState<PayProvider | null>(null);
@@ -191,6 +192,19 @@ function WalletPaymentsContent() {
     const check = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener('resize', check);
     return () => window.removeEventListener('resize', check);
+  }, []);
+
+  useEffect(() => {
+    const fetchCountries = async () => {
+      try {
+        const res = await fetch('/api/countries');
+        const data = await res.json();
+        setCountries(Array.isArray(data) ? data : (data.data ?? []));
+      } catch (e) {
+        console.error('Failed to fetch countries', e);
+      }
+    };
+    fetchCountries();
   }, []);
 
   const fetchData = useCallback(async () => {
@@ -326,6 +340,39 @@ function WalletPaymentsContent() {
     setEditingLink(null);
     setGenForm({ name: '', amount: '', currency: 'ZMW', note: '', expiresAt: '', isActive: true });
   }, []);
+
+  const openMethodModal = useCallback((method?: PayMethod) => {
+    setEditingMethod(method || null);
+    setMethodForm({
+      name: method?.name || '',
+      type: method?.type || 'mobile_wallet',
+      isEnabled: method?.isEnabled ?? true,
+      countryId: (method as any)?.countryId || null,
+    });
+    setShowMethodModal(true);
+  }, []);
+
+  const saveMethod = useCallback(async () => {
+    if (!methodForm.name.trim()) {
+      toast.error('Method name is required');
+      return;
+    }
+    try {
+      if (editingMethod) {
+        await updatePaymentMethod(editingMethod.id, methodForm);
+        toast.success('Payment method updated');
+      } else {
+        await createPaymentMethod(methodForm);
+        toast.success('Payment method created');
+      }
+      setShowMethodModal(false);
+      setEditingMethod(null);
+      setMethodForm({ name: '', type: 'mobile_wallet', isEnabled: true, countryId: null });
+      fetchData();
+    } catch (e: any) {
+      toast.error(e?.response?.data?.message || 'Failed to save payment method');
+    }
+  }, [methodForm, editingMethod, fetchData]);
 
   const openLinkModal = useCallback((link?: PayLink) => {
     setEditingLink(link || null);
@@ -1179,6 +1226,12 @@ function WalletPaymentsContent() {
             <Field label="Method type" T={T}>
               <select value={methodForm.type} onChange={(e) => setMethodForm((f) => ({ ...f, type: e.target.value }))} style={inputStyle(T)}>
                 {METHOD_TYPES.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
+              </select>
+            </Field>
+            <Field label="Available in Country" T={T}>
+              <select value={methodForm.countryId || ''} onChange={(e) => setMethodForm((f) => ({ ...f, countryId: e.target.value || null }))} style={inputStyle(T)}>
+                <option value="">Global (All Countries)</option>
+                {countries.map((country: any) => <option key={country.id} value={country.id}>{country.flag} {country.name}</option>)}
               </select>
             </Field>
             <ToggleField label="Enabled" checked={methodForm.isEnabled} onChange={(checked) => setMethodForm((f) => ({ ...f, isEnabled: checked }))} T={T} />
