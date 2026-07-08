@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, UseInterceptors, Req } from '@nestjs/common';
 import { CacheInterceptor } from '@nestjs/cache-manager';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { CountriesService } from './countries.service';
@@ -9,12 +9,16 @@ import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { UserRole } from '@prisma/client';
 import { AddPaymentMethodDto, UpdateCountryPaymentMethodDto } from './dto/add-payment-method.dto';
+import { GeolocationService } from '../common/services/geolocation.service';
 
 @ApiTags('Countries')
 @Controller('countries')
 @UseInterceptors(CacheInterceptor)
 export class CountriesController {
-  constructor(private readonly countriesService: CountriesService) {}
+  constructor(
+    private readonly countriesService: CountriesService,
+    private readonly geolocationService: GeolocationService,
+  ) {}
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -29,6 +33,50 @@ export class CountriesController {
   @ApiOperation({ summary: 'List all countries (Public)' })
   findAll() {
     return this.countriesService.findAll();
+  }
+
+  @Get('detect/by-ip')
+  @ApiOperation({ summary: 'Detect user country by IP and get currency (Public)' })
+  async detectCountryByIp(@Req() request: any) {
+    const clientIp = this.geolocationService.getClientIp(request);
+    const geoData = await this.geolocationService.detectCountryByIp(clientIp);
+    
+    if (!geoData) {
+      // Return default (USD) if geolocation fails
+      const defaultCountry = await this.countriesService.findByCode('US');
+      return {
+        success: true,
+        detected: false,
+        reason: 'Geolocation failed, returning default',
+        country: defaultCountry,
+        clientIp,
+      };
+    }
+
+    // Find country by code
+    const country = await this.countriesService.findByCode(geoData.countryCode);
+    
+    if (!country) {
+      // Country not in system, return default
+      const defaultCountry = await this.countriesService.findByCode('US');
+      return {
+        success: true,
+        detected: true,
+        reason: `Country ${geoData.countryCode} not configured in system`,
+        detectedCountryCode: geoData.countryCode,
+        country: defaultCountry,
+        clientIp,
+        geoData,
+      };
+    }
+
+    return {
+      success: true,
+      detected: true,
+      country,
+      clientIp,
+      geoData,
+    };
   }
 
   @Post('seed')

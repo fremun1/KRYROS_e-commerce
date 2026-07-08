@@ -3,6 +3,7 @@ import { CountriesService } from './countries.service';
 import { CountriesController } from './countries.controller';
 import { PrismaModule } from '../prisma/prisma.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { GeolocationService } from '../common/services/geolocation.service';
 
 @Module({
   imports: [
@@ -10,7 +11,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     ScheduleModule.forRoot(),
   ],
   controllers: [CountriesController],
-  providers: [CountriesService],
-  exports: [CountriesService],
+  providers: [CountriesService, GeolocationService],
+  exports: [CountriesService, GeolocationService],
 })
 export class CountriesModule {}

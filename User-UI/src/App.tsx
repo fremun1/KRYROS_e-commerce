@@ -256,7 +256,7 @@ function PageLoader() {
 // ── AppRoutes — handles both splash and page transitions ──────────────────────
 function AppRoutes() {
   const { getMe } = useAuthStore();
-  const { fetchCurrencies } = useCurrencyStore();
+  const { fetchCurrenciesByLocation } = useCurrencyStore();
   const [location] = useLocation();
   const prevLocationRef = useRef(location);
   const [transitioning, setTransitioning] = useState(false);
@@ -264,7 +264,8 @@ function AppRoutes() {
 
   useEffect(() => {
     getMe();
-    fetchCurrencies();
+    // Use location-based currency detection instead of manual selection
+    fetchCurrenciesByLocation();
   }, []);
 
   // Trigger page transition overlay on every route change

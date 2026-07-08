@@ -258,6 +258,17 @@ export class CountriesService implements OnModuleInit {
     });
   }
 
+  async findByCode(code: string) {
+    return this.prisma.country.findUnique({
+      where: { code },
+      include: {
+        paymentMethods: {
+          where: { isActive: true },
+        },
+      },
+    });
+  }
+
   async update(id: string, updateCountryDto: UpdateCountryDto) {
     const { paymentMethods, ...countryData } = updateCountryDto;
     
