@@ -104,4 +104,10 @@ export class WhatsAppPaymentDto {
   @IsString()
   @IsOptional()
   originalCurrency?: string;
+
+  @ApiProperty({ description: 'Optional country code (e.g., ZM, NG, GH)', example: 'ZM', required: false })
+  @Transform(({ value }) => value?.trim())
+  @IsString()
+  @IsOptional()
+  countryCode?: string;
 }

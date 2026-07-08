@@ -478,10 +478,130 @@ export class PaymentsService {
     });
   }
 
-  async updateDirectPaymentStatus(id: string, status: PaymentStatus, paidAt?: Date) {
+  async updateDirectPaymentStatus(id: string, status: PaymentStatus, adminNotes?: string) {
     return this.prisma.directPayment.update({
       where: { id },
-      data: { status, paidAt },
+      data: { 
+        status, 
+        ...(adminNotes ? { note: adminNotes } : {}),
+        ...(status === 'PAID' ? { paidAt: new Date() } : {})
+      },
     });
+  }
+
+  async checkDirectStatus(paymentId: string) {
+    const payment = await this.prisma.directPayment.findUnique({
+      where: { id: paymentId },
+    });
+    if (!payment) return null;
+
+    if (!payment.paymentReference || payment.status === 'PAID' || payment.status === 'FAILED') {
+      return this.formatDirectPaymentResponse(payment);
+    }
+
+    const username = this.configService.get('CGRATE_USERNAME');
+    const password = this.configService.get('CGRATE_PASSWORD');
+    const soapRequest = `<?xml version="1.0" encoding="UTF-8"?><soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:kon="http://konik.cgrate.com"><soapenv:Header><wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd" soapenv:mustUnderstand="1"><wsse:UsernameToken xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" wsu:Id="${username}"><wsse:Username>${username}</wsse:Username><wsse:Password Type="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText">${password}</wsse:Password></wsse:UsernameToken></wsse:Security></soapenv:Header><soapenv:Body><kon:queryCustomerPayment><paymentReference>${payment.paymentReference}</paymentReference></kon:queryCustomerPayment></soapenv:Body></soapenv:Envelope>`;
+
+    try {
+      const response = await axios.post(this.apiUrl, soapRequest, {
+        headers: { 'Content-Type': 'text/xml;charset=UTF-8', 'SOAPAction': '', 'Accept': 'text/xml' },
+      });
+
+      const parser = new XMLParser({ ignoreAttributes: true, removeNSPrefix: true });
+      const result = parser.parse(response.data);
+      const txReturn = result.Envelope?.Body?.queryCustomerPaymentResponse?.return;
+
+      if (txReturn) {
+        let newStatus = 'PENDING';
+        const code = String(txReturn.responseCode);
+        const msg = String(txReturn.responseMessage || '').toLowerCase();
+        const rawStatus = String(txReturn.status || '').toUpperCase();
+        
+        if (code === '0') {
+           if (rawStatus === 'FAILED' || msg.includes('fail') || msg.includes('cancel')) newStatus = 'FAILED';
+           else if (rawStatus === 'PENDING' || msg.includes('pending')) newStatus = 'PENDING';
+           else newStatus = 'PAID';
+        } else if (code !== '114') {
+           newStatus = 'FAILED';
+        }
+        
+        if (newStatus !== payment.status) {
+          const updateData: Prisma.DirectPaymentUpdateInput = { status: newStatus as PaymentStatus };
+          if (newStatus === 'PAID' && !payment.paidAt) {
+            updateData.paidAt = new Date();
+            updateData.receiptNumber = `REC-${Date.now().toString(36).toUpperCase()}`;
+          }
+          const updatedPayment = await this.prisma.directPayment.update({
+            where: { id: payment.id },
+            data: updateData,
+          });
+          return this.formatDirectPaymentResponse(updatedPayment, newStatus);
+        }
+        return this.formatDirectPaymentResponse(payment, newStatus);
+      }
+    } catch (error) {
+      this.log543Error('Status Check Error', error);
+    }
+    return this.formatDirectPaymentResponse(payment);
+  }
+
+  async checkStatus(orderId: string) {
+    const order = await this.prisma.order.findUnique({ where: { id: orderId } });
+    if (!order) return null;
+
+    const directPayment = await this.prisma.directPayment.findFirst({ where: { orderId: orderId } });
+    if (directPayment) {
+      return this.checkDirectStatus(directPayment.id);
+    }
+
+    if (!order.paymentReference) return null;
+
+    if (order.paymentStatus === 'PAID' || order.paymentStatus === 'FAILED') {
+      return { status: order.paymentStatus.toLowerCase() };
+    }
+
+    const username = this.configService.get('CGRATE_USERNAME');
+    const password = this.configService.get('CGRATE_PASSWORD');
+    const soapRequest = `<?xml version="1.0" encoding="UTF-8"?><soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:kon="http://konik.cgrate.com"><soapenv:Header><wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd" soapenv:mustUnderstand="1"><wsse:UsernameToken xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" wsu:Id="${username}"><wsse:Username>${username}</wsse:Username><wsse:Password Type="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText">${password}</wsse:Password></wsse:UsernameToken></wsse:Security></soapenv:Header><soapenv:Body><kon:queryCustomerPayment><paymentReference>${order.paymentReference}</paymentReference></kon:queryCustomerPayment></soapenv:Body></soapenv:Envelope>`;
+
+    try {
+      const response = await axios.post(this.apiUrl, soapRequest, {
+        headers: { 'Content-Type': 'text/xml;charset=UTF-8', 'SOAPAction': '', 'Accept': 'text/xml' },
+      });
+
+      const parser = new XMLParser({ ignoreAttributes: true, removeNSPrefix: true });
+      const result = parser.parse(response.data);
+      const txReturn = result.Envelope?.Body?.queryCustomerPaymentResponse?.return;
+
+      if (txReturn) {
+        let newStatus = 'PENDING';
+        const code = String(txReturn.responseCode);
+        const msg = String(txReturn.responseMessage || '').toLowerCase();
+        const rawStatus = String(txReturn.status || '').toUpperCase();
+        
+        if (code === '0') {
+           if (rawStatus === 'FAILED' || msg.includes('fail') || msg.includes('cancel')) newStatus = 'FAILED';
+           else if (rawStatus === 'PENDING' || msg.includes('pending')) newStatus = 'PENDING';
+           else newStatus = 'PAID';
+        } else if (code !== '114') {
+           newStatus = 'FAILED';
+        }
+        
+        if (newStatus !== order.paymentStatus) {
+          await this.prisma.order.update({
+            where: { id: orderId },
+            data: {
+              paymentStatus: newStatus as PaymentStatus,
+              status: newStatus === 'PAID' ? OrderStatus.CONFIRMED : OrderStatus.PENDING,
+            },
+          });
+        }
+        return { status: newStatus.toLowerCase() };
+      }
+    } catch (error) {
+      this.log543Error('Order Status Check Error', error);
+    }
+    return { status: order.paymentStatus.toLowerCase() };
   }
 }

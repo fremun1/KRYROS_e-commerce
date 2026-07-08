@@ -18,4 +18,10 @@ export class InitializePaymentDto {
   @IsPositive()
   @Type(() => Number)
   amount: number;
+
+  @ApiProperty({ description: 'Optional country code (e.g., ZM, NG, GH)', example: 'ZM', required: false })
+  @Transform(({ value }) => value?.trim())
+  @IsString()
+  @IsOptional()
+  countryCode?: string;
 }

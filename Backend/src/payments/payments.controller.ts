@@ -22,7 +22,7 @@ export class PaymentsController {
   @UseGuards(OptionalJwtAuthGuard)
   @ApiOperation({ summary: 'Send a 543/cGrate payment prompt to the customer mobile number' })
   initialize(@Body() body: InitializePaymentDto) {
-    return this.paymentsService.process543Payment(body.orderId, body.phone, body.amount);
+    return this.paymentsService.process543Payment(body.orderId, body.phone, body.amount, body.countryCode);
   }
 
   @Post('direct')
@@ -41,6 +41,7 @@ export class PaymentsController {
       body.customerEmail,
       body.originalAmount,
       body.originalCurrency,
+      body.countryCode,
     );
   }
 
@@ -59,6 +60,7 @@ export class PaymentsController {
       body.paymentLinkId,
       body.originalAmount,
       body.originalCurrency,
+      body.countryCode,
     );
   }
 
