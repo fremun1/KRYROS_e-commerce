@@ -26,9 +26,21 @@ export class PaymentConfigService {
   }
 
   // ── Enabled methods only (public – customer frontend) ──────────────────
-  async getEnabledMethods() {
+  async getEnabledMethods(countryCode?: string) {
+    let whereClause: any = { isEnabled: true };
+    
+    if (countryCode) {
+      whereClause = {
+        isEnabled: true,
+        OR: [
+          { countryId: null },
+          { country: { code: countryCode } },
+        ],
+      };
+    }
+    
     const methods = await this.prisma.checkoutMethod.findMany({
-      where: { isEnabled: true },
+      where: whereClause,
       orderBy: { sortOrder: 'asc' },
       include: {
         providers: {
@@ -41,6 +53,7 @@ export class PaymentConfigService {
             },
           },
         },
+        country: true,
       },
     });
 
@@ -71,11 +84,12 @@ export class PaymentConfigService {
 
   async updateMethod(
     id: string,
-    data: Partial<{ name: string; type: string; icon: string; sortOrder: number; isEnabled: boolean }>,
+    data: Partial<{ name: string; type: string; icon: string; sortOrder: number; isEnabled: boolean; countryId?: string | null }>,
   ) {
     await this.cacheManager.del('payment-config-methods');
     await this.cacheManager.del('payment-config-public');
-    return this.prisma.checkoutMethod.update({ where: { id }, data });
+    const { countryId, ...rest } = data;
+    return this.prisma.checkoutMethod.update({ where: { id }, data: { ...rest, countryId: countryId || null } });
   }
 
   async deleteMethod(id: string) {

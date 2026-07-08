@@ -1,6 +1,6 @@
 import {
   Controller, Get, Post, Patch, Delete,
-  Body, Param, UseGuards, UseInterceptors } from '@nestjs/common';
+  Body, Param, Query, UseGuards, UseInterceptors } from '@nestjs/common';
 import { CacheInterceptor } from '@nestjs/cache-manager';
 import { PaymentConfigService } from './payment-config.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
@@ -11,8 +11,8 @@ export class PaymentConfigController {
 
   // ── Public (customer frontend) ─────────────────────────────────────────
   @Get('public')
-  getPublic() {
-    return this.svc.getEnabledMethods();
+  getPublic(@Query('countryCode') countryCode?: string) {
+    return this.svc.getEnabledMethods(countryCode);
   }
 
   // ── Admin: Methods ─────────────────────────────────────────────────────
