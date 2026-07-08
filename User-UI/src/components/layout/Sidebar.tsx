@@ -3,7 +3,7 @@ import { Link, useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X, Home, ShoppingBag, Zap, Package, MapPin, Truck, Info, Phone, Shield, FileText, RefreshCw,
-  ChevronRight, Search, Grid2x2, Globe, Moon, Sun, DollarSign, ChevronDown, LogOut, Tag,
+  ChevronRight, Search, Grid2x2, Globe, Moon, Sun, DollarSign, ChevronDown, LogOut, User, Heart, LayoutDashboard
 } from "lucide-react";
 import { useThemeStore } from "@/store/themeStore";
 import { useCurrencyStore } from "@/store/currencyStore";
@@ -91,7 +91,6 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
         });
     }
 
-    // Fetch all brands (includes categoryId) — used for the accordion
     if (brands.length === 0) {
       fetch(`${API_BASE}/api/brands`)
         .then((r) => r.json())
@@ -103,7 +102,6 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
     }
   }, [open]);
 
-  // Group brands by their categoryId for fast lookup
   const brandsByCategory = useMemo(() => {
     const map: Record<string | number, ApiBrand[]> = {};
     brands.forEach((b) => {
@@ -152,49 +150,41 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
               </Link>
               <button
                 onClick={onClose}
-                data-testid="sidebar-close"
                 className="w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-muted-foreground/20 transition-colors"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            {/* User strip */}
-            {token && user ? (
-              <div className="flex items-center justify-between px-5 py-3 border-b border-border bg-muted/30">
-                <Link href="/dashboard" onClick={onClose}>
-                  <div className="flex items-center gap-3 cursor-pointer">
-                    <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white text-xs font-black">
-                      {user.firstName?.[0]?.toUpperCase() ?? "U"}
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold text-foreground">{user.firstName} {user.lastName}</p>
-                      <p className="text-[10px] text-muted-foreground">{user.email}</p>
-                    </div>
-                  </div>
-                </Link>
-                <button onClick={handleLogout} className="p-1.5 rounded-lg hover:bg-destructive/10 dark:hover:bg-destructive/20 text-muted-foreground hover:text-destructive transition-colors">
-                  <LogOut className="w-4 h-4" />
-                </button>
-              </div>
-            ) : (
-              <div className="flex items-center gap-3 px-5 py-3 border-b border-border bg-muted/30">
-                <Link href="/login" onClick={onClose} className="flex-1">
-                  <button className="w-full py-2 bg-primary text-white rounded-xl text-sm font-bold hover:opacity-90 transition-opacity">
-                    Login
-                  </button>
-                </Link>
-                <Link href="/register" onClick={onClose} className="flex-1">
-                  <button className="w-full py-2 bg-muted text-foreground rounded-xl text-sm font-semibold hover:bg-muted/80 transition-colors">
-                    Register
-                  </button>
-                </Link>
-              </div>
-            )}
-
-            {/* Content - Single unified menu (Jumia-style) */}
+            {/* Content - Single unified menu */}
             <div className="flex-1 overflow-y-auto">
               <div className="p-4">
+                
+                {/* MY ACCOUNT Section */}
+                <div className="mb-6">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3 px-2">My Account</p>
+                  <div className="space-y-0.5">
+                    <Link href="/dashboard" onClick={onClose}>
+                      <div className={`flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-muted text-foreground transition-all cursor-pointer`}>
+                        <LayoutDashboard className="w-5 h-5" />
+                        <span className="text-sm font-medium">Dashboard</span>
+                      </div>
+                    </Link>
+                    <Link href="/wishlist" onClick={onClose}>
+                      <div className={`flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-muted text-foreground transition-all cursor-pointer`}>
+                        <Heart className="w-5 h-5" />
+                        <span className="text-sm font-medium">Wishlist</span>
+                      </div>
+                    </Link>
+                    {token && (
+                      <button onClick={handleLogout} className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-destructive/10 text-destructive transition-all cursor-pointer">
+                        <LogOut className="w-5 h-5" />
+                        <span className="text-sm font-medium">Logout</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+
                 {/* Main Menu Items */}
                 <div className="space-y-0.5 mb-6">
                   {menuItems.map(({ label, icon: Icon, href }) => {
@@ -219,7 +209,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                   })}
                 </div>
 
-                {/* Categories Section - Unified with menu */}
+                {/* Categories Section */}
                 <div className="mb-6">
                   <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3 px-2">Categories</p>
                   <div className="relative mb-3">
@@ -269,7 +259,6 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                 {/* Preferences Section */}
                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3 px-2">Preferences</p>
                 <div className="space-y-0.5 mb-6">
-                  {/* Currency selector */}
                   <div className="relative">
                     <button
                       onClick={() => setExpandedCat(expandedCat === "currency" ? null : "currency")}
@@ -298,16 +287,6 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                         ))}
                       </div>
                     )}
-                  </div>
-                  <div className="flex items-center justify-between px-3 py-3 rounded-xl hover:bg-muted cursor-pointer">
-                    <div className="flex items-center gap-3 text-foreground">
-                      <Globe className="w-5 h-5" />
-                      <span className="text-sm font-medium">Language</span>
-                    </div>
-                    <div className="flex items-center gap-1 text-muted-foreground text-sm">
-                      <span>English</span>
-                      <ChevronRight className="w-4 h-4" />
-                    </div>
                   </div>
                   <div className="flex items-center justify-between px-3 py-3 rounded-xl hover:bg-muted cursor-pointer" onClick={toggleTheme}>
                     <div className="flex items-center gap-3 text-foreground">
