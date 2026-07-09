@@ -3,6 +3,8 @@ import FlashSaleSection from './FlashSaleSection';
 import ProductSection from './ProductSection';
 import HeroBannerSection from './HeroBannerSection';
 import LimitedStockDealSection from './LimitedStockDealSection';
+import AppliancesDealSection from './AppliancesDealSection';
+import CategoryDealSection from './CategoryDealSection';
 import TopSellingSection from './TopSellingSection';
 import TopExpressSection from './TopExpressSection';
 
@@ -26,47 +28,97 @@ interface DynamicSectionRendererProps {
 
 /**
  * DynamicSectionRenderer
- * 
- * Renders different section types based on the section.type field.
- * Each section type maps to a specific React component that handles
- * product fetching, filtering, and display.
+ *
+ * Maps admin-panel section types to React components.
+ * All section headers follow Jumia 3-variant system:
+ *   Variant 1 (Plain)     — ProductSection: white bg, dark title, primary See All
+ *   Variant 2 (Flash)     — FlashSaleSection: colored bar + countdown timer
+ *   Variant 3 (Deal)      — LimitedStockDealSection / CategoryDealSection: colored bar + discount subtitle
+ *
+ * Adding a new category deal section from Admin Panel:
+ *   CMS → Dynamic Sections → Create New → Type: CategoryDeal
+ *   Set: title, categorySlug, headerBgColor, productLimit, ctaText, ctaLink
  */
 export default function DynamicSectionRenderer({ section }: DynamicSectionRendererProps): ReactNode {
-  if (!section.isActive) {
-    return null;
-  }
+  if (!section.isActive) return null;
 
   const { type, title, subtitle, config = {}, dedicatedPageSlug } = section;
 
-  // Determine the view all link
-  const viewAllHref = dedicatedPageSlug 
-    ? `/shop/${dedicatedPageSlug}` 
+  const viewAllHref = dedicatedPageSlug
+    ? `/shop/${dedicatedPageSlug}`
     : config.ctaLink || config.viewAllLink || '/shop';
 
   switch (type) {
+
+    // ── Variant 2: Flash Sale ─────────────────────────────────
     case 'FlashSale':
       return (
         <FlashSaleSection
           title={title || config.title || 'Flash Sales'}
-          timerLabel={config.timerLabel || 'TIME LEFT:'}
+          timerLabel={config.timerLabel || config.countdownLabel || 'TIME LEFT:'}
           ctaText={config.ctaText || 'See All'}
           ctaLink={viewAllHref}
-          endTime={config.timerEndDate}
+          endTime={config.timerEndDate || config.endTime}
           headerBgColor={config.headerBgColor || '#C1304B'}
           productLimit={config.productLimit || 8}
         />
       );
 
+    // ── Variant 3: Limited Stock Deal ────────────────────────
+    case 'LimitedStockDeal':
+      return (
+        <LimitedStockDealSection
+          title={title || config.title || 'Limited Stock deals'}
+          discountText={config.discountText}
+          discountPercent={config.discountPercent || 70}
+          productLimit={config.productLimit || 8}
+          ctaText={config.ctaText || 'See All'}
+          ctaLink={viewAllHref}
+          headerBgColor={config.headerBgColor || '#0A5858'}
+        />
+      );
+
+    // ── Variant 3: Appliances Deal ───────────────────────────
+    case 'AppliancesDeal':
+      return (
+        <AppliancesDealSection
+          title={title || config.title || 'Appliances deals'}
+          subtitleText={subtitle || config.subtitle}
+          ctaText={config.ctaText || 'See All'}
+          ctaLink={viewAllHref}
+          headerBgColor={config.headerBgColor || '#0A5858'}
+          productLimit={config.productLimit || 8}
+          categorySlug={config.categorySlug}
+        />
+      );
+
+    // ── Variant 3: Generic Category Deal (Phone deals, etc.) ─
+    case 'CategoryDeal':
+      return (
+        <CategoryDealSection
+          title={title || config.title || 'Deals'}
+          subtitle={subtitle || config.subtitle}
+          categoryId={config.categoryId}
+          categorySlug={config.categorySlug}
+          headerBgColor={config.headerBgColor || '#0A5858'}
+          productLimit={config.productLimit || 8}
+          ctaText={config.ctaText || 'See All'}
+          ctaLink={viewAllHref}
+        />
+      );
+
+    // ── Variant 1: Plain sections ─────────────────────────────
     case 'ProductGrid':
       return (
         <ProductSection
           title={title || config.heading || 'Products'}
           subtitle={subtitle || config.subheading}
           viewAllHref={viewAllHref}
+          viewAllText={config.ctaText || 'See All'}
           params={{
             take: config.productLimit || 8,
             featured: config.filterType === 'Featured',
-            popularity: config.filterType === 'Best Selling' ? 'bestseller' : 
+            popularity: config.filterType === 'Best Selling' ? 'bestseller' :
                        config.filterType === 'New Arrivals' ? 'new' : undefined,
             categoryId: config.categoryId,
           }}
@@ -87,28 +139,14 @@ export default function DynamicSectionRenderer({ section }: DynamicSectionRender
         />
       );
 
-    case 'LimitedStockDeal':
-      return (
-        <LimitedStockDealSection
-          title={title || 'Limited Stock Deal'}
-          discountText={config.discountText || 'Up to 70% Off'}
-          discountPercent={config.discountPercent || 70}
-          productLimit={config.productLimit || 8}
-          ctaText={config.ctaText || 'Shop Now'}
-          ctaLink={viewAllHref}
-        />
-      );
-
     case 'TopSelling':
       return (
         <ProductSection
           title={title || 'Top Selling Items'}
           subtitle={subtitle}
           viewAllHref={viewAllHref}
-          params={{
-            take: config.productLimit || 8,
-            popularity: 'bestseller',
-          }}
+          viewAllText={config.ctaText || 'See All'}
+          params={{ take: config.productLimit || 8, popularity: 'bestseller' }}
           limit={config.productLimit || 8}
           accentColor={config.accentColor}
         />
@@ -120,10 +158,8 @@ export default function DynamicSectionRenderer({ section }: DynamicSectionRender
           title={title || 'Top Express Delivery'}
           subtitle={subtitle}
           viewAllHref={viewAllHref}
-          params={{
-            take: config.productLimit || 8,
-            popularity: 'trending',
-          }}
+          viewAllText={config.ctaText || 'See All'}
+          params={{ take: config.productLimit || 8, popularity: 'trending' }}
           limit={config.productLimit || 8}
           accentColor={config.accentColor}
         />
@@ -135,10 +171,8 @@ export default function DynamicSectionRenderer({ section }: DynamicSectionRender
           title={title || 'Newest Arrivals'}
           subtitle={subtitle}
           viewAllHref={viewAllHref}
-          params={{
-            take: config.productLimit || 8,
-            popularity: 'new',
-          }}
+          viewAllText={config.ctaText || 'See All'}
+          params={{ take: config.productLimit || 8, popularity: 'new' }}
           limit={config.productLimit || 8}
           accentColor={config.accentColor}
         />
@@ -150,10 +184,8 @@ export default function DynamicSectionRenderer({ section }: DynamicSectionRender
           title={title || 'Best Sellers'}
           subtitle={subtitle}
           viewAllHref={viewAllHref}
-          params={{
-            take: config.productLimit || 8,
-            popularity: 'bestseller',
-          }}
+          viewAllText={config.ctaText || 'See All'}
+          params={{ take: config.productLimit || 8, popularity: 'bestseller' }}
           limit={config.productLimit || 8}
           accentColor={config.accentColor}
         />
@@ -165,17 +197,14 @@ export default function DynamicSectionRenderer({ section }: DynamicSectionRender
           title={title || 'Trending Now'}
           subtitle={subtitle}
           viewAllHref={viewAllHref}
-          params={{
-            take: config.productLimit || 8,
-            popularity: 'trending',
-          }}
+          viewAllText={config.ctaText || 'See All'}
+          params={{ take: config.productLimit || 8, popularity: 'trending' }}
           limit={config.productLimit || 8}
           accentColor={config.accentColor}
         />
       );
 
     default:
-      // Fallback for unknown section types
       console.warn(`Unknown section type: ${type}`);
       return null;
   }
