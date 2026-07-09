@@ -4,28 +4,38 @@ import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
 
+/**
+ * KRYROS Primary Button
+ * Height: 48px | Padding: 16px 24px | Radius: 8px | Font: Roboto 500 16px
+ * Colors: bg #0A5858 → hover #2E656A → active #084C4C | Disabled #9DB5B5
+ * Shadow + translateY(-2px) on hover | 4px ring on focus
+ */
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0" +
-" hover-elevate active-elevate-2",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-base font-medium transition-all duration-250 focus-visible:outline-none disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 cursor-pointer select-none",
   {
     variants: {
       variant: {
         default:
-           "bg-primary text-primary-foreground border border-primary-border",
+          "bg-primary text-white border border-white/15 " +
+          "shadow-[0_2px_8px_rgba(0,0,0,0.10),0_8px_20px_rgba(10,88,88,0.25)] " +
+          "hover:bg-[#2E656A] hover:-translate-y-0.5 hover:shadow-[0_12px_28px_rgba(10,88,88,0.30)] " +
+          "active:bg-[#084C4C] active:translate-y-0 active:shadow-[0_3px_10px_rgba(10,88,88,0.18)] " +
+          "focus-visible:shadow-[0_0_0_4px_rgba(10,88,88,0.18),0_8px_20px_rgba(10,88,88,0.25)] " +
+          "disabled:bg-[#9DB5B5] disabled:text-white disabled:shadow-none disabled:cursor-not-allowed disabled:opacity-100",
         destructive:
-          "bg-destructive text-destructive-foreground shadow-sm border-destructive-border",
+          "bg-destructive text-destructive-foreground shadow-sm border-destructive-border hover:bg-destructive/90",
         outline:
-          " border [border-color:var(--button-outline)] shadow-xs active:shadow-none ",
+          "border [border-color:var(--button-outline)] shadow-xs hover:bg-muted active:shadow-none",
         secondary:
-          "border bg-secondary text-secondary-foreground border border-secondary-border ",
-        ghost: "border border-transparent",
+          "bg-secondary text-secondary-foreground border border-secondary-border hover:bg-secondary/80",
+        ghost: "border border-transparent hover:bg-muted hover:text-foreground",
         link: "text-primary underline-offset-4 hover:underline",
       },
       size: {
-        default: "min-h-9 px-4 py-2",
-        sm: "min-h-8 rounded-md px-3 text-xs",
-        lg: "min-h-10 rounded-md px-8",
-        icon: "h-9 w-9",
+        default: "min-h-[48px] px-6 py-3",
+        sm: "min-h-[36px] rounded-md px-4 text-sm",
+        lg: "min-h-[56px] rounded-lg px-8 text-lg",
+        icon: "h-10 w-10",
       },
     },
     defaultVariants: {
