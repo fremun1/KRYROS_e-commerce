@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
 @plugin "@tailwindcss/typography";
@@ -9,13 +9,13 @@
   /* =================================================
      GLOBAL BRAND COLORS (HEX for reference)
   ================================================= */
-  --kryros-primary: #27B9AF;
-  --kryros-primary-hover: #3BCEC4;
+  --kryros-primary: #0A5858;
+  --kryros-primary-hover: #2E656A;
   --kryros-gold: #FFC107;
   --kryros-danger: #B91C1C;
 
   /* RGB versions for opacity use */
-  --kryros-primary-rgb: 39, 185, 175;
+  --kryros-primary-rgb: 10, 88, 88;
   --kryros-dark-bg-rgb: 5, 8, 22;
 }
 
@@ -72,8 +72,8 @@
   --color-sidebar-ring: hsl(var(--sidebar-ring));
 
   /* KRYROS CUSTOM THEME TOKENS */
-  --color-kryros-primary: #27B9AF;
-  --color-kryros-primary-hover: #3BCEC4;
+  --color-kryros-primary: #0A5858;
+  --color-kryros-primary-hover: #2E656A;
   --color-kryros-gold: #FFC107;
   --color-kryros-danger: #B91C1C;
 
@@ -96,7 +96,7 @@
   --card-border: 214 32% 91%;     /* #E2E8F0 */
   --border: 214 32% 91%;          /* #E2E8F0 */
   --input: 214 32% 91%;           /* #E2E8F0 */
-  --primary: 176 65% 44%;         /* #27B9AF */
+  --primary: 180 80% 19%;         /* #0A5858 */
   --primary-foreground: 0 0% 100%;
   --secondary: 210 40% 96%;       /* #F1F5F9 */
   --secondary-foreground: 222 47% 11%;
@@ -106,26 +106,26 @@
   --accent-foreground: 222 47% 11%;
   --destructive: 0 74% 42%;       /* #B91C1C */
   --destructive-foreground: 0 0% 100%;
-  --ring: 176 65% 44%;
+  --ring: 180 80% 19%;
   --popover: 0 0% 100%;
   --popover-foreground: 222 47% 11%;
   --popover-border: 214 32% 91%;
   --sidebar: 210 40% 98%;
   --sidebar-foreground: 222 47% 11%;
   --sidebar-border: 214 32% 91%;
-  --sidebar-primary: 176 65% 44%;
+  --sidebar-primary: 180 80% 19%;
   --sidebar-primary-foreground: 0 0% 100%;
   --sidebar-accent: 210 40% 96%;
   --sidebar-accent-foreground: 222 47% 11%;
-  --sidebar-ring: 176 65% 44%;
-  --radius: 0.75rem;
-  --chart-1: 176 65% 44%;
-  --chart-2: 176 65% 44%;
-  --chart-3: 176 65% 44%;
-  --chart-4: 176 65% 44%;
-  --chart-5: 176 65% 44%;
+  --sidebar-ring: 180 80% 19%;
+  --radius: 0.5rem;
+  --chart-1: 180 80% 19%;
+  --chart-2: 180 80% 19%;
+  --chart-3: 180 80% 19%;
+  --chart-4: 180 80% 19%;
+  --chart-5: 180 80% 19%;
 
-  --app-font-sans: 'Inter', sans-serif;
+  --app-font-sans: 'Roboto', sans-serif;
   --app-font-serif: Georgia, serif;
   --app-font-mono: Menlo, monospace;
 }
@@ -138,7 +138,7 @@
   --card-border: 215 32% 17%;     /* #1E293B */
   --border: 215 32% 17%;          /* #1E293B */
   --input: 215 32% 17%;
-  --primary: 176 65% 44%;         /* #27B9AF */
+  --primary: 180 80% 19%;         /* #0A5858 */
   --primary-foreground: 0 0% 100%;
   --secondary: 217 41% 11%;       /* #101826 */
   --secondary-foreground: 0 0% 100%;
@@ -148,18 +148,18 @@
   --accent-foreground: 0 0% 100%;
   --destructive: 0 74% 42%;       /* #B91C1C */
   --destructive-foreground: 0 0% 100%;
-  --ring: 176 65% 44%;
+  --ring: 180 80% 19%;
   --popover: 217 46% 9%;
   --popover-foreground: 0 0% 100%;
   --popover-border: 215 32% 17%;
   --sidebar: 217 41% 11%;
   --sidebar-foreground: 0 0% 100%;
   --sidebar-border: 215 32% 17%;
-  --sidebar-primary: 176 65% 44%;
+  --sidebar-primary: 180 80% 19%;
   --sidebar-primary-foreground: 0 0% 100%;
   --sidebar-accent: 215 32% 17%;
   --sidebar-accent-foreground: 0 0% 100%;
-  --sidebar-ring: 176 65% 44%;
+  --sidebar-ring: 180 80% 19%;
 }
 
 @layer base {
@@ -274,7 +274,7 @@ html {
   transform: translateX(-50%);
   width: 44px;
   height: 44px;
-  background: #1dbcb8;
+  background: #0A5858;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -317,8 +317,8 @@ html {
 
 .nav-item.active .icon,
 .nav-item.active .label {
-  color: #1dbcb8;
-  stroke: #1dbcb8;
+  color: #0A5858;
+  stroke: #0A5858;
 }
 
 .nav-item:not(.active) .icon,
@@ -328,7 +328,7 @@ html {
 }
 
 .nav-item.active svg {
-  stroke: #1dbcb8;
+  stroke: #0A5858;
 }
 
 .nav-item:not(.active) svg {
@@ -350,7 +350,7 @@ html {
   right: -4px;
   min-width: 12px;
   height: 12px;
-  background: #1dbcb8;
+  background: #0A5858;
   border-radius: 6px;
   display: flex;
   align-items: center;
