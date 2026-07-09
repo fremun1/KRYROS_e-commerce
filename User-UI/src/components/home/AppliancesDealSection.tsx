@@ -1,94 +1,138 @@
 import { useState, useEffect } from "react";
-import { Link } from "wouter";
-import { ChevronRight, PlugZap } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { fetchProducts, fetchHomepageSections, fetchCategories } from "@/lib/api";
 import type { Product, ApiHomepageSection, ApiCategory } from "@/lib/api";
 import UnifiedProductCard from "@/components/UnifiedProductCard";
 
-export default function AppliancesDealSection() {
+interface AppliancesDealSectionProps {
+  title?: string;
+  subtitleText?: string;
+  ctaText?: string;
+  ctaLink?: string;
+  headerBgColor?: string;
+  productLimit?: number;
+  categorySlug?: string;
+}
+
+export default function AppliancesDealSection({
+  title: propTitle,
+  subtitleText: propSubtitleText,
+  ctaText: propCtaText,
+  ctaLink: propCtaLink,
+  headerBgColor: propHeaderBgColor,
+  productLimit: propProductLimit,
+  categorySlug: propCategorySlug,
+}: AppliancesDealSectionProps = {}) {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [sectionTitle, setSectionTitle] = useState("Appliances Deal");
-  const [ctaText, setCtaText] = useState("View All");
-  const [ctaLink, setCtaLink] = useState("/shop");
-  const [scroll, setScroll] = useState(true);
-  const [limit, setLimit] = useState(8);
+  const [cmsTitle, setCmsTitle]       = useState("Appliances deals");
+  const [cmsSubtitle, setCmsSubtitle] = useState("");
+  const [cmsCtaText, setCmsCtaText]   = useState("See All");
+  const [cmsCtaLink, setCmsCtaLink]   = useState("/shop");
+  const [cmsBgColor, setCmsBgColor]   = useState("#0A5858");
+  const [cmsLimit, setCmsLimit]       = useState(8);
+
+  const title     = propTitle          ?? cmsTitle;
+  const subtitle  = propSubtitleText   ?? cmsSubtitle;
+  const ctaText   = propCtaText        ?? cmsCtaText;
+  const ctaLink   = propCtaLink        ?? cmsCtaLink;
+  const headerBg  = propHeaderBgColor  ?? cmsBgColor;
+  const limit     = propProductLimit   ?? cmsLimit;
 
   useEffect(() => {
     const load = async () => {
-      // Fetch all categories to find appliances-related ones
-      const allCategories = await fetchCategories();
-      const applianceSlugs: string[] = [];
+      // 1. Try CMS config first
+      const sections = await fetchHomepageSections("AppliancesDeal");
+      const cms = sections.find((s: ApiHomepageSection) => s.type === "AppliancesDeal");
+      const cfg = (cms?.config ?? {}) as Record<string, unknown>;
 
-      // Look for categories that match appliances-related names
-      const matchKeywords = ["appliance", "home appliance", "kitchen", "washing", "fridge", "refrigerator", "microwave", "cooker", "oven", "iron", "fan", "blender", "toaster", "heater", "heater", "ac", "air conditioner", "vacuum"];
-      allCategories.forEach((cat: ApiCategory) => {
-        const nameLower = cat.name.toLowerCase();
-        if (matchKeywords.some((kw) => nameLower.includes(kw))) {
-          if (cat.slug) applianceSlugs.push(cat.slug);
-        }
-      });
+      if (cfg.title)       setCmsTitle(String(cfg.title));
+      if (cfg.subtitle)    setCmsSubtitle(String(cfg.subtitle));
+      if (cfg.headerBgColor) setCmsBgColor(String(cfg.headerBgColor));
+      if (cfg.ctaText)     setCmsCtaText(String(cfg.ctaText));
+      if (cfg.ctaLink)     setCmsCtaLink(String(cfg.ctaLink));
+      if (cfg.limit)       setCmsLimit(Number(cfg.limit) || 8);
+      if (cfg.productLimit) setCmsLimit(Number(cfg.productLimit) || 8);
 
-      // If no appliance categories found, fallback to fetching popular products
+      // 2. Fetch products — prop slug → CMS slug → auto-detect appliances
+      const targetSlug = propCategorySlug || (cfg.categorySlug ? String(cfg.categorySlug) : null);
       let prods: Product[] = [];
-      if (applianceSlugs.length > 0) {
-        // Try to fetch from the first matching category
-        prods = await fetchProducts({ categorySlug: applianceSlugs[0], take: 12 });
+
+      if (targetSlug) {
+        prods = await fetchProducts({ categorySlug: targetSlug, take: 12 });
       }
+
+      if (prods.length === 0) {
+        const allCategories = await fetchCategories();
+        const matchKeywords = ["appliance", "home appliance", "kitchen", "washing", "fridge", "refrigerator", "microwave", "cooker", "oven", "iron", "fan", "blender", "toaster", "heater", "ac", "air conditioner", "vacuum"];
+        const applianceSlugs: string[] = [];
+        allCategories.forEach((cat: ApiCategory) => {
+          const nameLower = cat.name.toLowerCase();
+          if (matchKeywords.some((kw) => nameLower.includes(kw)) && cat.slug) {
+            applianceSlugs.push(cat.slug);
+          }
+        });
+        if (applianceSlugs.length > 0) {
+          prods = await fetchProducts({ categorySlug: applianceSlugs[0], take: 12 });
+        }
+      }
+
       if (prods.length === 0) {
         prods = await fetchProducts({ popularity: "bestseller", take: 12 });
       }
 
       setProducts(prods.slice(0, 12));
-
-      const sections = await fetchHomepageSections("AppliancesDeal");
-      const cms = sections.find((s: ApiHomepageSection) => s.type === "AppliancesDeal");
-      const cfg = (cms?.config ?? {}) as Record<string, unknown>;
-
-      if (cfg.title) setSectionTitle(String(cfg.title));
-      if (cfg.ctaText) setCtaText(String(cfg.ctaText));
-      if (cfg.ctaLink) setCtaLink(String(cfg.ctaLink));
-      if (cfg.limit) setLimit(Number(cfg.limit) || 8);
-      if (typeof cfg.scroll === "boolean") setScroll(cfg.scroll);
-
       setLoading(false);
     };
     load();
   }, []);
 
-  if (!loading && products.length === 0) return null;
+  const displayProducts = products.slice(0, limit);
+  if (!loading && displayProducts.length === 0) return null;
 
   return (
-    <section className="max-w-7xl mx-auto px-4 md:px-6 py-4 md:py-6">
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <PlugZap className="w-4 h-4 text-primary" />
-          <h2 className="text-base md:text-xl font-black text-foreground">{sectionTitle}</h2>
+    <section className="w-full bg-white">
+
+      {/* ── Jumia Variant 3: Deal colored bar header ─────────── */}
+      <div
+        className="px-4 py-3 sm:px-6"
+        style={{ backgroundColor: headerBg }}
+      >
+        <div className="flex items-center justify-between gap-2">
+          <div>
+            <h2 className="text-[20px] leading-[28px] font-bold text-white">{title}</h2>
+            {subtitle && (
+              <p className="text-[13px] leading-[18px] text-white/90 mt-0.5">{subtitle}</p>
+            )}
+          </div>
+          <a
+            href={ctaLink}
+            className="flex items-center gap-0.5 text-white text-[14px] font-semibold hover:text-white/80 transition shrink-0 whitespace-nowrap"
+          >
+            {ctaText} <ChevronRight size={16} strokeWidth={2.5} />
+          </a>
         </div>
-        <Link href={ctaLink}>
-          <span className="text-xs md:text-sm text-primary font-semibold cursor-pointer hover:underline flex items-center gap-0.5 whitespace-nowrap">
-            {ctaText} <ChevronRight className="w-3.5 h-3.5" />
-          </span>
-        </Link>
       </div>
 
-      {loading ? (
-        <div className="flex gap-2 overflow-hidden">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="shrink-0 w-[calc(50vw-16px)] md:w-full" style={{ aspectRatio: "3/4" }} />
-          ))}
-        </div>
-      ) : (
-        <div className={scroll ? "flex gap-2 overflow-x-auto no-scrollbar pb-1 md:grid md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 md:overflow-visible" : "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2"}>
-          {products.slice(0, limit).map((p) => (
-            <UnifiedProductCard
-              key={p.id}
-              product={p}
-              className={scroll ? "flex-shrink-0 w-[calc(50vw-16px)] md:w-full" : "w-full"}
-            />
-          ))}
-        </div>
-      )}
+      {/* ── Products (horizontal scroll) ──────────────────────── */}
+      <div className="px-4 pt-3 pb-4 sm:px-6">
+        {loading ? (
+          <div className="flex gap-3 overflow-hidden">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="shrink-0 w-[calc(50vw-20px)] sm:w-48 aspect-[3/4] bg-muted rounded-lg animate-pulse"/>
+            ))}
+          </div>
+        ) : (
+          <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory no-scrollbar">
+            {displayProducts.map((p) => (
+              <div key={p.id} className="snap-start shrink-0 w-[calc(50vw-20px)] sm:w-48 md:w-52">
+                <UnifiedProductCard product={p} className="w-full" imageStyle="contain" />
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
     </section>
   );
 }
