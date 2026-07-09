@@ -325,7 +325,8 @@ export default function PayPage() {
   const [showDialDrop, setShowDialDrop] = useState(false);
 
   useEffect(() => {
-    const countryParam = detectedCountryCode ? `?countryCode=${detectedCountryCode}` : '';
+    const effectiveCountryCode = selectedCurrency.countryCode || detectedCountryCode;
+    const countryParam = effectiveCountryCode ? `?countryCode=${effectiveCountryCode}` : '';
     fetch(`${API_BASE}/api/payment-config/public${countryParam}`)
       .then(r => r.json())
       .then((data: any) => {
@@ -362,7 +363,7 @@ export default function PayPage() {
         setBankProviders([]);
         setMobileOptions([]);
       });
-  }, [detectedCountryCode]);
+  }, [detectedCountryCode, selectedCurrency.countryCode]);
 
   useEffect(() => {
     fetchSettings().then((settings) => {
@@ -376,10 +377,11 @@ export default function PayPage() {
 
   // Update dial code when country is detected
   useEffect(() => {
-    if (detectedCountryCode && dialCodeMap[detectedCountryCode]) {
-      setDialCode(dialCodeMap[detectedCountryCode]);
+    const effectiveCountryCode = selectedCurrency.countryCode || detectedCountryCode;
+    if (effectiveCountryCode && dialCodeMap[effectiveCountryCode]) {
+      setDialCode(dialCodeMap[effectiveCountryCode]);
     }
-  }, [detectedCountryCode]);
+  }, [detectedCountryCode, selectedCurrency.countryCode]);
 
   useEffect(() => {
     if (!showCurrencyDrop) return;
@@ -492,7 +494,7 @@ export default function PayPage() {
           amount: gatewayTotal,
           currency: "ZMW",
           phone: `${dialCode}${mmPhone}`,
-          countryCode: detectedCountryCode,
+          countryCode: selectedCurrency.countryCode || detectedCountryCode,
           note: note || linkedPaymentName || `Payment ${payRef}`,
           paymentLinkId,
           customerName: `${firstName} ${lastName}`.trim(),

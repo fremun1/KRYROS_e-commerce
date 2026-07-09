@@ -10,6 +10,7 @@ export interface Currency {
   symbolPosition: 'BEFORE' | 'AFTER';
   exchangeRate: number;
   flag: string;
+  countryCode?: string;
 }
 
 const FLAG_MAP: Record<string, string> = {
@@ -27,6 +28,7 @@ const DEFAULT: Currency = {
   symbolPosition: 'BEFORE',
   exchangeRate: 1,
   flag: '🇺🇸',
+  countryCode: 'US',
 };
 
 interface CurrencyState {
@@ -67,6 +69,7 @@ export const useCurrencyStore = create<CurrencyState>()(
               symbolPosition: (c.symbolPosition as 'BEFORE' | 'AFTER') ?? 'BEFORE',
               exchangeRate: Number(c.exchangeRate),
               flag: FLAG_MAP[c.currencyCode] ?? '',
+              countryCode: c.code,
             }));
 
           if (currencies.length > 0) {
@@ -105,6 +108,7 @@ export const useCurrencyStore = create<CurrencyState>()(
               symbolPosition: (c.symbolPosition as 'BEFORE' | 'AFTER') ?? 'BEFORE',
               exchangeRate: Number(c.exchangeRate),
               flag: FLAG_MAP[c.currencyCode] ?? '',
+              countryCode: c.code,
             }));
 
           // Then, detect user's location and get the appropriate currency
@@ -157,6 +161,7 @@ export const useCurrencyStore = create<CurrencyState>()(
                 symbolPosition: (c.symbolPosition as 'BEFORE' | 'AFTER') ?? 'BEFORE',
                 exchangeRate: Number(c.exchangeRate),
                 flag: FLAG_MAP[c.currencyCode] ?? '',
+                countryCode: c.code,
               }));
 
             if (currencies.length > 0) {

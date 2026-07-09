@@ -265,10 +265,11 @@ export default function CheckoutPage() {
     }).catch(() => {});
   }, []);
 
-  // Fetch enabled payment methods once we know the detected country.
-  // If we fetch too early (before detection), the API returns "global" methods and Zambia-only methods may show everywhere.
+  // Fetch enabled payment methods once we know the effective country.
+  // We prioritize the country associated with the selected currency, falling back to detected country.
   useEffect(() => {
-    const countryParam = detectedCountryCode ? `?countryCode=${detectedCountryCode}` : '';
+    const effectiveCountryCode = selectedCurrency.countryCode || detectedCountryCode;
+    const countryParam = effectiveCountryCode ? `?countryCode=${effectiveCountryCode}` : '';
     fetch(`${API_BASE}/api/payment-config/public${countryParam}`).then(r => r.json()).then(data => {
       const arr = (Array.isArray(data) ? data : data?.data ?? []) as PaymentConfigMethod[];
       const methods = arr.filter((method) => method?.isEnabled !== false);
@@ -300,7 +301,7 @@ export default function CheckoutPage() {
       setMobileOptions([]);
       setOpenMethod(null);
     });
-  }, [detectedCountryCode]);
+  }, [detectedCountryCode, selectedCurrency.countryCode]);
 
   useEffect(() => {
     setOrderError(null);
@@ -309,10 +310,11 @@ export default function CheckoutPage() {
   }, [openMethod]);
 
   useEffect(() => {
-    if (detectedCountryCode && dialCodeMap[detectedCountryCode]) {
-      setDialCode(dialCodeMap[detectedCountryCode]);
+    const effectiveCountryCode = selectedCurrency.countryCode || detectedCountryCode;
+    if (effectiveCountryCode && dialCodeMap[effectiveCountryCode]) {
+      setDialCode(dialCodeMap[effectiveCountryCode]);
     }
-  }, [detectedCountryCode]);
+  }, [detectedCountryCode, selectedCurrency.countryCode]);
 
   const [shippingCountries, setShippingCountries] = useState<any[]>([]);
 
@@ -405,7 +407,8 @@ export default function CheckoutPage() {
       setMmPhase("initializing");
       
       const phoneWithDialCode = `${dialCode}${mmPhone}`;
-      const initRes = await fetch(`${API_BASE}/api/payments/initialize`, { method: "POST", headers, body: JSON.stringify({ orderId, phone: phoneWithDialCode, countryCode: detectedCountryCode, amount: Math.round(calculateGatewayTotal() * 100) / 100 }) });
+      const effectiveCountryCode = selectedCurrency.countryCode || detectedCountryCode;
+      const initRes = await fetch(`${API_BASE}/api/payments/initialize`, { method: "POST", headers, body: JSON.stringify({ orderId, phone: phoneWithDialCode, countryCode: effectiveCountryCode, amount: Math.round(calculateGatewayTotal() * 100) / 100 }) });
       if (!initRes.ok) throw new Error("Payment init failed");
       
       setMmPhase("waiting");
