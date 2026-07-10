@@ -53,26 +53,6 @@ function CategoryCarousel({ categories }: { categories: ApiCategory[] }) {
 
   return (
     <section className="pt-4 pb-3">
-      {/* Header */}
-      <div className="px-4 md:px-6 mb-3 flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <div className="w-1 h-7 rounded-full bg-primary flex-shrink-0" />
-          <div>
-            <h2 className="text-sm md:text-base font-black text-foreground tracking-tight">
-              Browse Categories
-            </h2>
-            <p className="text-[10px] text-muted-foreground leading-none mt-0.5">
-              Tap a category to explore
-            </p>
-          </div>
-        </div>
-        <Link href="/categories">
-          <span className="flex items-center gap-1 text-[11px] font-bold text-primary bg-primary/10 hover:bg-primary/20 transition-colors px-3 py-1.5 rounded-full cursor-pointer whitespace-nowrap">
-            See All <ChevronRight className="w-3 h-3" />
-          </span>
-        </Link>
-      </div>
-
       {/* Jumia-style: horizontal scroll, ~4 square cards visible at once */}
       <div className="flex gap-2.5 overflow-x-auto no-scrollbar px-4 md:px-6 pb-2">
         {categories.map((cat) => {

@@ -81,20 +81,6 @@ export default function WholesalePage() {
       {/* Shop by Category — Jumia-style portrait cards */}
       {!loading && categories.length > 0 && (
       <div className="mb-5">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2.5">
-            <div className="w-1 h-7 rounded-full bg-primary flex-shrink-0" />
-            <div>
-              <h2 className="text-sm font-black text-foreground tracking-tight">Shop by Category</h2>
-              <p className="text-[10px] text-muted-foreground leading-none mt-0.5">Tap a category to explore</p>
-            </div>
-          </div>
-          <Link href="/categories">
-            <span className="flex items-center gap-1 text-[11px] font-bold text-primary bg-primary/10 hover:bg-primary/20 transition-colors px-3 py-1.5 rounded-full cursor-pointer whitespace-nowrap">
-              See All <ChevronRight className="w-3 h-3" />
-            </span>
-          </Link>
-        </div>
         <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2">
           {categories.map((cat) => {
             const href = `/shop/section/${encodeURIComponent((cat as any).slug || cat.id)}`;
