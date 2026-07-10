@@ -672,16 +672,17 @@ export class CMSService {
   }
 
   async getSections(pageSlug?: string) {
+    const normalizedSlug = (pageSlug === 'home' || pageSlug === 'homepage') ? 'homepage' : pageSlug;
     const where: any = { isActive: true };
-    if (pageSlug) where.pageSlug = pageSlug;
+    if (normalizedSlug) where.pageSlug = normalizedSlug;
 
     let sections = await this.prisma.cMSSection.findMany({ where, orderBy: { order: 'asc' } });
 
     // Auto-seed if no sections exist for this specific page slug (same pattern as homepage)
-    if (pageSlug && sections.length === 0) {
-      await this.resetAndSeedSectionsBySlug(pageSlug);
+    if (normalizedSlug && sections.length === 0) {
+      await this.resetAndSeedSectionsBySlug(normalizedSlug);
       sections = await this.prisma.cMSSection.findMany({
-        where: { pageSlug, isActive: true },
+        where: { pageSlug: normalizedSlug, isActive: true },
         orderBy: { order: 'asc' },
       });
     }
@@ -805,22 +806,35 @@ export class CMSService {
       ],
     };
 
-    // Home page sections live in homepage_sections, not cms_sections
-    if (slug === 'home') {
-      return this.resetAndSeedHomePageSections();
+    // Normalize homepage slug
+    const normalizedSlug = (slug === 'home' || slug === 'homepage') ? 'homepage' : slug;
+    
+    // Check if we have sections defined for this page
+    let sections = PAGE_SECTIONS[normalizedSlug];
+    
+    // If it's the homepage and no specific sections are defined in PAGE_SECTIONS,
+    // we could either use resetAndSeedHomePageSections() or define them here.
+    // For the new dynamic system, we want them in cMSSection (cms_sections table).
+    if (!sections && normalizedSlug === 'homepage') {
+      sections = [
+        { type: 'HeroSlider', order: 1, isActive: true, title: 'Hero Banner' },
+        { type: 'CategoriesGrid', order: 2, isActive: true, title: 'Shop by Category' },
+        { type: 'FlashSale', order: 3, isActive: true, title: 'Flash Sale' },
+        { type: 'TopSelling', order: 4, isActive: true, title: 'Top Selling' },
+        { type: 'Trending', order: 5, isActive: true, title: 'Trending Now' },
+      ];
     }
 
-    const sections = PAGE_SECTIONS[slug];
     if (!sections) {
-      return { success: false, message: `No section definition found for page slug: ${slug}` };
+      return { success: false, message: `No section definition found for page slug: ${normalizedSlug}` };
     }
 
     // Delete all existing cms_sections for this page slug
-    await this.prisma.cMSSection.deleteMany({ where: { pageSlug: slug } as any });
+    await this.prisma.cMSSection.deleteMany({ where: { pageSlug: normalizedSlug } as any });
 
     // Re-seed
     for (const s of sections) {
-      await this.prisma.cMSSection.create({ data: { ...s, pageSlug: slug } as any });
+      await this.prisma.cMSSection.create({ data: { ...s, pageSlug: normalizedSlug } as any });
     }
 
     return { success: true, message: `Reset & seeded ${sections.length} sections for page: ${slug}` };

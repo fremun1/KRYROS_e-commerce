@@ -45,7 +45,7 @@ export class CMSController {
   @Get('sections')
   @ApiOperation({ summary: 'List all sections for a page' })
   listSections(@Query('pageSlug') pageSlug: string) {
-    return this.cmsService.listSections(pageSlug);
+    return this.cmsService.getSections(pageSlug);
   }
 
   @Post('sections')
