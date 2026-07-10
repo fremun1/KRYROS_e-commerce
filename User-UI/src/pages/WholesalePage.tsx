@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
-import { Tag, Truck, ShieldCheck, Headphones, ShoppingCart, ChevronRight, Heart, LayoutGrid, Search, ClipboardList, SendHorizonal, CheckCircle2, ArrowRight } from "lucide-react";
+import { Tag, Truck, ShieldCheck, Headphones, ChevronRight, Search, ClipboardList, SendHorizonal, CheckCircle2, ArrowRight } from "lucide-react";
 import { fetchProducts, fetchCategories, API_BASE, type ApiBanner } from "@/lib/api";
 import { useCurrencyStore } from "@/store/currencyStore";
 import UnifiedProductCard from "@/components/UnifiedProductCard";
@@ -43,7 +43,7 @@ export default function WholesalePage() {
   useEffect(() => {
     setLoading(true);
     Promise.all([
-      fetchCategories().then((cats: any) => setCategories(cats.filter((c: any) => c.isActive !== false).slice(0, 5))),
+      fetchCategories().then((cats: any) => setCategories(cats.filter((c: any) => c.isActive !== false))),
       fetchProducts({ take: 8, isWholesaleOnly: true }).then((prods: any) => setWholesaleProducts(prods)),
       fetch(`${API_BASE}/api/cms/banners?tag=wholesale`, { cache: "no-store" })
         .then((r) => r.ok ? r.json() : null)
@@ -78,42 +78,64 @@ export default function WholesalePage() {
       {/* Jumia-Style Banner Slider */}
       <PageBannerSlider banners={banners} />
 
-      {/* Shop by Category */}
+      {/* Shop by Category — Jumia-style portrait cards */}
+      {!loading && categories.length > 0 && (
       <div className="mb-5">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-bold text-foreground">Shop by Category</h2>
-          <Link href="/shop">
-            <span className="text-xs text-primary font-semibold cursor-pointer">View All</span>
+          <div className="flex items-center gap-2.5">
+            <div className="w-1 h-7 rounded-full bg-primary flex-shrink-0" />
+            <div>
+              <h2 className="text-sm font-black text-foreground tracking-tight">Shop by Category</h2>
+              <p className="text-[10px] text-muted-foreground leading-none mt-0.5">Tap a category to explore</p>
+            </div>
+          </div>
+          <Link href="/categories">
+            <span className="flex items-center gap-1 text-[11px] font-bold text-primary bg-primary/10 hover:bg-primary/20 transition-colors px-3 py-1.5 rounded-full cursor-pointer whitespace-nowrap">
+              See All <ChevronRight className="w-3 h-3" />
+            </span>
           </Link>
         </div>
-        <div className="flex gap-3 overflow-x-auto no-scrollbar md:flex-wrap md:overflow-visible pb-1 -mx-4 px-4 md:mx-0 md:px-0">
-          {loading
-            ? Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="flex flex-col items-center gap-1.5 flex-shrink-0">
-                  <div className="w-[58px] h-[58px] rounded-2xl bg-muted animate-pulse" />
-                  <div className="w-10 h-2 bg-muted rounded animate-pulse" />
-                </div>
-              ))
-            : categories.map((cat) => (
-                <div key={cat.id} className="flex flex-col items-center gap-1.5 flex-shrink-0 cursor-pointer group">
-                  <div className="w-[58px] h-[58px] rounded-2xl overflow-hidden border border-border group-hover:border-primary transition-all bg-muted">
+        <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2">
+          {categories.map((cat) => {
+            const href = `/shop/section/${encodeURIComponent((cat as any).slug || cat.id)}`;
+            return (
+              <Link key={cat.id} href={href}>
+                <a
+                  className="flex-shrink-0 flex flex-col items-center gap-2 cursor-pointer group select-none"
+                  style={{ width: "clamp(130px, 36vw, 160px)" }}
+                >
+                  {/* Portrait image */}
+                  <div
+                    className="w-full rounded-2xl overflow-hidden bg-muted shadow-sm"
+                    style={{ aspectRatio: "3/4" }}
+                  >
                     {cat.image ? (
-                      <img src={cat.image} alt={cat.name} className="w-full h-full object-cover" />
+                      <img
+                        src={cat.image}
+                        alt={cat.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        loading="lazy"
+                      />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">{cat.name[0]}</div>
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-primary/5">
+                        <svg className="w-10 h-10 text-primary/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                            d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                        </svg>
+                      </div>
                     )}
                   </div>
-                  <span className="text-[9px] font-medium text-muted-foreground group-hover:text-primary transition-colors text-center">{cat.name}</span>
-                </div>
-              ))}
-          <div className="flex flex-col items-center gap-1.5 flex-shrink-0 cursor-pointer group">
-            <div className="w-[58px] h-[58px] rounded-2xl border border-border bg-muted group-hover:border-primary transition-all flex items-center justify-center">
-              <LayoutGrid className="w-5 h-5 text-muted-foreground" />
-            </div>
-            <span className="text-[9px] font-medium text-muted-foreground group-hover:text-primary transition-colors">More</span>
-          </div>
+                  {/* Name below */}
+                  <span className="text-center text-xs font-semibold text-foreground leading-tight line-clamp-2 px-0.5 w-full">
+                    {cat.name}
+                  </span>
+                </a>
+              </Link>
+            );
+          })}
         </div>
       </div>
+      )}
 
       {/* Feature badges — only shown when admin configures features */}
       {cms?.features && cms.features.length > 0 && (
