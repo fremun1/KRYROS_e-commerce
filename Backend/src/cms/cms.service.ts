@@ -1051,6 +1051,48 @@ export class CMSService {
     }
   }
 
+  // Move a section up or down
+  async moveSectionInOrder(
+    sectionId: string,
+    direction: 'up' | 'down',
+    pageSlug: string
+  ) {
+    // Get all sections on this page, sorted by order
+    const sections = await this.prisma.cMSSection.findMany({
+      where: { pageSlug } as any,
+      orderBy: { order: 'asc' },
+    });
+
+    const currentIndex = sections.findIndex(s => s.id === sectionId);
+    if (currentIndex === -1) throw new NotFoundException('Section not found on this page');
+
+    // Determine new index
+    let newIndex = currentIndex;
+    if (direction === 'up' && currentIndex > 0) {
+      newIndex = currentIndex - 1;
+    } else if (direction === 'down' && currentIndex < sections.length - 1) {
+      newIndex = currentIndex + 1;
+    } else {
+      return { success: false, message: `Cannot move ${direction} from this position` };
+    }
+
+    // Swap orders
+    const movedSection = sections[currentIndex];
+    const swappedSection = sections[newIndex];
+
+    await this.prisma.cMSSection.update({
+      where: { id: movedSection.id },
+      data: { order: swappedSection.order || 0 },
+    });
+
+    await this.prisma.cMSSection.update({
+      where: { id: swappedSection.id },
+      data: { order: movedSection.order || 0 },
+    });
+
+    return { success: true, section: movedSection };
+  }
+
   async seedFooter() {
     // Check if footer already exists
     const existingSection = await this.prisma.footerSection.findFirst();

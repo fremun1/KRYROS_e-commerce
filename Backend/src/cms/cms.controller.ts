@@ -16,11 +16,15 @@ import { UpdateFooterLinkDto } from './dto/update-footer-link.dto';
 import { UpdateFooterConfigDto } from './dto/update-footer-config.dto';
 import { CreateHomePageSectionDto } from './dto/create-homepage-section.dto';
 import { UpdateHomePageSectionDto } from './dto/update-homepage-section.dto';
+import { SectionDataSourceService } from './section-data-source.service';
 
 @ApiTags('CMS')
 @Controller('cms')
 export class CMSController {
-  constructor(private cmsService: CMSService) {}
+  constructor(
+    private cmsService: CMSService,
+    private sectionDataSourceService: SectionDataSourceService
+  ) {}
 
   // ==================== HOME PAGE SECTIONS ====================
 
@@ -443,5 +447,64 @@ export class CMSController {
   @ApiOperation({ summary: 'Seed default brand banners' })
   seedBrandBanners() {
     return this.cmsService.seedBrandBanners();
+  }
+
+  // ==================== SECTION DATA SOURCES ====================
+
+  @Get('section-rules')
+  @ApiOperation({ summary: 'Get all available section data source rules' })
+  getAllSectionRules() {
+    return this.sectionDataSourceService.getAllRules();
+  }
+
+  @Get('section-rules/metadata')
+  @ApiOperation({ summary: 'Get section rules metadata (for admin UI dropdowns)' })
+  getSectionRulesMetadata() {
+    return this.sectionDataSourceService.getRuleMetadata();
+  }
+
+  @Get('section-rules/metadata-grouped')
+  @ApiOperation({ summary: 'Get section rules metadata grouped by category' })
+  getSectionRulesMetadataGrouped() {
+    return this.sectionDataSourceService.getRuleMetadataGroupedByCategory();
+  }
+
+  @Get('sections/products-by-source')
+  @ApiOperation({ summary: 'Fetch products for a section data source' })
+  fetchProductsBySource(
+    @Query('dataSourceId') dataSourceId: string,
+    @Query('limit') limit?: string,
+    @Query('skip') skip?: string
+  ) {
+    return this.sectionDataSourceService.fetchProductsByRule(
+      dataSourceId,
+      limit ? Number(limit) : 8,
+      skip ? Number(skip) : 0
+    );
+  }
+
+  @Get('sections/categories-by-source')
+  @ApiOperation({ summary: 'Fetch categories for a section data source' })
+  fetchCategoriesBySource(
+    @Query('dataSourceId') dataSourceId: string,
+    @Query('limit') limit?: string
+  ) {
+    return this.sectionDataSourceService.fetchCategoriesByRule(
+      dataSourceId,
+      limit ? Number(limit) : 12
+    );
+  }
+
+  @Patch('sections/:id/move')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Move a section up or down' })
+  moveSectionInOrder(
+    @Param('id') id: string,
+    @Query('direction') direction: 'up' | 'down',
+    @Query('pageSlug') pageSlug: string = 'homepage'
+  ) {
+    return this.cmsService.moveSectionInOrder(id, direction, pageSlug);
   }
 }
