@@ -485,7 +485,75 @@ export class CMSService {
       });
     }
 
+    // Auto-seed tagged pages (get-now, wholesale) if empty
+    if (tag && banners.length === 0) {
+      await this.seedDefaultPageBanners(tag);
+      return this.prisma.cMSBanner.findMany({
+        where: { isActive: true, tag },
+        orderBy: { position: 'asc' },
+      });
+    }
+
     return banners;
+  }
+
+  async seedDefaultPageBanners(tag: string) {
+    const pageSeeds: Record<string, any[]> = {
+      'get-now': [
+        {
+          title: 'Shop Now, Pay Later',
+          subtitle: 'Get your favourite products with 0% interest financing.',
+          mediaType: 'image',
+          image: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=1600&h=600&fit=crop&auto=format&q=85',
+          link: '/shop',
+          linkText: 'Shop Now',
+          tag: 'get-now',
+          isActive: true,
+          position: 0,
+        },
+        {
+          title: 'Instant Approval',
+          subtitle: 'Apply in seconds and enjoy your purchase today.',
+          mediaType: 'image',
+          image: 'https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=1600&h=600&fit=crop&auto=format&q=85',
+          link: '/financing',
+          linkText: 'Apply Now',
+          tag: 'get-now',
+          isActive: true,
+          position: 1,
+        },
+      ],
+      'wholesale': [
+        {
+          title: 'Wholesale Deals',
+          subtitle: 'Bulk pricing on premium products for your business.',
+          mediaType: 'image',
+          image: 'https://images.unsplash.com/photo-1553413077-190dd305871c?w=1600&h=600&fit=crop&auto=format&q=85',
+          link: '/wholesale',
+          linkText: 'Browse Deals',
+          tag: 'wholesale',
+          isActive: true,
+          position: 0,
+        },
+        {
+          title: 'Business Pricing',
+          subtitle: 'Exclusive rates for verified wholesale partners.',
+          mediaType: 'image',
+          image: 'https://images.unsplash.com/photo-1542744095-291d1f67b221?w=1600&h=600&fit=crop&auto=format&q=85',
+          link: '/wholesale',
+          linkText: 'Get Started',
+          tag: 'wholesale',
+          isActive: true,
+          position: 1,
+        },
+      ],
+    };
+
+    const seeds = pageSeeds[tag] ?? [];
+    for (const banner of seeds) {
+      await this.prisma.cMSBanner.create({ data: banner });
+    }
+    return { success: true, message: \`Seeded \${seeds.length} banners for tag: \${tag}\` };
   }
 
   async seedDefaultBanners() {
