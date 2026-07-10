@@ -5,117 +5,36 @@ import PageHeader from '@/components/admin/page-header';
 import { Modal, ConfirmDialog, FormField, ModalFooter } from '@/components/admin/modal';
 import { useTheme } from '@/contexts/theme-context';
 import {
-  Plus, Edit, Trash2, GripVertical, Eye, EyeOff, ChevronDown,
-  Zap, Grid3x3, Image as ImageIcon, ShoppingBag, Users, TrendingUp
+  Plus, Edit, Trash2, GripVertical, Eye, EyeOff, ChevronUp, ChevronDown,
+  Zap, Grid3x3, ImageIcon, ShoppingBag, Users, TrendingUp, Layout, MousePointer, Info
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { getCmsSections, createCmsSection, updateCmsSection, deleteCmsSection, reorderCmsSections } from '@/lib/api';
+import { 
+  getCmsSections, 
+  createCmsSection, 
+  updateCmsSection, 
+  deleteCmsSection, 
+  reorderCmsSections,
+  getSectionRulesMetadataGrouped,
+  moveCmsSection
+} from '@/lib/api';
 
-type SectionField = {
-  key: string;
-  label: string;
-  type: 'text' | 'number' | 'datetime' | 'select' | 'color' | 'file';
-  default?: string | number;
-  options?: string[];
-};
-
-type SectionTypeConfig = {
-  label: string;
-  icon: any;
-  description: string;
-  color: string;
-  bgColor: string;
-  fields: SectionField[];
-};
-
-// Section type definitions with their configuration schemas
-const SECTION_TYPES: Record<string, SectionTypeConfig> = {
-  FlashSale: {
-    label: 'Flash Sale',
-    icon: Zap,
-    description: 'Time-limited product sale with countdown timer',
-    color: 'text-red-600',
-    bgColor: 'bg-red-50',
-    fields: [
-      { key: 'timerEndDate', label: 'Sale End Date & Time', type: 'datetime' },
-      { key: 'timerLabel', label: 'Timer Label', type: 'text', default: 'TIME LEFT:' },
-      { key: 'ctaText', label: 'Call-to-Action Text', type: 'text', default: 'See All' },
-      { key: 'ctaLink', label: 'CTA Link', type: 'text', default: '/shop?isFlashSale=true' },
-      { key: 'productLimit', label: 'Products to Show', type: 'number', default: 8 },
-      { key: 'headerBgColor', label: 'Header Background Color', type: 'color', default: '#C1304B' },
-    ]
-  },
-  ProductGrid: {
-    label: 'Product Grid',
-    icon: Grid3x3,
-    description: 'Display products based on filters or categories',
-    color: 'text-blue-600',
-    bgColor: 'bg-blue-50',
-    fields: [
-      { key: 'productLimit', label: 'Products to Show', type: 'number', default: 8 },
-      { key: 'filterType', label: 'Filter Type', type: 'select', options: ['Featured', 'Best Selling', 'New Arrivals', 'Category'], default: 'Featured' },
-      { key: 'categoryId', label: 'Category (if applicable)', type: 'text' },
-      { key: 'viewAllButtonText', label: 'View All Button Text', type: 'text', default: 'See All' },
-      { key: 'viewAllLink', label: 'View All Link', type: 'text', default: '/shop' },
-    ]
-  },
-  HeroBanner: {
-    label: 'Hero Banner',
-    icon: ImageIcon,
-    description: 'Full-width hero banner with image and CTA',
-    color: 'text-purple-600',
-    bgColor: 'bg-purple-50',
-    fields: [
-      { key: 'imageUrl', label: 'Image URL', type: 'file' },
-      { key: 'buttonText', label: 'Button Text', type: 'text' },
-      { key: 'buttonLink', label: 'Button Link', type: 'text' },
-      { key: 'duration', label: 'Display Duration (seconds)', type: 'number', default: 5 },
-    ]
-  },
-  LimitedStockDeal: {
-    label: 'Limited Stock Deal',
-    icon: ShoppingBag,
-    description: 'Highlight products with limited stock',
-    color: 'text-orange-600',
-    bgColor: 'bg-orange-50',
-    fields: [
-      { key: 'discountPercent', label: 'Discount Percentage', type: 'number', default: 70 },
-      { key: 'discountText', label: 'Discount Badge Text', type: 'text', default: 'Up to 70% Off' },
-      { key: 'productLimit', label: 'Products to Show', type: 'number', default: 8 },
-      { key: 'ctaText', label: 'Call-to-Action Text', type: 'text', default: 'Shop Now' },
-    ]
-  },
-  TopSelling: {
-    label: 'Top Selling',
-    icon: TrendingUp,
-    description: 'Best-selling products based on order count',
-    color: 'text-green-600',
-    bgColor: 'bg-green-50',
-    fields: [
-      { key: 'productLimit', label: 'Products to Show', type: 'number', default: 8 },
-      { key: 'ctaText', label: 'Call-to-Action Text', type: 'text', default: 'See All' },
-      { key: 'ctaLink', label: 'CTA Link', type: 'text', default: '/shop' },
-    ]
-  },
-  TopExpressDelivery: {
-    label: 'Top Express Delivery',
-    icon: TrendingUp,
-    description: 'Fast delivery, trending products',
-    color: 'text-indigo-600',
-    bgColor: 'bg-indigo-50',
-    fields: [
-      { key: 'productLimit', label: 'Products to Show', type: 'number', default: 8 },
-      { key: 'ctaText', label: 'Call-to-Action Text', type: 'text', default: 'View All' },
-      { key: 'ctaLink', label: 'CTA Link', type: 'text', default: '/shop' },
-    ]
-  },
+// Reusable template icons mapping
+const TEMPLATE_ICONS: Record<string, any> = {
+  ProductShelf: ShoppingBag,
+  BannerSlot: ImageIcon,
+  CategoryGrid: Grid3x3,
+  CategoryGridShelf: Grid3x3,
+  HeroSlider: Layout,
+  FlashSale: Zap,
+  Custom: Info
 };
 
 const PAGES = [
-  { value: 'home', label: 'Home Page' },
+  { value: 'homepage', label: 'Home Page' },
   { value: 'shop', label: 'Shop Page' },
-  { value: 'category', label: 'Category Pages' },
-  { value: 'brand', label: 'Brand Pages' },
+  { value: 'get-now', label: 'Get Now Page' },
+  { value: 'wholesale', label: 'Wholesale Page' },
 ];
 
 export default function DynamicSectionsPage() {
@@ -125,20 +44,21 @@ export default function DynamicSectionsPage() {
   const textMain = isDark ? '#FFFFFF' : '#0F172A';
   const textMuted = isDark ? '#8E9AAF' : '#64748B';
   const surface = isDark ? '#0D1523' : '#FFFFFF';
+  
   const [sections, setSections] = useState<any[]>([]);
-  const [selectedPage, setSelectedPage] = useState('home');
+  const [rulesGrouped, setRulesGrouped] = useState<Record<string, any[]>>({});
+  const [selectedPage, setSelectedPage] = useState('homepage');
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [showTypeSelector, setShowTypeSelector] = useState(false);
-  const [selectedType, setSelectedType] = useState<string | null>(null);
-  const [editingSection, setEditingSection] = useState<any>(null);
   const [formData, setFormData] = useState<any>({});
+  const [editingSection, setEditingSection] = useState<any>(null);
   const [draggedId, setDraggedId] = useState<string | null>(null);
 
-  // Fetch sections for selected page
   useEffect(() => {
     fetchSections();
+    fetchRules();
   }, [selectedPage]);
 
   const fetchSections = async () => {
@@ -148,38 +68,48 @@ export default function DynamicSectionsPage() {
       setSections(response.data || []);
     } catch (error) {
       toast.error('Failed to load sections');
-      console.error(error);
     } finally {
       setLoading(false);
     }
   };
 
+  const fetchRules = async () => {
+    try {
+      const response = await getSectionRulesMetadataGrouped();
+      setRulesGrouped(response.data || {});
+    } catch (error) {
+      console.error('Failed to load rules', error);
+    }
+  };
+
   const handleAddSection = () => {
     setEditingSection(null);
-    setSelectedType(null);
-    setFormData({});
+    setFormData({
+      pageSlug: selectedPage,
+      isActive: true,
+      order: sections.length,
+      config: { limit: 8, layout: 'horizontal-scroll' }
+    });
     setShowTypeSelector(true);
   };
 
-  const handleSelectType = (type: string) => {
-    setSelectedType(type);
+  const handleSelectRule = (rule: any) => {
+    setFormData({
+      ...formData,
+      templateType: rule.templateType,
+      type: rule.templateType, // Backward compatibility
+      dataSourceId: rule.id,
+      slotKey: rule.templateType === 'BannerSlot' ? rule.id : undefined,
+      title: rule.label,
+      name: rule.label,
+    });
     setShowTypeSelector(false);
     setShowModal(true);
-    setFormData({
-      type,
-      pageSlug: selectedPage,
-      name: SECTION_TYPES[type].label,
-      title: SECTION_TYPES[type].label,
-      isActive: true,
-      order: sections.length,
-      config: {},
-    });
   };
 
   const handleEditSection = (section: any) => {
     setEditingSection(section);
-    setSelectedType(section.type);
-    setFormData(section);
+    setFormData({ ...section });
     setShowModal(true);
   };
 
@@ -188,167 +118,116 @@ export default function DynamicSectionsPage() {
       setSaving(true);
       if (editingSection) {
         await updateCmsSection(editingSection.id, formData);
-        toast.success('Section updated successfully');
+        toast.success('Section updated');
       } else {
         await createCmsSection(formData);
-        toast.success('Section created successfully');
+        toast.success('Section created');
       }
       setShowModal(false);
       fetchSections();
     } catch (error) {
       toast.error('Failed to save section');
-      console.error(error);
     } finally {
       setSaving(false);
     }
   };
 
   const handleDeleteSection = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this section?')) return;
+    if (!confirm('Delete this section?')) return;
     try {
       await deleteCmsSection(id);
-      toast.success('Section deleted successfully');
+      toast.success('Section deleted');
       fetchSections();
     } catch (error) {
-      toast.error('Failed to delete section');
-      console.error(error);
+      toast.error('Failed to delete');
     }
   };
 
-  const handleToggleActive = async (section: any) => {
+  const handleMove = async (id: string, direction: 'up' | 'down') => {
     try {
-      await updateCmsSection(section.id, { isActive: !section.isActive });
-      toast.success(section.isActive ? 'Section disabled' : 'Section enabled');
+      await moveCmsSection(id, direction, selectedPage);
       fetchSections();
     } catch (error) {
-      toast.error('Failed to update section');
-      console.error(error);
+      toast.error('Failed to move');
     }
   };
-
-  const handleDragStart = (e: React.DragEvent, id: string) => {
-    setDraggedId(id);
-    e.dataTransfer.effectAllowed = 'move';
-  };
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-  };
-
-  const handleDrop = async (e: React.DragEvent, targetId: string) => {
-    e.preventDefault();
-    if (!draggedId || draggedId === targetId) return;
-
-    const draggedIndex = sections.findIndex(s => s.id === draggedId);
-    const targetIndex = sections.findIndex(s => s.id === targetId);
-
-    if (draggedIndex === -1 || targetIndex === -1) return;
-
-    const newSections = [...sections];
-    const [draggedSection] = newSections.splice(draggedIndex, 1);
-    newSections.splice(targetIndex, 0, draggedSection);
-
-    setSections(newSections);
-    setDraggedId(null);
-
-    // Call reorder API
-    try {
-      const idsInOrder = newSections.map(s => s.id);
-      await reorderCmsSections(selectedPage, idsInOrder);
-      toast.success('Sections reordered');
-    } catch (error) {
-      toast.error('Failed to reorder sections');
-      fetchSections(); // Refresh on error
-    }
-  };
-
-  const currentType = selectedType ? SECTION_TYPES[selectedType] : null;
-  const typeFields = currentType?.fields || [];
 
   return (
     <AdminShell>
-      <div className="space-y-6">
+      <div className="space-y-6 max-w-5xl mx-auto">
         <PageHeader
-          title="Dynamic Sections Manager"
-          subtitle="Create, configure, and manage product sections across your store"
-          icon={Grid3x3}
+          title="Dynamic Sections"
+          subtitle="Manage banners, product shelves, and categories across all pages"
+          icon={Layout}
         />
 
-        {/* Page Selector */}
-        <div className="flex items-center gap-4">
-          <label className="text-sm font-medium">Select Page:</label>
-          <select
-            value={selectedPage}
-            onChange={(e) => setSelectedPage(e.target.value)}
-            className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-          >
-            {PAGES.map(page => (
-              <option key={page.value} value={page.value}>
-                {page.label}
-              </option>
-            ))}
-          </select>
+        {/* Page Filter & Actions */}
+        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between bg-card p-4 rounded-xl border">
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Page:</span>
+            <div className="flex bg-muted p-1 rounded-lg">
+              {PAGES.map(page => (
+                <button
+                  key={page.value}
+                  onClick={() => setSelectedPage(page.value)}
+                  className={`px-4 py-1.5 rounded-md text-sm font-medium transition ${
+                    selectedPage === page.value 
+                    ? 'bg-background shadow-sm text-foreground' 
+                    : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  {page.label}
+                </button>
+              ))}
+            </div>
+          </div>
           <button
             onClick={handleAddSection}
-            className="ml-auto flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition"
+            className="flex items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-xl font-bold hover:opacity-90 transition shadow-lg shadow-primary/20"
           >
-            <Plus className="w-4 h-4" />
-            Add Section
+            <Plus size={18} />
+            Add Dynamic Section
           </button>
         </div>
 
-        {/* Sections List */}
-        <div className="space-y-2">
+        {/* Active Sections List */}
+        <div className="space-y-3">
           {loading ? (
-            <div className="text-center py-8 text-muted-foreground">Loading sections...</div>
+            <div className="flex items-center justify-center py-20"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>
           ) : sections.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">No sections yet. Create one to get started!</div>
+            <div className="text-center py-20 bg-muted/30 rounded-2xl border-2 border-dashed">
+              <Layout className="mx-auto w-12 h-12 text-muted-foreground/30 mb-4" />
+              <p className="text-muted-foreground font-medium">No sections configured for this page.</p>
+              <button onClick={handleAddSection} className="mt-4 text-primary font-bold hover:underline">Add your first section</button>
+            </div>
           ) : (
             sections.map((section, index) => {
-              const typeConfig = SECTION_TYPES[section.type];
-              const Icon = typeConfig?.icon || Grid3x3;
+              const Icon = TEMPLATE_ICONS[section.templateType || section.type] || Info;
               return (
-                <div
-                  key={section.id}
-                  draggable
-                  onDragStart={(e) => handleDragStart(e, section.id)}
-                  onDragOver={handleDragOver}
-                  onDrop={(e) => handleDrop(e, section.id)}
-                  className={`flex items-center gap-4 p-4 border rounded-lg transition ${
-                    draggedId === section.id ? 'opacity-50 bg-gray-50' : 'hover:bg-gray-50'
-                  }`}
-                >
-                  <GripVertical className="w-5 h-5 text-muted-foreground cursor-grab" />
-                  <Icon className={`w-5 h-5 ${typeConfig?.color}`} />
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-medium truncate">{section.title || section.name}</h3>
-                    <p className="text-sm text-muted-foreground">{typeConfig?.label}</p>
+                <div key={section.id} className="group flex items-center gap-4 p-4 bg-card border rounded-2xl hover:border-primary/50 transition shadow-sm">
+                  <div className="flex flex-col gap-1">
+                    <button onClick={() => handleMove(section.id, 'up')} disabled={index === 0} className="p-1 hover:bg-muted rounded disabled:opacity-30"><ChevronUp size={14} /></button>
+                    <button onClick={() => handleMove(section.id, 'down')} disabled={index === sections.length - 1} className="p-1 hover:bg-muted rounded disabled:opacity-30"><ChevronDown size={14} /></button>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => handleToggleActive(section)}
-                      className="p-2 hover:bg-gray-100 rounded transition"
-                      title={section.isActive ? 'Disable' : 'Enable'}
-                    >
-                      {section.isActive ? (
-                        <Eye className="w-4 h-4 text-green-600" />
-                      ) : (
-                        <EyeOff className="w-4 h-4 text-gray-400" />
-                      )}
-                    </button>
-                    <button
-                      onClick={() => handleEditSection(section)}
-                      className="p-2 hover:bg-gray-100 rounded transition"
-                    >
-                      <Edit className="w-4 h-4 text-blue-600" />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteSection(section.id)}
-                      className="p-2 hover:bg-gray-100 rounded transition"
-                    >
-                      <Trash2 className="w-4 h-4 text-red-600" />
-                    </button>
+                  
+                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${section.isActive ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
+                    <Icon size={24} />
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-bold text-lg truncate">{section.title || 'Untitled Section'}</h3>
+                      {!section.isActive && <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded font-bold uppercase">Hidden</span>}
+                    </div>
+                    <div className="flex items-center gap-3 text-xs text-muted-foreground font-medium">
+                      <span className="bg-muted px-2 py-0.5 rounded">{section.templateType || section.type}</span>
+                      <span>Source: <span className="text-foreground">{section.dataSourceId || section.slotKey || 'Custom'}</span></span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition">
+                    <button onClick={() => handleEditSection(section)} className="p-2.5 hover:bg-blue-50 text-blue-600 rounded-xl transition"><Edit size={18} /></button>
+                    <button onClick={() => handleDeleteSection(section.id)} className="p-2.5 hover:bg-red-50 text-red-600 rounded-xl transition"><Trash2 size={18} /></button>
                   </div>
                 </div>
               );
@@ -359,181 +238,84 @@ export default function DynamicSectionsPage() {
 
       {/* Type Selector Modal */}
       {showTypeSelector && (
-        <Modal open={showTypeSelector} onClose={() => setShowTypeSelector(false)} title="Select Section Type">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-96 overflow-y-auto">
-            {Object.entries(SECTION_TYPES).map(([key, config]) => {
-              const Icon = config.icon;
-              return (
-                <button
-                  key={key}
-                  onClick={() => handleSelectType(key)}
-                  className={`p-4 border-2 rounded-lg text-left transition hover:border-primary ${config.bgColor}`}
-                >
-                  <Icon className={`w-6 h-6 mb-2 ${config.color}`} />
-                  <h3 className="font-semibold">{config.label}</h3>
-                  <p className="text-sm text-muted-foreground">{config.description}</p>
-                </button>
-              );
-            })}
+        <Modal open={showTypeSelector} onClose={() => setShowTypeSelector(false)} title="Add New Section">
+          <div className="space-y-6 max-h-[70vh] overflow-y-auto pr-2">
+            {Object.entries(rulesGrouped).map(([category, rules]) => (
+              <div key={category} className="space-y-3">
+                <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-widest px-1">{category}</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {rules.map((rule: any) => {
+                    const Icon = TEMPLATE_ICONS[rule.templateType] || Info;
+                    return (
+                      <button
+                        key={rule.id}
+                        onClick={() => handleSelectRule(rule)}
+                        className="flex items-start gap-3 p-4 border rounded-xl hover:border-primary hover:bg-primary/5 text-left transition group"
+                      >
+                        <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center group-hover:bg-primary/10 group-hover:text-primary transition">
+                          <Icon size={20} />
+                        </div>
+                        <div>
+                          <div className="font-bold text-sm">{rule.label}</div>
+                          <div className="text-[11px] text-muted-foreground line-clamp-2 mt-0.5">{rule.description}</div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
           </div>
         </Modal>
       )}
 
-      {/* Configuration Modal */}
-      {showModal && currentType && (
-        <Modal open={showModal} onClose={() => setShowModal(false)} title={`${editingSection ? 'Edit' : 'Create'} ${currentType.label}`}>
-          <div className="space-y-4 max-h-96 overflow-y-auto">
-            {/* Common Fields */}
-            <FormField
-              label="Section Name"
-              value={formData.name || ''}
-              onChange={(value) => setFormData({ ...formData, name: value })}
-              placeholder="e.g., Homepage Flash Sales"
-              isDark={isDark}
-              border={border}
-              textMain={textMain}
-              textMuted={textMuted}
-              surface={surface}
-            />
-            <FormField
-              label="Display Title"
-              value={formData.title || ''}
-              onChange={(value) => setFormData({ ...formData, title: value })}
-              placeholder="Title shown to customers"
-              isDark={isDark}
-              border={border}
-              textMain={textMain}
-              textMuted={textMuted}
-              surface={surface}
-            />
-            <FormField
-              label="Subtitle"
-              value={formData.subtitle || ''}
-              onChange={(value) => setFormData({ ...formData, subtitle: value })}
-              placeholder="Optional subtitle"
-              isDark={isDark}
-              border={border}
-              textMain={textMain}
-              textMuted={textMuted}
-              surface={surface}
-            />
-            <FormField
-              label="Dedicated Page Slug"
-              value={formData.dedicatedPageSlug || ''}
-              onChange={(value) => setFormData({ ...formData, dedicatedPageSlug: value })}
-              placeholder="e.g., flash-sales (for /shop/flash-sales)"
-              isDark={isDark}
-              border={border}
-              textMain={textMain}
-              textMuted={textMuted}
-              surface={surface}
-            />
-
-            {/* Type-Specific Fields */}
-            {typeFields.map((field: SectionField) => (
-              <div key={field.key}>
-                {field.type === 'text' && (
-                  <FormField
-                    label={field.label}
-                    value={formData.config?.[field.key] || field.default || ''}
-                    onChange={(value) => setFormData({
-                      ...formData,
-                      config: { ...formData.config, [field.key]: value }
-                    })}
-                    placeholder={field.default != null ? String(field.default) : undefined}
-                    isDark={isDark}
-                    border={border}
-                    textMain={textMain}
-                    textMuted={textMuted}
-                    surface={surface}
-                  />
-                )}
-                {field.type === 'number' && (
-                  <FormField
-                    label={field.label}
-                    type="number"
-                    value={formData.config?.[field.key] || field.default || ''}
-                    onChange={(value) => setFormData({
-                      ...formData,
-                      config: { ...formData.config, [field.key]: parseInt(value) }
-                    })}
-                    isDark={isDark}
-                    border={border}
-                    textMain={textMain}
-                    textMuted={textMuted}
-                    surface={surface}
-                  />
-                )}
-                {field.type === 'select' && (
-                  <div>
-                    <label className="text-sm font-medium">{field.label}</label>
-                    <select
-                      value={formData.config?.[field.key] || field.default || ''}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        config: { ...formData.config, [field.key]: e.target.value }
-                      })}
-                      className="w-full px-3 py-2 border rounded-lg mt-1"
+      {/* Edit Modal */}
+      {showModal && (
+        <Modal open={showModal} onClose={() => setShowModal(false)} title={`${editingSection ? 'Edit' : 'Configure'} Section`}>
+          <div className="space-y-5 py-2">
+            <div className="grid grid-cols-2 gap-4">
+              <FormField label="Public Title" value={formData.title || ''} onChange={(v) => setFormData({...formData, title: v})} placeholder="Visible to customers" />
+              <FormField label="Internal Name" value={formData.name || ''} onChange={(v) => setFormData({...formData, name: v})} placeholder="For admin use" />
+            </div>
+            
+            <FormField label="Subtitle (Optional)" value={formData.subtitle || ''} onChange={(v) => setFormData({...formData, subtitle: v})} />
+            
+            <div className="p-4 bg-muted/30 rounded-xl border space-y-4">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Configuration</h4>
+              <div className="grid grid-cols-2 gap-4">
+                <FormField label="Item Limit" type="number" value={formData.config?.limit || 8} onChange={(v) => setFormData({...formData, config: {...formData.config, limit: parseInt(v)}})} />
+                {formData.templateType === 'ProductShelf' && (
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-muted-foreground uppercase">Layout</label>
+                    <select 
+                      value={formData.config?.layout || 'horizontal-scroll'} 
+                      onChange={(e) => setFormData({...formData, config: {...formData.config, layout: e.target.value}})}
+                      className="w-full p-2.5 bg-background border rounded-lg text-sm outline-none focus:ring-2 focus:ring-primary/20"
                     >
-                      {field.options?.map(opt => (
-                        <option key={opt} value={opt}>{opt}</option>
-                      ))}
+                      <option value="horizontal-scroll">Horizontal Scroll</option>
+                      <option value="grid">Fixed Grid</option>
                     </select>
                   </div>
                 )}
-                {field.type === 'datetime' && (
-                  <FormField
-                    label={field.label}
-                    type="datetime-local"
-                    value={formData.config?.[field.key] || ''}
-                    onChange={(value) => setFormData({
-                      ...formData,
-                      config: { ...formData.config, [field.key]: value }
-                    })}
-                    isDark={isDark}
-                    border={border}
-                    textMain={textMain}
-                    textMuted={textMuted}
-                    surface={surface}
-                  />
-                )}
-                {field.type === 'color' && (
-                  <div>
-                    <label className="text-sm font-medium">{field.label}</label>
-                    <input
-                      type="color"
-                      value={formData.config?.[field.key] || field.default || '#000000'}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        config: { ...formData.config, [field.key]: e.target.value }
-                      })}
-                      className="w-full h-10 border rounded-lg mt-1 cursor-pointer"
-                    />
-                  </div>
-                )}
               </div>
-            ))}
+            </div>
 
-            {/* Active Toggle */}
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="isActive"
-                checked={formData.isActive !== false}
-                onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                className="rounded"
+            <div className="flex items-center gap-3 p-3 bg-primary/5 rounded-xl border border-primary/10">
+              <input 
+                type="checkbox" 
+                id="active-toggle"
+                checked={formData.isActive} 
+                onChange={(e) => setFormData({...formData, isActive: e.target.checked})}
+                className="w-4 h-4 rounded border-primary text-primary focus:ring-primary"
               />
-              <label htmlFor="isActive" className="text-sm font-medium">Active</label>
+              <label htmlFor="active-toggle" className="text-sm font-bold text-primary cursor-pointer">Visible on website</label>
             </div>
           </div>
           <ModalFooter
             onClose={() => setShowModal(false)}
             onSubmit={handleSaveSection}
             loading={saving}
-            submitLabel={editingSection ? 'Save Changes' : 'Create Section'}
-            isDark={isDark}
-            border={border}
-            textMain={textMain}
+            submitLabel={editingSection ? 'Save Changes' : 'Add Section'}
           />
         </Modal>
       )}

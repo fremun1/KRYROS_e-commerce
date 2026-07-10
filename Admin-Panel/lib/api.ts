@@ -517,3 +517,11 @@ export const deleteEmailContact = (id: string) =>
 
 export const sendEmailBlast = (payload: { subject: string; body: string; emailIds?: string[] }) =>
   api.post('/api/notifications/email/blast', payload);
+
+// ── CMS — Section Rules & Data Sources ────────────────────
+export const getSectionRulesMetadata = () =>
+  api.get("/api/cms/section-rules/metadata");
+export const getSectionRulesMetadataGrouped = () =>
+  api.get("/api/cms/section-rules/metadata-grouped");
+export const moveCmsSection = (id: string, direction: 'up' | 'down', pageSlug: string) =>
+  api.patch(`/api/cms/sections/${id}/move?direction=${direction}&pageSlug=${pageSlug}`);
