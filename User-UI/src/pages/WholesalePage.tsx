@@ -47,7 +47,7 @@ export default function WholesalePage() {
       fetchProducts({ take: 8, isWholesaleOnly: true }).then((prods: any) => setWholesaleProducts(prods)),
       fetch(`${API_BASE}/api/cms/banners?tag=wholesale`, { cache: "no-store" })
         .then((r) => r.ok ? r.json() : null)
-        .then((d: any) => { if (d?.data && Array.isArray(d.data)) setBanners(d.data.filter((b: ApiBanner) => b.isActive && b.image)); }),
+        .then((d: any) => { const arr = Array.isArray(d) ? d : (Array.isArray(d?.data) ? d.data : []); if (arr.length > 0) setBanners(arr.filter((b: ApiBanner) => b.isActive !== false && (b.image || b.videoUrl))); }),
     ]).finally(() => setLoading(false));
 
     fetch(`${API_BASE}/api/cms/site-config/wholesale`, { cache: "no-store" })
