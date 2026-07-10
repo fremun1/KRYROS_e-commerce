@@ -150,11 +150,11 @@ export default function GetNowPage() {
               <Link key={cat.id} href={href}>
                 <a
                   className="flex-shrink-0 flex flex-col items-center gap-2 cursor-pointer group select-none"
-                  style={{ width: "clamp(130px, 36vw, 160px)" }}
+                  style={{ width: "clamp(78px, 22vw, 100px)" }}
                 >
                   <div
-                    className="w-full rounded-2xl overflow-hidden bg-muted shadow-sm"
-                    style={{ aspectRatio: "3/4" }}
+                    className="w-full rounded-xl overflow-hidden bg-muted shadow-sm"
+                    style={{ aspectRatio: "1/1" }}
                   >
                     {cat.image ? (
                       <img
