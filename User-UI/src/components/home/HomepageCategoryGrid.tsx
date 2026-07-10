@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { Link } from "wouter";
-import { ChevronRight } from "lucide-react";
 import { fetchHomepageCategories } from "@/lib/api";
 import type { ApiCategory } from "@/lib/api";
 
@@ -80,26 +79,6 @@ export default function HomepageCategoryGrid() {
   return (
     <section className="py-5 bg-background">
       <div className="px-3 sm:px-4 md:px-6 max-w-7xl mx-auto">
-        {/* Section header */}
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2.5">
-            <div className="w-1 h-7 rounded-full bg-primary flex-shrink-0" />
-            <div>
-              <h2 className="text-sm sm:text-base font-black text-foreground tracking-tight">
-                Shop By Category
-              </h2>
-              <p className="text-[10px] text-muted-foreground leading-none mt-0.5">
-                Browse our top categories
-              </p>
-            </div>
-          </div>
-          <Link href="/categories">
-            <span className="flex items-center gap-1 text-[11px] font-bold text-primary bg-primary/10 hover:bg-primary/20 transition-colors px-3 py-1.5 rounded-full cursor-pointer whitespace-nowrap">
-              See All <ChevronRight className="w-3 h-3" />
-            </span>
-          </Link>
-        </div>
-
         {/* 4×2 Grid */}
         <div className="grid grid-cols-4 gap-2.5 sm:gap-3">
           {loading
@@ -108,18 +87,6 @@ export default function HomepageCategoryGrid() {
               ))
             : categories.map((cat) => <CategoryCard key={cat.id} cat={cat} />)}
         </div>
-
-        {/* "See All Categories" CTA */}
-        {!loading && categories.length > 0 && (
-          <div className="mt-5 flex justify-center">
-            <Link href="/categories">
-              <a className="inline-flex items-center gap-2 px-7 py-2.5 rounded-full border-2 border-primary text-primary font-bold text-sm hover:bg-primary hover:text-primary-foreground transition-colors">
-                See All Categories
-                <ChevronRight className="w-4 h-4" />
-              </a>
-            </Link>
-          </div>
-        )}
       </div>
     </section>
   );
