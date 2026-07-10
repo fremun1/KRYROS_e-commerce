@@ -82,7 +82,7 @@ export default function GetNowPage() {
   useEffect(() => {
     fetch(`${API_BASE}/api/cms/banners?tag=get-now`, { cache: "no-store" })
       .then((r) => r.ok ? r.json() : null)
-      .then((d) => { if (d?.data && Array.isArray(d.data)) setBanners(d.data.filter((b: ApiBanner) => b.isActive && b.image)); })
+      .then((d) => { const arr = Array.isArray(d) ? d : (Array.isArray(d?.data) ? d.data : []); if (arr.length > 0) setBanners(arr.filter((b: ApiBanner) => b.isActive !== false && (b.image || b.videoUrl))); })
       .catch(() => {});
   }, []);
 
