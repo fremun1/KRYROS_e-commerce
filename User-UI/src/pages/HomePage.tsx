@@ -4,4 +4,110 @@ import type { ApiCMSSection } from "@/lib/api";
 import DynamicSectionRendererV2 from "@/components/home/DynamicSectionRendererV2";
 import NewsletterPopup from "@/components/NewsletterPopup";
 
-/**\n * HomePage.tsx - Fully Dynamic Home Page\n * \n * This page now fetches all sections from the CMS API and renders them dynamically.\n * No hardcoded sections remain. All sections are driven by database configuration.\n * \n * The DynamicSectionRendererV2 component handles:\n * - ProductShelf sections (Top Selling, Trending, New Arrivals, etc.)\n * - BannerSlot sections (Hero, Promo banners)\n * - CategoryGridShelf sections (Category displays)\n * - Legacy section types (for backward compatibility)\n * \n * Sections are sorted by the `order` field and displayed in that sequence.\n */\n\nexport default function HomePage() {\n  const [sections, setSections] = useState<ApiCMSSection[]>([]);\n  const [loading, setLoading] = useState(true);\n  const [error, setError] = useState<string | null>(null);\n\n  useEffect(() => {\n    const fetchSections = async () => {\n      setLoading(true);\n      setError(null);\n\n      try {\n        // Fetch all sections for the homepage from the CMS API\n        const response = await fetch(\n          `${API_BASE}/api/cms/sections?pageSlug=homepage`,\n          { cache: \"no-store\" }\n        );\n\n        if (!response.ok) {\n          throw new Error(`Failed to fetch sections: ${response.statusText}`);\n        }\n\n        const data = await response.json();\n\n        // Handle both array and { data } response formats\n        const sectionList = Array.isArray(data) ? data : (data.data || []);\n\n        // Filter active sections and sort by order\n        const activeSections = sectionList\n          .filter((s: any) => s.isActive !== false)\n          .sort((a: any, b: any) => (a.order || 0) - (b.order || 0));\n\n        setSections(activeSections);\n      } catch (err) {\n        console.error(\"Error fetching homepage sections:\", err);\n        setError(err instanceof Error ? err.message : \"Failed to load sections\");\n        setSections([]);\n      } finally {\n        setLoading(false);\n      }\n    };\n\n    fetchSections();\n  }, []);\n\n  return (\n    <div>\n      {/* Newsletter popup */}\n      <NewsletterPopup />\n\n      {/* Loading state */}\n      {loading && (\n        <div className=\"max-w-7xl mx-auto px-4 md:px-6 py-12\">\n          <div className=\"space-y-6\">\n            {Array.from({ length: 5 }).map((_, i) => (\n              <div\n                key={i}\n                className=\"w-full h-64 bg-muted rounded-2xl animate-pulse\"\n              />\n            ))}\n          </div>\n        </div>\n      )}\n\n      {/* Error state */}\n      {error && !loading && (\n        <div className=\"max-w-7xl mx-auto px-4 md:px-6 py-12\">\n          <div className=\"bg-red-50 border border-red-200 rounded-2xl p-4\">\n            <p className=\"text-sm font-semibold text-red-800\">Error Loading Sections</p>\n            <p className=\"text-sm text-red-700 mt-1\">{error}</p>\n          </div>\n        </div>\n      )}\n\n      {/* Empty state */}\n      {!loading && sections.length === 0 && !error && (\n        <div className=\"max-w-7xl mx-auto px-4 md:px-6 py-12\">\n          <div className=\"bg-blue-50 border border-blue-200 rounded-2xl p-4\">\n            <p className=\"text-sm font-semibold text-blue-800\">No Sections Configured</p>\n            <p className=\"text-sm text-blue-700 mt-1\">\n              Go to the Admin Panel → CMS → Home Page to configure sections.\n            </p>\n          </div>\n        </div>\n      )}\n\n      {/* Render all sections dynamically */}\n      {!loading && sections.length > 0 && (\n        <DynamicSectionRendererV2 sections={sections} pageSlug=\"homepage\" />\n      )}\n    </div>\n  );\n}\n
+/**
+ * HomePage.tsx - Fully Dynamic Home Page
+ * 
+ * This page now fetches all sections from the CMS API and renders them dynamically.
+ * No hardcoded sections remain. All sections are driven by database configuration.
+ * 
+ * The DynamicSectionRendererV2 component handles:
+ * - ProductShelf sections (Top Selling, Trending, New Arrivals, etc.)
+ * - BannerSlot sections (Hero, Promo banners)
+ * - CategoryGridShelf sections (Category displays)
+ * - Legacy section types (for backward compatibility)
+ * 
+ * Sections are sorted by the `order` field and displayed in that sequence.
+ */
+
+export default function HomePage() {
+  const [sections, setSections] = useState<ApiCMSSection[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchSections = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        // Fetch all sections for the homepage from the CMS API
+        const response = await fetch(
+          `${API_BASE}/api/cms/sections?pageSlug=homepage`,
+          { cache: "no-store" }
+        );
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch sections: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+
+        // Handle both array and { data } response formats
+        const sectionList = Array.isArray(data) ? data : (data.data || []);
+
+        // Filter active sections and sort by order
+        const activeSections = sectionList
+          .filter((s: any) => s.isActive !== false)
+          .sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
+
+        setSections(activeSections);
+      } catch (err) {
+        console.error("Error fetching homepage sections:", err);
+        setError(err instanceof Error ? err.message : "Failed to load sections");
+        setSections([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSections();
+  }, []);
+
+  return (
+    <div>
+      {/* Newsletter popup */}
+      <NewsletterPopup />
+
+      {/* Loading state */}
+      {loading && (
+        <div className="max-w-7xl mx-auto px-4 md:px-6 py-12">
+          <div className="space-y-6">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div
+                key={i}
+                className="w-full h-64 bg-muted rounded-2xl animate-pulse"
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Error state */}
+      {error && !loading && (
+        <div className="max-w-7xl mx-auto px-4 md:px-6 py-12">
+          <div className="bg-red-50 border border-red-200 rounded-2xl p-4">
+            <p className="text-sm font-semibold text-red-800">Error Loading Sections</p>
+            <p className="text-sm text-red-700 mt-1">{error}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Empty state */}
+      {!loading && sections.length === 0 && !error && (
+        <div className="max-w-7xl mx-auto px-4 md:px-6 py-12">
+          <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4">
+            <p className="text-sm font-semibold text-blue-800">No Sections Configured</p>
+            <p className="text-sm text-blue-700 mt-1">
+              Go to the Admin Panel → CMS → Home Page to configure sections.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Render all sections dynamically */}
+      {!loading && sections.length > 0 && (
+        <DynamicSectionRendererV2 sections={sections} pageSlug="homepage" />
+      )}
+    </div>
+  );
+}
