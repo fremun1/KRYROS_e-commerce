@@ -54,7 +54,6 @@ export default function DynamicSectionsPage() {
   const [showTypeSelector, setShowTypeSelector] = useState(false);
   const [formData, setFormData] = useState<any>({});
   const [editingSection, setEditingSection] = useState<any>(null);
-  const [draggedId, setDraggedId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchSections();
@@ -274,16 +273,39 @@ export default function DynamicSectionsPage() {
         <Modal open={showModal} onClose={() => setShowModal(false)} title={`${editingSection ? 'Edit' : 'Configure'} Section`}>
           <div className="space-y-5 py-2">
             <div className="grid grid-cols-2 gap-4">
-              <FormField label="Public Title" value={formData.title || ''} onChange={(v) => setFormData({...formData, title: v})} placeholder="Visible to customers" />
-              <FormField label="Internal Name" value={formData.name || ''} onChange={(v) => setFormData({...formData, name: v})} placeholder="For admin use" />
+              <FormField 
+                label="Public Title" 
+                value={formData.title || ''} 
+                onChange={(v) => setFormData({...formData, title: v})} 
+                placeholder="Visible to customers"
+                isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
+              />
+              <FormField 
+                label="Internal Name" 
+                value={formData.name || ''} 
+                onChange={(v) => setFormData({...formData, name: v})} 
+                placeholder="For admin use"
+                isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
+              />
             </div>
             
-            <FormField label="Subtitle (Optional)" value={formData.subtitle || ''} onChange={(v) => setFormData({...formData, subtitle: v})} />
+            <FormField 
+              label="Subtitle (Optional)" 
+              value={formData.subtitle || ''} 
+              onChange={(v) => setFormData({...formData, subtitle: v})}
+              isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
+            />
             
             <div className="p-4 bg-muted/30 rounded-xl border space-y-4">
               <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Configuration</h4>
               <div className="grid grid-cols-2 gap-4">
-                <FormField label="Item Limit" type="number" value={formData.config?.limit || 8} onChange={(v) => setFormData({...formData, config: {...formData.config, limit: parseInt(v)}})} />
+                <FormField 
+                  label="Item Limit" 
+                  type="number" 
+                  value={String(formData.config?.limit || 8)} 
+                  onChange={(v) => setFormData({...formData, config: {...formData.config, limit: parseInt(v)}})}
+                  isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
+                />
                 {formData.templateType === 'ProductShelf' && (
                   <div className="space-y-1.5">
                     <label className="text-xs font-bold text-muted-foreground uppercase">Layout</label>
@@ -316,6 +338,7 @@ export default function DynamicSectionsPage() {
             onSubmit={handleSaveSection}
             loading={saving}
             submitLabel={editingSection ? 'Save Changes' : 'Add Section'}
+            isDark={isDark} border={border} textMain={textMain}
           />
         </Modal>
       )}
