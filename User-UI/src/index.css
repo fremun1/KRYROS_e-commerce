@@ -9,14 +9,14 @@
   /* =================================================
      GLOBAL BRAND COLORS (HEX for reference)
   ================================================= */
-  --kryros-primary: #0A5858;
-  --kryros-primary-hover: #2E656A;
-  --kryros-gold: #FFC107;
-  --kryros-danger: #B91C1C;
+  --kryros-primary: #C0151B;
+  --kryros-primary-hover: #A01015;
+  --kryros-gold: #F6B01E;
+  --kryros-danger: #D63031;
 
   /* RGB versions for opacity use */
-  --kryros-primary-rgb: 10, 88, 88;
-  --kryros-dark-bg-rgb: 5, 8, 22;
+  --kryros-primary-rgb: 192, 21, 27;
+  --kryros-dark-bg-rgb: 15, 15, 15;
 }
 
 @theme inline {
@@ -72,10 +72,10 @@
   --color-sidebar-ring: hsl(var(--sidebar-ring));
 
   /* KRYROS CUSTOM THEME TOKENS */
-  --color-kryros-primary: #0A5858;
-  --color-kryros-primary-hover: #2E656A;
-  --color-kryros-gold: #FFC107;
-  --color-kryros-danger: #B91C1C;
+  --color-kryros-primary: #C0151B;
+  --color-kryros-primary-hover: #A01015;
+  --color-kryros-gold: #F6B01E;
+  --color-kryros-danger: #D63031;
 
   --font-sans: var(--app-font-sans);
   --font-serif: var(--app-font-serif);
@@ -89,41 +89,41 @@
 
 /* LIGHT MODE */
 :root {
-  --background: 210 40% 98%;      /* #F8FAFC */
-  --foreground: 222 47% 11%;      /* #0F172A */
-  --card: 0 0% 100%;              /* #FFFFFF */
-  --card-foreground: 222 47% 11%; /* #0F172A */
-  --card-border: 214 32% 91%;     /* #E2E8F0 */
-  --border: 214 32% 91%;          /* #E2E8F0 */
-  --input: 214 32% 91%;           /* #E2E8F0 */
-  --primary: 180 80% 19%;         /* #0A5858 */
+  --background: 0 0% 96%;          /* #F5F5F5 — Main Background */
+  --foreground: 240 2% 20%;        /* #313133 — Primary Text */
+  --card: 0 0% 100%;              /* #FFFFFF — Card Background */
+  --card-foreground: 240 2% 20%;  /* #313133 */
+  --card-border: 0 0% 90%;        /* #E5E5E5 — Border Gray */
+  --border: 0 0% 90%;             /* #E5E5E5 */
+  --input: 0 0% 90%;              /* #E5E5E5 */
+  --primary: 358 80% 42%;         /* #C0151B — KRYROS Primary Red */
   --primary-foreground: 0 0% 100%;
-  --secondary: 210 40% 96%;       /* #F1F5F9 */
-  --secondary-foreground: 222 47% 11%;
-  --muted: 210 40% 96%;           /* #F1F5F9 */
-  --muted-foreground: 215 16% 47%;/* #64748B */
-  --accent: 210 40% 96%;
-  --accent-foreground: 222 47% 11%;
-  --destructive: 0 74% 42%;       /* #B91C1C */
+  --secondary: 0 0% 98%;          /* #FAFAFA — Secondary Background */
+  --secondary-foreground: 240 2% 20%; /* #313133 */
+  --muted: 0 0% 98%;              /* #FAFAFA */
+  --muted-foreground: 240 2% 47%; /* #75757A — Secondary Text */
+  --accent: 0 0% 96%;             /* #F5F5F5 */
+  --accent-foreground: 240 2% 20%; /* #313133 */
+  --destructive: 0 67% 51%;       /* #D63031 — Sale/Error Red */
   --destructive-foreground: 0 0% 100%;
-  --ring: 180 80% 19%;
+  --ring: 358 80% 42%;            /* #C0151B */
   --popover: 0 0% 100%;
-  --popover-foreground: 222 47% 11%;
-  --popover-border: 214 32% 91%;
-  --sidebar: 210 40% 98%;
-  --sidebar-foreground: 222 47% 11%;
-  --sidebar-border: 214 32% 91%;
-  --sidebar-primary: 180 80% 19%;
+  --popover-foreground: 240 2% 20%;
+  --popover-border: 0 0% 90%;     /* #E5E5E5 */
+  --sidebar: 0 0% 96%;            /* #F5F5F5 */
+  --sidebar-foreground: 240 2% 20%;
+  --sidebar-border: 0 0% 90%;     /* #E5E5E5 */
+  --sidebar-primary: 358 80% 42%; /* #C0151B */
   --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 210 40% 96%;
-  --sidebar-accent-foreground: 222 47% 11%;
-  --sidebar-ring: 180 80% 19%;
+  --sidebar-accent: 0 0% 98%;     /* #FAFAFA */
+  --sidebar-accent-foreground: 240 2% 20%;
+  --sidebar-ring: 358 80% 42%;    /* #C0151B */
   --radius: 0.5rem;
-  --chart-1: 180 80% 19%;
-  --chart-2: 180 80% 19%;
-  --chart-3: 180 80% 19%;
-  --chart-4: 180 80% 19%;
-  --chart-5: 180 80% 19%;
+  --chart-1: 358 80% 42%;         /* #C0151B Primary Red */
+  --chart-2: 141 62% 46%;         /* #2DBE60 Success Green */
+  --chart-3: 30 92% 54%;          /* #F68B1E Warning Orange */
+  --chart-4: 41 92% 54%;          /* #F6B01E Rating Gold */
+  --chart-5: 221 83% 53%;         /* #2563EB Link Blue */
 
   --app-font-sans: 'Roboto', sans-serif;
   --app-font-serif: Georgia, serif;
@@ -131,35 +131,35 @@
 }
 
 .dark {
-  --background: 229 64% 5%;       /* #050816 */
+  --background: 0 0% 6%;          /* #0F0F0F — near black */
   --foreground: 0 0% 100%;        /* #FFFFFF */
-  --card: 217 46% 9%;             /* #0D1523 */
+  --card: 0 0% 10%;               /* #1A1A1A */
   --card-foreground: 0 0% 100%;
-  --card-border: 215 32% 17%;     /* #1E293B */
-  --border: 215 32% 17%;          /* #1E293B */
+  --card-border: 240 2% 20%;      /* #313133 */
+  --border: 240 2% 20%;           /* #313133 */
   --input: 215 32% 17%;
-  --primary: 180 80% 19%;         /* #0A5858 */
+  --primary: 358 80% 42%;         /* #C0151B — KRYROS Red stays in dark */
   --primary-foreground: 0 0% 100%;
-  --secondary: 217 41% 11%;       /* #101826 */
+  --secondary: 0 0% 14%;          /* #242424 */
   --secondary-foreground: 0 0% 100%;
-  --muted: 217 41% 11%;           /* #101826 */
-  --muted-foreground: 218 16% 62%;/* #8E9AAF */
-  --accent: 217 41% 11%;
+  --muted: 0 0% 14%;              /* #242424 */
+  --muted-foreground: 240 2% 47%; /* #75757A */
+  --accent: 0 0% 14%;
   --accent-foreground: 0 0% 100%;
   --destructive: 0 74% 42%;       /* #B91C1C */
   --destructive-foreground: 0 0% 100%;
-  --ring: 180 80% 19%;
-  --popover: 217 46% 9%;
+  --ring: 358 80% 42%;
+  --popover: 0 0% 10%;
   --popover-foreground: 0 0% 100%;
-  --popover-border: 215 32% 17%;
-  --sidebar: 217 41% 11%;
+  --popover-border: 240 2% 20%;
+  --sidebar: 0 0% 14%;
   --sidebar-foreground: 0 0% 100%;
-  --sidebar-border: 215 32% 17%;
-  --sidebar-primary: 180 80% 19%;
+  --sidebar-border: 240 2% 20%;
+  --sidebar-primary: 358 80% 42%;
   --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 215 32% 17%;
+  --sidebar-accent: 240 2% 20%;
   --sidebar-accent-foreground: 0 0% 100%;
-  --sidebar-ring: 180 80% 19%;
+  --sidebar-ring: 358 80% 42%;
 }
 
 @layer base {
@@ -262,7 +262,7 @@ html {
   transform: translateX(-50%);
   width: 36px;
   height: 36px;
-  background: #eef3f7;
+  background: #F5F5F5;
   border-radius: 50%;
   z-index: 1;
 }
@@ -274,7 +274,7 @@ html {
   transform: translateX(-50%);
   width: 44px;
   height: 44px;
-  background: #0A5858;
+  background: #C0151B;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -317,8 +317,8 @@ html {
 
 .nav-item.active .icon,
 .nav-item.active .label {
-  color: #0A5858;
-  stroke: #0A5858;
+  color: #C0151B;
+  stroke: #C0151B;
 }
 
 .nav-item:not(.active) .icon,
@@ -328,7 +328,7 @@ html {
 }
 
 .nav-item.active svg {
-  stroke: #0A5858;
+  stroke: #C0151B;
 }
 
 .nav-item:not(.active) svg {
@@ -350,7 +350,7 @@ html {
   right: -4px;
   min-width: 12px;
   height: 12px;
-  background: #0A5858;
+  background: #C0151B;
   border-radius: 6px;
   display: flex;
   align-items: center;
@@ -373,8 +373,8 @@ html {
 
 .dark .nav-item.active .icon,
 .dark .nav-item.active .label {
-  color: hsl(var(--kryros-primary));
-  stroke: hsl(var(--kryros-primary));
+  color: #C0151B;
+  stroke: #C0151B;
 }
 
 .dark .nav-item:not(.active) .icon,
@@ -384,7 +384,7 @@ html {
 }
 
 .dark .nav-item.active svg {
-  stroke: hsl(var(--kryros-primary));
+  stroke: #C0151B;
 }
 
 .dark .nav-item:not(.active) svg {
