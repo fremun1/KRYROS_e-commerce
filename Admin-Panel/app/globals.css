@@ -1,22 +1,25 @@
 @import "tailwindcss";
 
 :root {
-  --primary: #1FA89A;
-  --primary-hover: #27B9AF;
-  --gold: #FFC107;
-  --danger: #B91C1C;
+  --primary: #C0151B;            /* KRYROS Primary Red */
+  --primary-hover: #A01015;        /* KRYROS Primary Hover */
+  --gold: #F6B01E;              /* KRYROS Rating Gold */
+  --danger: #D63031;            /* KRYROS Sale/Error Red */
+  --success: #2DBE60;           /* KRYROS Success Green */
+  --warning: #F68B1E;           /* KRYROS Warning Orange */
+  --link: #2563EB;              /* KRYROS Link/URL */
   --sidebar-width: 260px;
-  --bg: #F8FAFC;
-  --card: #FFFFFF;
-  --surface: #F1F5F9;
-  --border: #E2E8F0;
-  --option: #CBD5E1;
-  --text-main: #0F172A;
-  --text-secondary: #334155;
-  --text-muted: #64748B;
-  --text-light: #94A3B8;
-  --glow: rgba(31,168,154,0.08);
-  --border-soft: rgba(15,23,42,0.06);
+  --bg: #F5F5F5;               /* KRYROS Main Background */
+  --card: #FFFFFF;              /* KRYROS Card Background */
+  --surface: #FAFAFA;           /* KRYROS Secondary Background */
+  --border: #E5E5E5;            /* KRYROS Border */
+  --option: #E5E5E5;            /* KRYROS Border Gray */
+  --text-main: #313133;         /* KRYROS Primary Text */
+  --text-secondary: #535357;     /* KRYROS Dark Gray */
+  --text-muted: #75757A;        /* KRYROS Medium Gray */
+  --text-light: #9E9E9E;        /* KRYROS Disabled Text */
+  --glow: rgba(192,21,27,0.08); /* KRYROS Primary Glow */
+  --border-soft: rgba(49,49,51,0.06); /* KRYROS soft border */
 }
 
 .dark {
@@ -29,7 +32,7 @@
   --text-secondary: #94A3B8;
   --text-muted: #8E9AAF;
   --text-light: #A9B4C7;
-  --glow: rgba(31,168,154,0.15);
+  --glow: rgba(192,21,27,0.15); /* KRYROS Primary Glow Dark */
   --border-soft: rgba(255,255,255,0.06);
 }
 
@@ -61,12 +64,12 @@ body {
 .card, .surface, button, input, select, textarea {
   transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }
-.badge-completed { background: rgba(31,168,154,0.15); color: #1FA89A; }
+.badge-completed { background: rgba(45,190,96,0.15); color: #2DBE60; }   /* KRYROS Success */
 .badge-processing { background: rgba(59,130,246,0.15); color: #3b82f6; }
-.badge-pending { background: rgba(255,193,7,0.15); color: #FFC107; }
-.badge-cancelled { background: rgba(185,28,28,0.15); color: #B91C1C; }
+.badge-pending { background: rgba(246,176,30,0.15); color: #F6B01E; }    /* KRYROS Rating Gold */
+.badge-cancelled { background: rgba(214,48,49,0.15); color: #D63031; }   /* KRYROS Error Red */
 .badge-shipped { background: rgba(139,92,246,0.15); color: #8b5cf6; }
-.badge-delivered { background: rgba(31,168,154,0.15); color: #1FA89A; }
+.badge-delivered { background: rgba(45,190,96,0.15); color: #2DBE60; }   /* KRYROS Success */
 
 @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes spin { to { transform: rotate(360deg); } }
