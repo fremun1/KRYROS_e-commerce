@@ -1891,8 +1891,8 @@ function CMSContent() {
           <CloudinaryUpload value={wbForm.image} onChange={(v) => setWbForm(f => ({ ...f, image: v }))} accept="image/*" folder="kryros/banners" isDark={isDark} border={border} surface={surface} textMuted={textMuted} />
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-          <FormField label="Click Link (optional)" value={wbForm.link} onChange={(v) => setWbForm(f => ({ ...f, link: v }))} placeholder="/shop" isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-          <FormField label="Button Text (optional)" value={wbForm.linkText} onChange={(v) => setWbForm(f => ({ ...f, linkText: v }))} placeholder="Shop Now" isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+          <FormField label="Click Link (optional)" value={wbForm.link || ''} onChange={(v) => setWbForm(f => ({ ...f, link: v }))} placeholder="/shop" isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+          <FormField label="Button Text (optional)" value={wbForm.linkText || ''} onChange={(v) => setWbForm(f => ({ ...f, linkText: v }))} placeholder="Shop Now" isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
         </div>
         <ModalFooter onClose={() => { setWholesaleBannersOpen(false); setWbEditIdx(null); }} onSubmit={handleWbSave} loading={wholesaleBannersSaving} submitLabel={wbEditIdx !== null ? 'Save Changes' : 'Add Banner'} isDark={isDark} border={border} textMain={textMain} />
       </Modal>
@@ -1906,8 +1906,8 @@ function CMSContent() {
           <CloudinaryUpload value={gnForm.image} onChange={(v) => setGnForm(f => ({ ...f, image: v }))} accept="image/*" folder="kryros/banners" isDark={isDark} border={border} surface={surface} textMuted={textMuted} />
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-          <FormField label="Click Link (optional)" value={gnForm.link} onChange={(v) => setGnForm(f => ({ ...f, link: v }))} placeholder="/register" isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-          <FormField label="Button Text (optional)" value={gnForm.linkText} onChange={(v) => setGnForm(f => ({ ...f, linkText: v }))} placeholder="Apply Now" isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+          <FormField label="Click Link (optional)" value={gnForm.link || ''} onChange={(v) => setGnForm(f => ({ ...f, link: v }))} placeholder="/register" isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+          <FormField label="Button Text (optional)" value={gnForm.linkText || ''} onChange={(v) => setGnForm(f => ({ ...f, linkText: v }))} placeholder="Apply Now" isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
         </div>
         <ModalFooter onClose={() => { setGetNowBannersOpen(false); setGnEditIdx(null); }} onSubmit={handleGnSave} loading={getNowBannersSaving} submitLabel={gnEditIdx !== null ? 'Save Changes' : 'Add Banner'} isDark={isDark} border={border} textMain={textMain} />
       </Modal>

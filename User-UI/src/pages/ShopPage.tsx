@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "wouter";
-import { ChevronRight, Zap } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import {
   fetchCategories,
   fetchPageSections,
@@ -175,53 +175,32 @@ function CategoryCarousel({ categories }: { categories: ApiCategory[] }) {
 // ─── Shop Hero Banner ─────────────────────────────────────────────────────────
 function ShopHero({ hero }: { hero: ShopSiteConfig["heroBanner"] }) {
   if (!hero) return null;
-  const style = hero.imageUrl
-    ? {
-        backgroundImage: `url(${hero.imageUrl})`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-      }
-    : {
-        background:
-          hero.bgColor ||
-          "linear-gradient(135deg, var(--kryros-primary) 0%, #0a7c72 100%)",
-      };
+  const bgStyle = hero.bgColor
+    ? { background: hero.bgColor }
+    : { background: "linear-gradient(135deg, var(--kryros-primary) 0%, #0a7c72 100%)" };
 
   return (
-    <section className="mx-4 mt-4 mb-4 rounded-2xl overflow-hidden" style={style as any}>
-      <div className="flex items-center min-h-[160px] relative overflow-hidden p-4 sm:min-h-[200px] lg:min-h-[240px] lg:p-10">
-        {hero.imageUrl && (
-          <div
-            className="absolute inset-0 z-0"
-            style={{
-              background:
-                "linear-gradient(135deg, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.38) 60%, transparent 100%)",
-            }}
-          />
-        )}
-        <div className="flex-1 z-10">
-          <p className="text-[10px] font-bold uppercase tracking-widest mb-1 text-white/70">
-            KRYROS Store
-          </p>
-          {hero.tagline && (
-            <h1 className="text-xl font-black leading-tight mb-1 text-white lg:text-4xl lg:mb-3">
-              {hero.tagline}
-            </h1>
-          )}
-          {hero.subtitle && (
-            <p className="text-[11px] mb-3 leading-relaxed text-white/80 lg:text-base lg:mb-5">
-              {hero.subtitle}
-            </p>
-          )}
-          {hero.ctaLink && (
-            <Link href={hero.ctaLink}>
-              <button className="flex items-center gap-1.5 bg-white text-teal-700 text-xs font-bold px-4 py-2 rounded-full hover:bg-white/90 transition-opacity lg:px-6 lg:py-3 lg:text-sm">
-                {hero.ctaText || "Explore Now"} <ChevronRight className="w-3.5 h-3.5" />
-              </button>
-            </Link>
-          )}
-        </div>
-      </div>
+    <section
+      className="mx-4 mt-4 mb-4 rounded-2xl overflow-hidden relative"
+      style={{ aspectRatio: "16/9", maxHeight: "360px" }}
+    >
+      {hero.imageUrl ? (
+        <img
+          src={hero.imageUrl}
+          alt={hero.tagline || "Shop banner"}
+          className="w-full h-full object-cover"
+          draggable={false}
+        />
+      ) : (
+        <div className="w-full h-full" style={bgStyle as any} />
+      )}
+
+      {/* Jumia-style: image-only, optional click-through */}
+      {hero.ctaLink && (
+        <Link href={hero.ctaLink}>
+          <a className="absolute inset-0" aria-label="Open banner link" />
+        </Link>
+      )}
     </section>
   );
 }
@@ -232,51 +211,35 @@ function MembersBanner({ banner }: { banner: ShopSiteConfig["membersBanner"] }) 
 
   return (
     <section
-      className="mx-4 my-4 rounded-2xl overflow-hidden"
-      style={
-        banner.imageUrl
-          ? {
-              backgroundImage: `url(${banner.imageUrl})`,
-              backgroundSize: "cover",
-              backgroundPosition: "center",
-            }
-          : { background: "linear-gradient(135deg, var(--kryros-primary) 0%, #0f766e 100%)" }
-      }
+      className="mx-4 my-4 rounded-2xl overflow-hidden relative"
+      style={{ aspectRatio: "16/9", maxHeight: "300px" }}
     >
-      <div className="flex items-center p-4 gap-3">
-        <div className="flex-1">
-          {banner.tag && (
-            <p className="text-[10px] font-bold text-white/70 uppercase tracking-wider mb-0.5">
-              {banner.tag}
-            </p>
-          )}
-          {banner.title && (
-            <h3 className="text-xl font-black text-white leading-tight lg:text-3xl">
-              {banner.title}
-            </h3>
-          )}
-          {banner.subtitle && (
-            <p className="text-[11px] text-white/80 mb-3 lg:text-sm lg:mb-5">{banner.subtitle}</p>
-          )}
-          {banner.ctaLink && (
-            <Link href={banner.ctaLink}>
-              <button className="flex items-center gap-1.5 bg-white text-teal-700 text-xs font-bold px-4 py-2 rounded-full hover:bg-white/90 transition-opacity">
-                {banner.ctaText || "Join Now"} <ChevronRight className="w-3.5 h-3.5" />
-              </button>
-            </Link>
-          )}
-        </div>
-      </div>
+      {banner.imageUrl ? (
+        <img
+          src={banner.imageUrl}
+          alt={banner.title || banner.tag || "Members banner"}
+          className="w-full h-full object-cover"
+          draggable={false}
+        />
+      ) : (
+        <div
+          className="w-full h-full"
+          style={{ background: "linear-gradient(135deg, var(--kryros-primary) 0%, #0f766e 100%)" }}
+        />
+      )}
+
+      {/* Jumia-style: image-only, optional click-through */}
+      {banner.ctaLink && (
+        <Link href={banner.ctaLink}>
+          <a className="absolute inset-0" aria-label="Open banner link" />
+        </Link>
+      )}
     </section>
   );
 }
 
 // ─── Promo Banner ─────────────────────────────────────────────────────────────
 function PromoBannerBlock({ cfg }: { cfg: Record<string, unknown> }) {
-  const tag = toStr(cfg.tag);
-  const title = toStr(cfg.title);
-  const subtitle = toStr(cfg.subtitle);
-  const ctaText = toStr(cfg.ctaText, "Shop Now");
   const ctaLink = toStr(cfg.ctaLink, "/shop/section/all");
   const imageUrl = toStr(cfg.imageUrl);
   const bg = toStr(
@@ -286,38 +249,26 @@ function PromoBannerBlock({ cfg }: { cfg: Record<string, unknown> }) {
 
   return (
     <section
-      className="mx-4 my-4 rounded-2xl overflow-hidden"
-      style={
-        imageUrl
-          ? {
-              backgroundImage: `url(${imageUrl})`,
-              backgroundSize: "cover",
-              backgroundPosition: "center",
-            }
-          : { background: bg }
-      }
+      className="mx-4 my-4 rounded-2xl overflow-hidden relative"
+      style={{ aspectRatio: "16/9", maxHeight: "300px" }}
     >
-      <div className="relative p-4 sm:p-6">
-        {imageUrl && (
-          <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.45)" }} />
-        )}
-        <div className="relative">
-          {tag && (
-            <p className="text-[10px] font-bold text-white/80 uppercase tracking-widest">{tag}</p>
-          )}
-          {title && <h3 className="text-xl font-black text-white mt-1">{title}</h3>}
-          {subtitle && (
-            <p className="text-[11px] text-white/80 mt-1 max-w-xl">{subtitle}</p>
-          )}
-          <div className="mt-3">
-            <Link href={ctaLink}>
-              <button className="inline-flex items-center gap-1.5 bg-white text-teal-700 text-xs font-bold px-4 py-2 rounded-full hover:bg-white/90 transition-opacity">
-                {ctaText} <ChevronRight className="w-3.5 h-3.5" />
-              </button>
-            </Link>
-          </div>
-        </div>
-      </div>
+      {imageUrl ? (
+        <img
+          src={imageUrl}
+          alt={toStr(cfg.title) || toStr(cfg.tag) || "Promo banner"}
+          className="w-full h-full object-cover"
+          draggable={false}
+        />
+      ) : (
+        <div className="w-full h-full" style={{ background: bg }} />
+      )}
+
+      {/* Jumia-style: image-only, optional click-through */}
+      {ctaLink && (
+        <Link href={ctaLink}>
+          <a className="absolute inset-0" aria-label="Open banner link" />
+        </Link>
+      )}
     </section>
   );
 }
