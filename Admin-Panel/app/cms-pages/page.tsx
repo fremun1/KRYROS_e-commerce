@@ -550,7 +550,7 @@ function CMSContent() {
   const accent = '#1FA89A';
 
   const [data, setData] = useState<CmsPage[]>(INITIAL_PAGES);
-  type View = 'pages' | 'sections' | 'items' | 'trusted-brands' | 'brand-banners';
+  type View = 'pages' | 'sections' | 'items' | 'trusted-brands' | 'brand-banners' | 'wholesale-banners' | 'get-now-banners';
 
 
   // ── Load real data from API on mount ─────────────────────────────────
@@ -678,15 +678,19 @@ function CMSContent() {
             await seedTrustedBrandsFromAPI();
           }
         } catch {}
-        // Load Wholesale Hero
+        // Load Wholesale Page Banners (tag=wholesale)
         try {
-          const wh = configs.find((c: any) => c.key === 'wholesale');
-          if (wh?.value) { const v = typeof wh.value === 'string' ? JSON.parse(wh.value) : wh.value; if (v?.hero) setWholesaleHero(h => ({ ...h, ...v.hero })); }
+          const wbRes = await fetch(`/api/cms/banners?tag=wholesale`).then(r => r.ok ? r.json() : null);
+          if (wbRes?.data && Array.isArray(wbRes.data)) {
+            setWholesaleBanners(wbRes.data.map((b: any) => ({ id: b.id, title: b.title || '', image: b.image || '', link: b.link || '', linkText: b.linkText || '', isActive: b.isActive !== false, position: b.position || 0 })));
+          }
         } catch {}
-        // Load Get Now Hero
+        // Load Get Now Page Banners (tag=get-now)
         try {
-          const gn = configs.find((c: any) => c.key === 'get-now');
-          if (gn?.value) { const v = typeof gn.value === 'string' ? JSON.parse(gn.value) : gn.value; if (v) setGetHero(h => ({ ...h, ...v })); }
+          const gnRes = await fetch(`/api/cms/banners?tag=get-now`).then(r => r.ok ? r.json() : null);
+          if (gnRes?.data && Array.isArray(gnRes.data)) {
+            setGetNowBanners(gnRes.data.map((b: any) => ({ id: b.id, title: b.title || '', image: b.image || '', link: b.link || '', linkText: b.linkText || '', isActive: b.isActive !== false, position: b.position || 0 })));
+          }
         } catch {}
         // Load Shop Members Banner
         try {
@@ -925,7 +929,7 @@ function CMSContent() {
     // Badge fields are now expanded at data-load time — no direct mutation needed here.
   };
   const goBack = () => {
-    if (view === 'trusted-brands' || view === 'brand-banners') { setView('sections'); }
+    if (view === 'trusted-brands' || view === 'brand-banners' || view === 'wholesale-banners' || view === 'get-now-banners') { setView('sections'); }
     else if (view === 'items') { setView('sections'); setSelectedSectionName(null); }
     else if (view === 'sections') { setView('pages'); setSelectedPageId(null); }
   };
@@ -954,14 +958,23 @@ function CMSContent() {
   const [tbSaving, setTbSaving] = useState(false);
   const [tbDeleteIdx, setTbDeleteIdx] = useState<number | null>(null);
   const toTbSlug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-  // ── Wholesale Hero Banner ────────────────────────────────────────────────────
-  const [wholesaleHero, setWholesaleHero] = useState({ heading: 'Buy More, Save More!', subheading: 'Exclusive wholesale prices on thousands of products.', ctaText: 'Explore Products', ctaLink: '/shop', imageUrl: '' });
-  const [wholesaleHeroOpen, setWholesaleHeroOpen] = useState(false);
-  const [wholesaleHeroSaving, setWholesaleHeroSaving] = useState(false);
-  // ── Get Now Hero Banner ──────────────────────────────────────────────────────
-  const [getHero, setGetHero] = useState({ title1: 'Shop Now.', title2: 'Pay Later.', ctaText: 'Get Started', ctaLink: '/register', bgColor: '#EDF7F5', imageUrl: '' });
-  const [getHeroOpen, setGetHeroOpen] = useState(false);
-  const [getHeroSaving, setGetHeroSaving] = useState(false);
+  // ── Wholesale Page Banners (tag-filtered) ───────────────────────────────────
+  type PageBanner = { id: string; title: string; image: string; link?: string; linkText?: string; isActive: boolean; position: number };
+  const [wholesaleBanners, setWholesaleBanners] = useState<PageBanner[]>([]);
+  const [wholesaleBannersOpen, setWholesaleBannersOpen] = useState(false);
+  const [wholesaleBannersSaving, setWholesaleBannersSaving] = useState(false);
+  const [wbEditIdx, setWbEditIdx] = useState<number | null>(null);
+  const [wbDeleteIdx, setWbDeleteIdx] = useState<number | null>(null);
+  const defaultWbForm = { title: '', image: '', link: '', linkText: '' };
+  const [wbForm, setWbForm] = useState<Omit<PageBanner, 'id' | 'isActive' | 'position'>>(defaultWbForm);
+  // ── Get Now Page Banners (tag-filtered) ─────────────────────────────────────
+  const [getNowBanners, setGetNowBanners] = useState<PageBanner[]>([]);
+  const [getNowBannersOpen, setGetNowBannersOpen] = useState(false);
+  const [getNowBannersSaving, setGetNowBannersSaving] = useState(false);
+  const [gnEditIdx, setGnEditIdx] = useState<number | null>(null);
+  const [gnDeleteIdx, setGnDeleteIdx] = useState<number | null>(null);
+  const defaultGnForm = { title: '', image: '', link: '', linkText: '' };
+  const [gnForm, setGnForm] = useState<Omit<PageBanner, 'id' | 'isActive' | 'position'>>(defaultGnForm);
   // ── Shop Members Banner ──────────────────────────────────────────────────────
   const [membersBanner, setMembersBanner] = useState({ tag: 'KRYROS Members', title: 'Extra 5% Off', subtitle: 'On selected products', ctaText: 'Join Now', ctaLink: '/register', imageUrl: '' });
   const [membersBannerOpen, setMembersBannerOpen] = useState(false);
@@ -1026,6 +1039,102 @@ function CMSContent() {
       setBrandBanners(banners);
       toast.success('Brand banners saved');
     } catch { toast.error('Failed to save brand banners'); }
+  };
+
+  // ── Wholesale Banners CRUD ──────────────────────────────────────────────────
+  const saveWholesaleBanner = async (banner: any) => {
+    setWholesaleBannersSaving(true);
+    try {
+      if (wbEditIdx !== null) {
+        await updateCmsBanner(banner.id, { title: banner.title, image: banner.image, link: banner.link || null, linkText: banner.linkText || null, tag: 'wholesale', position: banner.position });
+        setWholesaleBanners(prev => prev.map((b, i) => i === wbEditIdx ? banner : b));
+        toast.success('Banner updated');
+      } else {
+        const res = await createCmsBanner({ title: banner.title, image: banner.image, link: banner.link || null, linkText: banner.linkText || null, tag: 'wholesale', isActive: true, position: wholesaleBanners.length });
+        const newBanner = { id: res.data.id, title: banner.title, image: banner.image, link: banner.link || '', linkText: banner.linkText || '', isActive: true, position: wholesaleBanners.length };
+        setWholesaleBanners(prev => [...prev, newBanner]);
+        toast.success('Banner added');
+      }
+    } catch (e: any) { toast.error(e?.response?.data?.message || 'Save failed'); }
+    setWholesaleBannersSaving(false);
+  };
+  const handleWbSave = () => {
+    if (!wbForm.title.trim()) { toast.error('Banner title required'); return; }
+    if (!wbForm.image.trim()) { toast.error('Banner image required'); return; }
+    const banner: PageBanner = {
+      id: wbEditIdx !== null ? wholesaleBanners[wbEditIdx].id : 'wb-' + Date.now(),
+      title: wbForm.title.trim(),
+      image: wbForm.image,
+      link: wbForm.link || '',
+      linkText: wbForm.linkText || '',
+      isActive: true,
+      position: wbEditIdx !== null ? wholesaleBanners[wbEditIdx].position : wholesaleBanners.length,
+    };
+    saveWholesaleBanner(banner);
+    setWholesaleBannersOpen(false); setWbEditIdx(null); setWbForm(defaultWbForm);
+  };
+  const handleWbDelete = () => {
+    if (wbDeleteIdx === null) return;
+    const b = wholesaleBanners[wbDeleteIdx];
+    setWholesaleBanners(prev => prev.filter((_, i) => i !== wbDeleteIdx));
+    setWbDeleteIdx(null);
+    if (b.id && !b.id.startsWith('wb-')) deleteCmsBanner(b.id).catch(() => {});
+    toast.success('Banner deleted');
+  };
+  const handleWbToggle = (idx: number) => {
+    const b = wholesaleBanners[idx];
+    const ns = !b.isActive;
+    setWholesaleBanners(prev => prev.map((item, i) => i === idx ? { ...item, isActive: ns } : item));
+    toast.success('Set to ' + (ns ? 'Active' : 'Inactive'));
+    if (b.id && !b.id.startsWith('wb-')) updateCmsBanner(b.id, { isActive: ns }).catch(() => {});
+  };
+
+  // ── Get Now Banners CRUD ────────────────────────────────────────────────────
+  const saveGetNowBanner = async (banner: any) => {
+    setGetNowBannersSaving(true);
+    try {
+      if (gnEditIdx !== null) {
+        await updateCmsBanner(banner.id, { title: banner.title, image: banner.image, link: banner.link || null, linkText: banner.linkText || null, tag: 'get-now', position: banner.position });
+        setGetNowBanners(prev => prev.map((b, i) => i === gnEditIdx ? banner : b));
+        toast.success('Banner updated');
+      } else {
+        const res = await createCmsBanner({ title: banner.title, image: banner.image, link: banner.link || null, linkText: banner.linkText || null, tag: 'get-now', isActive: true, position: getNowBanners.length });
+        const newBanner = { id: res.data.id, title: banner.title, image: banner.image, link: banner.link || '', linkText: banner.linkText || '', isActive: true, position: getNowBanners.length };
+        setGetNowBanners(prev => [...prev, newBanner]);
+        toast.success('Banner added');
+      }
+    } catch (e: any) { toast.error(e?.response?.data?.message || 'Save failed'); }
+    setGetNowBannersSaving(false);
+  };
+  const handleGnSave = () => {
+    if (!gnForm.title.trim()) { toast.error('Banner title required'); return; }
+    if (!gnForm.image.trim()) { toast.error('Banner image required'); return; }
+    const banner: PageBanner = {
+      id: gnEditIdx !== null ? getNowBanners[gnEditIdx].id : 'gn-' + Date.now(),
+      title: gnForm.title.trim(),
+      image: gnForm.image,
+      link: gnForm.link || '',
+      linkText: gnForm.linkText || '',
+      isActive: true,
+      position: gnEditIdx !== null ? getNowBanners[gnEditIdx].position : getNowBanners.length,
+    };
+    saveGetNowBanner(banner);
+    setGetNowBannersOpen(false); setGnEditIdx(null); setGnForm(defaultGnForm);
+  };
+  const handleGnDelete = () => {
+    if (gnDeleteIdx === null) return;
+    const b = getNowBanners[gnDeleteIdx];
+    setGetNowBanners(prev => prev.filter((_, i) => i !== gnDeleteIdx));
+    setGnDeleteIdx(null);
+    if (b.id && !b.id.startsWith('gn-')) deleteCmsBanner(b.id).catch(() => {});
+    toast.success('Banner deleted');
+  };
+  const handleGnToggle = (idx: number) => {
+    const b = getNowBanners[idx];
+    const ns = !b.isActive;
+    setGetNowBanners(prev => prev.map((item, i) => i === idx ? { ...item, isActive: ns } : item));
+    toast.success('Set to ' + (ns ? 'Active' : 'Inactive'));
+    if (b.id && !b.id.startsWith('gn-')) updateCmsBanner(b.id, { isActive: ns }).catch(() => {});
   };
   const handleTbSave = () => {
     if (!tbForm.name.trim()) { toast.error('Brand name required'); return; }
@@ -1319,36 +1428,42 @@ function CMSContent() {
                   <ChevronRight size={16} color={textMuted} />
                 </div>
               )}
-              {/* ── Wholesale Hero Banner Card (wholesale page only) ── */}
+              {/* ── Wholesale Page Banners Card (wholesale page only) ── */}
               {(selectedPage?.slug === 'wholesale' || selectedPage?.id?.toLowerCase?.().includes('wholesale')) && (
                 <div style={{ background: card, border: `1px solid ${border}`, borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '14px', padding: '16px 20px', cursor: 'pointer', transition: 'border-color 0.15s' }}
-                  onClick={() => setWholesaleHeroOpen(true)}
+                  onClick={() => setView('wholesale-banners')}
                   onMouseEnter={e => (e.currentTarget.style.borderColor = accent)}
                   onMouseLeave={e => (e.currentTarget.style.borderColor = border)}>
                   <div style={{ width: '42px', height: '42px', borderRadius: '11px', background: 'rgba(31,168,154,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     <ImageIcon size={18} color={accent} />
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontWeight: 700, color: textMain, fontSize: '14px' }}>Wholesale Hero Banner</div>
-                    <div style={{ fontSize: '12px', color: textMuted, marginTop: '3px' }}>{wholesaleHero.heading}</div>
+                    <div style={{ fontWeight: 700, color: textMain, fontSize: '14px' }}>Wholesale Page Banners</div>
+                    <div style={{ fontSize: '12px', color: textMuted, marginTop: '3px', display: 'flex', gap: '10px' }}>
+                      <span>{wholesaleBanners.length} banner{wholesaleBanners.length !== 1 ? 's' : ''}</span>
+                      {wholesaleBanners.length > 0 && <span style={{ color: accent, fontWeight: 600 }}>{wholesaleBanners.filter(b => b.isActive).length} active</span>}
+                    </div>
                   </div>
-                  <Edit size={14} color={textMuted} />
+                  <ChevronRight size={16} color={textMuted} />
                 </div>
               )}
-              {/* ── Get Now Hero Banner Card (get-now page only) ── */}
+              {/* ── Get Now Page Banners Card (get-now page only) ── */}
               {(selectedPage?.slug === 'get-now' || selectedPage?.id?.toLowerCase?.().includes('get-now') || selectedPage?.id?.toLowerCase?.().includes('bnpl')) && (
                 <div style={{ background: card, border: `1px solid ${border}`, borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '14px', padding: '16px 20px', cursor: 'pointer', transition: 'border-color 0.15s' }}
-                  onClick={() => setGetHeroOpen(true)}
+                  onClick={() => setView('get-now-banners')}
                   onMouseEnter={e => (e.currentTarget.style.borderColor = accent)}
                   onMouseLeave={e => (e.currentTarget.style.borderColor = border)}>
                   <div style={{ width: '42px', height: '42px', borderRadius: '11px', background: 'rgba(31,168,154,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     <ImageIcon size={18} color={accent} />
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontWeight: 700, color: textMain, fontSize: '14px' }}>Get Now Hero Banner</div>
-                    <div style={{ fontSize: '12px', color: textMuted, marginTop: '3px' }}>{getHero.title1} {getHero.title2}</div>
+                    <div style={{ fontWeight: 700, color: textMain, fontSize: '14px' }}>Get Now Page Banners</div>
+                    <div style={{ fontSize: '12px', color: textMuted, marginTop: '3px', display: 'flex', gap: '10px' }}>
+                      <span>{getNowBanners.length} banner{getNowBanners.length !== 1 ? 's' : ''}</span>
+                      {getNowBanners.length > 0 && <span style={{ color: accent, fontWeight: 600 }}>{getNowBanners.filter(b => b.isActive).length} active</span>}
+                    </div>
                   </div>
-                  <Edit size={14} color={textMuted} />
+                  <ChevronRight size={16} color={textMuted} />
                 </div>
               )}
               {/* ── Announcement Bar Card (homepage only) ── */}
@@ -1415,6 +1530,118 @@ function CMSContent() {
                       <Edit size={11} /> Edit
                     </button>
                     <button onClick={() => setTbDeleteIdx(idx)} style={{ width: '28px', height: '28px', borderRadius: '7px', background: 'rgba(239,68,68,0.1)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Trash2 size={12} color='#ef4444' />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── WHOLESALE BANNERS VIEW ── */}
+      {view === 'wholesale-banners' && selectedPage && (
+        <div>
+          <Breadcrumb />
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', flexWrap: 'wrap', gap: '10px' }}>
+            <div>
+              <button onClick={goBack} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: isDark ? '#1E293B' : '#F1F5F9', border: `1px solid ${border}`, borderRadius: '8px', padding: '8px 14px', cursor: 'pointer', color: textMain, fontSize: '13px', fontWeight: 600, fontFamily: 'var(--font-inter)', marginBottom: '10px' }}>
+                <ChevronLeft size={14} /> Back to {selectedPage.title}
+              </button>
+              <h2 style={{ fontSize: '20px', fontWeight: 800, color: textMain, margin: 0 }}>Wholesale Page Banners</h2>
+              <p style={{ fontSize: '13px', color: textMuted, margin: '3px 0 0' }}>Jumia-style horizontal banner slider — {wholesaleBanners.length} banner{wholesaleBanners.length !== 1 ? 's' : ''}</p>
+            </div>
+            <button onClick={() => { setWbForm(defaultWbForm); setWbEditIdx(null); setWholesaleBannersOpen(true); }} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'linear-gradient(135deg,#1FA89A,#27B9AF)', border: 'none', borderRadius: '9px', color: 'white', fontSize: '13.5px', fontWeight: 600, padding: '9px 16px', cursor: 'pointer', fontFamily: 'var(--font-inter)', boxShadow: '0 4px 12px rgba(31,168,154,0.25)' }}>
+              <Plus size={15} /> Add Banner
+            </button>
+          </div>
+          {wholesaleBanners.length === 0 ? (
+            <div style={{ padding: '48px 20px', background: card, border: `1px dashed ${border}`, borderRadius: '12px', textAlign: 'center', color: textMuted }}>
+              <ImageIcon size={32} color={textMuted} style={{ opacity: 0.3, margin: '0 auto 12px', display: 'block' }} />
+              <div style={{ fontSize: '14px', fontWeight: 600, marginBottom: '6px' }}>No banners yet</div>
+              <div style={{ fontSize: '12.5px' }}>Click "Add Banner" to create a Jumia-style image banner for the wholesale page.</div>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {wholesaleBanners.map((banner, idx) => (
+                <div key={banner.id} style={{ background: card, border: `1px solid ${border}`, borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '14px', padding: '16px 20px', transition: 'border-color 0.15s' }}
+                  onMouseEnter={e => (e.currentTarget.style.borderColor = accent)}
+                  onMouseLeave={e => (e.currentTarget.style.borderColor = border)}>
+                  <div style={{ width: '80px', height: '56px', borderRadius: '10px', background: isDark ? '#1e2a35' : '#f0f9ff', border: `1px solid ${border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
+                    {banner.image ? <img src={banner.image} alt={banner.title} style={{ width: '100%', height: '100%', objectFit: 'cover', padding: '2px' }} onError={(e: any) => { e.target.style.display = 'none'; }} /> : <ImageIcon size={18} color={accent} />}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 700, color: textMain, fontSize: '14px' }}>{banner.title}</div>
+                    <div style={{ fontSize: '12px', color: textMuted, marginTop: '3px', display: 'flex', gap: '10px' }}>
+                      {banner.link && <code style={{ fontSize: '11px', color: accent, background: 'rgba(31,168,154,0.1)', padding: '1px 6px', borderRadius: '4px' }}>{banner.link}</code>}
+                      {banner.linkText && <span>{banner.linkText}</span>}
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+                    <button onClick={() => handleWbToggle(idx)} style={{ height: '28px', paddingInline: '10px', borderRadius: '7px', border: 'none', cursor: 'pointer', fontSize: '11.5px', fontWeight: 600, fontFamily: 'var(--font-inter)', background: banner.isActive ? 'rgba(31,168,154,0.1)' : 'rgba(100,116,139,0.1)', color: banner.isActive ? accent : '#8E9AAF' }}>
+                      {banner.isActive ? 'Active' : 'Inactive'}
+                    </button>
+                    <button onClick={() => { setWbForm({ title: banner.title, image: banner.image, link: banner.link || '', linkText: banner.linkText || '' }); setWbEditIdx(idx); setWholesaleBannersOpen(true); }} style={{ display: 'flex', alignItems: 'center', gap: '5px', height: '28px', paddingInline: '10px', borderRadius: '7px', background: 'rgba(31,168,154,0.1)', border: 'none', cursor: 'pointer', fontSize: '11.5px', fontWeight: 600, color: accent, fontFamily: 'var(--font-inter)' }}>
+                      <Edit size={11} /> Edit
+                    </button>
+                    <button onClick={() => setWbDeleteIdx(idx)} style={{ width: '28px', height: '28px', borderRadius: '7px', background: 'rgba(239,68,68,0.1)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Trash2 size={12} color='#ef4444' />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── GET NOW BANNERS VIEW ── */}
+      {view === 'get-now-banners' && selectedPage && (
+        <div>
+          <Breadcrumb />
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', flexWrap: 'wrap', gap: '10px' }}>
+            <div>
+              <button onClick={goBack} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: isDark ? '#1E293B' : '#F1F5F9', border: `1px solid ${border}`, borderRadius: '8px', padding: '8px 14px', cursor: 'pointer', color: textMain, fontSize: '13px', fontWeight: 600, fontFamily: 'var(--font-inter)', marginBottom: '10px' }}>
+                <ChevronLeft size={14} /> Back to {selectedPage.title}
+              </button>
+              <h2 style={{ fontSize: '20px', fontWeight: 800, color: textMain, margin: 0 }}>Get Now Page Banners</h2>
+              <p style={{ fontSize: '13px', color: textMuted, margin: '3px 0 0' }}>Jumia-style horizontal banner slider — {getNowBanners.length} banner{getNowBanners.length !== 1 ? 's' : ''}</p>
+            </div>
+            <button onClick={() => { setGnForm(defaultGnForm); setGnEditIdx(null); setGetNowBannersOpen(true); }} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'linear-gradient(135deg,#1FA89A,#27B9AF)', border: 'none', borderRadius: '9px', color: 'white', fontSize: '13.5px', fontWeight: 600, padding: '9px 16px', cursor: 'pointer', fontFamily: 'var(--font-inter)', boxShadow: '0 4px 12px rgba(31,168,154,0.25)' }}>
+              <Plus size={15} /> Add Banner
+            </button>
+          </div>
+          {getNowBanners.length === 0 ? (
+            <div style={{ padding: '48px 20px', background: card, border: `1px dashed ${border}`, borderRadius: '12px', textAlign: 'center', color: textMuted }}>
+              <ImageIcon size={32} color={textMuted} style={{ opacity: 0.3, margin: '0 auto 12px', display: 'block' }} />
+              <div style={{ fontSize: '14px', fontWeight: 600, marginBottom: '6px' }}>No banners yet</div>
+              <div style={{ fontSize: '12.5px' }}>Click "Add Banner" to create a Jumia-style image banner for the Get Now page.</div>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {getNowBanners.map((banner, idx) => (
+                <div key={banner.id} style={{ background: card, border: `1px solid ${border}`, borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '14px', padding: '16px 20px', transition: 'border-color 0.15s' }}
+                  onMouseEnter={e => (e.currentTarget.style.borderColor = accent)}
+                  onMouseLeave={e => (e.currentTarget.style.borderColor = border)}>
+                  <div style={{ width: '80px', height: '56px', borderRadius: '10px', background: isDark ? '#1e2a35' : '#f0f9ff', border: `1px solid ${border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
+                    {banner.image ? <img src={banner.image} alt={banner.title} style={{ width: '100%', height: '100%', objectFit: 'cover', padding: '2px' }} onError={(e: any) => { e.target.style.display = 'none'; }} /> : <ImageIcon size={18} color={accent} />}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 700, color: textMain, fontSize: '14px' }}>{banner.title}</div>
+                    <div style={{ fontSize: '12px', color: textMuted, marginTop: '3px', display: 'flex', gap: '10px' }}>
+                      {banner.link && <code style={{ fontSize: '11px', color: accent, background: 'rgba(31,168,154,0.1)', padding: '1px 6px', borderRadius: '4px' }}>{banner.link}</code>}
+                      {banner.linkText && <span>{banner.linkText}</span>}
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+                    <button onClick={() => handleGnToggle(idx)} style={{ height: '28px', paddingInline: '10px', borderRadius: '7px', border: 'none', cursor: 'pointer', fontSize: '11.5px', fontWeight: 600, fontFamily: 'var(--font-inter)', background: banner.isActive ? 'rgba(31,168,154,0.1)' : 'rgba(100,116,139,0.1)', color: banner.isActive ? accent : '#8E9AAF' }}>
+                      {banner.isActive ? 'Active' : 'Inactive'}
+                    </button>
+                    <button onClick={() => { setGnForm({ title: banner.title, image: banner.image, link: banner.link || '', linkText: banner.linkText || '' }); setGnEditIdx(idx); setGetNowBannersOpen(true); }} style={{ display: 'flex', alignItems: 'center', gap: '5px', height: '28px', paddingInline: '10px', borderRadius: '7px', background: 'rgba(31,168,154,0.1)', border: 'none', cursor: 'pointer', fontSize: '11.5px', fontWeight: 600, color: accent, fontFamily: 'var(--font-inter)' }}>
+                      <Edit size={11} /> Edit
+                    </button>
+                    <button onClick={() => setGnDeleteIdx(idx)} style={{ width: '28px', height: '28px', borderRadius: '7px', background: 'rgba(239,68,68,0.1)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <Trash2 size={12} color='#ef4444' />
                     </button>
                   </div>
@@ -1655,45 +1882,36 @@ function CMSContent() {
         </div>
         <ModalFooter onClose={() => setShopHeroBannerOpen(false)} onSubmit={async () => { setShopHeroBannerSaving(true); try { await upsertCmsSiteConfig('shop', { membersBanner, heroBanner: shopHeroBanner }); toast.success('Shop Hero Banner saved'); setShopHeroBannerOpen(false); } catch { toast.error('Save failed'); } setShopHeroBannerSaving(false); }} loading={shopHeroBannerSaving} submitLabel="Save Banner" isDark={isDark} border={border} textMain={textMain} />
       </Modal>
-      {/* ── Wholesale Hero Modal ── */}
-      <Modal open={wholesaleHeroOpen} onClose={() => setWholesaleHeroOpen(false)} title="Wholesale Hero Banner">
-        <FormField label="Heading (e.g. Buy More, Save More!)" value={wholesaleHero.heading} onChange={(v) => setWholesaleHero(h => ({ ...h, heading: v }))} placeholder="Buy More, Save More!" isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-        <FormField label="Subheading" value={wholesaleHero.subheading} onChange={(v) => setWholesaleHero(h => ({ ...h, subheading: v }))} placeholder="Exclusive wholesale prices..." isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-          <FormField label="Button Text" value={wholesaleHero.ctaText} onChange={(v) => setWholesaleHero(h => ({ ...h, ctaText: v }))} placeholder="Explore Products" isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-          <FormField label="Button Link" value={wholesaleHero.ctaLink} onChange={(v) => setWholesaleHero(h => ({ ...h, ctaLink: v }))} placeholder="/shop" isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-        </div>
-
-        <div>
-          <div style={{ fontSize: '12px', color: textMuted, fontWeight: 600, marginBottom: '6px' }}>Banner Image <span style={{ fontWeight: 400 }}>(optional — overrides background color)</span></div>
-          <CloudinaryUpload value={wholesaleHero.imageUrl || ''} onChange={(v) => setWholesaleHero(h => ({ ...h, imageUrl: v }))} isDark={isDark} border={border} surface={surface} textMuted={textMuted} />
-        </div>
-        <ModalFooter onClose={() => setWholesaleHeroOpen(false)} onSubmit={async () => { setWholesaleHeroSaving(true); try { await upsertCmsSiteConfig('wholesale', { hero: wholesaleHero }); toast.success('Wholesale hero saved'); setWholesaleHeroOpen(false); } catch { toast.error('Save failed'); } setWholesaleHeroSaving(false); }} loading={wholesaleHeroSaving} submitLabel="Save Banner" isDark={isDark} border={border} textMain={textMain} />
-      </Modal>
-      {/* ── Get Now Hero Modal ── */}
-      <Modal open={getHeroOpen} onClose={() => setGetHeroOpen(false)} title="Get Now Hero Banner">
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-          <FormField label="Title Line 1 (e.g. Shop Now.)" value={getHero.title1} onChange={(v) => setGetHero(h => ({ ...h, title1: v }))} placeholder="Shop Now." isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-          <FormField label="Title Line 2 (e.g. Pay Later.)" value={getHero.title2} onChange={(v) => setGetHero(h => ({ ...h, title2: v }))} placeholder="Pay Later." isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-          <FormField label="Button Text" value={getHero.ctaText} onChange={(v) => setGetHero(h => ({ ...h, ctaText: v }))} placeholder="Get Started" isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-          <FormField label="Button Link" value={getHero.ctaLink} onChange={(v) => setGetHero(h => ({ ...h, ctaLink: v }))} placeholder="/register" isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-        </div>
+      {/* ── Wholesale Banner Add/Edit Modal ── */}
+      <Modal open={wholesaleBannersOpen} onClose={() => { setWholesaleBannersOpen(false); setWbEditIdx(null); }} title={wbEditIdx !== null ? 'Edit Banner' : 'Add Wholesale Banner'}>
+        <FormField label="Banner Title *" value={wbForm.title} onChange={(v) => setWbForm(f => ({ ...f, title: v }))} placeholder="e.g. Flash Sale — Up to 40% Off" isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+        <p style={{ fontSize: '11px', color: textMuted, marginTop: '-8px', marginBottom: '12px' }}>This is used as alt-text and internal reference — the banner itself is image-only.</p>
         <div style={{ marginBottom: '14px' }}>
-          <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: textMuted, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Background Color</label>
-          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-            <input type="color" value={getHero.bgColor} onChange={(e) => setGetHero(h => ({ ...h, bgColor: e.target.value }))} style={{ width: '36px', height: '36px', borderRadius: '6px', border: `1px solid ${border}`, cursor: 'pointer', padding: '2px' }} />
-            <input type="text" value={getHero.bgColor} onChange={(e) => setGetHero(h => ({ ...h, bgColor: e.target.value }))} style={{ flex: 1, padding: '8px', borderRadius: '6px', background: surface, border: `1px solid ${border}`, color: textMain, fontSize: '12px', outline: 'none' }} />
-          </div>
+          <div style={{ fontSize: '12px', color: textMuted, fontWeight: 600, marginBottom: '6px' }}>Banner Image * (16:9 recommended, e.g. 1024x576px)</div>
+          <CloudinaryUpload value={wbForm.image} onChange={(v) => setWbForm(f => ({ ...f, image: v }))} accept="image/*" folder="kryros/banners" isDark={isDark} border={border} surface={surface} textMuted={textMuted} />
         </div>
-
-        <div>
-          <div style={{ fontSize: '12px', color: textMuted, fontWeight: 600, marginBottom: '6px' }}>Banner Image <span style={{ fontWeight: 400 }}>(optional — overrides background color)</span></div>
-          <CloudinaryUpload value={getHero.imageUrl || ''} onChange={(v) => setGetHero(h => ({ ...h, imageUrl: v }))} isDark={isDark} border={border} surface={surface} textMuted={textMuted} />
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+          <FormField label="Click Link (optional)" value={wbForm.link} onChange={(v) => setWbForm(f => ({ ...f, link: v }))} placeholder="/shop" isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+          <FormField label="Button Text (optional)" value={wbForm.linkText} onChange={(v) => setWbForm(f => ({ ...f, linkText: v }))} placeholder="Shop Now" isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
         </div>
-        <ModalFooter onClose={() => setGetHeroOpen(false)} onSubmit={async () => { setGetHeroSaving(true); try { await upsertCmsSiteConfig('get-now', getHero); toast.success('Get Now hero saved'); setGetHeroOpen(false); } catch { toast.error('Save failed'); } setGetHeroSaving(false); }} loading={getHeroSaving} submitLabel="Save Banner" isDark={isDark} border={border} textMain={textMain} />
+        <ModalFooter onClose={() => { setWholesaleBannersOpen(false); setWbEditIdx(null); }} onSubmit={handleWbSave} loading={wholesaleBannersSaving} submitLabel={wbEditIdx !== null ? 'Save Changes' : 'Add Banner'} isDark={isDark} border={border} textMain={textMain} />
       </Modal>
+      <ConfirmDialog open={wbDeleteIdx !== null} onClose={() => setWbDeleteIdx(null)} onConfirm={handleWbDelete} loading={false} title="Delete Banner" message={wbDeleteIdx !== null ? `Delete "${wholesaleBanners[wbDeleteIdx]?.title}" from wholesale banners?` : 'Delete this banner?'} />
+      {/* ── Get Now Banner Add/Edit Modal ── */}
+      <Modal open={getNowBannersOpen} onClose={() => { setGetNowBannersOpen(false); setGnEditIdx(null); }} title={gnEditIdx !== null ? 'Edit Banner' : 'Add Get Now Banner'}>
+        <FormField label="Banner Title *" value={gnForm.title} onChange={(v) => setGnForm(f => ({ ...f, title: v }))} placeholder="e.g. Get Now — Pay in 3 Months" isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+        <p style={{ fontSize: '11px', color: textMuted, marginTop: '-8px', marginBottom: '12px' }}>This is used as alt-text and internal reference — the banner itself is image-only.</p>
+        <div style={{ marginBottom: '14px' }}>
+          <div style={{ fontSize: '12px', color: textMuted, fontWeight: 600, marginBottom: '6px' }}>Banner Image * (16:9 recommended, e.g. 1024x576px)</div>
+          <CloudinaryUpload value={gnForm.image} onChange={(v) => setGnForm(f => ({ ...f, image: v }))} accept="image/*" folder="kryros/banners" isDark={isDark} border={border} surface={surface} textMuted={textMuted} />
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+          <FormField label="Click Link (optional)" value={gnForm.link} onChange={(v) => setGnForm(f => ({ ...f, link: v }))} placeholder="/register" isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+          <FormField label="Button Text (optional)" value={gnForm.linkText} onChange={(v) => setGnForm(f => ({ ...f, linkText: v }))} placeholder="Apply Now" isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+        </div>
+        <ModalFooter onClose={() => { setGetNowBannersOpen(false); setGnEditIdx(null); }} onSubmit={handleGnSave} loading={getNowBannersSaving} submitLabel={gnEditIdx !== null ? 'Save Changes' : 'Add Banner'} isDark={isDark} border={border} textMain={textMain} />
+      </Modal>
+      <ConfirmDialog open={gnDeleteIdx !== null} onClose={() => setGnDeleteIdx(null)} onConfirm={handleGnDelete} loading={false} title="Delete Banner" message={gnDeleteIdx !== null ? `Delete "${getNowBanners[gnDeleteIdx]?.title}" from Get Now banners?` : 'Delete this banner?'} />
       {/* ── Announcement Bar Modal ── */}
       <Modal open={announcementBarOpen} onClose={() => setAnnouncementBarOpen(false)} title="Announcement Bar">
         <p style={{ fontSize: '11.5px', color: textMuted, marginBottom: '14px' }}>This bar appears at the very top of the header on all pages. Leave text empty to hide it.</p>

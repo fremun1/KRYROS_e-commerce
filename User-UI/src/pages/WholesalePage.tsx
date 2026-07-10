@@ -1,17 +1,15 @@
 import { useState, useEffect } from "react";
-import { Link } from "wouter";
 import { motion } from "framer-motion";
-import { ArrowRight, Tag, Truck, ShieldCheck, Headphones, ShoppingCart, ChevronRight, Heart, LayoutGrid, Search, ClipboardList, SendHorizonal, CheckCircle2 } from "lucide-react";
-import { fetchProducts, fetchCategories, API_BASE } from "@/lib/api";
-import type { Product, ApiCategory } from "@/lib/api";
+import { Tag, Truck, ShieldCheck, Headphones, ShoppingCart, ChevronRight, Heart, LayoutGrid, Search, ClipboardList, SendHorizonal, CheckCircle2 } from "lucide-react";
+import { fetchProducts, fetchCategories, API_BASE, type ApiBanner } from "@/lib/api";
 import { useCurrencyStore } from "@/store/currencyStore";
 import UnifiedProductCard from "@/components/UnifiedProductCard";
+import PageBannerSlider from "@/components/PageBannerSlider";
 
 const STEP_ICONS = [Search, ClipboardList, SendHorizonal, CheckCircle2];
 const FEATURE_ICONS = [Tag, Truck, ShieldCheck, Headphones];
 
 type WholesaleCms = {
-  hero?: { heading?: string; subheading?: string; ctaText?: string; ctaLink?: string; imageUrl?: string };
   steps?: { title: string; desc: string }[];
   features?: { title: string; desc: string }[];
   quoteCta?: { title?: string; subtitle?: string; ctaText?: string; ctaLink?: string };
@@ -21,6 +19,7 @@ export default function WholesalePage() {
   const [liked, setLiked] = useState<Record<string, boolean>>({});
   const [categories, setCategories] = useState<ApiCategory[]>([]);
   const [wholesaleProducts, setWholesaleProducts] = useState<Product[]>([]);
+  const [banners, setBanners] = useState<ApiBanner[]>([]);
   const [loading, setLoading] = useState(true);
   const [cms, setCms] = useState<WholesaleCms | null>(null);
   const format = useCurrencyStore((s) => s.format);
@@ -30,6 +29,9 @@ export default function WholesalePage() {
     Promise.all([
       fetchCategories().then((cats) => setCategories(cats.filter((c: any) => c.isActive !== false).slice(0, 5))),
       fetchProducts({ take: 8, isWholesaleOnly: true }).then((prods) => setWholesaleProducts(prods)),
+      fetch(`${API_BASE}/api/cms/banners?tag=wholesale`, { cache: "no-store" })
+        .then((r) => r.ok ? r.json() : null)
+        .then((d) => { if (d?.data && Array.isArray(d.data)) setBanners(d.data.filter((b: ApiBanner) => b.isActive && b.image)); }),
     ]).finally(() => setLoading(false));
 
     fetch(`${API_BASE}/api/cms/site-config/wholesale`, { cache: "no-store" })
@@ -57,46 +59,8 @@ export default function WholesalePage() {
         </div>
       </div>
 
-      {/* Hero Banner — only shown when admin has configured it */}
-      {cms?.hero && (
-      <div className="rounded-2xl overflow-hidden mb-6 relative" style={cms.hero.imageUrl ? { backgroundImage: `url(${cms.hero.imageUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' } : { background: "linear-gradient(135deg, #050F1A 0%, #0A1E2E 100%)" }}>
-        <div className="flex items-center p-5 gap-3">
-          <div className="flex-1">
-            {cms.hero.heading && <h2 className="text-xl font-black text-white leading-tight">{cms.hero.heading.split(",")[0]}{cms.hero.heading.includes(",") ? "," : ""}</h2>}
-            {cms.hero.heading?.includes(",") && <h2 className="text-xl font-black text-primary leading-tight mb-2">{cms.hero.heading.split(",")[1]?.trim()}</h2>}
-            {cms.hero.subheading && <p className="text-white/50 text-xs mb-4 leading-relaxed">{cms.hero.subheading}</p>}
-            {cms.hero.ctaLink && (
-              <Link href={cms.hero.ctaLink}>
-                <button className="flex items-center gap-2 px-4 py-2 bg-white text-gray-900 rounded-xl font-bold text-xs hover:bg-white/90 transition-all">
-                  {cms.hero.ctaText || "Explore"} <ArrowRight className="w-3.5 h-3.5" />
-                </button>
-              </Link>
-            )}
-          </div>
-          <div className="relative flex-shrink-0 w-36 h-32">
-            <div className="absolute right-0 top-0 w-22 h-22 rounded-xl overflow-hidden shadow-xl" style={{ width: 80, height: 80 }}>
-              {wholesaleProducts[0]?.image ? (
-                <img src={wholesaleProducts[0].image} alt={wholesaleProducts[0].name} className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full bg-white/10" />
-              )}
-            </div>
-            <div className="absolute left-0 bottom-0 w-16 h-16 rounded-xl overflow-hidden shadow-md">
-              {wholesaleProducts[1]?.image ? (
-                <img src={wholesaleProducts[1].image} alt={wholesaleProducts[1].name} className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full bg-white/10" />
-              )}
-            </div>
-            <div className="absolute right-0 bottom-0 flex flex-col items-center justify-center w-16 h-16 rounded-2xl border-2 border-primary/40 bg-primary/10">
-              <span className="text-[8px] text-white/60 font-medium">UP TO</span>
-              <span className="text-lg font-black text-primary leading-none">40%</span>
-              <span className="text-[8px] text-white/60 font-medium">OFF</span>
-            </div>
-          </div>
-        </div>
-      </div>
-      )}
+      {/* Jumia-Style Banner Slider */}
+      <PageBannerSlider banners={banners} />
 
       {/* Shop by Category */}
       <div className="mb-5">

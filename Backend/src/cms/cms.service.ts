@@ -27,6 +27,8 @@ export class CMSService {
   async invalidateCmsCache(type?: string) {
     const keys = [
       'cms:banners',
+      'cms:banners:wholesale',
+      'cms:banners:get-now',
       'cms:sections',
       type ? `cms:sections:${type}` : null,
     ].filter(Boolean) as string[];
@@ -465,13 +467,17 @@ export class CMSService {
   }
 
 
-  async getBanners() {
+  async getBanners(tag?: string) {
+    const where: any = { isActive: true };
+    if (tag) where.tag = tag;
+
     const banners = await this.prisma.cMSBanner.findMany({
-      where: { isActive: true },
+      where,
       orderBy: { position: 'asc' },
     });
 
-    if (banners.length === 0) {
+    // Only auto-seed homepage banners (no tag filter)
+    if (!tag && banners.length === 0) {
       await this.seedDefaultBanners();
       return this.prisma.cMSBanner.findMany({
         where: { isActive: true },

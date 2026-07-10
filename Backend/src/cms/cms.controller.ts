@@ -85,9 +85,9 @@ export class CMSController {
   }
 
   @Get('banners')
-  @ApiOperation({ summary: 'Get active banners' })
-  getBanners() {
-    return this.cmsService.getBanners();
+  @ApiOperation({ summary: 'Get active banners, optional ?tag= filter' })
+  getBanners(@Query('tag') tag?: string) {
+    return this.cmsService.getBanners(tag);
   }
 
   @Get('banners/manage')
