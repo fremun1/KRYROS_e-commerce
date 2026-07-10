@@ -1,6 +1,5 @@
 import HeroSection from "@/components/home/HeroSection";
 import BrandsSection from "@/components/home/BrandsSection";
-import CategorySection from "@/components/home/CategorySection";
 import FlashSaleSection from "@/components/home/FlashSaleSection";
 import HomepageCategoryGrid from "@/components/home/HomepageCategoryGrid";
 import RecentlyViewedSection from "@/components/home/RecentlyViewedSection";
@@ -28,9 +27,6 @@ export default function HomePage() {
 
       {/* 2. Top Brands */}
       <BrandsSection />
-
-      {/* 3. Category cards */}
-      <CategorySection />
 
       {/* 4. Flash Sales */}
       <FlashSaleSection />
