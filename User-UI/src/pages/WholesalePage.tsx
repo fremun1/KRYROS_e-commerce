@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
+import { Link } from "wouter";
 import { motion } from "framer-motion";
-import { Tag, Truck, ShieldCheck, Headphones, ShoppingCart, ChevronRight, Heart, LayoutGrid, Search, ClipboardList, SendHorizonal, CheckCircle2 } from "lucide-react";
+import { Tag, Truck, ShieldCheck, Headphones, ShoppingCart, ChevronRight, Heart, LayoutGrid, Search, ClipboardList, SendHorizonal, CheckCircle2, ArrowRight } from "lucide-react";
 import { fetchProducts, fetchCategories, API_BASE, type ApiBanner } from "@/lib/api";
 import { useCurrencyStore } from "@/store/currencyStore";
 import UnifiedProductCard from "@/components/UnifiedProductCard";
@@ -8,6 +9,21 @@ import PageBannerSlider from "@/components/PageBannerSlider";
 
 const STEP_ICONS = [Search, ClipboardList, SendHorizonal, CheckCircle2];
 const FEATURE_ICONS = [Tag, Truck, ShieldCheck, Headphones];
+
+interface ApiCategory {
+  id: string;
+  name: string;
+  image?: string;
+  isActive?: boolean;
+}
+
+interface Product {
+  id: string;
+  name: string;
+  image?: string;
+  price: number;
+  isActive?: boolean;
+}
 
 type WholesaleCms = {
   steps?: { title: string; desc: string }[];
@@ -22,21 +38,21 @@ export default function WholesalePage() {
   const [banners, setBanners] = useState<ApiBanner[]>([]);
   const [loading, setLoading] = useState(true);
   const [cms, setCms] = useState<WholesaleCms | null>(null);
-  const format = useCurrencyStore((s) => s.format);
+  const format = useCurrencyStore((s: any) => s.format);
 
   useEffect(() => {
     setLoading(true);
     Promise.all([
-      fetchCategories().then((cats) => setCategories(cats.filter((c: any) => c.isActive !== false).slice(0, 5))),
-      fetchProducts({ take: 8, isWholesaleOnly: true }).then((prods) => setWholesaleProducts(prods)),
+      fetchCategories().then((cats: any) => setCategories(cats.filter((c: any) => c.isActive !== false).slice(0, 5))),
+      fetchProducts({ take: 8, isWholesaleOnly: true }).then((prods: any) => setWholesaleProducts(prods)),
       fetch(`${API_BASE}/api/cms/banners?tag=wholesale`, { cache: "no-store" })
         .then((r) => r.ok ? r.json() : null)
-        .then((d) => { if (d?.data && Array.isArray(d.data)) setBanners(d.data.filter((b: ApiBanner) => b.isActive && b.image)); }),
+        .then((d: any) => { if (d?.data && Array.isArray(d.data)) setBanners(d.data.filter((b: ApiBanner) => b.isActive && b.image)); }),
     ]).finally(() => setLoading(false));
 
     fetch(`${API_BASE}/api/cms/site-config/wholesale`, { cache: "no-store" })
-      .then((r) => r.ok ? r.json() : null)
-      .then((d) => { if (d?.value) setCms(d.value); })
+      .then((r: any) => r.ok ? r.json() : null)
+      .then((d: any) => { if (d?.value) setCms(d.value); })
       .catch(() => {});
   }, []);
 
@@ -102,7 +118,7 @@ export default function WholesalePage() {
       {/* Feature badges — only shown when admin configures features */}
       {cms?.features && cms.features.length > 0 && (
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-5">
-        {cms.features.map(({ title, desc }, i) => {
+          {cms.features.map(({ title, desc }: any, i: number) => {
           const Icon = FEATURE_ICONS[i % FEATURE_ICONS.length];
           return (
             <div key={title} className="flex flex-col items-center text-center p-2 bg-card border border-border rounded-xl">
@@ -167,7 +183,7 @@ export default function WholesalePage() {
       <div>
         <h2 className="text-sm font-bold text-foreground mb-4">How Wholesale Works</h2>
         <div className="flex items-start">
-          {cms.steps.map((step, i) => {
+          {cms.steps.map((step: any, i: number) => {
             const Icon = STEP_ICONS[i % STEP_ICONS.length];
             return (
               <div key={step.title} className="flex items-center flex-1 min-w-0">

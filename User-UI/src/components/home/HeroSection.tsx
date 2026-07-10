@@ -75,6 +75,7 @@ export default function HeroSection() {
       <div
         className="flex h-full"
         style={{
+          width: "100%",
           transform: `translateX(calc(-${current * 100}% + ${translateX}px))`,
           transition: isDragging ? "none" : "transform 500ms ease-out",
         }}

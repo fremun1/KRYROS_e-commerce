@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-
+import { Link } from "wouter";
 import { ShieldCheck, Heart, ShoppingBag, CreditCard, FileCheck, Package, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { fetchProducts, API_BASE, type ApiBanner } from "@/lib/api";
@@ -23,6 +23,13 @@ interface UserCredit {
   availableCredit?: number;
   creditLimit?: number;
   usedCredit?: number;
+}
+
+interface ApiCategory {
+  id: string;
+  name: string;
+  image?: string;
+  isActive?: boolean;
 }
 
 
