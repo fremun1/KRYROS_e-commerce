@@ -83,15 +83,17 @@ export default function HeroSection() {
         {banners.map((banner) => {
           const imgSrc = banner.image || banner.videoUrl || "";
           return banner.link ? (
-            <Link key={banner.id} href={banner.link}>
-              <a className="flex-shrink-0 w-full h-full block" draggable={false}>
-                <img
-                  src={imgSrc}
-                  alt=""
-                  className="w-full h-full object-cover select-none"
-                  draggable={false}
-                />
-              </a>
+            <Link
+              key={banner.id}
+              href={banner.link}
+              className="flex-shrink-0 w-full h-full block"
+            >
+              <img
+                src={imgSrc}
+                alt=""
+                className="w-full h-full object-cover select-none"
+                draggable={false}
+              />
             </Link>
           ) : (
             <div key={banner.id} className="flex-shrink-0 w-full h-full">
