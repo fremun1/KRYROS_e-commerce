@@ -1,35 +1,16 @@
-import { useState, useEffect, useRef } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { useEffect, useState, useRef } from "react";
 import { Link } from "wouter";
-import { ArrowRight } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { fetchBanners } from "@/lib/api";
 import type { ApiBanner } from "@/lib/api";
-
-const OVERLAY_COLORS = [
-  { from: "rgba(15,30,25,0.82)", to: "rgba(15,30,25,0.10)" },
-  { from: "rgba(15,10,35,0.82)", to: "rgba(15,10,35,0.08)" },
-  { from: "rgba(30,15,10,0.82)", to: "rgba(30,15,10,0.08)" },
-  { from: "rgba(10,25,15,0.82)", to: "rgba(10,25,15,0.08)" },
-];
-
-const DEFAULT_DURATION_MS = 5500;
-
-function getYouTubeId(url: string): string | null {
-  const m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([-\w]{11})/);
-  return m ? m[1] : null;
-}
-
-function isDirectVideoUrl(url: string): boolean {
-  return /\.(mp4|mov|webm|ogg|m4v)(\?.*)?$/i.test(url) || url.startsWith("data:video/");
-}
 
 export default function HeroSection() {
   const [banners, setBanners] = useState<ApiBanner[]>([]);
   const [current, setCurrent] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(DEFAULT_DURATION_MS);
-  const [totalDuration, setTotalDuration] = useState(DEFAULT_DURATION_MS);
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const startRef = useRef<number>(Date.now());
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [translateX, setTranslateX] = useState(0);
+  const timer = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     fetchBanners().then((data) => {
@@ -37,161 +18,125 @@ export default function HeroSection() {
     });
   }, []);
 
+  // Auto-rotate — pauses while dragging
   useEffect(() => {
-    if (banners.length === 0) return;
-    const banner = banners[current];
-    const duration = banner.duration ? banner.duration * 1000 : DEFAULT_DURATION_MS;
-    setTotalDuration(duration);
-    setTimeLeft(duration);
-    startRef.current = Date.now();
-    if (timerRef.current) clearInterval(timerRef.current);
-    timerRef.current = setInterval(() => {
-      const elapsed = Date.now() - startRef.current;
-      const remaining = Math.max(0, duration - elapsed);
-      setTimeLeft(remaining);
-      if (remaining === 0) {
-        clearInterval(timerRef.current!);
-        setCurrent((c) => (c + 1) % banners.length);
-      }
-    }, 100);
-    return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  }, [current, banners]);
+    if (banners.length <= 1) return;
+    if (timer.current) clearInterval(timer.current);
+    timer.current = setInterval(() => {
+      if (!isDragging) setCurrent((c) => (c + 1) % banners.length);
+    }, 5000);
+    return () => { if (timer.current) clearInterval(timer.current); };
+  }, [banners.length, isDragging]);
 
-  if (banners.length === 0) return null;
+  if (banners.length === 0) {
+    return (
+      <section
+        className="w-full bg-muted/20 animate-pulse"
+        style={{ height: "clamp(150px, 44vw, 420px)" }}
+      />
+    );
+  }
 
-  const banner = banners[current];
-  const overlay = OVERLAY_COLORS[current % OVERLAY_COLORS.length];
+  const goNext = () => setCurrent((c) => (c + 1) % banners.length);
+  const goPrev = () => setCurrent((c) => (c - 1 + banners.length) % banners.length);
 
-  // Determine media type and URL
-  // When mediaType is explicitly "image", prefer banner.image so a stale
-  // videoUrl from a previous video-type save doesn't override the image.
-  const rawUrl = banner.mediaType === "image"
-    ? (banner.image || banner.videoUrl || "")   // image type → image first
-    : (banner.videoUrl || banner.image || "");   // video / unset → keep existing order
-  const ytId = rawUrl ? getYouTubeId(rawUrl) : null;
-  const isVideo = banner.mediaType === "video" || !!ytId || isDirectVideoUrl(rawUrl);
-  const isYouTube = !!ytId;
+  const handleDragStart = (clientX: number) => {
+    setIsDragging(true);
+    setStartX(clientX);
+    setTranslateX(0);
+  };
+  const handleDragMove = (clientX: number) => {
+    if (!isDragging) return;
+    setTranslateX(clientX - startX);
+  };
+  const handleDragEnd = () => {
+    if (!isDragging) return;
+    if (Math.abs(translateX) > 50) {
+      if (translateX > 0) goPrev();
+      else goNext();
+    }
+    setIsDragging(false);
+    setTranslateX(0);
+  };
 
   return (
     <section
-      className="relative overflow-hidden lg:![height:620px]"
-      style={{ height: "clamp(330px, 56vw, 520px)" }}
+      className="relative w-full overflow-hidden"
+      style={{ height: "clamp(150px, 44vw, 420px)" }}
+      onTouchStart={(e) => handleDragStart(e.touches[0].clientX)}
+      onTouchMove={(e) => handleDragMove(e.touches[0].clientX)}
+      onTouchEnd={handleDragEnd}
+      onMouseDown={(e) => handleDragStart(e.clientX)}
+      onMouseMove={(e) => handleDragMove(e.clientX)}
+      onMouseUp={handleDragEnd}
+      onMouseLeave={handleDragEnd}
     >
-      {/* Media layer */}
-      <AnimatePresence mode="wait">
-        {isYouTube ? (
-          <motion.div
-            key={banner.id + "-yt"}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.55 }}
-            className="absolute inset-0 w-full h-full"
-            style={{ pointerEvents: "none" }}
-          >
-            <iframe
-              src={`https://www.youtube.com/embed/${ytId}?autoplay=1&mute=1&loop=1&playlist=${ytId}&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1`}
-              className="absolute inset-0 w-full h-full"
-              style={{ border: "none", transform: "scale(1.05)" }}
-              allow="autoplay; encrypted-media"
-              allowFullScreen={false}
-            />
-          </motion.div>
-        ) : isVideo ? (
-          <motion.video
-            key={banner.id + "-video"}
-            initial={{ opacity: 0, scale: 1.04 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.55 }}
-            src={rawUrl}
-            autoPlay
-            muted
-            loop
-            playsInline
-            className="absolute inset-0 w-full h-full object-cover object-center"
-          />
-        ) : (
-          <motion.img
-            key={banner.id + "-img"}
-            initial={{ opacity: 0, scale: 1.04 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.55 }}
-            src={rawUrl}
-            alt={banner.title}
-            className="absolute inset-0 w-full h-full object-cover object-center"
-          />
-        )}
-      </AnimatePresence>
-
-      {/* Overlay gradient */}
+      {/* Slides track */}
       <div
-        className="absolute inset-0 pointer-events-none"
+        className="flex h-full"
         style={{
-          background: `linear-gradient(to right, ${overlay.from} 0%, ${overlay.to} 65%, transparent 100%)`,
-          transition: "background 0.5s ease",
-          zIndex: 1,
+          transform: `translateX(calc(-${current * 100}% + ${translateX}px))`,
+          transition: isDragging ? "none" : "transform 500ms ease-out",
         }}
-      />
-
-      {/* Text content */}
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={banner.id + "-text"}
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -10 }}
-          transition={{ duration: 0.4 }}
-          className="absolute inset-0 flex items-center"
-          style={{ zIndex: 2 }}
-        >
-          <div className="px-6 md:px-14 lg:px-20 max-w-[58%] md:max-w-[50%] lg:max-w-[45%]">
-            {banner.badge && (
-              <p className="text-[10px] md:text-xs lg:text-sm font-bold uppercase tracking-widest mb-2 md:mb-3 lg:mb-4"
-                style={{ color: "var(--kryros-primary)" }}>
-                {banner.badge}
-              </p>
-            )}
-            <h1 className="text-[22px] md:text-[46px] lg:text-[58px] font-black text-white leading-[1.05] drop-shadow-md">
-              {banner.title}
-            </h1>
-            {banner.subtitle && (
-              <h2 className="text-[18px] md:text-[36px] lg:text-[46px] font-black leading-[1.05] mb-2 md:mb-4 lg:mb-5 drop-shadow-md"
-                style={{ color: "var(--kryros-primary)" }}>
-                {banner.subtitle}
-              </h2>
-            )}
-            {banner.link && (
-              <Link href={banner.link}>
-                <button
-                  className="inline-flex items-center gap-2 px-5 md:px-7 lg:px-9 py-2 md:py-3 lg:py-4 rounded-lg font-semibold text-xs md:text-sm lg:text-base text-white hover:opacity-90 active:scale-95 transition-all shadow-lg mt-3 md:mt-5 lg:mt-6"
-                  style={{ background: "var(--kryros-primary)" }}>
-                  {banner.linkText || "Shop Now"}
-                  <ArrowRight className="w-3.5 h-3.5 lg:w-5 lg:h-5" />
-                </button>
-              </Link>
-            )}
-          </div>
-        </motion.div>
-      </AnimatePresence>
-
-      {/* Bottom bar: slide dots */}
-      <div className="absolute bottom-3 left-0 right-0 flex items-center justify-center gap-3 px-4"
-        style={{ zIndex: 3 }}>
-        {banners.length > 1 && (
-          <div className="flex items-center gap-1.5">
-            {banners.map((_, i) => (
-              <button key={i} onClick={() => setCurrent(i)}
-                className={`rounded-full transition-all duration-300 ${
-                  i === current ? "w-5 h-2 bg-[var(--kryros-primary)]" : "w-2 h-2 bg-white/40 hover:bg-white/60"
-                }`} />
-            ))}
-          </div>
-        )}
-
+      >
+        {banners.map((banner) => {
+          const imgSrc = banner.image || banner.videoUrl || "";
+          return banner.link ? (
+            <Link key={banner.id} href={banner.link}>
+              <a className="flex-shrink-0 w-full h-full block" draggable={false}>
+                <img
+                  src={imgSrc}
+                  alt=""
+                  className="w-full h-full object-cover select-none"
+                  draggable={false}
+                />
+              </a>
+            </Link>
+          ) : (
+            <div key={banner.id} className="flex-shrink-0 w-full h-full">
+              <img
+                src={imgSrc}
+                alt=""
+                className="w-full h-full object-cover select-none"
+                draggable={false}
+              />
+            </div>
+          );
+        })}
       </div>
 
+      {/* Desktop arrows */}
+      {banners.length > 1 && (
+        <>
+          <button
+            onClick={goPrev}
+            className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/60 transition-colors hidden sm:flex"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+          <button
+            onClick={goNext}
+            className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/60 transition-colors hidden sm:flex"
+          >
+            <ChevronRight className="w-5 h-5" />
+          </button>
+        </>
+      )}
+
+      {/* Dot indicators */}
+      {banners.length > 1 && (
+        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+          {banners.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setCurrent(i)}
+              className={`rounded-full transition-all duration-300 ${
+                i === current ? "w-6 h-2 bg-white" : "w-2 h-2 bg-white/50"
+              }`}
+            />
+          ))}
+        </div>
+      )}
     </section>
   );
 }
