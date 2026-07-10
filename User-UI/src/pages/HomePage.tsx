@@ -2,6 +2,7 @@ import HeroSection from "@/components/home/HeroSection";
 import BrandsSection from "@/components/home/BrandsSection";
 import CategorySection from "@/components/home/CategorySection";
 import FlashSaleSection from "@/components/home/FlashSaleSection";
+import HomepageCategoryGrid from "@/components/home/HomepageCategoryGrid";
 import RecentlyViewedSection from "@/components/home/RecentlyViewedSection";
 import TopSellingSection from "@/components/home/TopSellingSection";
 import LimitedStockDealSection from "@/components/home/LimitedStockDealSection";
@@ -34,7 +35,10 @@ export default function HomePage() {
       {/* 4. Flash Sales */}
       <FlashSaleSection />
 
-      {/* 5. What You Viewed */}
+      {/* 5. Category Grid (4×2, Jumia-style) */}
+      <HomepageCategoryGrid />
+
+      {/* 6. What You Viewed */}
       <RecentlyViewedSection />
 
       {/* 6. Top Selling Items */}
