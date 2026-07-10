@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "wouter";
 import { ShieldCheck, Heart, ShoppingBag, CreditCard, FileCheck, Package, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
-import { fetchProducts, API_BASE, type ApiBanner } from "@/lib/api";
+import { fetchProducts, fetchCategories, API_BASE, type ApiBanner } from "@/lib/api";
 import type { Product } from "@/lib/api";
 import { useCurrencyStore } from "@/store/currencyStore";
 import AccountLayout from "@/components/layout/AccountLayout";
@@ -28,6 +28,7 @@ interface UserCredit {
 interface ApiCategory {
   id: string;
   name: string;
+  slug?: string;
   image?: string;
   isActive?: boolean;
 }
@@ -48,6 +49,7 @@ export default function GetNowPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [banners, setBanners] = useState<ApiBanner[]>([]);
   const [userCredit, setUserCredit] = useState<UserCredit | null>(null);
+  const [categories, setCategories] = useState<ApiCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const format = useCurrencyStore((s) => s.format);
 
@@ -55,15 +57,17 @@ export default function GetNowPage() {
     const load = async () => {
       setLoading(true);
       try {
-        const [plansRes, prods] = await Promise.all([
+        const [plansRes, prods, cats] = await Promise.all([
           fetch(`${API_BASE}/api/credit/plans`).then((r) => r.ok ? r.json() : []),
           fetchProducts({ take: 8, allowCredit: true }),
+          fetchCategories(),
         ]);
         const activePlans: CreditPlan[] = Array.isArray(plansRes)
           ? plansRes.filter((p: CreditPlan) => p.isActive)
           : [];
         setPlans(activePlans);
         setProducts(prods.slice(0, 4));
+        setCategories((cats || []).filter((c: any) => c.isActive !== false));
 
         const creditRes = await fetch(`${API_BASE}/api/credit/my-account`).catch(() => null);
         if (creditRes?.ok) {
@@ -120,6 +124,64 @@ export default function GetNowPage() {
 
       {/* Jumia-Style Banner Slider */}
       <PageBannerSlider banners={banners} />
+
+
+      {/* Shop by Category — Jumia-style portrait cards */}
+      {!loading && categories.length > 0 && (
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2.5">
+            <div className="w-1 h-7 rounded-full bg-primary flex-shrink-0" />
+            <div>
+              <h2 className="text-sm font-black text-foreground tracking-tight">Shop by Category</h2>
+              <p className="text-[10px] text-muted-foreground leading-none mt-0.5">Tap a category to explore</p>
+            </div>
+          </div>
+          <Link href="/categories">
+            <span className="flex items-center gap-1 text-[11px] font-bold text-primary bg-primary/10 hover:bg-primary/20 transition-colors px-3 py-1.5 rounded-full cursor-pointer whitespace-nowrap">
+              See All <ChevronRight className="w-3 h-3" />
+            </span>
+          </Link>
+        </div>
+        <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2">
+          {categories.map((cat) => {
+            const href = `/shop/section/${encodeURIComponent(cat.slug || cat.id)}`;
+            return (
+              <Link key={cat.id} href={href}>
+                <a
+                  className="flex-shrink-0 flex flex-col items-center gap-2 cursor-pointer group select-none"
+                  style={{ width: "clamp(130px, 36vw, 160px)" }}
+                >
+                  <div
+                    className="w-full rounded-2xl overflow-hidden bg-muted shadow-sm"
+                    style={{ aspectRatio: "3/4" }}
+                  >
+                    {cat.image ? (
+                      <img
+                        src={cat.image}
+                        alt={cat.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-primary/5">
+                        <svg className="w-10 h-10 text-primary/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                            d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                        </svg>
+                      </div>
+                    )}
+                  </div>
+                  <span className="text-center text-xs font-semibold text-foreground leading-tight line-clamp-2 px-0.5 w-full">
+                    {cat.name}
+                  </span>
+                </a>
+              </Link>
+            );
+          })}
+        </div>
+      </div>
+      )}
 
       {/* How Get Now Works */}
       <div className="mb-6">
