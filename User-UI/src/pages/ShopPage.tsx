@@ -73,20 +73,19 @@ function CategoryCarousel({ categories }: { categories: ApiCategory[] }) {
         </Link>
       </div>
 
-      {/* Jumia-style: horizontally scrollable portrait cards */}
-      <div className="flex gap-3 overflow-x-auto no-scrollbar px-4 md:px-6 pb-2">
+      {/* Jumia-style: 4-column square grid */}
+      <div className="grid grid-cols-4 gap-2 px-4 md:px-6 pb-2">
         {categories.map((cat) => {
           const href = `/shop/section/${encodeURIComponent(cat.slug || cat.id)}`;
           return (
             <Link key={cat.id} href={href}>
               <a
-                className="flex-shrink-0 flex flex-col items-center gap-2 cursor-pointer group select-none"
-                style={{ width: "clamp(130px, 36vw, 160px)" }}
+                className="flex flex-col items-center gap-2 cursor-pointer group select-none"
               >
-                {/* Portrait image card */}
+                {/* Square image card — Jumia style */}
                 <div
-                  className="w-full rounded-2xl overflow-hidden bg-muted shadow-sm"
-                  style={{ aspectRatio: "3/4" }}
+                  className="w-full rounded-xl overflow-hidden bg-muted shadow-sm"
+                  style={{ aspectRatio: "1/1" }}
                 >
                   {cat.image ? (
                     <img
