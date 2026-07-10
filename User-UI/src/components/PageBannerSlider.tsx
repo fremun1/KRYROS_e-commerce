@@ -18,6 +18,12 @@ export default function PageBannerSlider({ banners }: { banners: ApiBanner[] }) 
     return () => clearInterval(interval);
   }, [banners.length, isDragging]);
 
+  useEffect(() => {
+    if (current >= banners.length) {
+      setCurrent(0);
+    }
+  }, [banners.length, current]);
+
   if (banners.length === 0) return null;
 
   const goNext = () => setCurrent(prev => (prev + 1) % banners.length);
@@ -58,27 +64,29 @@ export default function PageBannerSlider({ banners }: { banners: ApiBanner[] }) 
     >
       {/* Slides track */}
       <div
-        className="flex transition-transform duration-500 ease-out h-full"
+        className="flex transition-transform duration-500 ease-out h-full w-full"
         style={{
           transform: `translateX(calc(-${current * 100}% + ${translateX}px))`,
           transitionDuration: isDragging ? "0ms" : "500ms",
         }}
       >
-        {banners.map((banner) => (
-          <div key={banner.id} className="w-full flex-shrink-0 h-full relative">
-            <img
-              src={banner.image}
-              alt={banner.title}
-              className="w-full h-full object-cover"
-              draggable={false}
-            />
-            {banner.link && (
-              <Link href={banner.link}>
-                <a className="absolute inset-0" />
-              </Link>
-            )}
-          </div>
-        ))}
+        {banners.map((banner) => {
+          const mediaSrc = banner.image || banner.videoUrl || "";
+
+          return (
+            <div key={banner.id} className="min-w-full w-full flex-shrink-0 h-full relative">
+              <img
+                src={mediaSrc}
+                alt={banner.title || ""}
+                className="w-full h-full object-cover"
+                draggable={false}
+              />
+              {banner.link && (
+                <Link href={banner.link} className="absolute inset-0 block" aria-label={banner.title || "Banner link"} />
+              )}
+            </div>
+          );
+        })}
       </div>
 
       {/* Navigation arrows — desktop only */}

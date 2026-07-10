@@ -381,9 +381,18 @@ export async function fetchBrands(): Promise<ApiBrand[]> {
 }
 
 export async function fetchBanners(): Promise<ApiBanner[]> {
-  const result = await apiFetch<ApiBanner[]>("/api/cms/banners");
-  if (!Array.isArray(result)) return [];
-  return result.filter((b) => b.isActive);
+  try {
+    const res = await fetch(`${API_BASE}/api/cms/banners`, {
+      headers: { "Content-Type": "application/json" },
+      cache: "no-store",
+    });
+    if (!res.ok) return [];
+    const result = (await res.json()) as ApiBanner[];
+    if (!Array.isArray(result)) return [];
+    return result.filter((b) => b.isActive);
+  } catch {
+    return [];
+  }
 }
 
 export async function fetchOrders(token: string): Promise<ApiOrder[]> {

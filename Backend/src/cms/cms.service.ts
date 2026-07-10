@@ -35,6 +35,12 @@ export class CMSService {
     await Promise.all(keys.map(k => this.cacheManager.del(k)));
   }
 
+  private async invalidateBannerCache(tag?: string) {
+    const keys = ['cms:banners'];
+    if (tag) keys.push(`cms:banners:${tag}`);
+    await Promise.all(keys.map((key) => this.cacheManager.del(key)));
+  }
+
   // ==================== HOME PAGE SECTIONS ====================
 
   async getHomePageSections(type?: string) {
@@ -468,10 +474,14 @@ export class CMSService {
 
 
   async getBanners(tag?: string) {
+    const cacheKey = tag ? `cms:banners:${tag}` : 'cms:banners';
+    const cached = await this.cacheManager.get<any[]>(cacheKey);
+    if (cached) return cached;
+
     const where: any = { isActive: true };
     if (tag) where.tag = tag;
 
-    const banners = await this.prisma.cMSBanner.findMany({
+    let banners = await this.prisma.cMSBanner.findMany({
       where,
       orderBy: { position: 'asc' },
     });
@@ -479,21 +489,22 @@ export class CMSService {
     // Only auto-seed homepage banners (no tag filter)
     if (!tag && banners.length === 0) {
       await this.seedDefaultBanners();
-      return this.prisma.cMSBanner.findMany({
+      banners = await this.prisma.cMSBanner.findMany({
         where: { isActive: true },
         orderBy: { position: 'asc' },
       });
     }
 
     // Auto-seed tagged pages (get-now, wholesale) if empty
-    if (tag && banners.length === 0) {
+    else if (tag && banners.length === 0) {
       await this.seedDefaultPageBanners(tag);
-      return this.prisma.cMSBanner.findMany({
+      banners = await this.prisma.cMSBanner.findMany({
         where: { isActive: true, tag },
         orderBy: { position: 'asc' },
       });
     }
 
+    await this.cacheManager.set(cacheKey, banners, 5 * 60 * 1000);
     return banners;
   }
 
@@ -553,7 +564,7 @@ export class CMSService {
     for (const banner of seeds) {
       await this.prisma.cMSBanner.create({ data: banner });
     }
-    return { success: true, message: \`Seeded \${seeds.length} banners for tag: \${tag}\` };
+    return { success: true, message: `Seeded ${seeds.length} banners for tag: ${tag}` };
   }
 
   async seedDefaultBanners() {
@@ -629,18 +640,35 @@ export class CMSService {
   }
 
   async createBanner(data: CreateBannerDto) {
-    return this.prisma.cMSBanner.create({ data });
+    const banner = await this.prisma.cMSBanner.create({
+      data: {
+        ...data,
+        isActive: data.isActive ?? true,
+        mediaType: data.mediaType ?? (data.videoUrl ? 'video' : 'image'),
+      },
+    });
+    await this.invalidateBannerCache(banner.tag ?? undefined);
+    return banner;
   }
 
   async updateBanner(id: string, data: UpdateBannerDto) {
-    return this.prisma.cMSBanner.update({
+    const existing = await this.prisma.cMSBanner.findUnique({ where: { id } });
+    const banner = await this.prisma.cMSBanner.update({
       where: { id },
       data,
     });
+    await this.invalidateBannerCache(existing?.tag ?? undefined);
+    if (banner.tag !== existing?.tag) {
+      await this.invalidateBannerCache(banner.tag ?? undefined);
+    }
+    return banner;
   }
 
   async deleteBanner(id: string) {
-    return this.prisma.cMSBanner.delete({ where: { id } });
+    const existing = await this.prisma.cMSBanner.findUnique({ where: { id } });
+    const banner = await this.prisma.cMSBanner.delete({ where: { id } });
+    await this.invalidateBannerCache(existing?.tag ?? undefined);
+    return banner;
   }
 
   async getSections(pageSlug?: string) {

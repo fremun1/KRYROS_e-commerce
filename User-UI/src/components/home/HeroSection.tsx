@@ -86,7 +86,7 @@ export default function HeroSection() {
             <Link
               key={banner.id}
               href={banner.link}
-              className="flex-shrink-0 w-full h-full block"
+              className="min-w-full flex-shrink-0 w-full h-full block"
             >
               <img
                 src={imgSrc}
@@ -96,7 +96,7 @@ export default function HeroSection() {
               />
             </Link>
           ) : (
-            <div key={banner.id} className="flex-shrink-0 w-full h-full">
+            <div key={banner.id} className="min-w-full flex-shrink-0 w-full h-full">
               <img
                 src={imgSrc}
                 alt=""
