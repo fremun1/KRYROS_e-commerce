@@ -121,7 +121,7 @@ export class SectionDataSourceService {
     const categories = await this.prisma.category.findMany({
       where: { isActive: true },
       take: limit,
-      orderBy: { order: 'asc' },
+      orderBy: { sortOrder: 'asc' },
       include: {
         _count: {
           select: { products: true }

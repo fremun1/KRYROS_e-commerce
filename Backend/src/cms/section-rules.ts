@@ -208,14 +208,7 @@ export const SECTION_RULES: Record<string, SectionRule> = {
     icon: '🏷️'
   },
 
-  'homepage-categories': {
-    id: 'homepage-categories',
-    label: 'Homepage Categories',
-    description: 'Display categories marked for homepage display.',
-    category: 'category',
-    params: { showOnHome: true },
-    icon: '🏠'
-  },
+
 
   // ─────────────────────────────────────────────────────────────────
   // CUSTOM RULES (for special sections)
