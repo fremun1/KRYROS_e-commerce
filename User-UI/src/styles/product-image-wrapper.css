@@ -45,13 +45,13 @@
 
   /* ── Aesthetics ── */
   border-radius: 12px;         /* Clean, consistent corner radius on this layer */
-  background-color: #F1F1F1;   /* Light mode fallback background (neutral grey) */
+  background-color: #F5F5F5;   /* KRYROS Main Background */
 }
 
 /* Dark mode background fallback */
 @media (prefers-color-scheme: dark) {
   .product-image-wrapper {
-    background-color: #101826;
+    background-color: #1A1A1A;
   }
 }
 
@@ -147,7 +147,7 @@
 .product-image-wrapper__badge--discount {
   top: 12px;
   left: 12px;
-  background-color: #B91C1C;   /* Kryros red */
+  background-color: #D63031;   /* KRYROS Sale/Error Red */
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
 }
 
@@ -163,7 +163,7 @@
 .product-image-wrapper__badge--extra {
   bottom: 12px;
   left: 12px;
-  background-color: var(--color-primary, #1FA89A); /* Uses CSS variable or fallback */
+  background-color: var(--color-primary, #C0151B); /* KRYROS Primary Red */
   font-size: 9px;
 }
 
@@ -223,8 +223,8 @@
 
 /* ── Wishlisted state (add .is-wishlisted to the button element via JS) ── */
 .product-image-wrapper__wishlist.is-wishlisted .product-image-wrapper__wishlist-icon {
-  fill: #ef4444;
-  color: #ef4444;
+  fill: #D63031;
+  color: #D63031;
 }
 
 /* =============================================================================
