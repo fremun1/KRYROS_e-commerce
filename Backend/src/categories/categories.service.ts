@@ -113,9 +113,23 @@ export class CategoriesService {
     const cached = await this.cacheManager.get<any[]>('categories:homepage');
     if (cached) return cached;
 
-    const result = (await this.getCategoriesWithCounts()).filter(
-      (category) => category.showOnHome,
-    );
+    const all = await this.getCategoriesWithCounts();
+
+    // Step 1: Manually pinned (showOnHome = true) — always shown first
+    const manual = all.filter((c) => c.showOnHome);
+
+    // Step 2: Auto-fill by product count, excluding manually pinned ones
+    const manualIds = new Set(manual.map((c) => c.id));
+    const auto = all
+      .filter((c) => !manualIds.has(c.id))
+      .sort((a, b) => (b._count?.products ?? 0) - (a._count?.products ?? 0));
+
+    // Return manual picks first, then auto-fill remaining slots up to FILL_TARGET
+    // The frontend grid slices to 8; FILL_TARGET=16 gives generous overflow
+    const FILL_TARGET = 16;
+    const remaining = Math.max(0, FILL_TARGET - manual.length);
+    const result = [...manual, ...auto.slice(0, remaining)];
+
     await this.cacheManager.set('categories:homepage', result, CACHE_TTL);
     return result;
   }
