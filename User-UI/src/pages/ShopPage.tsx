@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "wouter";
 import { ChevronRight } from "lucide-react";
 import {
@@ -49,21 +49,7 @@ function toStr(v: unknown, fallback = "") {
 
 // ─── Category Carousel ────────────────────────────────────────────────────────
 function CategoryCarousel({ categories }: { categories: ApiCategory[] }) {
-  const scrollerRef = useRef<HTMLDivElement>(null);
-  const [active, setActive] = useState(0);
-
-  const allCards = useMemo(
-    () => [{ id: "__all__", name: "All", slug: "" } as any].concat(categories),
-    [categories]
-  );
-
-  const scrollTo = (index: number) => {
-    const el = scrollerRef.current;
-    if (!el) return;
-    const firstCard = el.children[0] as HTMLElement | undefined;
-    const itemWidth = firstCard ? firstCard.offsetWidth + 10 : 108;
-    el.scrollTo({ left: index * itemWidth, behavior: "smooth" });
-  };
+  if (categories.length === 0) return null;
 
   return (
     <section className="pt-4 pb-3">
@@ -80,93 +66,61 @@ function CategoryCarousel({ categories }: { categories: ApiCategory[] }) {
             </p>
           </div>
         </div>
-        <Link href="/shop/section/all">
+        <Link href="/categories">
           <span className="flex items-center gap-1 text-[11px] font-bold text-primary bg-primary/10 hover:bg-primary/20 transition-colors px-3 py-1.5 rounded-full cursor-pointer whitespace-nowrap">
-            All <ChevronRight className="w-3 h-3" />
+            See All <ChevronRight className="w-3 h-3" />
           </span>
         </Link>
       </div>
 
-      {/* Horizontal cards */}
-      <div
-        ref={scrollerRef}
-        className="flex gap-2.5 overflow-x-auto no-scrollbar px-4 md:px-6 pb-2"
-        style={{ scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch" }}
-        onScroll={() => {
-          const el = scrollerRef.current;
-          if (!el) return;
-          const firstCard = el.children[0] as HTMLElement | undefined;
-          const itemWidth = firstCard ? firstCard.offsetWidth + 10 : 108;
-          const idx = Math.round(el.scrollLeft / itemWidth);
-          setActive(Math.max(0, Math.min(idx, allCards.length - 1)));
-        }}
-      >
-        {allCards.map((cat: ApiCategory, idx: number) => {
-          const href =
-            idx === 0
-              ? "/shop/section/all"
-              : `/shop/section/${encodeURIComponent(cat.slug || cat.id)}`;
-          const isActive = active === idx;
+      {/* Jumia-style: horizontally scrollable portrait cards */}
+      <div className="flex gap-3 overflow-x-auto no-scrollbar px-4 md:px-6 pb-2">
+        {categories.map((cat) => {
+          const href = `/shop/section/${encodeURIComponent(cat.slug || cat.id)}`;
           return (
             <Link key={cat.id} href={href}>
               <a
-                className="flex-shrink-0 snap-start flex flex-col items-center gap-1.5 cursor-pointer group"
-                style={{ width: "clamp(80px, 22vw, 110px)" }}
+                className="flex-shrink-0 flex flex-col items-center gap-2 cursor-pointer group select-none"
+                style={{ width: "clamp(130px, 36vw, 160px)" }}
               >
-                {/* Image circle */}
+                {/* Portrait image card */}
                 <div
-                  className={`relative w-full overflow-hidden rounded-2xl border-2 transition-all ${
-                    isActive
-                      ? "border-primary shadow-md shadow-primary/20"
-                      : "border-border group-hover:border-primary/40"
-                  }`}
-                  style={{ aspectRatio: "1" }}
+                  className="w-full rounded-2xl overflow-hidden bg-muted shadow-sm"
+                  style={{ aspectRatio: "3/4" }}
                 >
                   {cat.image ? (
                     <img
                       src={cat.image}
                       alt={cat.name}
-                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      loading="lazy"
                     />
                   ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/40 flex items-center justify-center">
-                      <span className="text-2xl md:text-3xl">🛍️</span>
+                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-primary/5">
+                      <svg
+                        className="w-10 h-10 text-primary/30"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={1.5}
+                          d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
+                        />
+                      </svg>
                     </div>
                   )}
-                  {/* Overlay gradient */}
-                  <div
-                    className="absolute inset-0"
-                    style={{
-                      background:
-                        "linear-gradient(to top, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.1) 55%, transparent 100%)",
-                    }}
-                  />
                 </div>
-                {/* Label below image */}
-                <p
-                  className={`text-[10px] md:text-xs font-bold text-center leading-tight px-0.5 truncate w-full transition-colors ${
-                    isActive ? "text-primary" : "text-foreground group-hover:text-primary"
-                  }`}
-                >
+                {/* Category name below card */}
+                <span className="text-center text-xs font-semibold text-foreground leading-tight line-clamp-2 px-0.5 w-full">
                   {cat.name}
-                </p>
+                </span>
               </a>
             </Link>
           );
         })}
-      </div>
-
-      {/* Dot indicators (mobile only) */}
-      <div className="flex justify-center gap-1.5 pt-2 md:hidden">
-        {allCards.slice(0, Math.min(allCards.length, 10)).map((_, i) => (
-          <button
-            key={i}
-            onClick={() => scrollTo(i)}
-            className={`rounded-full transition-all ${
-              active === i ? "w-4 h-1.5 bg-primary" : "w-1.5 h-1.5 bg-muted-foreground/30"
-            }`}
-          />
-        ))}
       </div>
     </section>
   );
