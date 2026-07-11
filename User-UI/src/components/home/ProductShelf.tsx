@@ -67,8 +67,8 @@ export default function ProductShelf({
       setError(null);
 
       try {
-        // Construct the API URL with the data source ID and limit
-        const url = new URL(`${API_BASE}/api/cms/sections/products-by-source`);
+        // Try products-by-source first
+        let url = new URL(`${API_BASE}/api/cms/sections/products-by-source`);
         url.searchParams.set('dataSourceId', dataSourceId);
         url.searchParams.set('limit', String(limit));
         
@@ -79,7 +79,19 @@ export default function ProductShelf({
           }
         });
 
-        const response = await fetch(url.toString());
+        let response = await fetch(url.toString());
+
+        // If that fails or returns empty, try the general products API as fallback
+        if (!response.ok || (await response.clone().json()).length === 0) {
+          url = new URL(`${API_BASE}/api/products`);
+          url.searchParams.set('take', String(limit));
+          Object.entries(params).forEach(([key, value]) => {
+            if (value !== undefined && value !== null) {
+              url.searchParams.set(key, String(value));
+            }
+          });
+          response = await fetch(url.toString());
+        }
 
         if (!response.ok) {
           throw new Error(`Failed to fetch products: ${response.statusText}`);
