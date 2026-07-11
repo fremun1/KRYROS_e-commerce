@@ -240,6 +240,26 @@ const SECTION_FIELDS: Record<string, Array<{ key: string; label: string; type: s
     { key: 'badge4_title', label: 'Badge 4 Title', type: 'text' },
     { key: 'badge4_subtitle', label: 'Badge 4 Subtitle', type: 'text' },
   ],
+  'Category Section': [
+    { key: 'title', label: 'Section Title', type: 'text', icon: 'type' },
+    { key: 'dataSourceId', label: 'Data Source Rule (Auto-fetch categories)', type: 'select', options: ['homepage-categories', 'shop-page-categories', 'all-categories', 'categories-grid'], icon: 'tag' },
+    { key: 'layout', label: 'Layout Style', type: 'select', options: ['grid', 'horizontal'], icon: 'type' },
+    { key: 'limit', label: 'Max Categories to Display (default: 12)', type: 'text', icon: 'type' },
+    { key: 'showProductCount', label: 'Show Product Count', type: 'select', options: ['true', 'false'], icon: 'type' },
+  ],
+  'Featured Products': [
+    { key: 'title', label: 'Section Title', type: 'text', icon: 'type' },
+    { key: 'dataSourceId', label: 'Data Source Rule (Auto-fetch products)', type: 'select', options: ['top-selling', 'trending-products', 'new-arrivals', 'hot-products', 'flash-sales', 'featured-products', 'sale-items', 'credit-eligible', 'wholesale-products'], icon: 'tag' },
+    { key: 'ctaText', label: 'Button Text — e.g. View All', type: 'text', icon: 'mouse' },
+    { key: 'ctaLink', label: 'Button Link — e.g. /shop', type: 'text', icon: 'link' },
+    { key: 'limit', label: 'Max Products to Display (default: 8)', type: 'text', icon: 'type' },
+    { key: 'scroll', label: 'Scroll Mode (horizontal scroll on desktop)', type: 'select', options: ['true', 'false'] },
+  ],
+  'Brands': [
+    { key: 'title', label: 'Section Title', type: 'text', icon: 'type' },
+    { key: 'limit', label: 'Max Brands to Display (default: 12)', type: 'text', icon: 'type' },
+    { key: 'layout', label: 'Layout Style', type: 'select', options: ['grid', 'horizontal'], icon: 'type' },
+  ],
   'Flash Sale': [
     { key: 'title', label: 'Section Title — shown in the flash sale header', type: 'text', icon: 'type' },
     { key: 'countdownLabel', label: 'Countdown Label — e.g. Time Left', type: 'text', icon: 'clock' },
@@ -250,6 +270,7 @@ const SECTION_FIELDS: Record<string, Array<{ key: string; label: string; type: s
   ],
   'Top Selling': [
     { key: 'title', label: 'Section Title', type: 'text', icon: 'type' },
+    { key: 'dataSourceId', label: 'Data Source Rule (Auto-fetch products)', type: 'select', options: ['top-selling', 'trending-products', 'new-arrivals', 'hot-products', 'flash-sales', 'featured-products', 'sale-items', 'credit-eligible', 'wholesale-products'], icon: 'tag' },
     { key: 'ctaText', label: 'Button Text — e.g. View All', type: 'text', icon: 'mouse' },
     { key: 'ctaLink', label: 'Button Link — e.g. /shop', type: 'text', icon: 'link' },
     { key: 'limit', label: 'Max Products to Display (default: 8)', type: 'text', icon: 'type' },
@@ -257,6 +278,7 @@ const SECTION_FIELDS: Record<string, Array<{ key: string; label: string; type: s
   ],
   'Newest Arrivals': [
     { key: 'title', label: 'Section Title', type: 'text', icon: 'type' },
+    { key: 'dataSourceId', label: 'Data Source Rule (Auto-fetch products)', type: 'select', options: ['top-selling', 'trending-products', 'new-arrivals', 'hot-products', 'flash-sales', 'featured-products', 'sale-items', 'credit-eligible', 'wholesale-products'], icon: 'tag' },
     { key: 'ctaText', label: 'Button Text — e.g. View All', type: 'text', icon: 'mouse' },
     { key: 'ctaLink', label: 'Button Link — e.g. /shop', type: 'text', icon: 'link' },
     { key: 'limit', label: 'Max Products to Display (default: 8)', type: 'text', icon: 'type' },
@@ -264,6 +286,7 @@ const SECTION_FIELDS: Record<string, Array<{ key: string; label: string; type: s
   ],
   'Best Sellers': [
     { key: 'title', label: 'Section Title', type: 'text', icon: 'type' },
+    { key: 'dataSourceId', label: 'Data Source Rule (Auto-fetch products)', type: 'select', options: ['top-selling', 'trending-products', 'new-arrivals', 'hot-products', 'flash-sales', 'featured-products', 'sale-items', 'credit-eligible', 'wholesale-products'], icon: 'tag' },
     { key: 'ctaText', label: 'Button Text — e.g. View All', type: 'text', icon: 'mouse' },
     { key: 'ctaLink', label: 'Button Link — e.g. /shop', type: 'text', icon: 'link' },
     { key: 'limit', label: 'Max Products to Display (default: 8)', type: 'text', icon: 'type' },
@@ -271,6 +294,7 @@ const SECTION_FIELDS: Record<string, Array<{ key: string; label: string; type: s
   ],
   'Trending': [
     { key: 'title', label: 'Section Title', type: 'text', icon: 'type' },
+    { key: 'dataSourceId', label: 'Data Source Rule (Auto-fetch products)', type: 'select', options: ['top-selling', 'trending-products', 'new-arrivals', 'hot-products', 'flash-sales', 'featured-products', 'sale-items', 'credit-eligible', 'wholesale-products'], icon: 'tag' },
     { key: 'ctaText', label: 'Button Text — e.g. View All', type: 'text', icon: 'mouse' },
     { key: 'ctaLink', label: 'Button Link — e.g. /shop', type: 'text', icon: 'link' },
     { key: 'limit', label: 'Max Products to Display (default: 8)', type: 'text', icon: 'type' },
@@ -278,6 +302,7 @@ const SECTION_FIELDS: Record<string, Array<{ key: string; label: string; type: s
   ],
   'Limited Stock Deal': [
     { key: 'title', label: 'Section Title', type: 'text', icon: 'type' },
+    { key: 'dataSourceId', label: 'Data Source Rule (Auto-fetch products)', type: 'select', options: ['top-selling', 'trending-products', 'new-arrivals', 'hot-products', 'flash-sales', 'featured-products', 'sale-items', 'credit-eligible', 'wholesale-products'], icon: 'tag' },
     { key: 'discountText', label: 'Discount Label — e.g. Up to 70% Off', type: 'text', icon: 'tag' },
     { key: 'discountPercent', label: 'Discount Percent (number) — e.g. 70', type: 'text', icon: 'tag' },
     { key: 'ctaText', label: 'Button Text — e.g. Shop Now', type: 'text', icon: 'mouse' },
@@ -287,6 +312,7 @@ const SECTION_FIELDS: Record<string, Array<{ key: string; label: string; type: s
   ],
   'Appliances Deal': [
     { key: 'title', label: 'Section Title', type: 'text', icon: 'type' },
+    { key: 'dataSourceId', label: 'Data Source Rule (Auto-fetch products)', type: 'select', options: ['top-selling', 'trending-products', 'new-arrivals', 'hot-products', 'flash-sales', 'featured-products', 'sale-items', 'credit-eligible', 'wholesale-products'], icon: 'tag' },
     { key: 'ctaText', label: 'Button Text — e.g. View All', type: 'text', icon: 'mouse' },
     { key: 'ctaLink', label: 'Button Link — e.g. /shop', type: 'text', icon: 'link' },
     { key: 'limit', label: 'Max Products to Display (default: 8)', type: 'text', icon: 'type' },
@@ -294,6 +320,7 @@ const SECTION_FIELDS: Record<string, Array<{ key: string; label: string; type: s
   ],
   'Top Express': [
     { key: 'title', label: 'Section Title', type: 'text', icon: 'type' },
+    { key: 'dataSourceId', label: 'Data Source Rule (Auto-fetch products)', type: 'select', options: ['top-selling', 'trending-products', 'new-arrivals', 'hot-products', 'flash-sales', 'featured-products', 'sale-items', 'credit-eligible', 'wholesale-products'], icon: 'tag' },
     { key: 'ctaText', label: 'Button Text — e.g. View All', type: 'text', icon: 'mouse' },
     { key: 'ctaLink', label: 'Button Link — e.g. /shop', type: 'text', icon: 'link' },
     { key: 'limit', label: 'Max Products to Display (default: 8)', type: 'text', icon: 'type' },
@@ -411,7 +438,36 @@ function sectionHasMedia(name: string): boolean {
 
 
 const EMPTY_PAGE_FORM = { title: '', slug: '', status: 'Published' };
-const ADD_SECTION_NAMES = ['Hero Banner','Promo Banner','Promo Banners','Promotions','Newsletter','Company Story','Team','Mission & Vision','Contact Form','Location Map','Business Hours','Terms Text','Policy Text','Products Grid','Sale Banner','Category Promo Banners','Upgrade Banner','Shop Hero','Shop Categories','Shop Product Shelf','Shop Promo Banner','Members Banner','Shop Filters','Product Grid','Wholesale Hero','Wholesale Features','Get Now Hero','Get Now Features','Page Hero','FAQ Accordion','Product Gallery','Related Products','Testimonials','Flash Sale','Trust Badges','Top Selling','Newest Arrivals','Best Sellers','Trending','Limited Stock Deal','Appliances Deal','Top Express','Custom Section'];
+// Simplified section types - grouped by category for better UX
+const ADD_SECTION_NAMES = [
+  // Banner Sections
+  'Hero Banner',
+  'Promo Banner', 
+  'Upgrade Banner',
+  'Category Promo Banners',
+  
+  // Product Sections (Dynamic - auto-fetch based on dataSourceId)
+  'Flash Sale',
+  'Top Selling',
+  'Newest Arrivals', 
+  'Best Sellers',
+  'Trending',
+  'Limited Stock Deal',
+  'Appliances Deal',
+  'Top Express',
+  'Featured Products',
+  
+  // Category Sections
+  'Category Section',
+  
+  // Content Sections
+  'Trust Badges',
+  'Newsletter',
+  'Brands',
+  
+  // Custom/Other
+  'Custom Section'
+];
 
 // FileUpload is now the shared CloudinaryUpload component
 
@@ -647,11 +703,19 @@ function CMSContent() {
     return map[type] || 'Custom';
   };
 
-  const _getDataSourceId = (type: string): string | null => {
+  const _getDataSourceId = (type: string, content?: SectionData): string | null => {
+    // If dataSourceId is provided in content, use it
+    if (content?.dataSourceId) {
+      return content.dataSourceId;
+    }
+    
+    // Default mappings for backward compatibility
     const map: Record<string, string> = {
       TopSelling: 'top-selling', Trending: 'trending-products', NewestArrivals: 'new-arrivals',
       BestSellers: 'top-selling', FlashSale: 'flash-sales', CategoriesGrid: 'homepage-categories',
       HeroSlider: 'homepage-hero-slider', ShopCategories: 'shop-page-categories',
+      FeaturedProducts: 'featured-products', AppliancesDeal: 'top-selling',
+      LimitedStockDeal: 'sale-items', TopExpress: 'trending-products',
     };
     return map[type] || null;
   };
@@ -667,7 +731,7 @@ function CMSContent() {
   const _apiSave = (itemId: string, pageId: string, secName: string, content: SectionData, mediaUrl?: string) => {
     const _backendType = SECTION_NAME_TO_TYPE[secName] || secName;
     const _templateType = _getTemplateType(_backendType);
-    const _dataSourceId = _getDataSourceId(_backendType);
+    const _dataSourceId = _getDataSourceId(_backendType, content);
     const _slotKey = _getSlotKey(_backendType);
 
     if (itemId === 'nl-placeholder' && _isHome(pageId)) {
@@ -793,7 +857,7 @@ function CMSContent() {
       } else {
         const _backendType = SECTION_NAME_TO_TYPE[secName] || secName;
         const _templateType = _getTemplateType(_backendType);
-        const _dataSourceId = _getDataSourceId(_backendType);
+        const _dataSourceId = _getDataSourceId(_backendType, content);
         const _slotKey = _getSlotKey(_backendType);
         const _payload: any = { type: _backendType, pageSlug: 'homepage', templateType: _templateType, dataSourceId: _dataSourceId || undefined, slotKey: _slotKey || undefined, config: { ...content, ...(mediaUrl ? { media: mediaUrl } : {}) }, isActive: true, name: secName };
         if (secName === 'Flash Sale') {
@@ -844,7 +908,7 @@ function CMSContent() {
     } else {
       const _backendType = SECTION_NAME_TO_TYPE[secName] || secName;
       const _templateType = _getTemplateType(_backendType);
-      const _dataSourceId = _getDataSourceId(_backendType);
+      const _dataSourceId = _getDataSourceId(_backendType, content);
       const _slotKey = _getSlotKey(_backendType);
       const _UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       const _existing = data.find(p => p.id === pageId)?.sections.find(s => s.name === secName)?.items.find(i => _UUID_RE.test(i.id));
@@ -910,6 +974,10 @@ function CMSContent() {
   const [addingItem, setAddingItem] = useState(false);
   const [editingItem, setEditingItem] = useState<SectionItem | null>(null);
   const [deletingItem, setDeletingItem] = useState<SectionItem | null>(null);
+
+  // Drag and drop state for sections
+  const [draggedSection, setDraggedSection] = useState<string | null>(null);
+  const [dragOverSection, setDragOverSection] = useState<string | null>(null);
 
   // ── Trusted Brands ──────────────────────────────────────────────────────────────────────
   type TrustedBrand = { id: string; name: string; logo: string; slug: string };
@@ -1195,6 +1263,49 @@ function CMSContent() {
       toast.error('Move failed');
     }
   };
+
+  // Drag and drop handlers
+  const handleDragStart = (sectionName: string) => {
+    setDraggedSection(sectionName);
+  };
+
+  const handleDragOver = (sectionName: string) => {
+    if (draggedSection && draggedSection !== sectionName) {
+      setDragOverSection(sectionName);
+    }
+  };
+
+  const handleDragEnd = async () => {
+    if (draggedSection && dragOverSection && draggedSection !== dragOverSection) {
+      const page = data.find(p => p.id === selectedPageId);
+      if (!page) return;
+
+      const fromIdx = page.sections.findIndex(s => s.name === draggedSection);
+      const toIdx = page.sections.findIndex(s => s.name === dragOverSection);
+      
+      if (fromIdx >= 0 && toIdx >= 0) {
+        const newSections = [...page.sections];
+        const [movedSection] = newSections.splice(fromIdx, 1);
+        newSections.splice(toIdx, 0, movedSection);
+        
+        try {
+          // Update backend with new order
+          const idsInOrder = newSections.map(s => s.items[0]?.id).filter(Boolean);
+          if (idsInOrder.length > 0) {
+            await reorderCmsSections(page.slug, idsInOrder);
+          }
+          
+          setData(d => d.map(p => p.id !== selectedPageId ? p : { ...p, sections: newSections }));
+          toast.success('Section reordered');
+        } catch {
+          toast.error('Reorder failed');
+        }
+      }
+    }
+    
+    setDraggedSection(null);
+    setDragOverSection(null);
+  };
   const handleAddItem = (content: SectionData, mediaUrl?: string) => {
     if (!selectedPageId || !selectedSectionName) return;
     const item: SectionItem = { id: 'item_' + Date.now(), content, status: 'Active', mediaUrl };
@@ -1350,9 +1461,32 @@ function CMSContent() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {selectedPage.sections.map((sec, idx) => {
                 const active = sec.items.filter(i => i.status === 'Active').length;
+                const isDragging = draggedSection === sec.name;
+                const isDragOver = dragOverSection === sec.name;
+                
                 return (
-                  <div key={idx} style={{ background: card, border: `1px solid ${border}`, borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '14px', padding: '16px 20px', cursor: 'pointer', transition: 'border-color 0.15s' }}
-                    onClick={() => openSection(sec.name)} onMouseEnter={e => (e.currentTarget.style.borderColor = accent)} onMouseLeave={e => (e.currentTarget.style.borderColor = border)}>
+                  <div 
+                    key={idx} 
+                    draggable
+                    onDragStart={() => handleDragStart(sec.name)}
+                    onDragOver={(e) => { e.preventDefault(); handleDragOver(sec.name); }}
+                    onDragEnd={handleDragEnd}
+                    style={{ 
+                      background: card, 
+                      border: isDragging ? `2px solid ${accent}` : (isDragOver ? `2px dashed ${accent}` : `1px solid ${border}`), 
+                      borderRadius: '12px', 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '14px', 
+                      padding: '16px 20px', 
+                      cursor: 'grab', 
+                      transition: 'border-color 0.15s',
+                      opacity: isDragging ? 0.5 : 1
+                    }}
+                    onClick={() => openSection(sec.name)} 
+                    onMouseEnter={e => !isDragging && (e.currentTarget.style.borderColor = accent)} 
+                    onMouseLeave={e => !isDragging && (e.currentTarget.style.borderColor = border)}
+                  >
                     <div style={{ width: '42px', height: '42px', borderRadius: '11px', background: 'rgba(31,168,154,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                       {iconMap(getSectionIconType(sec.name))}
                     </div>

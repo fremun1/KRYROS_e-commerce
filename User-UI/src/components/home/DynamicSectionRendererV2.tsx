@@ -26,6 +26,7 @@ import RecentlyViewedSection from './RecentlyViewedSection';
 import CategoryPromoBanners from './CategoryPromoBanners';
 import PromoBanners from './PromoBanners';
 import HeroBannerSection from './HeroBannerSection';
+import TopExpressSection from './TopExpressSection';
 
 interface CMSSection {
   id: string;
@@ -137,68 +138,79 @@ export default function DynamicSectionRendererV2({
 
           case 'TopSelling':
             return (
-              <ProductSection
+              <ProductShelf
                 key={section.id}
                 title={section.title || 'Top Selling Items'}
                 subtitle={section.subtitle}
+                dataSourceId={section.dataSourceId || 'top-selling'}
+                limit={section.config?.productLimit || section.config?.limit || 8}
+                layout={section.config?.scroll === 'true' ? 'horizontal-scroll' : 'grid'}
                 viewAllHref={section.config?.ctaLink || section.config?.viewAllLink || '/shop'}
                 viewAllText={section.config?.ctaText || 'See All'}
-                params={{ take: section.config?.productLimit || section.config?.limit || 8, popularity: 'bestseller' }}
-                limit={section.config?.productLimit || section.config?.limit || 8}
                 accentColor={section.config?.accentColor}
               />
             );
 
           case 'Trending':
             return (
-              <ProductSection
+              <ProductShelf
                 key={section.id}
                 title={section.title || 'Trending Now'}
                 subtitle={section.subtitle}
+                dataSourceId={section.dataSourceId || 'trending-products'}
+                limit={section.config?.productLimit || section.config?.limit || 8}
+                layout={section.config?.scroll === 'true' ? 'horizontal-scroll' : 'grid'}
                 viewAllHref={section.config?.ctaLink || section.config?.viewAllLink || '/shop'}
                 viewAllText={section.config?.ctaText || 'See All'}
-                params={{ take: section.config?.productLimit || section.config?.limit || 8, popularity: 'trending' }}
-                limit={section.config?.productLimit || section.config?.limit || 8}
                 accentColor={section.config?.accentColor}
               />
             );
 
           case 'BestSellers':
             return (
-              <ProductSection
+              <ProductShelf
                 key={section.id}
                 title={section.title || 'Best Sellers'}
                 subtitle={section.subtitle}
+                dataSourceId={section.dataSourceId || 'top-selling'}
+                limit={section.config?.productLimit || section.config?.limit || 8}
+                layout={section.config?.scroll === 'true' ? 'horizontal-scroll' : 'grid'}
                 viewAllHref={section.config?.ctaLink || section.config?.viewAllLink || '/shop'}
                 viewAllText={section.config?.ctaText || 'See All'}
-                params={{ take: section.config?.productLimit || section.config?.limit || 8, popularity: 'bestseller' }}
-                limit={section.config?.productLimit || section.config?.limit || 8}
                 accentColor={section.config?.accentColor}
               />
             );
 
           case 'NewestArrivals':
             return (
-              <ProductSection
+              <ProductShelf
                 key={section.id}
                 title={section.title || 'Newest Arrivals'}
                 subtitle={section.subtitle}
+                dataSourceId={section.dataSourceId || 'new-arrivals'}
+                limit={section.config?.productLimit || section.config?.limit || 8}
+                layout={section.config?.scroll === 'true' ? 'horizontal-scroll' : 'grid'}
                 viewAllHref={section.config?.ctaLink || section.config?.viewAllLink || '/shop'}
                 viewAllText={section.config?.ctaText || 'See All'}
-                params={{ take: section.config?.productLimit || section.config?.limit || 8, popularity: 'new' }}
-                limit={section.config?.productLimit || section.config?.limit || 8}
                 accentColor={section.config?.accentColor}
               />
             );
 
           case 'CategoriesGrid':
           case 'Categories':
+          case 'CategorySection':
             return (
               <CategoryGridShelf
                 key={section.id}
                 title={section.title}
                 subtitle={section.subtitle}
-                dataSourceId="homepage-categories"
+                dataSourceId={section.dataSourceId || 'homepage-categories'}
+                limit={section.config?.limit || 12}
+                columns={section.config?.layout === 'horizontal' ? 6 : 'auto'}
+                showProductCount={section.config?.showProductCount === 'true'}
+                showViewAll={section.config?.showViewAll === 'true'}
+                viewAllHref={section.config?.viewAllHref || '/shop'}
+                className={section.config?.className}
               />
             );
 
@@ -227,6 +239,62 @@ export default function DynamicSectionRendererV2({
 
           case 'Brands':
             return <BrandsSection key={section.id} />;
+
+          case 'FeaturedProducts':
+            return (
+              <ProductShelf
+                key={section.id}
+                title={section.title || 'Featured Products'}
+                subtitle={section.subtitle}
+                dataSourceId={section.dataSourceId || 'featured-products'}
+                limit={section.config?.productLimit || section.config?.limit || 8}
+                layout={section.config?.scroll === 'true' ? 'horizontal-scroll' : 'grid'}
+                viewAllHref={section.config?.ctaLink || section.config?.viewAllLink || '/shop'}
+                viewAllText={section.config?.ctaText || 'See All'}
+                accentColor={section.config?.accentColor}
+              />
+            );
+
+          case 'LimitedStockDeal':
+            return (
+              <LimitedStockDealSection
+                key={section.id}
+                title={section.title || section.config?.title}
+                discountText={section.config?.discountText}
+                discountPercent={section.config?.discountPercent}
+                ctaText={section.config?.ctaText}
+                ctaLink={section.config?.ctaLink}
+                limit={section.config?.limit || 8}
+                scroll={section.config?.scroll === 'true'}
+                dataSourceId={section.dataSourceId || 'sale-items'}
+              />
+            );
+
+          case 'AppliancesDeal':
+            return (
+              <AppliancesDealSection
+                key={section.id}
+                title={section.title || section.config?.title}
+                ctaText={section.config?.ctaText}
+                ctaLink={section.config?.ctaLink}
+                limit={section.config?.limit || 8}
+                scroll={section.config?.scroll === 'true'}
+                dataSourceId={section.dataSourceId || 'top-selling'}
+              />
+            );
+
+          case 'TopExpress':
+            return (
+              <TopExpressSection
+                key={section.id}
+                title={section.title || section.config?.title}
+                ctaText={section.config?.ctaText}
+                ctaLink={section.config?.ctaLink}
+                limit={section.config?.limit || 8}
+                scroll={section.config?.scroll === 'true'}
+                dataSourceId={section.dataSourceId || 'trending-products'}
+              />
+            );
 
           case 'PageHero':
             return (
@@ -297,22 +365,21 @@ export default function DynamicSectionRendererV2({
           case 'ProductGrid':
           case 'ProductSection':
             return (
-              <ProductSection
+              <ProductShelf
                 key={section.id}
                 title={section.title || section.config?.heading || 'Products'}
                 subtitle={section.subtitle}
+                dataSourceId={section.dataSourceId || 'top-selling'}
+                limit={section.config?.product_limit || section.config?.productLimit || section.config?.limit || 8}
+                layout={section.config?.scroll === 'true' ? 'horizontal-scroll' : 'grid'}
                 viewAllHref={section.config?.viewAllHref || section.config?.button_link || section.config?.ctaLink || '/shop'}
                 viewAllText={section.config?.ctaText || section.config?.button_text || 'See All'}
+                accentColor={section.config?.accentColor}
                 params={{
-                  take: section.config?.product_limit || section.config?.productLimit || section.config?.limit || 8,
                   featured: section.config?.filter_by === 'Featured' || section.config?.filterType === 'Featured',
-                  popularity: (section.config?.filter_by === 'Best Selling' || section.config?.filterType === 'Best Selling') ? 'bestseller' : 
-                             (section.config?.filter_by === 'New Arrivals' || section.config?.filterType === 'New Arrivals') ? 'new' : undefined,
                   categoryId: section.config?.categoryId,
                   categorySlug: section.config?.categorySlug,
                 }}
-                limit={section.config?.product_limit || section.config?.productLimit || section.config?.limit || 8}
-                accentColor={section.config?.accentColor}
               />
             );
 
@@ -391,14 +458,15 @@ export default function DynamicSectionRendererV2({
                 key={section.id}
                 title={section.title || section.config?.title || 'Products'}
                 subtitle={section.subtitle}
+                dataSourceId={section.dataSourceId || 'top-selling'}
+                limit={section.config?.limit || 10}
+                layout={section.config?.scroll === 'true' ? 'horizontal-scroll' : 'grid'}
                 viewAllHref={section.config?.ctaLink || section.config?.viewAllLink || section.config?.viewAllHref || '/shop'}
                 viewAllText={section.config?.ctaText || 'See All'}
                 params={{
-                  take: section.config?.limit || 10,
                   categorySlug: section.config?.categorySlug,
                   popularity: section.config?.popularity,
                 }}
-                limit={section.config?.limit || 10}
               />
             );
 
