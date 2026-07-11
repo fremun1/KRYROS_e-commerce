@@ -44,24 +44,21 @@ export class CMSService {
   // ==================== HOME PAGE SECTIONS ====================
 
   async getHomePageSections(type?: string) {
-    const cacheKey = type ? `cms:sections:${type}` : 'cms:sections';
+    const cacheKey = type ? `cms:sections:${type}:homepage` : 'cms:sections:homepage';
     const cached = await this.cacheManager.get<any[]>(cacheKey);
     if (cached) return cached;
 
-    const where: any = { isActive: true };
+    const where: any = { isActive: true, pageSlug: 'homepage' };
     if (type) where.type = type;
 
-    let sections = await this.prisma.homePageSection.findMany({
+    let sections = await this.prisma.cMSSection.findMany({
       where,
       orderBy: { order: 'asc' },
     });
 
-    // Auto-seed if the database is empty (even with a type filter)
-    // This ensures that frontend components like TrustBadges get data on first load
-    const totalCount = await this.prisma.homePageSection.count();
-    if (totalCount === 0) {
-      await this.seedHomePageSections();
-      sections = await this.prisma.homePageSection.findMany({
+    if (sections.length === 0) {
+      await this.resetAndSeedSectionsBySlug('homepage');
+      sections = await this.prisma.cMSSection.findMany({
         where,
         orderBy: { order: 'asc' },
       });
@@ -72,46 +69,44 @@ export class CMSService {
   }
 
   async listHomePageSections() {
-    return this.prisma.homePageSection.findMany({
+    return this.prisma.cMSSection.findMany({
+      where: { pageSlug: 'homepage' },
       orderBy: { order: 'asc' },
     });
   }
 
   async createHomePageSection(data: CreateHomePageSectionDto) {
-    const result = await this.prisma.homePageSection.create({
+    const result = await this.prisma.cMSSection.create({
       data: {
         ...data,
+        pageSlug: 'homepage',
         config: data.config ? (typeof data.config === 'string' ? JSON.parse(data.config) : data.config) : undefined,
       } as any,
     });
-    // Invalidate cache for this specific type
     await this.invalidateCmsCache(result.type);
     return result;
   }
 
   async updateHomePageSection(id: string, data: UpdateHomePageSectionDto) {
-    const result = await this.prisma.homePageSection.update({
+    const result = await this.prisma.cMSSection.update({
       where: { id },
       data: {
         ...data,
         config: data.config ? (typeof data.config === 'string' ? JSON.parse(data.config) : data.config) : undefined,
       } as any,
     });
-    // Invalidate cache for this specific type to ensure frontend gets fresh data
     await this.invalidateCmsCache(result.type);
     return result;
   }
 
   async deleteHomePageSection(id: string) {
-    const result = await this.prisma.homePageSection.delete({ where: { id } });
-    // Invalidate cache for this specific type
+    const result = await this.prisma.cMSSection.delete({ where: { id } });
     await this.invalidateCmsCache(result.type);
     return result;
   }
 
   async resetAndSeedHomePageSections() {
-    // Wipe ALL existing homepage sections (old frontend data)
-    await this.prisma.homePageSection.deleteMany({});
+    await this.prisma.cMSSection.deleteMany({ where: { pageSlug: 'homepage' } as any });
     return this.seedHomePageSections();
   }
 
@@ -444,7 +439,13 @@ export class CMSService {
 
     if (existingSections.length === 0) {
       for (const section of defaultSections) {
-        await this.prisma.homePageSection.create({ data: section as any });
+        await this.prisma.cMSSection.create({ data: {
+          ...section,
+          pageSlug: 'homepage',
+          templateType: this.mapLegacyTypeToTemplate(section.type),
+          dataSourceId: this.mapLegacyTypeToDataSource(section.type),
+          name: section.title || `${section.type} Section`,
+        } as any });
       }
       return { success: true, message: `Seeded ${defaultSections.length} homepage sections for the current frontend.` };
     }
@@ -455,10 +456,16 @@ export class CMSService {
     for (const def of defaultSections) {
       const existing = existingSections.find(s => s.type === def.type && s.title === def.title);
       if (!existing) {
-        await this.prisma.homePageSection.create({ data: def as any });
+        await this.prisma.cMSSection.create({ data: {
+          ...def,
+          pageSlug: 'homepage',
+          templateType: this.mapLegacyTypeToTemplate(def.type),
+          dataSourceId: this.mapLegacyTypeToDataSource(def.type),
+          name: def.title || `${def.type} Section`,
+        } as any });
         added++;
       } else {
-        await this.prisma.homePageSection.update({
+        await this.prisma.cMSSection.update({
           where: { id: existing.id },
           data: { order: def.order, isActive: true, config: (def as any).config || existing.config }
         });
@@ -472,6 +479,45 @@ export class CMSService {
     };
   }
 
+  private mapLegacyTypeToTemplate(type: string): string {
+    const map: Record<string, string> = {
+      HeroSlider: 'BannerSlot',
+      Brands: 'Brands',
+      TrustBadges: 'TrustBadges',
+      CategoriesGrid: 'CategoryGrid',
+      FlashSale: 'FlashSale',
+      PromoBanners: 'PromoBanners',
+      promo_banners: 'PromoBanner',
+      CategoryPromoBanners: 'CategoryPromoBanners',
+      ProductSection: 'ProductSection',
+      RecommendedProducts: 'RecommendedProducts',
+      RecentlyViewed: 'RecentlyViewed',
+      UpgradeBanner: 'UpgradeBanner',
+      TopSelling: 'TopSelling',
+      NewestArrivals: 'NewestArrivals',
+      BestSellers: 'BestSellers',
+      Trending: 'Trending',
+      LimitedStockDeal: 'LimitedStockDeal',
+      AppliancesDeal: 'AppliancesDeal',
+      TopExpress: 'TopExpress',
+      Newsletter: 'Newsletter',
+      ProductGrid: 'ProductGrid',
+    };
+    return map[type] || 'Custom';
+  }
+
+  private mapLegacyTypeToDataSource(type: string): string | null {
+    const map: Record<string, string> = {
+      TopSelling: 'top-selling',
+      Trending: 'trending-products',
+      NewestArrivals: 'new-arrivals',
+      BestSellers: 'top-selling',
+      FlashSale: 'flash-sales',
+      CategoriesGrid: 'homepage-categories',
+      HeroSlider: 'homepage-hero-slider',
+    };
+    return map[type] || null;
+  }
 
   async getBanners(tag?: string) {
     const cacheKey = tag ? `cms:banners:${tag}` : 'cms:banners';

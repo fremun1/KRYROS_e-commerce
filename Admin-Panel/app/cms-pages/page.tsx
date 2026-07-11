@@ -5,17 +5,16 @@ import PageHeader from '@/components/admin/page-header';
 import { Modal, ConfirmDialog, FormField, ModalFooter } from '@/components/admin/modal';
 import { useTheme } from '@/contexts/theme-context';
 import {
-  Layout, Edit, Eye, Plus, ChevronDown, Trash2, Upload, X, RefreshCw,
+  Layout, Edit, Eye, Plus, ChevronDown, ChevronUp, Trash2, Upload, X, RefreshCw,
   Image as ImageIcon, Video, Link2, Type, AlignLeft, MousePointer,
   ChevronLeft, ChevronRight, FileText, Mail, MapPin, Clock, Tag, Award
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import CloudinaryUpload from '@/components/ui/file-upload';
 import {
-  getCmsPages, getCmsBanners, getCmsHomepageSections, getCmsSections,
+  getCmsPages, getCmsBanners, getCmsSections,
   createCmsBanner, updateCmsBanner, deleteCmsBanner,
-  createCmsHomepageSection, updateCmsHomepageSection, deleteCmsHomepageSection,
-  updateCmsSection, createCmsSection, deleteCmsSection,
+  updateCmsSection, createCmsSection, deleteCmsSection, reorderCmsSections, moveCmsSection,
   getCmsSiteConfigs, upsertCmsSiteConfig,
   getBrands, resetSeedCmsSections,
   createCmsPage, updateCmsPage, deleteCmsPage, seedAllCmsPages
@@ -490,29 +489,16 @@ function CMSContent() {
   useEffect(() => {
     const load = async () => {
       try {
-        const [pagesRes, bannersRes, hpRes] = await Promise.all([
+        const [pagesRes, bannersRes, hpSecsRes] = await Promise.all([
           getCmsPages().catch(() => ({ data: [] })),
           getCmsBanners().catch(() => ({ data: [] })),
-          getCmsHomepageSections().catch(() => ({ data: [] })),
+          getCmsSections('homepage').catch(() => ({ data: [] })),
         ]);
         const apiPages: any[] = Array.isArray(pagesRes.data) ? pagesRes.data : Array.isArray((pagesRes.data as any)?.data) ? (pagesRes.data as any).data : [];
         const banners: any[] = Array.isArray(bannersRes.data) ? bannersRes.data : Array.isArray((bannersRes.data as any)?.data) ? (bannersRes.data as any).data : [];
-        const hpSecs: any[] = Array.isArray(hpRes.data) ? hpRes.data : Array.isArray((hpRes.data as any)?.data) ? (hpRes.data as any).data : [];
+        const hpSecs: any[] = Array.isArray(hpSecsRes.data) ? hpSecsRes.data : Array.isArray((hpSecsRes.data as any)?.data) ? (hpSecsRes.data as any).data : [];
         if (apiPages.length === 0 && banners.length === 0 && hpSecs.length === 0) return;
-        const _nlSec = hpSecs.find((s: any) => s.type === 'Newsletter');
-        const HP_NAME: Record<string, string> = {
-          HeroSlider: 'Hero Slider', Brands: 'Featured Brands', TrustBadges: 'Trust Badges',
-          CategorySection: 'Category Section', CategoriesGrid: 'Category Section',
-          FlashSale: 'Flash Sale', PromoBanners: 'Promo Banners',
-          promo_banners: 'Category Promo Banners',
-          CategoryPromoBanners: 'Category Promo Banners', ProductSection: 'Products Section',
-          RecommendedProducts: 'Recommended For You',
-          RecentlyViewed: 'What You Viewed', UpgradeBanner: 'Upgrade Banner',
-          TopSelling: 'Top Selling', NewestArrivals: 'Newest Arrivals',
-          BestSellers: 'Best Sellers', Trending: 'Trending',
-          LimitedStockDeal: 'Limited Stock Deal', AppliancesDeal: 'Appliances Deal',
-          TopExpress: 'Top Express',
-        };
+
         const cmsPages: CmsPage[] = await Promise.all(apiPages.map(async (p: any) => {
           const isHome = p.slug === '/' || p.slug === 'home';
           const secs: Section[] = [];
@@ -521,15 +507,13 @@ function CMSContent() {
               secs.push({ name: 'Hero Banner', items: banners.map((b: any) => ({ id: b.id, content: { title: b.title || '', subtitle: b.subtitle || '', description: '', button_text: b.linkText || '', button_link: b.link || '', media: b.videoUrl || b.image || '', duration: b.duration ? String(b.duration) : '' }, status: b.isActive ? 'Active' : 'Inactive', mediaUrl: b.videoUrl || b.image })) });
             }
             [...hpSecs].sort((a: any, b: any) => (a.order || 0) - (b.order || 0)).forEach((sec: any) => {
-              const nm = HP_NAME[sec.type] || sec.type || 'Section';
+              const nm = sec.name || sec.type || 'Section';
               const _rawContent = Object.fromEntries(Object.entries(sec.config || {}).map(([k, v]) => {
-                  // Special handling for Trust Badges items array to prevent [object Object] corruption
                   if (sec.type === 'TrustBadges' && k === 'items' && Array.isArray(v)) {
                     return [k, JSON.stringify(v, null, 2)];
                   }
                   return [k, String(v)];
                 }));
-              // Trust Badges: expand items[] into flat badge fields at load time (fix for direct-mutation bug)
               if (sec.type === 'TrustBadges') {
                 try {
                   const _rawItems = Array.isArray(sec.config?.items) ? sec.config.items
@@ -558,7 +542,7 @@ function CMSContent() {
               if (existing) { existing.items.push(newItem); }
               else { secs.push({ name: nm, items: [newItem] }); }
             });
-            // Always ensure Newsletter section appears in Home, even if not yet in DB
+            const _nlSec = hpSecs.find((s: any) => s.type === 'Newsletter') || banners.find((b: any) => b.type === 'Newsletter');
             if (!secs.find(s => s.name === 'Newsletter')) {
               secs.push({ name: 'Newsletter', items: [{ id: _nlSec?.id ? String(_nlSec.id) : 'nl-placeholder', content: { heading: 'Signup Today!', subheading: 'Want exclusive access to discounts & offers on premium brands?', placeholder: 'Your E-mail', button_text: 'Submit', footnote: '*Limited time offer.', popup_image: '' }, status: 'Active' }] });
             }
@@ -566,7 +550,6 @@ function CMSContent() {
             try {
               let sr = await getCmsSections(p.slug).catch(() => ({ data: [] }));
               let ss: any[] = Array.isArray(sr.data) ? sr.data : Array.isArray((sr.data as any)?.data) ? (sr.data as any).data : [];
-              // If DB has no sections, silently auto-seed then re-fetch with real UUIDs
               if (ss.length === 0 && p.slug) {
                 await resetSeedCmsSections(p.slug).catch(() => {});
                 sr = await getCmsSections(p.slug).catch(() => ({ data: [] }));
@@ -574,7 +557,7 @@ function CMSContent() {
               }
               const g: Record<string, SectionItem[]> = {};
               ss.forEach((s: any) => {
-                const nm = s.name || PAGE_SECTION_NAME[s.type] || s.type || 'Section';
+                const nm = s.name || s.type || 'Section';
                 if (!g[nm]) g[nm] = [];
                 g[nm].push({ id: s.id, content: Object.fromEntries(Object.entries((s.content || s.config || {})).map(([k, v]) => [k, String(v)])), status: s.isActive ? 'Active' : 'Inactive' });
               });
@@ -642,10 +625,53 @@ function CMSContent() {
   // ── API helpers (fire-and-forget, local state stays snappy) ──────────
   const _getPageSlug = (pageId: string) => data.find(p => p.id === pageId)?.slug || '/';
   const _isHome = (pageId: string) => { const s = _getPageSlug(pageId); return s === '/' || s === 'home'; };
+
+  const _getTemplateType = (type: string): string => {
+    const map: Record<string, string> = {
+      HeroSlider: 'BannerSlot', Brands: 'Brands', TrustBadges: 'TrustBadges',
+      CategoriesGrid: 'CategoryGrid', FlashSale: 'FlashSale', PromoBanners: 'PromoBanners',
+      promo_banners: 'PromoBanner', CategoryPromoBanners: 'CategoryPromoBanners',
+      ProductSection: 'ProductSection', RecommendedProducts: 'RecommendedProducts',
+      RecentlyViewed: 'RecentlyViewed', UpgradeBanner: 'UpgradeBanner',
+      TopSelling: 'TopSelling', NewestArrivals: 'NewestArrivals', BestSellers: 'BestSellers',
+      Trending: 'Trending', LimitedStockDeal: 'LimitedStockDeal', AppliancesDeal: 'AppliancesDeal',
+      TopExpress: 'TopExpress', Newsletter: 'Newsletter', ProductGrid: 'ProductGrid',
+      ShopHero: 'ShopHero', ShopCategories: 'ShopCategories', ShopProductShelf: 'ShopProductShelf',
+      ShopPromoBanner: 'ShopPromoBanner', MembersBanner: 'MembersBanner', ShopFilters: 'ShopFilters',
+      ProductGrid: 'ProductGrid', WholesaleHero: 'WholesaleHero', WholesaleFeatures: 'WholesaleFeatures',
+      GetNowHero: 'GetNowHero', GetNowFeatures: 'GetNowFeatures', PageHero: 'PageHero',
+      FAQAccordion: 'FAQAccordion', ProductGallery: 'ProductGallery', RelatedProducts: 'RelatedProducts',
+      Testimonials: 'Testimonials', SaleBanner: 'SaleBanner', ProductsGrid: 'ProductsGrid',
+      PageContent: 'PageContent', ContactForm: 'ContactForm',
+    };
+    return map[type] || 'Custom';
+  };
+
+  const _getDataSourceId = (type: string): string | null => {
+    const map: Record<string, string> = {
+      TopSelling: 'top-selling', Trending: 'trending-products', NewestArrivals: 'new-arrivals',
+      BestSellers: 'top-selling', FlashSale: 'flash-sales', CategoriesGrid: 'homepage-categories',
+      HeroSlider: 'homepage-hero-slider', ShopCategories: 'shop-page-categories',
+    };
+    return map[type] || null;
+  };
+
+  const _getSlotKey = (type: string): string | null => {
+    const map: Record<string, string> = {
+      HeroSlider: 'homepage-hero-slider', ShopHero: 'shop-page-top',
+      GetNowHero: 'get-now-page-top', WholesaleHero: 'wholesale-page-top',
+      PromoBanners: 'homepage-mid-page', UpgradeBanner: 'homepage-mid-page',
+    };
+    return map[type] || null;
+  };
   const _apiSave = (itemId: string, pageId: string, secName: string, content: SectionData, mediaUrl?: string) => {
-    // Newsletter with placeholder ID (not yet in DB) — create instead of update
+    const _backendType = SECTION_NAME_TO_TYPE[secName] || secName;
+    const _templateType = _getTemplateType(_backendType);
+    const _dataSourceId = _getDataSourceId(_backendType);
+    const _slotKey = _getSlotKey(_backendType);
+
     if (itemId === 'nl-placeholder' && _isHome(pageId)) {
-      createCmsHomepageSection({ type: 'Newsletter', config: { ...content, ...(mediaUrl ? { media: mediaUrl } : {}) }, isActive: true })
+      createCmsSection({ type: _backendType, pageSlug: 'homepage', templateType: _templateType, dataSourceId: _dataSourceId || undefined, slotKey: _slotKey || undefined, name: secName, config: { ...content, ...(mediaUrl ? { media: mediaUrl } : {}) }, isActive: true })
         .then((res: any) => {
           const newId = res?.data?.id || (res?.data as any)?.data?.id;
           if (newId) setData(d => d.map(p => p.id !== pageId ? p : { ...p, sections: p.sections.map(s => s.name !== 'Newsletter' ? s : { ...s, items: s.items.map(i => i.id === 'nl-placeholder' ? { ...i, id: String(newId) } : i) }) }));
@@ -653,64 +679,72 @@ function CMSContent() {
         .catch(() => toast.error('Newsletter save failed'));
       return;
     }
-    if (_isHome(pageId)) {
-      if (secName === 'Hero Banner') {
-        const _mUrl = mediaUrl || content.media || content.image || '';
-        const _isVid = /\.(mp4|mov|webm|ogg|m4v)(\?.*)?$/i.test(_mUrl) || _mUrl.startsWith('data:video/') || /youtu\.?be/.test(_mUrl);
-        const _dur = content.duration ? parseInt(content.duration) : undefined;
-        updateCmsBanner(itemId, { title: content.title, subtitle: content.subtitle, ...(_isVid ? { videoUrl: _mUrl, mediaType: 'video', image: '' } : { image: _mUrl, mediaType: 'image', videoUrl: '' }), link: content.button_link, linkText: content.button_text, ...(_dur ? { duration: _dur } : {}) }).catch(() => toast.error('Banner save failed'));
-      } else {
-        const finalConfig: any = { ...content, ...(mediaUrl ? { media: mediaUrl } : {}) };
-        // Special handling for Trust Badges: convert flat badge fields into an items array
-        if (secName === 'Trust Badges') {
-          const items = [];
-          for (let i = 1; i <= 4; i++) {
-            if (finalConfig[`badge${i}_title`]) {
-              items.push({
-                icon: finalConfig[`badge${i}_icon`] || 'Truck',
-                title: finalConfig[`badge${i}_title`],
-                subtitle: finalConfig[`badge${i}_subtitle`] || '',
-              });
-            }
-          }
-          if (items.length > 0) {
-            finalConfig.items = items;
-          }
+
+    const isHome = _isHome(pageId);
+    const pageSlug = isHome ? 'homepage' : _getPageSlug(pageId);
+
+    if (isHome && secName === 'Hero Banner') {
+      const _mUrl = mediaUrl || content.media || content.image || '';
+      const _isVid = /\.(mp4|mov|webm|ogg|m4v)(\?.*)?$/i.test(_mUrl) || _mUrl.startsWith('data:video/') || /youtu\.?be/.test(_mUrl);
+      const _dur = content.duration ? parseInt(content.duration) : undefined;
+      updateCmsBanner(itemId, { title: content.title, subtitle: content.subtitle, ...(_isVid ? { videoUrl: _mUrl, mediaType: 'video', image: '' } : { image: _mUrl, mediaType: 'image', videoUrl: '' }), link: content.button_link, linkText: content.button_text, ...(_dur ? { duration: _dur } : {}) }).catch(() => toast.error('Banner save failed'));
+      return;
+    }
+
+    const finalConfig: any = { ...content, ...(mediaUrl ? { media: mediaUrl } : {}) };
+    if (secName === 'Trust Badges') {
+      const items = [];
+      for (let i = 1; i <= 4; i++) {
+        if (finalConfig[`badge${i}_title`]) {
+          items.push({
+            icon: finalConfig[`badge${i}_icon`] || 'Truck',
+            title: finalConfig[`badge${i}_title`],
+            subtitle: finalConfig[`badge${i}_subtitle`] || '',
+          });
         }
-        const homepagePayload: any = { config: finalConfig, isActive: true };
-        if (secName === 'Flash Sale') {
-          homepagePayload.title = finalConfig.title || undefined;
-          homepagePayload.linkText = finalConfig.ctaText || undefined;
-          homepagePayload.link = finalConfig.ctaLink || undefined;
-        }
-        updateCmsHomepageSection(itemId, homepagePayload)
-          .then(() => {
-            // Update local state to reflect changes immediately
-            setData(prev => prev.map(p => p.id !== pageId ? p : {
-              ...p,
-              sections: p.sections.map(s => s.name !== secName ? s : {
-                ...s,
-                items: s.items.map(i => i.id !== itemId ? i : { ...i, content: finalConfig })
-              })
-            }));
-            toast.success('Section saved successfully');
-          })
-          .catch(() => toast.error('Section save failed'));
       }
+      if (items.length > 0) {
+        finalConfig.items = items;
+      }
+    }
+
+    const _isRealId = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(itemId);
+    if (!_isRealId) {
+      const payload: any = { type: _backendType, pageSlug, templateType: _templateType, dataSourceId: _dataSourceId || undefined, slotKey: _slotKey || undefined, name: secName, config: finalConfig, isActive: true };
+      if (isHome) {
+        payload.title = content.title || _backendType;
+        if (secName === 'Flash Sale') { payload.linkText = content.ctaText || 'See All'; payload.link = content.ctaLink || '/shop'; }
+        else if (secName === 'Top Selling') { payload.linkText = content.ctaText || 'View All'; payload.link = content.ctaLink || '/shop'; }
+        else if (secName === 'Newest Arrivals') { payload.linkText = content.ctaText || 'View All'; payload.link = content.ctaLink || '/shop'; }
+        else if (secName === 'Best Sellers') { payload.linkText = content.ctaText || 'View All'; payload.link = content.ctaLink || '/shop'; }
+        else if (secName === 'Trending') { payload.linkText = content.ctaText || 'View All'; payload.link = content.ctaLink || '/shop'; }
+        else if (secName === 'Limited Stock Deal') { payload.linkText = content.ctaText || 'Shop Now'; payload.link = content.ctaLink || '/shop'; if (content.discountPercent) finalConfig.discountPercent = Number(content.discountPercent); if (content.discountText) finalConfig.discountText = content.discountText; }
+        else if (secName === 'Appliances Deal') { payload.linkText = content.ctaText || 'View All'; payload.link = content.ctaLink || '/shop'; }
+        else if (secName === 'Top Express') { payload.linkText = content.ctaText || 'View All'; payload.link = content.ctaLink || '/shop'; }
+        else if (secName === 'Upgrade Banner') {
+          payload.title = content.title || 'Upgrade Banner';
+          if (content.images) finalConfig.images = content.images.split(',').map((s: string) => s.trim()).filter(Boolean);
+        }
+      }
+      createCmsSection(payload)
+        .then((res: any) => {
+          const newId = res?.data?.id || (res?.data as any)?.data?.id;
+          if (newId) setData(d => d.map(p => p.id !== pageId ? p : { ...p, sections: p.sections.map(s => s.name !== secName ? s : { ...s, items: s.items.map(i => i.id === itemId ? { ...i, id: String(newId) } : i) }) }));
+        })
+        .catch(() => toast.error('Section create failed'));
     } else {
-      // Real DB UUIDs are 36-char hex strings.
-      // don't exist in DB — must CREATE instead of UPDATE, then swap in the real ID.
-      const _isRealId = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(itemId);
-      if (!_isRealId) {
-        createCmsSection({ type: secName, pageSlug: _getPageSlug(pageId), config: { ...content, ...(mediaUrl ? { media: mediaUrl } : {}) } as any, isActive: true })
-          .then((res: any) => {
-            const newId = res?.data?.id || (res?.data as any)?.data?.id;
-            if (newId) setData(d => d.map(p => p.id !== pageId ? p : { ...p, sections: p.sections.map(s => s.name !== secName ? s : { ...s, items: s.items.map(i => i.id !== itemId ? i : { ...i, id: String(newId) }) }) }));
-          })
-          .catch(() => {});
-      } else {
-        updateCmsSection(itemId, { config: { ...content, ...(mediaUrl ? { media: mediaUrl } : {}) } as any, isActive: true }).catch(() => toast.error('Section save failed'));
-      }
+      updateCmsSection(itemId, { templateType: _templateType, dataSourceId: _dataSourceId || undefined, slotKey: _slotKey || undefined, config: finalConfig, isActive: true })
+        .then(() => {
+          setData(prev => prev.map(p => p.id !== pageId ? p : {
+            ...p,
+            sections: p.sections.map(s => s.name !== secName ? s : {
+              ...s,
+              items: s.items.map(i => i.id !== itemId ? i : { ...i, content: finalConfig })
+            })
+          }));
+          toast.success('Section saved successfully');
+        })
+        .catch(() => toast.error('Section save failed'));
     }
   };
   // Reset & re-seed all sections for a non-home page (clears duplicates)
@@ -757,79 +791,80 @@ function CMSContent() {
         const _durC = content.duration ? parseInt(content.duration) : undefined;
         createCmsBanner({ title: content.title, subtitle: content.subtitle, ...(_isVidC ? { videoUrl: _mUrlC, mediaType: 'video' } : { image: _mUrlC, mediaType: 'image' }), link: content.button_link, linkText: content.button_text, isActive: true, ...(_durC ? { duration: _durC } : {}) }).catch(() => {});
       } else {
-        const type = HP_SECTION_TYPE[secName] || secName;
-        const homepagePayload: any = { type, config: { ...content, ...(mediaUrl ? { media: mediaUrl } : {}) }, isActive: true };
+        const _backendType = SECTION_NAME_TO_TYPE[secName] || secName;
+        const _templateType = _getTemplateType(_backendType);
+        const _dataSourceId = _getDataSourceId(_backendType);
+        const _slotKey = _getSlotKey(_backendType);
+        const _payload: any = { type: _backendType, pageSlug: 'homepage', templateType: _templateType, dataSourceId: _dataSourceId || undefined, slotKey: _slotKey || undefined, config: { ...content, ...(mediaUrl ? { media: mediaUrl } : {}) }, isActive: true, name: secName };
         if (secName === 'Flash Sale') {
-          homepagePayload.title = content.title || 'Flash Sales';
-          homepagePayload.linkText = content.ctaText || 'See All';
-          homepagePayload.link = content.ctaLink || '/shop';
-        } else if (secName === 'What You Viewed') {
-          homepagePayload.title = content.title || 'What You Viewed';
+          _payload.title = content.title || 'Flash Sales';
+          _payload.linkText = content.ctaText || 'See All';
+          _payload.link = content.ctaLink || '/shop';
         } else if (secName === 'Top Selling') {
-          homepagePayload.title = content.title || 'Top Selling Items';
-          homepagePayload.linkText = content.ctaText || 'View All';
-          homepagePayload.link = content.ctaLink || '/shop';
+          _payload.title = content.title || 'Top Selling Items';
+          _payload.linkText = content.ctaText || 'View All';
+          _payload.link = content.ctaLink || '/shop';
         } else if (secName === 'Newest Arrivals') {
-          homepagePayload.title = content.title || 'Newest Arrivals';
-          homepagePayload.linkText = content.ctaText || 'View All';
-          homepagePayload.link = content.ctaLink || '/shop';
+          _payload.title = content.title || 'Newest Arrivals';
+          _payload.linkText = content.ctaText || 'View All';
+          _payload.link = content.ctaLink || '/shop';
         } else if (secName === 'Best Sellers') {
-          homepagePayload.title = content.title || 'Best Sellers';
-          homepagePayload.linkText = content.ctaText || 'View All';
-          homepagePayload.link = content.ctaLink || '/shop';
+          _payload.title = content.title || 'Best Sellers';
+          _payload.linkText = content.ctaText || 'View All';
+          _payload.link = content.ctaLink || '/shop';
         } else if (secName === 'Trending') {
-          homepagePayload.title = content.title || 'Trending Now';
-          homepagePayload.linkText = content.ctaText || 'View All';
-          homepagePayload.link = content.ctaLink || '/shop';
+          _payload.title = content.title || 'Trending Now';
+          _payload.linkText = content.ctaText || 'View All';
+          _payload.link = content.ctaLink || '/shop';
         } else if (secName === 'Limited Stock Deal') {
-          homepagePayload.title = content.title || 'Limited Stock Deal';
-          homepagePayload.linkText = content.ctaText || 'Shop Now';
-          homepagePayload.link = content.ctaLink || '/shop';
-          if (content.discountPercent) homepagePayload.config.discountPercent = Number(content.discountPercent);
-          if (content.discountText) homepagePayload.config.discountText = content.discountText;
+          _payload.title = content.title || 'Limited Stock Deal';
+          _payload.linkText = content.ctaText || 'Shop Now';
+          _payload.link = content.ctaLink || '/shop';
+          if (content.discountPercent) _payload.config.discountPercent = Number(content.discountPercent);
+          if (content.discountText) _payload.config.discountText = content.discountText;
         } else if (secName === 'Appliances Deal') {
-          homepagePayload.title = content.title || 'Appliances Deal';
-          homepagePayload.linkText = content.ctaText || 'View All';
-          homepagePayload.link = content.ctaLink || '/shop';
+          _payload.title = content.title || 'Appliances Deal';
+          _payload.linkText = content.ctaText || 'View All';
+          _payload.link = content.ctaLink || '/shop';
         } else if (secName === 'Top Express') {
-          homepagePayload.title = content.title || 'Top Express';
-          homepagePayload.linkText = content.ctaText || 'View All';
-          homepagePayload.link = content.ctaLink || '/shop';
+          _payload.title = content.title || 'Top Express';
+          _payload.linkText = content.ctaText || 'View All';
+          _payload.link = content.ctaLink || '/shop';
         } else if (secName === 'Upgrade Banner') {
-          homepagePayload.title = content.title || 'Upgrade Banner';
-          // Store images as comma-separated in media field
+          _payload.title = content.title || 'Upgrade Banner';
           if (content.images) {
-            homepagePayload.config.images = content.images.split(',').map((s: string) => s.trim()).filter(Boolean);
+            _payload.config.images = content.images.split(',').map((s: string) => s.trim()).filter(Boolean);
           }
           if (content.media) {
-            homepagePayload.config.media = content.media;
+            _payload.config.media = content.media;
           }
         }
-        createCmsHomepageSection(homepagePayload).catch(() => {});
+        createCmsSection(_payload).catch(() => toast.error('Section create failed'));
       }
     } else {
-      // Convert display name → backend type code (e.g. 'Members Banner' → 'MembersBanner')
       const _backendType = SECTION_NAME_TO_TYPE[secName] || secName;
-      // Upsert: update existing if UUID item exists — never create duplicates
+      const _templateType = _getTemplateType(_backendType);
+      const _dataSourceId = _getDataSourceId(_backendType);
+      const _slotKey = _getSlotKey(_backendType);
       const _UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       const _existing = data.find(p => p.id === pageId)?.sections.find(s => s.name === secName)?.items.find(i => _UUID_RE.test(i.id));
       if (_existing) {
-        updateCmsSection(_existing.id, { config: { ...content, ...(mediaUrl ? { media: mediaUrl } : {}) } as any, isActive: true }).catch(() => toast.error('Section save failed'));
+        updateCmsSection(_existing.id, { templateType: _templateType, dataSourceId: _dataSourceId || undefined, slotKey: _slotKey || undefined, config: { ...content, ...(mediaUrl ? { media: mediaUrl } : {}) } as any, isActive: true }).catch(() => toast.error('Section save failed'));
       } else {
-        createCmsSection({ type: _backendType, pageSlug: _getPageSlug(pageId), config: { ...content, ...(mediaUrl ? { media: mediaUrl } : {}) } as any, isActive: true }).catch(() => toast.error('Section create failed'));
+        createCmsSection({ type: _backendType, pageSlug: _getPageSlug(pageId), templateType: _templateType, dataSourceId: _dataSourceId || undefined, slotKey: _slotKey || undefined, name: secName, config: { ...content, ...(mediaUrl ? { media: mediaUrl } : {}) } as any, isActive: true }).catch(() => toast.error('Section create failed'));
       }
     }
   };
   const _apiDelete = (itemId: string, pageId: string, secName: string) => {
     if (_isHome(pageId)) {
       if (secName === 'Hero Banner') { deleteCmsBanner(itemId).catch(() => {}); }
-      else { deleteCmsHomepageSection(itemId).catch(() => {}); }
+      else { deleteCmsSection(itemId).catch(() => {}); }
     } else { deleteCmsSection(itemId).catch(() => {}); }
   };
   const _apiToggle = (itemId: string, pageId: string, secName: string, active: boolean) => {
     if (_isHome(pageId)) {
       if (secName === 'Hero Banner') { updateCmsBanner(itemId, { isActive: active }).catch(() => {}); }
-      else { updateCmsHomepageSection(itemId, { isActive: active }).catch(() => {}); }
+      else { updateCmsSection(itemId, { isActive: active }).catch(() => {}); }
     } else { updateCmsSection(itemId, { isActive: active }).catch(() => {}); }
   };
   const [view, setView] = useState<View>('pages');
@@ -1142,6 +1177,24 @@ function CMSContent() {
     toast.success('Section removed');
     if (selectedSectionName === sectionName) { setView('sections'); setSelectedSectionName(null); }
   };
+  const handleMoveSection = async (pageId: string, sectionName: string, direction: 'up' | 'down') => {
+    const page = data.find(p => p.id === pageId);
+    if (!page) return;
+    const idx = page.sections.findIndex(s => s.name === sectionName);
+    if (idx < 0) return;
+    const newIdx = direction === 'up' ? idx - 1 : idx + 1;
+    if (newIdx < 0 || newIdx >= page.sections.length) return;
+    const newSections = [...page.sections];
+    [newSections[idx], newSections[newIdx]] = [newSections[newIdx], newSections[idx]];
+    const idsInOrder = newSections.map(s => s.items[0]?.id).filter(Boolean);
+    try {
+      await moveCmsSection(page.sections[idx].items[0]?.id || '', direction, page.slug);
+      setData(d => d.map(p => p.id !== pageId ? p : { ...p, sections: newSections }));
+      toast.success('Section moved');
+    } catch {
+      toast.error('Move failed');
+    }
+  };
   const handleAddItem = (content: SectionData, mediaUrl?: string) => {
     if (!selectedPageId || !selectedSectionName) return;
     const item: SectionItem = { id: 'item_' + Date.now(), content, status: 'Active', mediaUrl };
@@ -1312,6 +1365,12 @@ function CMSContent() {
                       </div>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+                      <button onClick={e => { e.stopPropagation(); handleMoveSection(selectedPage.id, sec.name, 'up'); }} style={{ width: '28px', height: '28px', borderRadius: '7px', background: isDark ? '#1E293B' : '#F1F5F9', border: `1px solid ${border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                        <ChevronUp size={12} color={textMuted} />
+                      </button>
+                      <button onClick={e => { e.stopPropagation(); handleMoveSection(selectedPage.id, sec.name, 'down'); }} style={{ width: '28px', height: '28px', borderRadius: '7px', background: isDark ? '#1E293B' : '#F1F5F9', border: `1px solid ${border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                        <ChevronDown size={12} color={textMuted} />
+                      </button>
                       <button onClick={e => { e.stopPropagation(); if (confirm('Remove "' + sec.name + '" section?')) handleDeleteSection(selectedPage.id, sec.name); }} style={{ width: '28px', height: '28px', borderRadius: '7px', background: 'rgba(239,68,68,0.08)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
                         <Trash2 size={12} color="#ef4444" />
                       </button>
