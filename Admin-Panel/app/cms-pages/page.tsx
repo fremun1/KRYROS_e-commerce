@@ -688,7 +688,7 @@ function CMSContent() {
       TopExpress: 'TopExpress', Newsletter: 'Newsletter', ProductGrid: 'ProductGrid',
       ShopHero: 'ShopHero', ShopCategories: 'ShopCategories', ShopProductShelf: 'ShopProductShelf',
       ShopPromoBanner: 'ShopPromoBanner', MembersBanner: 'MembersBanner', ShopFilters: 'ShopFilters',
-      ProductGrid: 'ProductGrid', WholesaleHero: 'WholesaleHero', WholesaleFeatures: 'WholesaleFeatures',
+      WholesaleHero: 'WholesaleHero', WholesaleFeatures: 'WholesaleFeatures',
       GetNowHero: 'GetNowHero', GetNowFeatures: 'GetNowFeatures', PageHero: 'PageHero',
       FAQAccordion: 'FAQAccordion', ProductGallery: 'ProductGallery', RelatedProducts: 'RelatedProducts',
       Testimonials: 'Testimonials', SaleBanner: 'SaleBanner', ProductsGrid: 'ProductsGrid',
