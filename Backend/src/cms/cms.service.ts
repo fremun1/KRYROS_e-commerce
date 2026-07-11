@@ -832,9 +832,37 @@ export class CMSService {
     // Delete all existing cms_sections for this page slug
     await this.prisma.cMSSection.deleteMany({ where: { pageSlug: normalizedSlug } as any });
 
-    // Re-seed
+    // Re-seed with new dynamic fields
     for (const s of sections) {
-      await this.prisma.cMSSection.create({ data: { ...s, pageSlug: normalizedSlug } as any });
+      // Determine templateType and dataSourceId for seeded sections
+      let templateType = (s as any).templateType || 'ProductShelf';
+      let dataSourceId = (s as any).dataSourceId || null;
+      let slotKey = (s as any).slotKey || null;
+
+      // Map legacy types to new system for seeded defaults
+      if (s.type === 'HeroSlider') {
+        templateType = 'BannerSlot';
+        slotKey = 'homepage-hero-slider';
+      } else if (s.type === 'CategoriesGrid') {
+        templateType = 'CategoryGrid';
+        dataSourceId = 'homepage-categories';
+      } else if (['TopSelling', 'Trending', 'BestSellers', 'NewestArrivals', 'FlashSale'].includes(s.type)) {
+        templateType = 'ProductShelf';
+        dataSourceId = s.type === 'Trending' ? 'trending-products' : 
+                       s.type === 'NewestArrivals' ? 'new-arrivals' : 
+                       s.type === 'FlashSale' ? 'flash-sales' : 'top-selling';
+      }
+
+      await this.prisma.cMSSection.create({ 
+        data: { 
+          ...s, 
+          pageSlug: normalizedSlug,
+          templateType,
+          dataSourceId,
+          slotKey,
+          name: s.title || `${s.type} Section`
+        } as any 
+      });
     }
 
     return { success: true, message: `Reset & seeded ${sections.length} sections for page: ${slug}` };
@@ -1090,21 +1118,30 @@ export class CMSService {
       return { success: false, message: `Cannot move ${direction} from this position` };
     }
 
-    // Swap orders
+    // Swap orders using a temporary value to avoid conflicts
     const movedSection = sections[currentIndex];
     const swappedSection = sections[newIndex];
+    const tempOrder = 99999; // Temporary order value
 
+    // Step 1: Move current section to temp order
     await this.prisma.cMSSection.update({
       where: { id: movedSection.id },
-      data: { order: swappedSection.order || 0 },
+      data: { order: tempOrder },
     });
 
+    // Step 2: Move swapped section to current order
     await this.prisma.cMSSection.update({
       where: { id: swappedSection.id },
-      data: { order: movedSection.order || 0 },
+      data: { order: movedSection.order },
     });
 
-    return { success: true, section: movedSection };
+    // Step 3: Move current section to swapped order
+    await this.prisma.cMSSection.update({
+      where: { id: movedSection.id },
+      data: { order: swappedSection.order },
+    });
+
+    return { success: true, message: `Section moved ${direction} successfully` };
   }
 
   async seedFooter() {

@@ -48,6 +48,12 @@ export class CMSController {
     return this.cmsService.getSections(pageSlug);
   }
 
+  @Get('sections/manage')
+  @ApiOperation({ summary: 'List all sections for admin panel (with manage endpoint)' })
+  manageSections(@Query('pageSlug') pageSlug: string) {
+    return this.cmsService.getSections(pageSlug);
+  }
+
   @Post('sections')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
@@ -82,6 +88,15 @@ export class CMSController {
   @ApiOperation({ summary: 'Reorder sections' })
   reorderSections(@Body() data: { pageSlug: string; idsInOrder: string[] }) {
     return this.cmsService.reorderSections(data.pageSlug, data.idsInOrder);
+  }
+
+  @Post('sections/reset-seed')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Reset and seed default sections for a page' })
+  resetSeedSections(@Body() data: { slug: string }) {
+    return this.cmsService.resetAndSeedSectionsBySlug(data.slug);
   }
 
   @Post('sections/seed/:slug')
@@ -251,5 +266,64 @@ export class CMSController {
     @Query('pageSlug') pageSlug: string = 'homepage'
   ) {
     return this.cmsService.moveSectionInOrder(id, direction, pageSlug);
+  }
+
+  // ==================== HOMEPAGE SECTIONS (Legacy Support) ====================
+
+  @Get('homepage-sections/manage')
+  @ApiOperation({ summary: 'List all homepage sections (legacy support)' })
+  manageHomePageSections() {
+    return this.cmsService.getHomePageSections();
+  }
+
+  @Get('homepage-sections')
+  @ApiOperation({ summary: 'List all active homepage sections' })
+  getHomePageSections(@Query('type') type?: string) {
+    return this.cmsService.getHomePageSections(type);
+  }
+
+  @Post('homepage-sections')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Create a new homepage section' })
+  createHomePageSection(@Body() data: any) {
+    return this.cmsService.createHomePageSection(data);
+  }
+
+  @Put('homepage-sections/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Update a homepage section' })
+  updateHomePageSection(@Param('id') id: string, @Body() data: any) {
+    return this.cmsService.updateHomePageSection(id, data);
+  }
+
+  @Delete('homepage-sections/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Delete a homepage section' })
+  deleteHomePageSection(@Param('id') id: string) {
+    return this.cmsService.deleteHomePageSection(id);
+  }
+
+  @Post('homepage-sections/seed')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Seed default homepage sections' })
+  seedHomePageSections() {
+    return this.cmsService.seedHomePageSections();
+  }
+
+  @Post('homepage-sections/reset-seed')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Reset and seed default homepage sections' })
+  resetSeedHomePageSections() {
+    return this.cmsService.resetAndSeedHomePageSections();
   }
 }

@@ -41,4 +41,20 @@ export class UpdateSectionDto {
   @IsOptional()
   @IsString()
   description?: string;
+
+  // New fields for dynamic section system
+  @IsOptional()
+  @Transform(({ value }) => value?.trim())
+  @IsString()
+  templateType?: string; // ProductShelf, BannerSlot, CategoryGrid, etc.
+
+  @IsOptional()
+  @Transform(({ value }) => value?.trim())
+  @IsString()
+  dataSourceId?: string; // Rule ID: top-selling, trending-products, flash-sales, etc.
+
+  @IsOptional()
+  @Transform(({ value }) => value?.trim())
+  @IsString()
+  slotKey?: string; // For banners: homepage-hero-slider, homepage-mid-page, etc.
 }

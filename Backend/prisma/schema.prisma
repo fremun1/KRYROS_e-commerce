@@ -749,8 +749,15 @@ model CMSSection {
   pageSlug        String?
   textColor       String?
   dedicatedPageSlug String?
+  // New fields for dynamic section system
+  templateType    String?  @default("ProductShelf") // ProductShelf, BannerSlot, CategoryGrid, etc.
+  dataSourceId    String?  // Rule ID: top-selling, trending-products, flash-sales, etc.
+  slotKey         String?  // For banners: homepage-hero-slider, homepage-mid-page, etc.
+  name            String?  // Internal name for admin use
 
   @@index([pageSlug])
+  @@index([templateType])
+  @@index([dataSourceId])
   @@map("cms_sections")
 }
 
