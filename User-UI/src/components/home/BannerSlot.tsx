@@ -13,7 +13,8 @@ import { API_BASE } from "@/lib/api";
 interface Banner {
   id: string;
   title: string;
-  imageUrl: string;
+  imageUrl: string; // The URL of the banner image
+  image?: string; // Backend might provide 'image' instead of 'imageUrl'
   link?: string;
   alt?: string;
   isActive: boolean;
@@ -108,14 +109,14 @@ export default function BannerSlot({
           {currentBanner.link ? (
             <a href={currentBanner.link} className="block">
               <img
-                src={currentBanner.imageUrl}
+                src={currentBanner.imageUrl || currentBanner.image}
                 alt={currentBanner.alt || currentBanner.title}
                 className="w-full h-auto object-cover"
               />
             </a>
           ) : (
             <img
-              src={currentBanner.imageUrl}
+              src={currentBanner.imageUrl || currentBanner.image}
               alt={currentBanner.alt || currentBanner.title}
               className="w-full h-auto object-cover"
             />

@@ -1,7 +1,7 @@
 import { useState, useEffect, type ReactNode } from "react";
 import { ChevronRight } from "lucide-react";
 import { API_BASE } from "@/lib/api";
-import type { Product } from "@/lib/api";
+import { type Product, normalizeProduct } from "@/lib/api";
 import UnifiedProductCard from "@/components/UnifiedProductCard";
 
 /**
@@ -78,7 +78,7 @@ export default function ProductShelf({
         
         // Handle both direct array and { data: [] } response formats
         const productList = Array.isArray(data) ? data : (data.data || []);
-        setProducts(productList.slice(0, limit));
+        setProducts(productList.map(normalizeProduct).slice(0, limit));
       } catch (err) {
         console.error(`Error fetching products for data source '${dataSourceId}':`, err);
         setError(err instanceof Error ? err.message : 'Failed to load products');
