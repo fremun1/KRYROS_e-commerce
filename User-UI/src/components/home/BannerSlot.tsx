@@ -48,7 +48,9 @@ export default function BannerSlot({
       try {
         // Fetch banners by tag (which we're using as slotKey in the current backend)
         const url = new URL(`${API_BASE}/api/cms/banners`);
-        url.searchParams.set('tag', slotKey);
+        if (slotKey) {
+          url.searchParams.set('tag', slotKey);
+        }
 
         const response = await fetch(url.toString());
 

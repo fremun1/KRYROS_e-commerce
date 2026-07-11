@@ -16,6 +16,7 @@ interface Category {
   name: string;
   slug: string;
   image?: string;
+  imageUrl?: string;
   icon?: string;
   productCount?: number;
 }
@@ -123,9 +124,9 @@ export default function CategoryGridShelf({
               <Link key={category.id} href={`/shop?category=${category.slug}`}>
                 <div className="group cursor-pointer">
                   <div className="relative w-full bg-muted rounded-2xl overflow-hidden mb-2">
-                    {category.image ? (
+                    {(category.image || category.imageUrl) ? (
                       <img
-                        src={category.image}
+                        src={category.image || category.imageUrl}
                         alt={category.name}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />

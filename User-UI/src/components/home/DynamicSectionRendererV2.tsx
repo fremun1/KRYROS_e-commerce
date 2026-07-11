@@ -15,6 +15,7 @@ import { useMemo } from 'react';
 import ProductShelf from './ProductShelf';
 import BannerSlot from './BannerSlot';
 import CategoryGridShelf from './CategoryGridShelf';
+import BrandsSection from './BrandsSection';
 
 interface CMSSection {
   id: string;
@@ -90,6 +91,8 @@ export default function DynamicSectionRendererV2({
           // ─────────────────────────────────────────────────────────────────
           case 'CategoryGrid':
           case 'CategoryGridShelf':
+          case 'CategoriesGrid':
+          case 'Categories':
             return (
               <CategoryGridShelf
                 key={section.id}
@@ -179,11 +182,14 @@ export default function DynamicSectionRendererV2({
             return (
               <BannerSlot
                 key={section.id}
-                slotKey="homepage-hero-slider"
+                slotKey={section.slotKey || "homepage-hero-slider"}
                 autoRotate={true}
                 rotationInterval={4000}
               />
             );
+
+          case 'Brands':
+            return <BrandsSection key={section.id} />;
 
           case 'PageHero':
             return (
