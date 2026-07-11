@@ -16,6 +16,7 @@ import ProductShelf from './ProductShelf';
 import BannerSlot from './BannerSlot';
 import CategoryGridShelf from './CategoryGridShelf';
 import BrandsSection from './BrandsSection';
+import CategorySection from './CategorySection';
 
 interface CMSSection {
   id: string;
@@ -320,23 +321,15 @@ export default function DynamicSectionRendererV2({
 
           case 'ShopHero':
             return (
-              <div key={section.id} className="w-full py-12 px-4 text-center" style={{ background: section.config?.bgColor || 'linear-gradient(135deg, #0D9488 0%, #0a7c72 100%)' }}>
-                <h2 className="text-3xl font-black text-white mb-2">{section.title || section.config?.tagline || 'Shop the Best Deals'}</h2>
-                {section.subtitle && <p className="text-white/90 mb-4">{section.subtitle}</p>}
-                {(section.config?.ctaText || section.config?.ctaLink) && (
-                  <a href={section.config?.ctaLink || '/shop'} className="inline-block px-6 py-2 bg-white text-gray-900 rounded-xl text-sm font-bold">
-                    {section.config?.ctaText || 'Shop Now'}
-                  </a>
-                )}
-              </div>
+              <BannerSlot
+                key={section.id}
+                slotKey={section.slotKey || section.config?.slotKey || "shop-hero-banner"}
+                autoRotate={true}
+              />
             );
 
           case 'ShopCategories':
-            return (
-              <div key={section.id} className="max-w-5xl mx-auto px-4 py-8">
-                <p className="text-center text-sm text-muted-foreground">Categories loading…</p>
-              </div>
-            );
+            return <CategorySection key={section.id} />;
 
           case 'ShopProductShelf':
             return (
@@ -357,38 +350,20 @@ export default function DynamicSectionRendererV2({
 
           case 'ShopPromoBanner':
             return (
-              <div key={section.id} className="max-w-5xl mx-auto px-4 py-6">
-                <div
-                  className="w-full rounded-2xl p-6 md:p-8 text-center text-white"
-                  style={{ background: section.config?.bgColor || 'linear-gradient(135deg, #0f4c35, #1a7a52)' }}
-                >
-                  {section.config?.tag && <span className="inline-block px-3 py-1 rounded-full bg-white/20 text-xs font-bold mb-3">{section.config.tag}</span>}
-                  <h3 className="text-xl font-black mb-2">{section.title || section.config?.title}</h3>
-                  {section.subtitle && <p className="text-sm opacity-90 mb-4">{section.subtitle}</p>}
-                  {(section.config?.ctaText || section.config?.ctaLink) && (
-                    <a href={section.config?.ctaLink || '#'} className="inline-block px-6 py-2 bg-white text-gray-900 rounded-xl text-sm font-bold">
-                      {section.config?.ctaText || 'Shop Now'}
-                    </a>
-                  )}
-                </div>
-              </div>
+              <BannerSlot
+                key={section.id}
+                slotKey={section.slotKey || section.config?.slotKey || "shop-promo-banner"}
+                autoRotate={true}
+              />
             );
 
           case 'MembersBanner':
             return (
-              <div key={section.id} className="max-w-5xl mx-auto px-4 py-6">
-                <div className="bg-card border rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-4">
-                  <div>
-                    <h3 className="text-lg font-black">{section.title || section.config?.title || 'Members Get More'}</h3>
-                    {section.subtitle && <p className="text-sm text-muted-foreground">{section.subtitle}</p>}
-                  </div>
-                  {(section.config?.ctaText || section.config?.ctaLink) && (
-                    <a href={section.config?.ctaLink || '/register'} className="px-5 py-2 bg-primary text-white rounded-xl text-sm font-bold">
-                      {section.config?.ctaText || 'Join Now'}
-                    </a>
-                  )}
-                </div>
-              </div>
+              <BannerSlot
+                key={section.id}
+                slotKey={section.slotKey || section.config?.slotKey || "shop-members-banner"}
+                autoRotate={true}
+              />
             );
 
           case 'ShopFilters':

@@ -38,6 +38,9 @@ interface ProductShelfProps {
   
   // Optional custom loading state
   loadingCount?: number;
+  
+  // Optional extra query params
+  params?: Record<string, any>;
 }
 
 export default function ProductShelf({
@@ -51,7 +54,8 @@ export default function ProductShelf({
   viewAllText = 'See All',
   accentColor,
   topBanner,
-  loadingCount = 8
+  loadingCount = 8,
+  params = {}
 }: ProductShelfProps) {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -67,6 +71,13 @@ export default function ProductShelf({
         const url = new URL(`${API_BASE}/api/cms/sections/products-by-source`);
         url.searchParams.set('dataSourceId', dataSourceId);
         url.searchParams.set('limit', String(limit));
+        
+        // Add extra params if provided
+        Object.entries(params).forEach(([key, value]) => {
+          if (value !== undefined && value !== null) {
+            url.searchParams.set(key, String(value));
+          }
+        });
 
         const response = await fetch(url.toString());
 
@@ -89,7 +100,7 @@ export default function ProductShelf({
     };
 
     fetchProducts();
-  }, [dataSourceId, limit]);
+  }, [dataSourceId, limit, JSON.stringify(params)]);
 
   // Don't render if no products and not loading
   if (!loading && products.length === 0) {
