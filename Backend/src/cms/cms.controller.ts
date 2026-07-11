@@ -34,6 +34,12 @@ export class CMSController {
     return this.cmsService.listPages();
   }
 
+  @Post('pages/seed-all')
+  @ApiOperation({ summary: 'Seed all default CMS pages' })
+  seedAllPages() {
+    return this.cmsService.seedAllPages();
+  }
+
   @Get('pages/:slug')
   @ApiOperation({ summary: 'Get page by slug' })
   getPageBySlug(@Param('slug') slug: string) {

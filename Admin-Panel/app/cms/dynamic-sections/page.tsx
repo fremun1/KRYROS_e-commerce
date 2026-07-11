@@ -16,7 +16,8 @@ import {
   deleteCmsSection, 
   reorderCmsSections,
   getSectionRulesMetadataGrouped,
-  moveCmsSection
+  moveCmsSection,
+  getCmsPages
 } from '@/lib/api';
 
 // Reusable template icons mapping
@@ -30,12 +31,7 @@ const TEMPLATE_ICONS: Record<string, any> = {
   Custom: Info
 };
 
-const PAGES = [
-  { value: 'homepage', label: 'Home Page' },
-  { value: 'shop', label: 'Shop Page' },
-  { value: 'get-now', label: 'Get Now Page' },
-  { value: 'wholesale', label: 'Wholesale Page' },
-];
+
 
 export default function DynamicSectionsPage() {
   const { theme } = useTheme();
@@ -47,7 +43,8 @@ export default function DynamicSectionsPage() {
   
   const [sections, setSections] = useState<any[]>([]);
   const [rulesGrouped, setRulesGrouped] = useState<Record<string, any[]>>({});
-  const [selectedPage, setSelectedPage] = useState('homepage');
+  const [pages, setPages] = useState<{ value: string; label: string }[]>([]);
+  const [selectedPage, setSelectedPage] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -56,9 +53,29 @@ export default function DynamicSectionsPage() {
   const [editingSection, setEditingSection] = useState<any>(null);
 
   useEffect(() => {
-    fetchSections();
-    fetchRules();
+    fetchPages();
+  }, []);
+
+  useEffect(() => {
+    if (selectedPage) {
+      fetchSections();
+      fetchRules();
+    }
   }, [selectedPage]);
+
+  const fetchPages = async () => {
+    try {
+      const response = await getCmsPages();
+      const list = Array.isArray(response.data) ? response.data : (response.data as any)?.data || [];
+      const mapped = list.map((p: any) => ({ value: p.slug, label: p.title || p.slug }));
+      setPages(mapped);
+      if (mapped.length > 0 && !selectedPage) {
+        setSelectedPage(mapped[0].value);
+      }
+    } catch {
+      toast.error('Failed to load pages');
+    }
+  };
 
   const fetchSections = async () => {
     try {
@@ -164,21 +181,21 @@ export default function DynamicSectionsPage() {
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between bg-card p-4 rounded-xl border">
           <div className="flex items-center gap-3">
             <span className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Page:</span>
-            <div className="flex bg-muted p-1 rounded-lg">
-              {PAGES.map(page => (
-                <button
-                  key={page.value}
-                  onClick={() => setSelectedPage(page.value)}
-                  className={`px-4 py-1.5 rounded-md text-sm font-medium transition ${
-                    selectedPage === page.value 
-                    ? 'bg-background shadow-sm text-foreground' 
-                    : 'text-muted-foreground hover:text-foreground'
-                  }`}
-                >
-                  {page.label}
-                </button>
-              ))}
-            </div>
+             <div className="flex bg-muted p-1 rounded-lg">
+               {pages.map(page => (
+                 <button
+                   key={page.value}
+                   onClick={() => setSelectedPage(page.value)}
+                   className={`px-4 py-1.5 rounded-md text-sm font-medium transition ${
+                     selectedPage === page.value 
+                     ? 'bg-background shadow-sm text-foreground' 
+                     : 'text-muted-foreground hover:text-foreground'
+                   }`}
+                 >
+                   {page.label}
+                 </button>
+               ))}
+             </div>
           </div>
           <button
             onClick={handleAddSection}

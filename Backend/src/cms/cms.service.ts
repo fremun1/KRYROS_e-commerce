@@ -680,11 +680,14 @@ export class CMSService {
 
     // Auto-seed if no sections exist for this specific page slug (same pattern as homepage)
     if (normalizedSlug && sections.length === 0) {
-      await this.resetAndSeedSectionsBySlug(normalizedSlug);
-      sections = await this.prisma.cMSSection.findMany({
-        where: { pageSlug: normalizedSlug, isActive: true },
-        orderBy: { order: 'asc' },
-      });
+      const pageExists = await this.prisma.cMSPage.findUnique({ where: { slug: normalizedSlug } });
+      if (pageExists) {
+        await this.resetAndSeedSectionsBySlug(normalizedSlug);
+        sections = await this.prisma.cMSSection.findMany({
+          where: { pageSlug: normalizedSlug, isActive: true },
+          orderBy: { order: 'asc' },
+        });
+      }
     }
 
     return sections;
@@ -714,16 +717,19 @@ export class CMSService {
     const pages = [
       { title: 'Home',              slug: 'home',               isActive: true },
       { title: 'Shop',              slug: 'shop',               isActive: true },
-      { title: 'About Us',          slug: 'about-us',           isActive: true },
-      { title: 'Contact Us',        slug: 'contact-us',         isActive: true },
+      { title: 'About Us',          slug: 'about',              isActive: true },
+      { title: 'Contact Us',        slug: 'contact',            isActive: true },
       { title: 'FAQ',               slug: 'faq',                isActive: true },
       { title: 'How It Works',      slug: 'how-it-works',       isActive: true },
       { title: 'Wholesale',         slug: 'wholesale',          isActive: true },
       { title: 'Get Now (BNPL)',     slug: 'get-now',            isActive: true },
-      { title: 'Terms & Conditions',slug: 'terms-conditions',   isActive: true },
-      { title: 'Privacy Policy',    slug: 'privacy-policy',     isActive: true },
-      { title: 'Refund Policy',     slug: 'refund-policy',      isActive: true },
-      { title: 'Shipping Policy',   slug: 'shipping-policy',    isActive: true },
+      { title: 'Terms & Conditions',slug: 'terms',              isActive: true },
+      { title: 'Privacy Policy',    slug: 'privacy',            isActive: true },
+      { title: 'Refund Policy',     slug: 'refund',             isActive: true },
+      { title: 'Shipping Policy',   slug: 'shipping',           isActive: true },
+      { title: 'Returns Policy',    slug: 'returns',            isActive: true },
+      { title: 'Security',          slug: 'security',           isActive: true },
+      { title: 'Help Center',       slug: 'help',               isActive: true },
       { title: 'Cart',              slug: 'cart',               isActive: true },
       { title: 'Checkout',          slug: 'checkout',           isActive: true },
       { title: 'Track Order',       slug: 'track-order',        isActive: true },
@@ -776,7 +782,7 @@ export class CMSService {
         { type: 'PageHero',         title: 'FAQ Hero',          subtitle: 'Frequently Asked Questions', order: 1, isActive: true, config: {} },
         { type: 'FAQAccordion',     title: 'FAQ Accordion',     subtitle: 'Questions & answers',        order: 2, isActive: true, config: {} },
       ],
-      'contact-us': [
+      'contact': [
         { type: 'PageHero',         title: 'Contact Hero',      subtitle: 'Get in touch with us', order: 1, isActive: true, config: {} },
         { type: 'ContactForm',      title: 'Contact Form',      subtitle: 'Send us a message',    order: 2, isActive: true, config: {} },
       ],
@@ -784,7 +790,7 @@ export class CMSService {
         { type: 'GetNowHero',       title: 'Get Now Hero',      subtitle: 'Buy Now, Pay Later',   order: 1, isActive: true, config: {} },
         { type: 'GetNowFeatures',   title: 'Get Now Features',  subtitle: 'BNPL benefits',        order: 2, isActive: true, config: {} },
       ],
-      'about-us': [
+      'about': [
         { type: 'PageHero',         title: 'About Hero',        subtitle: 'Our story',            order: 1, isActive: true, config: {} },
         { type: 'PageContent',      title: 'About Content',     subtitle: 'Who we are',           order: 2, isActive: true, config: {} },
       ],
@@ -792,11 +798,14 @@ export class CMSService {
         { type: 'PageHero',         title: 'How It Works Hero', subtitle: 'Simple steps',         order: 1, isActive: true, config: {} },
         { type: 'PageContent',      title: 'How It Works',      subtitle: 'Step by step guide',   order: 2, isActive: true, config: {} },
       ],
-      'terms-conditions':  [{ type: 'PageContent', title: 'Terms & Conditions', order: 1, isActive: true, config: {} }],
-      'privacy-policy':    [{ type: 'PageContent', title: 'Privacy Policy',     order: 1, isActive: true, config: {} }],
-      'refund-policy':     [{ type: 'PageContent', title: 'Refund Policy',      order: 1, isActive: true, config: {} }],
-      'shipping-policy':   [{ type: 'PageContent', title: 'Shipping Policy',    order: 1, isActive: true, config: {} }],
+      'terms':  [{ type: 'PageContent', title: 'Terms & Conditions', order: 1, isActive: true, config: {} }],
+      'privacy':    [{ type: 'PageContent', title: 'Privacy Policy',     order: 1, isActive: true, config: {} }],
+      'refund':     [{ type: 'PageContent', title: 'Refund Policy',      order: 1, isActive: true, config: {} }],
+      'shipping':   [{ type: 'PageContent', title: 'Shipping Policy',    order: 1, isActive: true, config: {} }],
+      'returns':    [{ type: 'PageContent', title: 'Returns Policy',     order: 1, isActive: true, config: {} }],
+      'security':   [{ type: 'PageContent', title: 'Security',           order: 1, isActive: true, config: {} }],
       'track-order':       [{ type: 'PageContent', title: 'Track Order',        order: 1, isActive: true, config: {} }],
+      'help':               [{ type: 'PageContent', title: 'Help Center',        order: 1, isActive: true, config: {} }],
       cart:                [{ type: 'PageContent', title: 'Cart',               order: 1, isActive: true, config: {} }],
       checkout:            [{ type: 'PageContent', title: 'Checkout',           order: 1, isActive: true, config: {} }],
       account:             [{ type: 'PageContent', title: 'My Account',         order: 1, isActive: true, config: {} }],

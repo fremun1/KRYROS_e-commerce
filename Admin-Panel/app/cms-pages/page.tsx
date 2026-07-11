@@ -18,6 +18,7 @@ import {
   updateCmsSection, createCmsSection, deleteCmsSection,
   getCmsSiteConfigs, upsertCmsSiteConfig,
   getBrands, resetSeedCmsSections,
+  createCmsPage, updateCmsPage, deleteCmsPage, seedAllCmsPages
 } from '@/lib/api';
 
 const SECTION_FIELDS: Record<string, Array<{ key: string; label: string; type: string; options?: string[]; icon?: string }>> = {
@@ -408,75 +409,7 @@ function sectionHasMedia(name: string): boolean {
   return fields.some(f => f.type === 'file');
 }
 
-const INITIAL_PAGES: CmsPage[] = [
-  { id: 'PG001', title: 'Home', slug: '/', lastEdited: '2025-05-25', status: 'Published',
-    sections: [
-      { name: 'Hero Banner', items: [{ id: 'i1a', content: { title: 'Welcome to KRYROS', subtitle: 'Premium Tech Products in Zambia', description: 'Discover the latest smartphones, laptops and accessories.', button_text: 'Shop Now', button_link: '/products', media: '' }, status: 'Active' }] },
-      { name: 'Featured Products', items: [{ id: 'i2a', content: { heading: 'Featured Products', subheading: 'Hand-picked just for you', product_limit: '8', sort_by: 'Featured' }, status: 'Active' }] },
-      { name: 'Promotions', items: [{ id: 'i3a', content: { heading: 'Special Offers', promo_title: 'Flash Sale', promo_text: 'Up to 40% off selected items', button_text: 'See All Deals', button_link: '/promotions', media: '' }, status: 'Active' }] },
-      { name: 'Newsletter', items: [{ id: 'i4a', content: { heading: 'Stay Updated', subheading: 'Get deals and new arrivals straight to your inbox', placeholder: 'Enter your email', button_text: 'Subscribe' }, status: 'Active' }] },
-    ],
-  },
-  { id: 'PG002', title: 'About Us', slug: '/about', lastEdited: '2025-04-10', status: 'Published',
-    sections: [
-      { name: 'Company Story', items: [{ id: 'i5a', content: { heading: 'Our Story', content: 'KRYROS Mobile Tech was founded in 2020 with a mission to make premium technology accessible to everyone in Zambia.', button_text: 'Learn More', button_link: '/about', media: '' }, status: 'Active' }] },
-      { name: 'Team', items: [{ id: 'i6a', content: { heading: 'Meet Our Team', subheading: 'The people behind KRYROS', media: '' }, status: 'Active' }] },
-      { name: 'Mission & Vision', items: [{ id: 'i7a', content: { mission_title: 'Our Mission', mission_text: 'To provide the best tech products and services at fair prices.', vision_title: 'Our Vision', vision_text: 'To be the leading tech retailer in Southern Africa.', media: '' }, status: 'Active' }] },
-    ],
-  },
-  { id: 'PG003', title: 'Contact', slug: '/contact', lastEdited: '2025-03-20', status: 'Published',
-    sections: [
-      { name: 'Contact Form', items: [{ id: 'i8a', content: { heading: 'Get in Touch', subheading: "We'd love to hear from you", email: process.env.NEXT_PUBLIC_STORE_EMAIL || 'info@kryros.com', phone: process.env.NEXT_PUBLIC_STORE_PHONE || '+260 97X XXX XXX', address: 'Lusaka, Zambia' }, status: 'Active' }] },
-      { name: 'Location Map', items: [{ id: 'i9a', content: { heading: 'Find Us', address: 'Lusaka, Zambia', map_embed_url: '' }, status: 'Active' }] },
-      { name: 'Business Hours', items: [{ id: 'i10a', content: { heading: 'Business Hours', mon_fri: '08:00 AM – 06:00 PM', saturday: '09:00 AM – 04:00 PM', sunday: 'Closed' }, status: 'Active' }] },
-    ],
-  },
-  { id: 'PG004', title: 'Terms & Conditions', slug: '/terms', lastEdited: '2025-01-15', status: 'Published',
-    sections: [{ name: 'Terms Text', items: [{ id: 'i11a', content: { heading: 'Terms & Conditions', content: 'By using our website you agree to these terms...', last_updated: '2025-01-15' }, status: 'Active' }] }],
-  },
-  { id: 'PG005', title: 'Privacy Policy', slug: '/privacy', lastEdited: '2025-01-15', status: 'Published',
-    sections: [{ name: 'Policy Text', items: [{ id: 'i12a', content: { heading: 'Privacy Policy', content: 'We respect your privacy and are committed to protecting your data...', last_updated: '2025-01-15' }, status: 'Active' }] }],
-  },
-  { id: 'PG006', title: 'Flash Sale', slug: 'flash-sale', lastEdited: '2025-05-20', status: 'Draft',
-    sections: [
-      { name: 'Sale Banner', items: [{ id: 'i13a', content: { title: 'Flash Sale', subtitle: 'Limited Time Only', discount_text: '50% OFF', button_text: 'Shop Now', button_link: '/products', media: '' }, status: 'Active' }] },
-      { name: 'Products Grid', items: [{ id: 'i14a', content: { heading: 'Sale Items', product_limit: '12', filter_by: 'Sale Items', button_text: 'View All Sale Items', button_link: '/products?sale=true' }, status: 'Active' }] },
-    ],
-  },
 
-  { id: 'PG007', title: 'Shop', slug: 'shop', lastEdited: '2025-05-25', status: 'Published',
-    sections: [
-      { name: 'Members Banner', items: [{ id: 'i15a', content: { heading: 'Members Get More', subtitle: 'Sign up for exclusive deals and early access', button_text: 'Join Now', button_link: '/register', media: '' }, status: 'Active' }] },
-      { name: 'Shop Filters', items: [{ id: 'i16a', content: { heading: 'Browse By Category', filter_categories: 'Phones, Laptops, Accessories, Tablets' }, status: 'Active' }] },
-      { name: 'Product Grid', items: [{ id: 'i17a', content: { heading: 'All Products', product_limit: '24', filter_by: 'All Products', button_text: 'Load More', button_link: '/shop' }, status: 'Active' }] },
-    ],
-  },
-  { id: 'PG008', title: 'Wholesale', slug: 'wholesale', lastEdited: '2025-05-25', status: 'Published',
-    sections: [
-      { name: 'Wholesale Hero', items: [{ id: 'i18a', content: { heading: 'Wholesale Pricing for Your Business', subtitle: 'Buy in bulk and save', description: 'Partner with KRYROS for competitive wholesale pricing on all tech products.', button_text: 'Apply Now', button_link: '/wholesale/apply', media: '' }, status: 'Active' }] },
-      { name: 'Wholesale Features', items: [{ id: 'i19a', content: { heading: 'Why Choose KRYROS Wholesale', feature_1_title: 'Competitive Pricing', feature_1_text: 'Best rates for bulk orders.', feature_2_title: 'Fast Delivery', feature_2_text: 'Reliable logistics across Zambia.', feature_3_title: 'Dedicated Support', feature_3_text: 'Your own account manager.' }, status: 'Active' }] },
-    ],
-  },
-  { id: 'PG009', title: 'Get Now (BNPL)', slug: 'get-now', lastEdited: '2025-05-25', status: 'Published',
-    sections: [
-      { name: 'Get Now Hero', items: [{ id: 'i20a', content: { heading: 'Get It Now, Pay Later', subtitle: 'Buy Now Pay Later with KRYROS', description: 'Get your favourite devices today and pay in easy instalments.', button_text: 'Apply Now', button_link: '/get-now/apply', media: '' }, status: 'Active' }] },
-      { name: 'Get Now Features', items: [{ id: 'i21a', content: { heading: 'How It Works', feature_1_title: 'Choose Your Device', feature_1_text: 'Pick any product in our store.', feature_2_title: 'Apply in Minutes', feature_2_text: 'Quick and easy application process.', feature_3_title: 'Pay in Instalments', feature_3_text: 'Flexible payment plans to suit your budget.' }, status: 'Active' }] },
-    ],
-  },
-  { id: 'PG010', title: 'FAQ', slug: 'faq', lastEdited: '2025-05-25', status: 'Published',
-    sections: [
-      { name: 'Page Hero', items: [{ id: 'i22a', content: { heading: 'Frequently Asked Questions', subtitle: 'Find answers to common questions about KRYROS', media: '' }, status: 'Active' }] },
-      { name: 'FAQ Accordion', items: [{ id: 'i23a', content: { heading: 'General Questions', question: 'How do I place an order?', answer: 'You can place an order through our website or visit our store in Lusaka.' }, status: 'Active' }] },
-    ],
-  },
-  { id: 'PG011', title: 'Product Detail', slug: 'product-detail', lastEdited: '2025-05-25', status: 'Published',
-    sections: [
-      { name: 'Product Gallery', items: [{ id: 'i24a', content: { heading: 'Product Images', layout: 'Carousel' }, status: 'Active' }] },
-      { name: 'Related Products', items: [{ id: 'i25a', content: { heading: 'You May Also Like', product_limit: '4', sort_by: 'Same Category' }, status: 'Active' }] },
-      { name: 'Testimonials', items: [{ id: 'i26a', content: { heading: 'Customer Reviews', subheading: 'What our customers say', customer_name: 'Sample Customer', review: 'Great product and fast delivery!', rating: '5', media: '' }, status: 'Active' }] },
-    ],
-  },
-];
 
 const EMPTY_PAGE_FORM = { title: '', slug: '', status: 'Published' };
 const ADD_SECTION_NAMES = ['Hero Banner','Promo Banner','Promo Banners','Promotions','Newsletter','Company Story','Team','Mission & Vision','Contact Form','Location Map','Business Hours','Terms Text','Policy Text','Products Grid','Sale Banner','Category Promo Banners','Upgrade Banner','Shop Hero','Shop Categories','Shop Product Shelf','Shop Promo Banner','Members Banner','Shop Filters','Product Grid','Wholesale Hero','Wholesale Features','Get Now Hero','Get Now Features','Page Hero','FAQ Accordion','Product Gallery','Related Products','Testimonials','Flash Sale','Trust Badges','Top Selling','Newest Arrivals','Best Sellers','Trending','Limited Stock Deal','Appliances Deal','Top Express','Custom Section'];
@@ -549,7 +482,7 @@ function CMSContent() {
   const surface = isDark ? '#101826' : '#F1F5F9';
   const accent = '#1FA89A';
 
-  const [data, setData] = useState<CmsPage[]>(INITIAL_PAGES);
+  const [data, setData] = useState<CmsPage[]>([]);
   type View = 'pages' | 'sections' | 'items' | 'trusted-brands' | 'brand-banners' | 'wholesale-banners' | 'get-now-banners';
 
 
@@ -651,13 +584,7 @@ function CMSContent() {
           return { id: p.id, title: p.title || p.slug, slug: p.slug, lastEdited: p.updatedAt ? String(p.updatedAt).split('T')[0] : '', status: p.status || 'Published', sections: secs };
         }));
         if (cmsPages.length > 0) {
-          setData(cmsPages.map(apiPage => {
-            // Backend slugs have no leading slash (e.g. 'shop') — normalize both sides
-            const _norm = (s: string) => s.replace(/^\//, '');
-            const fallback = INITIAL_PAGES.find(p => _norm(p.slug) === _norm(apiPage.slug));
-            if (!fallback || apiPage.sections.length > 0) return apiPage;
-            return { ...apiPage, sections: fallback.sections };
-          }));
+          setData(cmsPages);
         }
         // Load trusted brands from site-config; auto-seed from brands API on first run
         let configs: any[] = [];
@@ -771,7 +698,7 @@ function CMSContent() {
           .catch(() => toast.error('Section save failed'));
       }
     } else {
-      // Real DB UUIDs are 36-char hex strings. INITIAL_PAGES fallback items (i1a, i15a etc.)
+      // Real DB UUIDs are 36-char hex strings.
       // don't exist in DB — must CREATE instead of UPDATE, then swap in the real ID.
       const _isRealId = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(itemId);
       if (!_isRealId) {
@@ -1156,21 +1083,51 @@ function CMSContent() {
     setTbDeleteIdx(null);
   };
 
-  const handleAddPage = () => {
+  const handleAddPage = async () => {
     if (!pageForm.title.trim()) { toast.error('Title required'); return; }
-    const p: CmsPage = { id: 'PG' + String(Date.now()).slice(-4), ...pageForm, sections: [], lastEdited: new Date().toISOString().split('T')[0] };
-    setData(d => [...d, p]); toast.success('Page added'); setAddPageOpen(false);
+    try {
+      const res = await createCmsPage({ title: pageForm.title, slug: pageForm.slug, status: pageForm.status });
+      const newPage = { id: res.data.id, ...pageForm, sections: [], lastEdited: new Date().toISOString().split('T')[0] };
+      setData(d => [...d, newPage]);
+      toast.success('Page added');
+      setAddPageOpen(false);
+    } catch {
+      toast.error('Failed to add page');
+    }
   };
-  const handleEditPage = () => {
+  const handleEditPage = async () => {
     if (!editPage) return;
-    setData(d => d.map(p => p.id === editPage.id ? { ...p, ...pageForm, lastEdited: new Date().toISOString().split('T')[0] } : p));
-    toast.success('Page updated'); setEditPage(null);
+    try {
+      await updateCmsPage(editPage.id, { title: pageForm.title, slug: pageForm.slug, status: pageForm.status });
+      setData(d => d.map(p => p.id === editPage.id ? { ...p, ...pageForm, lastEdited: new Date().toISOString().split('T')[0] } : p));
+      toast.success('Page updated');
+      setEditPage(null);
+    } catch {
+      toast.error('Failed to update page');
+    }
   };
-  const handleDeletePage = () => {
+  const handleDeletePage = async () => {
     if (!deletePage) return;
-    setData(d => d.filter(p => p.id !== deletePage.id));
-    toast.success('Page deleted'); setDeletePage(null);
-    if (selectedPageId === deletePage.id) { setView('pages'); setSelectedPageId(null); }
+    try {
+      await deleteCmsPage(deletePage.id);
+      setData(d => d.filter(p => p.id !== deletePage.id));
+      toast.success('Page deleted');
+      setDeletePage(null);
+      if (selectedPageId === deletePage.id) { setView('pages'); setSelectedPageId(null); }
+    } catch {
+      toast.error('Failed to delete page');
+    }
+  };
+  const handleSeedAllPages = async () => {
+    try {
+      await seedAllCmsPages();
+      toast.success('Default pages seeded');
+      const pagesRes = await getCmsPages();
+      const apiPages = Array.isArray(pagesRes.data) ? pagesRes.data : (pagesRes.data as any)?.data || [];
+      setData(apiPages);
+    } catch {
+      toast.error('Failed to seed pages');
+    }
   };
   const handleAddSection = () => {
     if (!addSectionPage) return;
@@ -1250,6 +1207,9 @@ function CMSContent() {
       {view === 'pages' && (
         <div>
           <PageHeader title="CMS & Pages" subtitle="Manage your website pages and content" icon={Layout} onAdd={() => { setPageForm({ ...EMPTY_PAGE_FORM }); setAddPageOpen(true); }} addLabel="New Page" />
+          <button onClick={handleSeedAllPages} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: isDark ? '#1E293B' : '#F1F5F9', border: `1px solid ${border}`, borderRadius: '9px', color: textMuted, fontSize: '13px', fontWeight: 600, padding: '9px 14px', cursor: 'pointer', fontFamily: 'var(--font-inter)' }}>
+            <RefreshCw size={13} /> Seed Default Pages
+          </button>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '14px', marginBottom: '24px' }} className="sg">
             {[{ label: 'Total Pages', val: String(data.length), color: accent },

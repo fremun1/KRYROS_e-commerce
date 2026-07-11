@@ -185,12 +185,312 @@ export default function DynamicSectionRendererV2({
               />
             );
 
+          case 'PageHero':
+            return (
+              <div key={section.id} className="relative w-full h-64 md:h-80 flex items-center justify-center text-center px-4 overflow-hidden">
+                {(section.config?.backgroundImage || section.config?.image) && (
+                  <img src={section.config?.backgroundImage || section.config?.image} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                )}
+                <div className="absolute inset-0 bg-black/50" />
+                <div className="relative z-10 text-white">
+                  <h1 className="text-3xl font-black mb-2">{section.title || section.config?.heading || 'Welcome'}</h1>
+                  {section.subtitle && <p className="text-lg opacity-90">{section.subtitle}</p>}
+                </div>
+              </div>
+            );
+
+          case 'PageContent':
+            return (
+              <div key={section.id} className="max-w-3xl mx-auto px-4 py-8">
+                <h2 className="text-2xl font-black mb-4">{section.title || section.config?.heading || 'Content'}</h2>
+                {section.config?.content && (
+                  <div className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">{section.config.content}</div>
+                )}
+                {section.config?.last_updated && (
+                  <p className="text-xs text-muted-foreground mt-3">Last updated: {section.config.last_updated}</p>
+                )}
+              </div>
+            );
+
+          case 'ContactForm':
+            return (
+              <div key={section.id} className="max-w-3xl mx-auto px-4 py-8">
+                <h2 className="text-2xl font-black mb-1">{section.title || section.config?.heading || 'Contact Us'}</h2>
+                {section.subtitle && <p className="text-muted-foreground mb-4">{section.subtitle}</p>}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {section.config?.email && (
+                    <div className="bg-card border rounded-xl p-4">
+                      <p className="text-xs text-muted-foreground">Email</p>
+                      <p className="font-bold text-sm">{section.config.email}</p>
+                    </div>
+                  )}
+                  {section.config?.phone && (
+                    <div className="bg-card border rounded-xl p-4">
+                      <p className="text-xs text-muted-foreground">Phone</p>
+                      <p className="font-bold text-sm">{section.config.phone}</p>
+                    </div>
+                  )}
+                  {section.config?.address && (
+                    <div className="bg-card border rounded-xl p-4">
+                      <p className="text-xs text-muted-foreground">Address</p>
+                      <p className="font-bold text-sm">{section.config.address}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+
+          case 'FAQAccordion':
+            return (
+              <div key={section.id} className="max-w-3xl mx-auto px-4 py-6">
+                <div className="bg-card border rounded-xl p-4 mb-3">
+                  <p className="font-bold text-sm mb-1">{section.title || section.config?.heading || 'Question'}</p>
+                  <p className="text-xs text-muted-foreground">{section.config?.answer || ''}</p>
+                </div>
+              </div>
+            );
+
+          case 'ProductsGrid':
+          case 'ProductGrid':
+            return (
+              <ProductShelf
+                key={section.id}
+                title={section.title || section.config?.heading || 'Products'}
+                subtitle={section.subtitle}
+                viewAllHref={section.config?.viewAllHref || section.config?.button_link || '/shop'}
+                viewAllText={section.config?.ctaText || section.config?.button_text || 'See All'}
+                params={{
+                  take: section.config?.product_limit || section.config?.limit || 8,
+                  featured: section.config?.filter_by === 'Featured',
+                  popularity: section.config?.filter_by === 'Best Selling' ? 'bestseller' : section.config?.filter_by === 'New Arrivals' ? 'new' : undefined,
+                }}
+                limit={section.config?.product_limit || section.config?.limit || 8}
+              />
+            );
+
+          case 'PromoBanner':
+          case 'Promo Banners':
+          case 'CategoryPromoBanners':
+            return (
+              <div key={section.id} className="max-w-5xl mx-auto px-4 py-6">
+                <div
+                  className="w-full rounded-2xl p-6 md:p-10 text-center text-white"
+                  style={{
+                    background: section.config?.bgColor || section.config?.gradient || 'linear-gradient(135deg, #1FA89A, #27B9AF)',
+                    backgroundImage: section.config?.image ? `url(${section.config.image})` : undefined,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                  }}
+                >
+                  {section.config?.tag && (
+                    <span className="inline-block px-3 py-1 rounded-full bg-white/20 text-xs font-bold mb-3">{section.config.tag}</span>
+                  )}
+                  <h3 className="text-xl md:text-2xl font-black mb-2">{section.title || section.config?.title}</h3>
+                  {section.subtitle && <p className="text-sm md:text-base opacity-90 mb-4">{section.subtitle}</p>}
+                  {(section.config?.ctaText || section.config?.cta) && (
+                    <a href={section.config?.ctaLink || section.config?.href || '#'} className="inline-block px-6 py-2 bg-white text-gray-900 rounded-xl text-sm font-bold">
+                      {section.config?.ctaText || section.config?.cta || 'Shop Now'}
+                    </a>
+                  )}
+                </div>
+              </div>
+            );
+
+          case 'TrustBadges':
+            const badges = section.config?.items || [];
+            return (
+              <div key={section.id} className="max-w-5xl mx-auto px-4 py-8">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {badges.slice(0, 4).map((badge: any, idx: number) => (
+                    <div key={idx} className="bg-card border rounded-xl p-4 text-center">
+                      <p className="text-2xl mb-2">{badge.icon || '🛡️'}</p>
+                      <p className="text-sm font-bold">{badge.title || 'Badge'}</p>
+                      <p className="text-xs text-muted-foreground">{badge.subtitle || ''}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+
+          case 'ShopHero':
+            return (
+              <div key={section.id} className="w-full py-12 px-4 text-center" style={{ background: section.config?.bgColor || 'linear-gradient(135deg, #0D9488 0%, #0a7c72 100%)' }}>
+                <h2 className="text-3xl font-black text-white mb-2">{section.title || section.config?.tagline || 'Shop the Best Deals'}</h2>
+                {section.subtitle && <p className="text-white/90 mb-4">{section.subtitle}</p>}
+                {(section.config?.ctaText || section.config?.ctaLink) && (
+                  <a href={section.config?.ctaLink || '/shop'} className="inline-block px-6 py-2 bg-white text-gray-900 rounded-xl text-sm font-bold">
+                    {section.config?.ctaText || 'Shop Now'}
+                  </a>
+                )}
+              </div>
+            );
+
+          case 'ShopCategories':
+            return (
+              <div key={section.id} className="max-w-5xl mx-auto px-4 py-8">
+                <p className="text-center text-sm text-muted-foreground">Categories loading…</p>
+              </div>
+            );
+
+          case 'ShopProductShelf':
+            return (
+              <ProductShelf
+                key={section.id}
+                title={section.title || section.config?.title || 'Products'}
+                subtitle={section.subtitle}
+                viewAllHref={section.config?.ctaLink || section.config?.viewAllLink || section.config?.viewAllHref || '/shop'}
+                viewAllText={section.config?.ctaText || 'See All'}
+                params={{
+                  take: section.config?.limit || 10,
+                  categorySlug: section.config?.categorySlug,
+                  popularity: section.config?.popularity,
+                }}
+                limit={section.config?.limit || 10}
+              />
+            );
+
+          case 'ShopPromoBanner':
+            return (
+              <div key={section.id} className="max-w-5xl mx-auto px-4 py-6">
+                <div
+                  className="w-full rounded-2xl p-6 md:p-8 text-center text-white"
+                  style={{ background: section.config?.bgColor || 'linear-gradient(135deg, #0f4c35, #1a7a52)' }}
+                >
+                  {section.config?.tag && <span className="inline-block px-3 py-1 rounded-full bg-white/20 text-xs font-bold mb-3">{section.config.tag}</span>}
+                  <h3 className="text-xl font-black mb-2">{section.title || section.config?.title}</h3>
+                  {section.subtitle && <p className="text-sm opacity-90 mb-4">{section.subtitle}</p>}
+                  {(section.config?.ctaText || section.config?.ctaLink) && (
+                    <a href={section.config?.ctaLink || '#'} className="inline-block px-6 py-2 bg-white text-gray-900 rounded-xl text-sm font-bold">
+                      {section.config?.ctaText || 'Shop Now'}
+                    </a>
+                  )}
+                </div>
+              </div>
+            );
+
+          case 'MembersBanner':
+            return (
+              <div key={section.id} className="max-w-5xl mx-auto px-4 py-6">
+                <div className="bg-card border rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-4">
+                  <div>
+                    <h3 className="text-lg font-black">{section.title || section.config?.title || 'Members Get More'}</h3>
+                    {section.subtitle && <p className="text-sm text-muted-foreground">{section.subtitle}</p>}
+                  </div>
+                  {(section.config?.ctaText || section.config?.ctaLink) && (
+                    <a href={section.config?.ctaLink || '/register'} className="px-5 py-2 bg-primary text-white rounded-xl text-sm font-bold">
+                      {section.config?.ctaText || 'Join Now'}
+                    </a>
+                  )}
+                </div>
+              </div>
+            );
+
+          case 'ShopFilters':
+            return (
+              <div key={section.id} className="max-w-5xl mx-auto px-4 py-6">
+                <h3 className="text-lg font-bold mb-2">{section.title || 'Filters'}</h3>
+                {section.config?.filter_categories && (
+                  <div className="flex flex-wrap gap-2">
+                    {String(section.config.filter_categories).split(',').map((cat: string, idx: number) => (
+                      <span key={idx} className="px-3 py-1 bg-muted rounded-full text-xs font-medium">{cat.trim()}</span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+
+          case 'WholesaleHero':
+          case 'GetNowHero':
+            return (
+              <div key={section.id} className="w-full py-12 px-4 text-center" style={{ background: section.config?.bgColor || 'linear-gradient(135deg, #1FA89A, #27B9AF)' }}>
+                <h2 className="text-3xl font-black text-white mb-2">{section.title || 'Welcome'}</h2>
+                {section.subtitle && <p className="text-white/90 mb-4">{section.subtitle}</p>}
+                {(section.config?.ctaText || section.config?.ctaLink) && (
+                  <a href={section.config?.ctaLink || '#'} className="inline-block px-6 py-2 bg-white text-gray-900 rounded-xl text-sm font-bold">
+                    {section.config?.ctaText || 'Get Started'}
+                  </a>
+                )}
+              </div>
+            );
+
+          case 'WholesaleFeatures':
+          case 'GetNowFeatures':
+            return (
+              <div key={section.id} className="max-w-5xl mx-auto px-4 py-8">
+                <h3 className="text-2xl font-black text-center mb-6">{section.title || 'Features'}</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {[1, 2, 3].map((num) => (
+                    <div key={num} className="bg-card border rounded-2xl p-5">
+                      <p className="font-bold text-sm mb-1">{section.config?.[`feature_${num}_title`] || `Feature ${num}`}</p>
+                      <p className="text-xs text-muted-foreground">{section.config?.[`feature_${num}_text`] || ''}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+
+          case 'Testimonials':
+            return (
+              <div key={section.id} className="max-w-3xl mx-auto px-4 py-8">
+                <div className="bg-card border rounded-2xl p-6">
+                  <p className="text-xs text-muted-foreground mb-2">{section.config?.rating ? `Rating: ${section.config.rating}/5` : ''}</p>
+                  <p className="text-sm font-bold mb-1">{section.config?.customer_name || 'Customer'}</p>
+                  <p className="text-xs text-muted-foreground italic">"{section.config?.review || ''}"</p>
+                </div>
+              </div>
+            );
+
+          case 'ProductGallery':
+            return (
+              <div key={section.id} className="max-w-5xl mx-auto px-4 py-8">
+                <h3 className="text-lg font-bold mb-4">{section.title || 'Gallery'}</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {[1, 2, 3, 4].map((i) => (
+                    <div key={i} className="aspect-square bg-muted rounded-xl" />
+                  ))}
+                </div>
+              </div>
+            );
+
+          case 'RelatedProducts':
+            return (
+              <ProductShelf
+                key={section.id}
+                title={section.title || 'You May Also Like'}
+                subtitle={section.subtitle}
+                viewAllHref="/shop"
+                viewAllText="View All"
+                params={{ take: section.config?.product_limit || 4 }}
+                limit={section.config?.product_limit || 4}
+              />
+            );
+
+          case 'UpgradeBanner':
+            return (
+              <div key={section.id} className="max-w-5xl mx-auto px-4 py-6">
+                <div className="bg-card border rounded-2xl p-6 text-center">
+                  <h3 className="text-xl font-black mb-2">{section.title || 'Upgrade Your Tech'}</h3>
+                  {(section.config?.images || []).length > 0 && (
+                    <div className="flex flex-wrap justify-center gap-2 mt-4">
+                      {section.config.images.map((img: string, idx: number) => (
+                        <img key={idx} src={img} alt="" className="h-32 rounded-lg object-cover" />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+
           // ─────────────────────────────────────────────────────────────────
           // UNKNOWN SECTION TYPE
           // ─────────────────────────────────────────────────────────────────
           default:
-            console.warn(`Unknown section type: ${templateType}`);
-            return null;
+            return (
+              <div key={section.id} className="max-w-3xl mx-auto px-4 py-6">
+                <h3 className="text-lg font-bold">{section.title || section.type || 'Section'}</h3>
+                <pre className="text-xs bg-muted p-4 rounded-xl overflow-auto">{JSON.stringify(section.config ?? {}, null, 2)}</pre>
+              </div>
+            );
         }
       })}
     </div>
