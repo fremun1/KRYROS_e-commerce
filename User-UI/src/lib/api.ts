@@ -190,7 +190,7 @@ export interface ApiHomepageSection {
   order?: number;
 }
 
-function normalizeProduct(p: any): Product {
+export function normalizeProduct(p: any): Product {
   const basePrice = Number(p.price || 0);
   const salePrice = p.salePrice ? Number(p.salePrice) : 0;
   const flashPrice = p.flashSalePrice ? Number(p.flashSalePrice) : 0;
