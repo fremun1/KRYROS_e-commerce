@@ -196,8 +196,6 @@ export default function DynamicSectionRendererV2({
               />
             );
 
-          case 'CategoriesGrid':
-          case 'Categories':
           case 'CategorySection':
             return (
               <CategoryGridShelf
@@ -591,34 +589,6 @@ export default function DynamicSectionRendererV2({
               />
             );
 
-          case 'LimitedStockDeal':
-            return (
-              <LimitedStockDealSection
-                key={section.id}
-                title={section.title || section.config?.title}
-                discountText={section.config?.discountText}
-                discountPercent={section.config?.discountPercent}
-                productLimit={section.config?.productLimit || section.config?.limit}
-                ctaText={section.config?.ctaText}
-                ctaLink={section.config?.ctaLink}
-                headerBgColor={section.config?.headerBgColor}
-              />
-            );
-
-          case 'AppliancesDeal':
-            return (
-              <AppliancesDealSection
-                key={section.id}
-                title={section.title || section.config?.title}
-                subtitleText={section.subtitle || section.config?.subtitle}
-                ctaText={section.config?.ctaText}
-                ctaLink={section.config?.ctaLink}
-                headerBgColor={section.config?.headerBgColor}
-                productLimit={section.config?.productLimit || section.config?.limit}
-                categorySlug={section.config?.categorySlug}
-              />
-            );
-
           case 'CategoryDeal':
             return (
               <CategoryDealSection
@@ -636,20 +606,6 @@ export default function DynamicSectionRendererV2({
 
           case 'RecentlyViewed':
             return <RecentlyViewedSection key={section.id} />;
-
-          case 'TopExpress':
-            return (
-              <ProductSection
-                key={section.id}
-                title={section.title || 'Top Express Delivery'}
-                subtitle={section.subtitle}
-                viewAllHref={section.config?.ctaLink || '/shop'}
-                viewAllText={section.config?.ctaText || 'See All'}
-                params={{ take: section.config?.productLimit || section.config?.limit || 8, popularity: 'trending' }}
-                limit={section.config?.productLimit || section.config?.limit || 8}
-                accentColor={section.config?.accentColor}
-              />
-            );
 
           case 'UpgradeBanner':
             return (

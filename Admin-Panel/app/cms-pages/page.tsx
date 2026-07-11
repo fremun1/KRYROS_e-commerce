@@ -38,12 +38,6 @@ const SECTION_FIELDS: Record<string, Array<{ key: string; label: string; type: s
     { key: 'button_link', label: 'Button Link (URL)', type: 'text', icon: 'link' },
     { key: 'media', label: 'Banner Image', type: 'file' },
   ],
-  'Featured Products': [
-    { key: 'heading', label: 'Section Heading', type: 'text', icon: 'type' },
-    { key: 'subheading', label: 'Subheading', type: 'text', icon: 'type' },
-    { key: 'product_limit', label: 'Number of Products to Show', type: 'text', icon: 'type' },
-    { key: 'sort_by', label: 'Sort By', type: 'select', options: ['Featured', 'Newest', 'Best Selling', 'On Sale'] },
-  ],
   'Promotions': [
     { key: 'heading', label: 'Section Heading', type: 'text', icon: 'type' },
     { key: 'promo_title', label: 'Promotion Title', type: 'text', icon: 'type' },
