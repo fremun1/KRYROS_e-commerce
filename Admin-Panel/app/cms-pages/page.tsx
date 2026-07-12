@@ -915,17 +915,21 @@ function CMSContent() {
       }
     }
   };
-  const _apiDelete = (itemId: string, pageId: string, secName: string) => {
+  const _apiDelete = async (itemId: string, pageId: string, secName: string) => {
     if (_isHome(pageId)) {
-      if (secName === 'Hero Banner') { deleteCmsBanner(itemId).catch(() => {}); }
-      else { deleteCmsSection(itemId).catch(() => {}); }
-    } else { deleteCmsSection(itemId).catch(() => {}); }
+      if (secName === 'Hero Banner') await deleteCmsBanner(itemId);
+      else await deleteCmsSection(itemId);
+    } else {
+      await deleteCmsSection(itemId);
+    }
   };
-  const _apiToggle = (itemId: string, pageId: string, secName: string, active: boolean) => {
+  const _apiToggle = async (itemId: string, pageId: string, secName: string, active: boolean) => {
     if (_isHome(pageId)) {
-      if (secName === 'Hero Banner') { updateCmsBanner(itemId, { isActive: active }).catch(() => {}); }
-      else { updateCmsSection(itemId, { isActive: active }).catch(() => {}); }
-    } else { updateCmsSection(itemId, { isActive: active }).catch(() => {}); }
+      if (secName === 'Hero Banner') await updateCmsBanner(itemId, { isActive: active });
+      else await updateCmsSection(itemId, { isActive: active });
+    } else {
+      await updateCmsSection(itemId, { isActive: active });
+    }
   };
   const [view, setView] = useState<View>('pages');
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());

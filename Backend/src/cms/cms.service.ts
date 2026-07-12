@@ -183,10 +183,9 @@ export class CMSService {
           endTime: new Date(Date.now() + 86400000).toISOString()
         }
       },
-
       {
         type: 'PromoBanners',
-        order: 7,
+        order: 6,
         isActive: true,
         title: 'Get Now Promo Banner',
         animation: 'slideUp',
@@ -201,7 +200,7 @@ export class CMSService {
       },
       {
         type: 'PromoBanners',
-        order: 8,
+        order: 7,
         isActive: true,
         title: 'Free Shipping Promo Banner',
         animation: 'slideUp',
@@ -215,17 +214,33 @@ export class CMSService {
         }
       },
       {
-        type: 'RecentlyViewed',
-        order: 6,
+        type: 'PromoBanners',
+        order: 8,
         isActive: true,
-        title: 'What You Viewed',
-        subtitle: 'Products you recently browsed — client-side (localStorage)',
+        title: 'Flash Sale Promo Banner',
         animation: 'slideUp',
-        config: { limit: 8, clientSide: true }
+        config: {
+          tag: 'LIMITED TIME',
+          title: 'Flash Sale',
+          subtitle: "Today's Hot Deals",
+          desc: "Grab the best prices before they're gone — limited stock only",
+          href: '/shop',
+          gradient: 'linear-gradient(135deg, #7c1d1d 0%, #b91c1c 50%, #ef4444 100%)',
+          emoji: '⚡'
+        }
+      },
+      {
+        type: 'RecommendedProducts',
+        order: 9,
+        isActive: true,
+        title: 'Recommended For You',
+        subtitle: 'Personalised product recommendations',
+        animation: 'slideUp',
+        config: { limit: 8, scroll: true }
       },
       {
         type: 'TopSelling',
-        order: 7,
+        order: 10,
         isActive: true,
         title: 'Top Selling Items',
         subtitle: 'Auto-picked based on sales performance — most ordered products',
@@ -234,7 +249,7 @@ export class CMSService {
       },
       {
         type: 'LimitedStockDeal',
-        order: 9,
+        order: 11,
         isActive: true,
         title: 'Limited Stock Deal',
         subtitle: 'Grab them before they\'re gone — configurable discount banner',
@@ -252,7 +267,7 @@ export class CMSService {
       },
       {
         type: 'AppliancesDeal',
-        order: 10,
+        order: 12,
         isActive: true,
         title: 'Appliances Deal',
         subtitle: 'Home appliances at unbeatable prices',
@@ -267,7 +282,7 @@ export class CMSService {
       },
       {
         type: 'TopExpress',
-        order: 11,
+        order: 13,
         isActive: true,
         title: 'Top Express',
         subtitle: 'Fast delivery, top picks',
@@ -283,7 +298,7 @@ export class CMSService {
       },
       {
         type: 'UpgradeBanner',
-        order: 12,
+        order: 14,
         isActive: true,
         title: 'Upgrade Banner',
         subtitle: 'Image-only carousel — upload multiple banner images via CMS',
@@ -316,177 +331,6 @@ export class CMSService {
         subtitle: 'Hot products right now',
         animation: 'slideUp',
         config: { limit: 8, popularity: 'trending', scroll: true }
-      },
-      {
-        type: 'CategoryDeals',
-        order: 18,
-        isActive: true,
-        title: 'Category Deals',
-        subtitle: 'Special category promotions',
-        animation: 'slideUp',
-        config: {}
-      },
-      {
-        type: 'TopSelling',
-        order: 19,
-        isActive: true,
-        title: 'Top Selling Products',
-        subtitle: 'Our most popular products by sales volume',
-        animation: 'slideUp',
-        config: { limit: 8, popularity: 'bestseller' }
-      },
-      {
-        type: 'TrendingProducts',
-        order: 20,
-        isActive: true,
-        title: 'Trending Products',
-        subtitle: 'What\'s hot right now',
-        animation: 'slideUp',
-        config: { limit: 8, popularity: 'trending' }
-      },
-      {
-        type: 'BestSellers',
-        order: 21,
-        isActive: true,
-        title: 'Best Sellers',
-        subtitle: 'Customer favourites',
-        animation: 'slideUp',
-        config: { limit: 8, popularity: 'bestseller' }
-      },
-      {
-        type: 'NewArrivals',
-        order: 22,
-        isActive: true,
-        title: 'New Arrivals',
-        subtitle: 'Fresh drops just landed',
-        animation: 'slideUp',
-        config: { limit: 8, popularity: 'new' }
-      },
-      {
-        type: 'LimitedStockDeal',
-        order: 23,
-        isActive: true,
-        title: 'Limited Stock Deals',
-        subtitle: 'Grab them before they\'re gone',
-        animation: 'slideUp',
-        config: { limit: 8, sort: 'limited_stock' }
-      },
-      {
-        type: 'TopExpress',
-        order: 24,
-        isActive: true,
-        title: 'Top Express',
-        subtitle: 'Fast delivery essentials',
-        animation: 'slideUp',
-        config: { limit: 8 }
-      },
-      {
-        type: 'AppliancesDeal',
-        order: 25,
-        isActive: true,
-        title: 'Appliances Deal',
-        subtitle: 'Home appliances at unbeatable prices',
-        animation: 'slideUp',
-        config: { limit: 8, categorySlug: 'appliances' }
-      },
-      {
-        type: 'promo_banners',
-        order: 9,
-        isActive: true,
-        title: 'Mega Deal',
-        subtitle: 'On Selected Items',
-        description: 'Get the biggest discounts on top electronics and accessories',
-        link: '/shop',
-        animation: 'slideUp',
-        config: {
-          tag: 'UP TO 50% OFF',
-          title: 'Mega Deal',
-          subtitle: 'On Selected Items',
-          desc: 'Get the biggest discounts on top electronics and accessories',
-          href: '/shop',
-          gradient: 'linear-gradient(135deg, #0f4c35 0%, #1a7a52 50%, #0d9488 100%)',
-          emoji: '🛒'
-        }
-      },
-      {
-        type: 'promo_banners',
-        order: 10,
-        isActive: true,
-        title: 'Refer & Earn',
-        subtitle: 'Invite Friends & Get Rewards',
-        description: 'Share with friends and earn credit per referral',
-        link: '/dashboard',
-        animation: 'slideUp',
-        config: {
-          tag: 'EARN REWARDS',
-          title: 'Refer & Earn',
-          subtitle: 'Invite Friends & Get Rewards',
-          desc: 'Share with friends and earn credit per referral',
-          href: '/dashboard',
-          gradient: 'linear-gradient(135deg, #1a3a5c 0%, #1e5f8c 50%, #0ea5c9 100%)',
-          emoji: '🎁'
-        }
-      },
-      {
-        type: 'promo_banners',
-        order: 11,
-        isActive: true,
-        title: 'Ship For Free',
-        subtitle: 'On Orders Over $100',
-        description: 'Fast delivery to your doorstep at no extra cost nationwide',
-        link: '/shop',
-        animation: 'slideUp',
-        config: {
-          tag: 'FREE DELIVERY',
-          title: 'Ship For Free',
-          subtitle: 'On Orders Over $100',
-          desc: 'Fast delivery to your doorstep at no extra cost nationwide',
-          href: '/shop',
-          gradient: 'linear-gradient(135deg, #3b1f6b 0%, #5c2fa0 50%, #7c3aed 100%)',
-          emoji: '🚚'
-        }
-      },
-      {
-        type: 'promo_banners',
-        order: 12,
-        isActive: true,
-        title: 'Flash Sale',
-        subtitle: "Today's Hot Deals",
-        description: "Grab the best prices before they're gone — limited stock only",
-        link: '/shop',
-        animation: 'slideUp',
-        config: {
-          tag: 'LIMITED TIME',
-          title: 'Flash Sale',
-          subtitle: "Today's Hot Deals",
-          desc: "Grab the best prices before they're gone — limited stock only",
-          href: '/shop',
-          gradient: 'linear-gradient(135deg, #7c1d1d 0%, #b91c1c 50%, #ef4444 100%)',
-          emoji: '⚡'
-        }
-      },
-      {
-        type: 'RecommendedProducts',
-        order: 14,
-        isActive: true,
-        title: 'Recommended For You',
-        subtitle: 'Personalised product recommendations',
-        animation: 'slideUp',
-        config: { limit: 8, scroll: true }
-      },
-      {
-        type: 'Newsletter',
-        order: 15,
-        isActive: true,
-        title: 'Newsletter Popup',
-        subtitle: 'Homepage newsletter subscription popup — configure content below',
-        animation: 'fadeIn',
-        config: {
-          heading: 'Stay in the Loop with KRYROS',
-          subheading: 'Subscribe to get exclusive deals, new arrivals, and special offers delivered straight to your inbox.',
-          placeholder: 'Enter your email address',
-          button_text: 'Subscribe',
-        }
       },
     ];
 
