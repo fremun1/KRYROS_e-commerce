@@ -478,6 +478,124 @@ export default function DynamicSectionsPage() {
                   </div>
                 </div>
               )}
+
+              {/* Banner Image Upload */}
+              {(formData.templateType === 'HeroBanner' || formData.templateType === 'HeroSlider' || formData.templateType === 'PromoBanner' || formData.templateType === 'BannerSlot') && (
+                <div className="grid grid-cols-1 gap-4 mt-4">
+                  <FormField 
+                    label="Image URL" 
+                    value={formData.config?.image || formData.config?.media || ''} 
+                    onChange={(v) => setFormData({...formData, config: {...formData.config, image: v, media: v}})}
+                    placeholder="https://example.com/image.jpg"
+                    isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
+                  />
+                  <FormField 
+                    label="Background Color" 
+                    value={formData.config?.bgColor || formData.config?.gradient || ''} 
+                    onChange={(v) => setFormData({...formData, config: {...formData.config, bgColor: v, gradient: v}})}
+                    placeholder="#000000 or linear-gradient(...)"
+                    isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
+                  />
+                  <FormField 
+                    label="CTA Link" 
+                    value={formData.config?.ctaLink || formData.config?.href || formData.config?.link || ''} 
+                    onChange={(v) => setFormData({...formData, config: {...formData.config, ctaLink: v, href: v, link: v}})}
+                    placeholder="/shop or https://..."
+                    isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
+                  />
+                  <FormField 
+                    label="CTA Text" 
+                    value={formData.config?.ctaText || formData.config?.button_text || formData.config?.linkText || ''} 
+                    onChange={(v) => setFormData({...formData, config: {...formData.config, ctaText: v, button_text: v, linkText: v}})}
+                    placeholder="Shop Now"
+                    isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
+                  />
+                </div>
+              )}
+
+              {/* Flash Sale Timer */}
+              {(formData.templateType === 'FlashSale' || formData.templateType === 'LimitedStockDeal') && (
+                <div className="grid grid-cols-2 gap-4 mt-4">
+                  <FormField 
+                    label="End Date" 
+                    type="datetime-local"
+                    value={formData.config?.endTime || formData.config?.timerEndDate || ''} 
+                    onChange={(v) => setFormData({...formData, config: {...formData.config, endTime: v, timerEndDate: v}})}
+                    isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
+                  />
+                  <FormField 
+                    label="Timer Label" 
+                    value={formData.config?.countdownLabel || formData.config?.timerLabel || ''} 
+                    onChange={(v) => setFormData({...formData, config: {...formData.config, countdownLabel: v, timerLabel: v}})}
+                    placeholder="Ends in"
+                    isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
+                  />
+                  <FormField 
+                    label="Discount Text" 
+                    value={formData.config?.discountText || ''} 
+                    onChange={(v) => setFormData({...formData, config: {...formData.config, discountText: v}})}
+                    placeholder="Up to 50% OFF"
+                    isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
+                  />
+                  <FormField 
+                    label="Discount %" 
+                    type="number"
+                    value={String(formData.config?.discountPercent || '')} 
+                    onChange={(v) => setFormData({...formData, config: {...formData.config, discountPercent: parseInt(v)}})}
+                    placeholder="50"
+                    isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
+                  />
+                </div>
+              )}
+
+              {/* Category Selection for Products */}
+              {formData.templateType === 'ProductShelf' && (
+                <div className="grid grid-cols-2 gap-4 mt-4">
+                  <FormField 
+                    label="Category ID" 
+                    value={formData.config?.categoryId || ''} 
+                    onChange={(v) => setFormData({...formData, config: {...formData.config, categoryId: v}})}
+                    placeholder="Filter by category ID"
+                    isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
+                  />
+                  <FormField 
+                    label="Category Slug" 
+                    value={formData.config?.categorySlug || ''} 
+                    onChange={(v) => setFormData({...formData, config: {...formData.config, categorySlug: v}})}
+                    placeholder="electronics"
+                    isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
+                  />
+                  <div className="flex items-center gap-2">
+                    <input 
+                      type="checkbox" 
+                      id="filter-featured"
+                      checked={formData.config?.filter_by === 'Featured' || formData.config?.filterType === 'Featured'} 
+                      onChange={(e) => setFormData({...formData, config: {...formData.config, filter_by: e.target.checked ? 'Featured' : '', filterType: e.target.checked ? 'Featured' : ''}})}
+                    />
+                    <label htmlFor="filter-featured" className="text-xs font-bold text-muted-foreground uppercase">Featured Products Only</label>
+                  </div>
+                </div>
+              )}
+
+              {/* Trust Badges Configuration */}
+              {(formData.templateType === 'TrustBadges' || formData.templateType === 'Testimonials') && (
+                <div className="mt-4 space-y-3">
+                  <label className="text-xs font-bold text-muted-foreground uppercase">Items (JSON Array)</label>
+                  <textarea
+                    value={JSON.stringify(formData.config?.items || [], null, 2)}
+                    onChange={(e) => {
+                      try {
+                        setFormData({...formData, config: {...formData.config, items: JSON.parse(e.target.value)}});
+                      } catch {
+                        // Invalid JSON, don't update
+                      }
+                    }}
+                    className="w-full p-3 bg-background border rounded-lg text-sm font-mono outline-none focus:ring-2 focus:ring-primary/20 min-h-[150px]"
+                    placeholder='[{"icon": "🛡️", "title": "Secure", "subtitle": "Safe checkout"}]'
+                  />
+                  <p className="text-[10px] text-muted-foreground">Enter JSON array of items with icon, title, subtitle fields</p>
+                </div>
+              )}
             </div>
 
             <div className="flex items-center gap-3 p-3 bg-primary/5 rounded-xl border border-primary/10">
