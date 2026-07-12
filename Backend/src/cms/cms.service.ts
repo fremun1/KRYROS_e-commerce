@@ -781,7 +781,7 @@ export class CMSService {
   }
 
   async getSections(pageSlug?: string) {
-    const normalizedSlug = (pageSlug === 'home' || pageSlug === 'homepage') ? 'homepage' : pageSlug;
+    const normalizedSlug = (pageSlug === 'home' || pageSlug === 'homepage' || pageSlug === '/' || pageSlug === '') ? 'homepage' : pageSlug;
     const where: any = { isActive: true };
     if (normalizedSlug) where.pageSlug = normalizedSlug;
 
@@ -924,8 +924,8 @@ export class CMSService {
       ],
     };
 
-    // Normalize homepage slug
-    const normalizedSlug = (slug === 'home' || slug === 'homepage') ? 'homepage' : slug;
+    // Normalize homepage slug variants
+    const normalizedSlug = (slug === 'home' || slug === 'homepage' || slug === '/' || slug === '') ? 'homepage' : slug;
     
     // Check if we have sections defined for this page
     let sections = PAGE_SECTIONS[normalizedSlug];
