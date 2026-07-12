@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { X, CheckCircle, Loader2 } from "lucide-react";
-import { API_BASE } from "@/lib/api";
+import { api, API_BASE } from "@/lib/api";
 
 const STORAGE_KEY = "kryros_nl_subscribed";
 
@@ -26,19 +26,33 @@ export default function NewsletterPopup() {
     // Never show again if already subscribed
     if (localStorage.getItem(STORAGE_KEY) === "true") return;
 
-    // Fetch CMS config
-    fetch(`${API_BASE}/api/cms/homepage-sections?type=Newsletter`)
-      .then((r) => r.json())
-      .then((sections: any[]) => {
-        const section = Array.isArray(sections) ? sections[0] : null;
-        if (section?.config && typeof section.config === "object" && (section.config as any).heading) {
-          setConfig(section.config as NLConfig);
+    // Fetch CMS config from the generic sections endpoint (supports any page)
+    const fetchNewsletter = async () => {
+      try {
+        const response = await api.get('/api/cms/sections?pageSlug=homepage');
+        const sections: any[] = Array.isArray(response.data) ? response.data : [];
+        const newsletterSection = sections.find((s: any) =>
+          s.templateType === 'Newsletter' || s.type === 'Newsletter'
+        );
+        if (newsletterSection?.config && typeof newsletterSection.config === "object" && (newsletterSection.config as any).heading) {
+          setConfig(newsletterSection.config as NLConfig);
           setTimeout(() => setVisible(true), 1500);
         }
-      })
-      .catch(() => {});
+      } catch {
+        // Fallback: try legacy endpoint
+        try {
+          const res = await fetch(`${API_BASE}/api/cms/homepage-sections?type=Newsletter`);
+          const sections = await res.json();
+          const section = Array.isArray(sections) ? sections[0] : null;
+          if (section?.config && typeof section.config === "object" && (section.config as any).heading) {
+            setConfig(section.config as NLConfig);
+            setTimeout(() => setVisible(true), 1500);
+          }
+        } catch {}
+      }
+    };
 
-    // Popup timer is started only after CMS config loads (see above)
+    fetchNewsletter();
   }, []);
 
   const handleSubscribe = async () => {

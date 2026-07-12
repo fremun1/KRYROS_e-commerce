@@ -12,6 +12,7 @@ import { useAuthStore } from "@/store/authStore";
 import { API_BASE } from "@/lib/api";
 import Sidebar from "./Sidebar";
 import SearchAutocomplete from "./SearchAutocomplete";
+import AnnouncementBar from "./AnnouncementBar";
 
 const DEFAULT_NAV = [
   { label: "Home", href: "/" },
@@ -101,37 +102,7 @@ export default function Header() {
 
       {/* FIXED header wrapper — always at top of viewport */}
       <div ref={headerRef} className="fixed top-0 left-0 right-0 z-40">
-        {/* Announcement bar — always visible, dismissible with X */}
-        {headerCfg?.announcementEnabled && headerCfg?.announcementText && !announceHidden && (
-          <div
-            className="bg-background text-foreground text-[10px] md:text-xs border-b border-border"
-            style={{
-              ...(headerCfg?.announcementBgColor ? { backgroundColor: headerCfg.announcementBgColor } : {}),
-              ...(headerCfg?.announcementTextColor ? { color: headerCfg.announcementTextColor } : {}),
-            }}
-          >
-            {/* lg: max-width centering added — mobile px-4 untouched */}
-            <div className="flex items-center justify-between px-4 md:px-6 py-1.5 md:py-2 lg:max-w-screen-xl lg:mx-auto lg:px-8">
-              <span>
-                {headerCfg?.announcementText}
-              </span>
-              <div className="flex items-center gap-2">
-                <Link href={headerCfg?.announcementCtaLink || "/track"}>
-                  <span className="flex items-center gap-0.5 cursor-pointer hover:opacity-80 transition-opacity font-medium">
-                    {headerCfg?.announcementCta || "›"} <span className="text-[10px]">&rsaquo;</span>
-                  </span>
-                </Link>
-                <button
-                  onClick={() => setAnnounceHidden(true)}
-                  className="p-0.5 rounded hover:bg-white/20 transition-colors ml-1 flex-shrink-0"
-                  aria-label="Dismiss announcement"
-                >
-                  <X className="w-3 h-3" />
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+        <AnnouncementBar />
 
         <header className="bg-background/95 backdrop-blur-xl border-b border-border shadow-sm">
           {/* Main header row — lg: max-width centered so content doesn't stretch on ultrawide */}

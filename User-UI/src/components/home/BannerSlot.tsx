@@ -1,166 +1,172 @@
-import { useState, useEffect } from "react";
-import { API_BASE } from "@/lib/api";
+import { useEffect, useState, useRef } from "react";
+import { Link } from "wouter";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { api } from "@/lib/api";
+import PromoBanner from "./PromoBanner";
 
-/**
- * BannerSlot Component
- * 
- * Renders all banners assigned to a specific slot/position on the page.
- * Banners are displayed in order, and can be rotated/cycled if multiple banners exist in the same slot.
- * 
- * This replaces hardcoded banner sections and allows admins to manage banners by position/slot.
- */
-
-interface Banner {
+interface BannerData {
   id: string;
   title: string;
-  imageUrl: string; // The URL of the banner image
-  image?: string; // Backend might provide 'image' instead of 'imageUrl'
+  subtitle?: string;
+  image?: string;
+  videoUrl?: string;
   link?: string;
-  alt?: string;
+  linkText?: string;
+  tag?: string;
+  badge?: string;
+  secondaryCta?: string;
+  secondaryCtaLink?: string;
+  gradient?: string;
+  bgColor?: string;
+  mediaType?: string;
+  duration?: number;
   isActive: boolean;
-  order: number;
+  position?: number;
 }
 
 interface BannerSlotProps {
-  slotKey: string; // e.g., 'homepage-hero-slider', 'homepage-after-flash-sale'
-  autoRotate?: boolean; // Auto-cycle through multiple banners
-  rotationInterval?: number; // Milliseconds between rotations (default: 4000)
-  className?: string;
+  bannerMode?: 'hero' | 'promo';
+  tag?: string;
+  slotKey?: string;
 }
 
-export default function BannerSlot({
-  slotKey,
-  autoRotate = false,
-  rotationInterval = 4000,
-  className = ""
-}: BannerSlotProps) {
-  const [banners, setBanners] = useState<Banner[]>([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+export default function BannerSlot({ bannerMode = 'hero', tag, slotKey }: BannerSlotProps) {
+  const [banners, setBanners] = useState<BannerData[]>([]);
+  const [current, setCurrent] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [translateX, setTranslateX] = useState(0);
+  const timer = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Fetch banners for this slot
   useEffect(() => {
     const fetchBanners = async () => {
-      setLoading(true);
-      setError(null);
-
       try {
-        // Fetch banners by tag (which we're using as slotKey in the current backend)
-        const url = new URL(`${API_BASE}/api/cms/banners`);
-        if (slotKey) {
-          url.searchParams.set('tag', slotKey);
+        const tagParam = tag || slotKey;
+        const url = tagParam ? `/api/cms/banners?tag=${tagParam}` : '/api/cms/banners';
+        const response = await api.get(url);
+        if (response.data && Array.isArray(response.data)) {
+          setBanners(response.data.filter((b: any) => b.isActive));
         }
-
-        const response = await fetch(url.toString());
-
-        if (!response.ok) {
-          throw new Error(`Failed to fetch banners: ${response.statusText}`);
-        }
-
-        const data = await response.json();
-        const bannerList = Array.isArray(data) ? data : (data.data || []);
-        
-        // Filter active banners and sort by order
-        const activeBanners = bannerList
-          .filter((b: any) => b.isActive)
-          .sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
-
-        setBanners(activeBanners);
-        setCurrentIndex(0);
       } catch (err) {
-        console.error(`Error fetching banners for slot '${slotKey}':`, err);
-        setError(err instanceof Error ? err.message : 'Failed to load banners');
-        setBanners([]);
-      } finally {
-        setLoading(false);
+        console.warn("Failed to fetch banners", err);
       }
     };
-
     fetchBanners();
-  }, [slotKey]);
+  }, [tag, slotKey]);
 
-  // Auto-rotate banners
+  // Auto-rotate for hero mode only
   useEffect(() => {
-    if (!autoRotate || banners.length <= 1) return;
+    if (bannerMode !== 'hero' || banners.length <= 1) return;
+    if (timer.current) clearInterval(timer.current);
+    timer.current = setInterval(() => {
+      if (!isDragging) setCurrent((c) => (c + 1) % banners.length);
+    }, 5000);
+    return () => { if (timer.current) clearInterval(timer.current); };
+  }, [bannerMode, banners.length, isDragging]);
 
-    const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % banners.length);
-    }, rotationInterval);
+  // ── HERO MODE: full-width carousel ──
+  if (bannerMode === 'hero') {
+    const goNext = () => setCurrent((c) => (c + 1) % banners.length);
+    const goPrev = () => setCurrent((c) => (c - 1 + banners.length) % banners.length);
 
-    return () => clearInterval(interval);
-  }, [autoRotate, banners.length, rotationInterval]);
+    const handleDragStart = (clientX: number) => {
+      setIsDragging(true);
+      setStartX(clientX);
+      setTranslateX(0);
+    };
+    const handleDragMove = (clientX: number) => {
+      if (!isDragging) return;
+      setTranslateX(clientX - startX);
+    };
+    const handleDragEnd = () => {
+      if (!isDragging) return;
+      if (Math.abs(translateX) > 50) {
+        if (translateX > 0) goPrev();
+        else goNext();
+      }
+      setIsDragging(false);
+      setTranslateX(0);
+    };
 
-  // Don't render if no banners
-  if (!loading && banners.length === 0) {
-    return null;
+    if (banners.length === 0) {
+      return (
+        <section className="w-full bg-muted/20 animate-pulse" style={{ height: "clamp(150px, 44vw, 420px)" }} />
+      );
+    }
+
+    return (
+      <section
+        className="relative w-full overflow-hidden"
+        style={{ height: "clamp(150px, 44vw, 420px)" }}
+        onTouchStart={(e) => handleDragStart(e.touches[0].clientX)}
+        onTouchMove={(e) => handleDragMove(e.touches[0].clientX)}
+        onTouchEnd={handleDragEnd}
+        onMouseDown={(e) => handleDragStart(e.clientX)}
+        onMouseMove={(e) => handleDragMove(e.clientX)}
+        onMouseUp={handleDragEnd}
+        onMouseLeave={handleDragEnd}
+      >
+        <div
+          className="flex h-full"
+          style={{
+            width: "100%",
+            transform: `translateX(calc(-${current * 100}% + ${translateX}px))`,
+            transition: isDragging ? "none" : "transform 500ms ease-out",
+          }}
+        >
+          {banners.map((banner) => {
+            const imgSrc = banner.image || banner.videoUrl || "";
+            return banner.link ? (
+              <Link key={banner.id} href={banner.link} className="min-w-full flex-shrink-0 w-full h-full block">
+                <img src={imgSrc} alt="" className="w-full h-full object-cover select-none" draggable={false} />
+              </Link>
+            ) : (
+              <div key={banner.id} className="min-w-full flex-shrink-0 w-full h-full">
+                <img src={imgSrc} alt="" className="w-full h-full object-cover select-none" draggable={false} />
+              </div>
+            );
+          })}
+        </div>
+
+        {banners.length > 1 && (
+          <>
+            <button onClick={goPrev} className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/60 transition-colors hidden sm:flex">
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+            <button onClick={goNext} className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/60 transition-colors hidden sm:flex">
+              <ChevronRight className="w-5 h-5" />
+            </button>
+          </>
+        )}
+
+        {banners.length > 1 && (
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+            {banners.map((_, i) => (
+              <button key={i} onClick={() => setCurrent(i)} className={`rounded-full transition-all duration-300 ${i === current ? "w-6 h-2 bg-white" : "w-2 h-2 bg-white/50"}`} />
+            ))}
+          </div>
+        )}
+      </section>
+    );
   }
 
-  const currentBanner = banners[currentIndex];
-
+  // ── PROMO MODE: stacked rich banners ──
   return (
-    <div className={`banner-slot ${className}`}>
-      {loading ? (
-        <div className="w-full bg-muted rounded-lg animate-pulse" style={{ aspectRatio: '16/9' }} />
-      ) : error ? (
-        <div className="w-full bg-muted rounded-lg flex items-center justify-center text-sm text-muted-foreground">
-          {error}
-        </div>
-      ) : currentBanner ? (
-        <div className="relative w-full overflow-hidden rounded-lg">
-          {currentBanner.link ? (
-            <a href={currentBanner.link} className="block">
-              <img
-                src={currentBanner.imageUrl || currentBanner.image}
-                alt={currentBanner.alt || currentBanner.title}
-                className="w-full h-auto object-cover"
-              />
-            </a>
-          ) : (
-            <img
-              src={currentBanner.imageUrl || currentBanner.image}
-              alt={currentBanner.alt || currentBanner.title}
-              className="w-full h-auto object-cover"
-            />
-          )}
-
-          {/* Banner indicators (dots) if multiple banners */}
-          {banners.length > 1 && (
-            <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2 flex gap-2">
-              {banners.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => setCurrentIndex(index)}
-                  className={`w-2 h-2 rounded-full transition-all ${
-                    index === currentIndex ? 'bg-white w-6' : 'bg-white/50'
-                  }`}
-                  aria-label={`Go to banner ${index + 1}`}
-                />
-              ))}
-            </div>
-          )}
-
-          {/* Navigation arrows if multiple banners and not auto-rotating */}
-          {banners.length > 1 && !autoRotate && (
-            <>
-              <button
-                onClick={() => setCurrentIndex((prev) => (prev - 1 + banners.length) % banners.length)}
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white p-2 rounded-full transition-all"
-                aria-label="Previous banner"
-              >
-                ‹
-              </button>
-              <button
-                onClick={() => setCurrentIndex((prev) => (prev + 1) % banners.length)}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white p-2 rounded-full transition-all"
-                aria-label="Next banner"
-              >
-                ›
-              </button>
-            </>
-          )}
-        </div>
-      ) : null}
-    </div>
+    <section className="py-4 md:py-6">
+      <div className="px-3 md:px-6 max-w-7xl mx-auto space-y-4">
+        {banners.map((banner) => (
+          <PromoBanner
+            key={banner.id}
+            tag={banner.tag}
+            title={banner.title}
+            subtitle={banner.subtitle}
+            cta={banner.linkText || banner.secondaryCta}
+            href={banner.link || banner.secondaryCtaLink}
+            image={banner.image}
+            gradient={banner.gradient || banner.bgColor}
+          />
+        ))}
+      </div>
+    </section>
   );
 }

@@ -376,4 +376,15 @@ export class CMSController {
   seedSiteConfigs() {
     return this.cmsService.seedSiteConfigs();
   }
+
+  // ==================== DATA MIGRATION ====================
+
+  @Post('sections/migrate')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Migrate all legacy section records to the new 7-family model' })
+  migrateSections() {
+    return this.cmsService.migrateLegacySections();
+  }
 }

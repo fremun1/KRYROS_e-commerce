@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { fetchSiteConfig, api } from "@/lib/api";
+import { api } from "@/lib/api";
 
 interface CmsBrand {
   name: string;
@@ -10,16 +10,16 @@ interface CmsBrand {
 interface BrandsSectionProps {
   title?: string;
   subtitle?: string;
-  layout?: 'grid' | 'horizontal';
-  style?: 'full' | 'minimal';
+  displayMode?: 'full' | 'minimal';
+  autoScroll?: boolean;
   dataSourceId?: string;
 }
 
 export default function BrandsSection({
   title,
   subtitle,
-  layout = 'horizontal',
-  style = 'full',
+  displayMode = 'full',
+  autoScroll = true,
   dataSourceId = 'generic-brand-section'
 }: BrandsSectionProps) {
   const [brands, setBrands] = useState<CmsBrand[]>([]);
@@ -42,31 +42,17 @@ export default function BrandsSection({
           return;
         }
       } catch (err) {
-        console.warn("Falling back to site config");
+        console.warn("No brands returned from CMS");
       }
-
-      fetchSiteConfig<any>("trusted-brands")
-        .then((v) => {
-          if (!v) return;
-          const raw: any[] = Array.isArray(v) ? v : Array.isArray(v?.items) ? v.items : [];
-          if (raw.length > 0) {
-            setBrands(raw.map((b: any) => ({
-              name: b.name || "",
-              logo: b.logo || "",
-              shopSlug: b.shopSlug || b.slug || b.name?.toLowerCase().replace(/\s+/g, "-") || "",
-            })));
-          }
-        })
-        .catch(() => {});
     };
 
     fetchBrands();
   }, [dataSourceId]);
 
-  // Auto-scroll logic (only for horizontal)
+  // Auto-scroll logic
   useEffect(() => {
     const el = scrollRef.current;
-    if (!el || brands.length === 0 || layout === 'grid') return;
+    if (!el || brands.length === 0 || !autoScroll) return;
 
     const SPEED = 0.03;
     const tick = (time: number) => {
@@ -98,7 +84,7 @@ export default function BrandsSection({
       el.removeEventListener("mouseenter", pause);
       el.removeEventListener("mouseleave", resume);
     };
-  }, [brands, layout]);
+  }, [brands, autoScroll]);
 
   if (brands.length === 0) return null;
 
@@ -118,16 +104,16 @@ export default function BrandsSection({
         
         <div
           ref={scrollRef}
-          className={`${layout === 'grid' ? 'grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3' : 'flex items-center gap-2.5 overflow-x-auto no-scrollbar pb-2'}`}
-          style={layout === 'horizontal' ? { scrollbarWidth: "none", msOverflowStyle: "none" } : undefined}
+          className="flex items-center gap-2.5 overflow-x-auto no-scrollbar pb-2"
+          style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
         >
           {brands.map((brand, i) => (
             <button
               key={i}
               onClick={() => handleBrandClick(brand)}
-              className={`flex-shrink-0 bg-card border border-border rounded-xl flex flex-col items-center justify-center hover:border-primary/40 hover:shadow-md transition-all cursor-pointer px-4 py-2.5 min-w-[80px] md:min-w-[100px] gap-1.5 ${style === 'minimal' ? 'bg-transparent border-none py-1 px-2 min-w-0' : ''} ${layout === 'grid' ? 'w-full' : ''}`}
+              className={`flex-shrink-0 border border-border rounded-xl flex flex-col items-center justify-center hover:border-primary/40 hover:shadow-md transition-all cursor-pointer px-4 py-2.5 min-w-[80px] md:min-w-[100px] gap-1.5 ${displayMode === 'minimal' ? 'bg-transparent border-none py-1 px-2 min-w-0' : 'bg-card'}`}
             >
-              {brand.logo && style !== 'minimal' ? (
+              {brand.logo && displayMode !== 'minimal' ? (
                 <img
                   src={brand.logo}
                   alt={brand.name}
@@ -135,11 +121,11 @@ export default function BrandsSection({
                   loading="lazy"
                 />
               ) : (
-                <span className={`text-xs md:text-sm font-bold text-foreground leading-tight whitespace-nowrap ${style === 'minimal' ? 'text-muted-foreground hover:text-primary transition-colors py-1' : ''}`}>
+                <span className={`text-xs md:text-sm font-bold text-foreground leading-tight whitespace-nowrap ${displayMode === 'minimal' ? 'text-muted-foreground hover:text-primary transition-colors py-1' : ''}`}>
                   {brand.name}
                 </span>
               )}
-              {style !== 'minimal' && (
+              {displayMode !== 'minimal' && (
                 <span className="text-[10px] font-semibold text-muted-foreground leading-none">{brand.name}</span>
               )}
             </button>

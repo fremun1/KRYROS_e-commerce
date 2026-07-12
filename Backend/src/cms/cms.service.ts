@@ -1439,4 +1439,218 @@ export class CMSService {
     return { success: true, seeded: results.length };
   }
 
+  // ==================== DATA MIGRATION ====================
+
+  /**
+   * Migrate legacy section records to the new 7-family model.
+   * 
+   * This normalizes all existing cms_sections by:
+   * 1. Mapping legacy type values to canonical templateType values
+   * 2. Setting proper dataSourceId based on the section type
+   * 3. Cleaning up config fields that were never used
+   * 4. Ensuring all sections have valid pageSlug values
+   */
+  async migrateLegacySections() {
+    const logger = new Logger('CMSService.migrateLegacySections');
+    logger.log('Starting legacy section migration...');
+
+    const sections = await this.prisma.cMSSection.findMany({
+      orderBy: { order: 'asc' },
+    });
+
+    const migrated: any[] = [];
+    const skipped: any[] = [];
+
+    // Type mapping table: legacy types -> canonical templateType
+    const typeMapping: Record<string, string> = {
+      // Product family
+      'TopSelling': 'ProductShelf',
+      'Trending': 'ProductShelf',
+      'BestSellers': 'ProductShelf',
+      'NewestArrivals': 'ProductShelf',
+      'FeaturedProducts': 'ProductShelf',
+      'ProductsGrid': 'ProductShelf',
+      'ProductGrid': 'ProductShelf',
+      'ProductSection': 'ProductShelf',
+      'ShopProductShelf': 'ProductShelf',
+      'RelatedProducts': 'ProductShelf',
+      
+      // Banner family
+      'HeroSlider': 'BannerSlot',
+      'HeroBanner': 'BannerSlot',
+      'BannerSlot': 'BannerSlot',
+      'PromoBanners': 'PromoBanner',
+      'Promotions': 'PromoBanner',
+      'promo_banners': 'PromoBanner',
+      'ShopPromoBanner': 'PromoBanner',
+      
+      // Category family
+      'CategoryGrid': 'CategoryGrid',
+      'CategoryGridShelf': 'CategoryGrid',
+      'CategoriesGrid': 'CategoryGrid',
+      'Categories': 'CategoryGrid',
+      'CategorySection': 'CategoryGrid',
+      'ShopCategories': 'CategoryGrid',
+      
+      // Brand family
+      'BrandGrid': 'BrandGrid',
+      'Brands': 'BrandGrid',
+      
+      // Content family
+      'PageHero': 'ContentSection',
+      'ShopHero': 'ContentSection',
+      'WholesaleHero': 'ContentSection',
+      'GetNowHero': 'ContentSection',
+      'PageContent': 'ContentSection',
+      'ContactForm': 'ContentSection',
+      'FAQAccordion': 'ContentSection',
+      'WholesaleFeatures': 'ContentSection',
+      'GetNowFeatures': 'ContentSection',
+      'ProductGallery': 'ContentSection',
+      
+      // Utility family
+      'Testimonials': 'Testimonials',
+      'Newsletter': 'Newsletter',
+      'RecentlyViewed': 'RecentlyViewed',
+      'TrustBadges': 'TrustBadges',
+      'MembersBanner': 'MembersBanner',
+      'UpgradeBanner': 'UpgradeBanner',
+      'ShopFilters': 'ShopFilters',
+      
+      // Deal family
+      'FlashSale': 'FlashSale',
+      'LimitedStockDeal': 'LimitedStockDeal',
+      'AppliancesDeal': 'AppliancesDeal',
+      'TopExpress': 'TopExpress',
+      'CategoryDeal': 'CategoryDeal',
+      
+      // Category (direct)
+      'category': 'CategoryGrid',
+      'categories': 'CategoryGrid',
+    };
+
+    // dataSourceId mapping table: legacy type -> default dataSourceId
+    const dataSourceMapping: Record<string, string> = {
+      'TopSelling': 'top-selling',
+      'Trending': 'trending-products',
+      'BestSellers': 'top-selling',
+      'NewestArrivals': 'new-arrivals',
+      'FeaturedProducts': 'featured-products',
+      'CategoryGrid': 'homepage-categories',
+      'CategoriesGrid': 'homepage-categories',
+      'Categories': 'homepage-categories',
+      'BrandGrid': 'generic-brand-section',
+      'Brands': 'generic-brand-section',
+      'FlashSale': 'flash-sales',
+      'LimitedStockDeal': 'sale-items',
+      'AppliancesDeal': 'top-selling',
+      'TopExpress': 'trending-products',
+      'RecentlyViewed': 'recently-viewed',
+    };
+
+    // slotKey mapping for banner types
+    const slotKeyMapping: Record<string, string> = {
+      'HeroSlider': 'homepage-hero-slider',
+      'HeroBanner': 'homepage-hero-slider',
+    };
+
+    // config normalization: add canonical fields based on templateType
+    const configNormalization: Record<string, Partial<any>> = {
+      'ProductShelf': { layout: 'horizontal-scroll', limit: 8 },
+      'CategoryGrid': { layout: 'grid', limit: 12 },
+      'BrandGrid': { displayMode: 'full', autoScroll: true },
+      'BannerSlot': { bannerMode: 'hero' },
+    };
+
+    for (const section of sections) {
+      const legacyType = section.type || '';
+      const existingTemplateType = (section as any).templateType;
+      
+      // Skip if already normalized (has templateType that matches the mapping)
+      if (existingTemplateType && typeMapping[legacyType] === existingTemplateType) {
+        skipped.push({ id: section.id, reason: 'already normalized' });
+        continue;
+      }
+
+      // Skip if templateType exists and is not in our mapping (could be custom)
+      if (existingTemplateType && !typeMapping[legacyType] && typeMapping[existingTemplateType] !== existingTemplateType) {
+        skipped.push({ id: section.id, reason: 'unknown custom type' });
+        continue;
+      }
+
+      const canonicalTemplateType = typeMapping[legacyType] || existingTemplateType || 'ProductShelf';
+      const currentConfig = (section.config as any) || {};
+      const normalizedConfig: any = { ...currentConfig };
+
+      // Apply config defaults if missing
+      if (configNormalization[canonicalTemplateType]) {
+        for (const [key, value] of Object.entries(configNormalization[canonicalTemplateType])) {
+          if (!(key in normalizedConfig)) {
+            normalizedConfig[key] = value;
+          }
+        }
+      }
+
+      // Clean up legacy config fields that were never used
+      const fieldsToRemove = ['shopSlug', 'category_source', 'section_source'];
+      for (const field of fieldsToRemove) {
+        delete normalizedConfig[field];
+      }
+
+      // Set dataSourceId if not already set
+      let dataSourceId = section.dataSourceId;
+      if (!dataSourceId && dataSourceMapping[legacyType]) {
+        dataSourceId = dataSourceMapping[legacyType];
+      }
+
+      // Set slotKey for banner types if not already set
+      let slotKey = (section as any).slotKey;
+      if (!slotKey && slotKeyMapping[legacyType]) {
+        slotKey = slotKeyMapping[legacyType];
+      }
+
+      // Normalize pageSlug
+      let pageSlug = section.pageSlug;
+      if (pageSlug === 'home' || pageSlug === '/' || pageSlug === '') {
+        pageSlug = 'homepage';
+      }
+
+      try {
+        await this.prisma.cMSSection.update({
+          where: { id: section.id },
+          data: {
+            templateType: canonicalTemplateType,
+            dataSourceId: dataSourceId || null,
+            slotKey: slotKey || null,
+            pageSlug: pageSlug,
+            config: normalizedConfig,
+            name: section.name || section.title || canonicalTemplateType,
+          } as any,
+        });
+
+        migrated.push({
+          id: section.id,
+          from: legacyType,
+          to: canonicalTemplateType,
+          pageSlug,
+        });
+      } catch (error) {
+        logger.error(`Failed to migrate section ${section.id}: ${error}`);
+        skipped.push({ id: section.id, reason: `error: ${error}` });
+      }
+    }
+
+    // Invalidate CMS cache after migration
+    await this.invalidateCmsCache();
+
+    logger.log(`Migration complete: ${migrated.length} sections migrated, ${skipped.length} skipped`);
+
+    return {
+      success: true,
+      migrated: migrated.length,
+      skipped: skipped.length,
+      details: { migrated, skipped },
+    };
+  }
+
 }

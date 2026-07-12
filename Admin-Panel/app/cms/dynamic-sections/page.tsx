@@ -122,8 +122,9 @@ export default function DynamicSectionsPage() {
       config: { 
         ...formData.config,
         limit: rule.templateType === 'CategoryGrid' ? 12 : 8,
-        layout: rule.templateType === 'ProductShelf' ? 'horizontal-scroll' : (rule.templateType === 'CategoryGrid' ? 'grid' : (rule.templateType === 'BrandGrid' ? 'horizontal' : undefined)),
-        style: rule.templateType === 'BrandGrid' ? 'full' : undefined
+        layout: rule.templateType === 'ProductShelf' ? 'horizontal-scroll' : (rule.templateType === 'CategoryGrid' ? 'grid' : undefined),
+        displayMode: rule.templateType === 'BrandGrid' ? 'full' : undefined,
+        autoScroll: rule.templateType === 'BrandGrid' ? true : undefined
       }
     });
     setShowTypeSelector(false);
@@ -361,18 +362,29 @@ export default function DynamicSectionsPage() {
                   </div>
                 )}
 
-                {/* Brand Style */}
+                {/* Brand Display Mode */}
                 {formData.templateType === 'BrandGrid' && (
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-muted-foreground uppercase">Display Style</label>
+                    <label className="text-xs font-bold text-muted-foreground uppercase">Display Mode</label>
                     <select 
-                      value={formData.config?.style || 'full'} 
-                      onChange={(e) => setFormData({...formData, config: {...formData.config, style: e.target.value}})}
+                      value={formData.config?.displayMode || 'full'} 
+                      onChange={(e) => setFormData({...formData, config: {...formData.config, displayMode: e.target.value}})}
                       className="w-full p-2.5 bg-background border rounded-lg text-sm outline-none focus:ring-2 focus:ring-primary/20"
                     >
-                      <option value="full">Image + Name</option>
-                      <option value="minimal">Name Only (Auto-scroll)</option>
+                      <option value="full">Image + Name (Full)</option>
+                      <option value="minimal">Name Only (Minimal)</option>
                     </select>
+                  </div>
+                )}
+                {formData.templateType === 'BrandGrid' && (
+                  <div className="flex items-center gap-2">
+                    <input 
+                      type="checkbox" 
+                      id="auto-scroll"
+                      checked={formData.config?.autoScroll !== false} 
+                      onChange={(e) => setFormData({...formData, config: {...formData.config, autoScroll: e.target.checked}})}
+                    />
+                    <label htmlFor="auto-scroll" className="text-xs font-bold text-muted-foreground uppercase">Auto-Scroll</label>
                   </div>
                 )}
               </div>
