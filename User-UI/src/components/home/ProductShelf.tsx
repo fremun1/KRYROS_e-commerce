@@ -1,4 +1,4 @@
-import { useState, useEffect, type ReactNode } from "react";
+import { useState, useEffect, useRef, type ReactNode } from "react";
 import { ChevronRight } from "lucide-react";
 import { API_BASE } from "@/lib/api";
 import { type Product, normalizeProduct } from "@/lib/api";

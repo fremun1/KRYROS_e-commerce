@@ -334,7 +334,7 @@ export class CMSService {
       },
     ];
 
-    const existingSections = await this.prisma.homePageSection.findMany();
+    const existingSections = await this.prisma.cMSSection.findMany({ where: { pageSlug: 'homepage' } });
 
     if (existingSections.length === 0) {
       for (const section of defaultSections) {
@@ -366,7 +366,7 @@ export class CMSService {
       } else {
         await this.prisma.cMSSection.update({
           where: { id: existing.id },
-          data: { order: def.order, isActive: true, config: (def as any).config || existing.config }
+          data: { order: def.order, isActive: true, config: (def as any).config || (existing as any).config }
         });
         updated++;
       }
@@ -834,7 +834,9 @@ export class CMSService {
   }
 
   async deleteSection(id: string) {
-    return this.prisma.cMSSection.delete({ where: { id } });
+    const section = await this.prisma.cMSSection.delete({ where: { id } });
+    await this.invalidateCmsCache();
+    return section;
   }
 
   async reorderSections(pageSlug: string, idsInOrder: string[]) {
@@ -845,6 +847,7 @@ export class CMSService {
       }),
     );
     await Promise.all(updates);
+    await this.invalidateCmsCache();
     return { success: true, message: 'Sections reordered successfully' };
   }
 
@@ -1091,6 +1094,7 @@ export class CMSService {
       data: { order: swappedSection.order },
     });
 
+    await this.invalidateCmsCache();
     return { success: true, message: `Section moved ${direction} successfully` };
   }
 

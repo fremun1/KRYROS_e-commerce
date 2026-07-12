@@ -1,4 +1,4 @@
-import { useState, useEffect, type ReactNode } from "react";
+import { useState, useEffect, useRef, type ReactNode } from "react";
 import { ChevronRight } from "lucide-react";
 import { fetchProducts } from "@/lib/api";
 import type { Product } from "@/lib/api";
@@ -33,6 +33,8 @@ interface ProductSectionProps {
   accentColor?: string;
   /** Decorative banner rendered ABOVE the title/See-All row */
   topBanner?: ReactNode;
+  showTimer?: boolean;
+  showPercent?: boolean;
 }
 
 export default function ProductSection({
@@ -44,6 +46,8 @@ export default function ProductSection({
   params = {},
   limit = 10,
   topBanner,
+  showTimer = false,
+  showPercent = false,
 }: ProductSectionProps) {
   const [activeTab, setActiveTab] = useState(0);
   const [products, setProducts] = useState<Product[]>([]);
@@ -53,6 +57,40 @@ export default function ProductSection({
   useEffect(() => {
     fetchProducts({ ...activeParams, take: limit }).then(setProducts);
   }, [activeTab, JSON.stringify(activeParams), limit]);
+
+  // ─── Timer logic ───
+  const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0 });
+  const endDateRef = useRef<Date | null>(null);
+
+  useEffect(() => {
+    if (!showTimer || products.length === 0) return;
+
+    const timestamps = products
+      .filter((p) => p.flashSaleEnd)
+      .map((p) => new Date(p.flashSaleEnd!).getTime())
+      .filter((t) => !isNaN(t));
+    
+    let end = timestamps.length > 0 ? new Date(Math.min(...timestamps)) : null;
+    if (!end) {
+      end = new Date();
+      end.setHours(23, 59, 59, 999);
+    }
+    endDateRef.current = end;
+
+    const tick = setInterval(() => {
+      const totalSeconds = Math.max(0, Math.floor((endDateRef.current!.getTime() - Date.now()) / 1000));
+      setTimeLeft({
+        hours: Math.floor(totalSeconds / 3600),
+        minutes: Math.floor((totalSeconds % 3600) / 60),
+        seconds: totalSeconds % 60,
+      });
+      if (totalSeconds === 0) clearInterval(tick);
+    }, 1000);
+
+    return () => clearInterval(tick);
+  }, [showTimer, products]);
+
+  const fmt = (v: number) => String(v).padStart(2, '0');
 
   if (products.length === 0) return null;
 
@@ -66,9 +104,23 @@ export default function ProductSection({
         {/* ── Jumia-style plain section header ─────────────────────── */}
         <div className="flex items-center justify-between px-4 md:px-6 pt-4 pb-3">
           <div className="min-w-0">
-            <h2 className="text-[20px] leading-[28px] font-bold text-foreground tracking-tight">
-              {title}
-            </h2>
+            <div className="flex items-center gap-3">
+              <h2 className="text-[20px] leading-[28px] font-bold text-foreground tracking-tight">
+                {title}
+              </h2>
+              {showTimer && products.length > 0 && (
+                <div className="flex items-center gap-1.5 ml-2">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground opacity-80">
+                    Ends in:
+                  </span>
+                  <div className="flex items-center gap-1 font-bold text-primary">
+                    <span className="text-sm bg-black/10 px-1.5 py-0.5 rounded">{fmt(timeLeft.hours)}h</span>
+                    <span className="text-sm bg-black/10 px-1.5 py-0.5 rounded">{fmt(timeLeft.minutes)}m</span>
+                    <span className="text-sm bg-black/10 px-1.5 py-0.5 rounded">{fmt(timeLeft.seconds)}s</span>
+                  </div>
+                </div>
+              )}
+            </div>
             {subtitle && (
               <p className="text-[13px] leading-[18px] text-muted-foreground mt-0.5">
                 {subtitle}

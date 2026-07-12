@@ -124,7 +124,7 @@ export class SectionDataSourceService {
         whereClause.showOnHome = true;
         break;
       case 'shop-page-categories':
-        whereClause.showOnShop = true;
+        // whereClause.showOnShop = true; // Field does not exist in schema
         break;
       case 'all-categories':
       case 'categories-grid':
@@ -232,7 +232,8 @@ export class SectionDataSourceService {
         id: rule.id,
         label: rule.label,
         description: rule.description,
-        icon: rule.icon
+        icon: rule.icon,
+        templateType: rule.templateType
       });
     }
 

@@ -135,7 +135,7 @@ export default function BrandsSection({
                   loading="lazy"
                 />
               ) : (
-                <span className={`text-xs md:text-sm font-bold text-foreground leading-tight whitespace-nowrap ${style === 'minimal' ? 'text-muted-foreground hover:text-primary transition-colors' : ''}`}>
+                <span className={`text-xs md:text-sm font-bold text-foreground leading-tight whitespace-nowrap ${style === 'minimal' ? 'text-muted-foreground hover:text-primary transition-colors py-1' : ''}`}>
                   {brand.name}
                 </span>
               )}

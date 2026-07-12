@@ -79,7 +79,7 @@ export const SECTION_RULES: Record<string, SectionRule> = {
     label: 'Featured Products',
     description: 'Manually featured products (hand-picked by admin).',
     category: 'products',
-    params: { featured: true },
+    params: { isFeatured: true },
     icon: '⭐',
     templateType: 'ProductShelf'
   },

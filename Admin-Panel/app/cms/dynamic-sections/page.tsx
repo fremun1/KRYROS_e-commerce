@@ -361,32 +361,19 @@ export default function DynamicSectionsPage() {
                   </div>
                 )}
 
-                {/* Brand Layout & Style */}
+                {/* Brand Style */}
                 {formData.templateType === 'BrandGrid' && (
-                  <>
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-muted-foreground uppercase">Layout</label>
-                      <select 
-                        value={formData.config?.layout || 'horizontal'} 
-                        onChange={(e) => setFormData({...formData, config: {...formData.config, layout: e.target.value}})}
-                        className="w-full p-2.5 bg-background border rounded-lg text-sm outline-none focus:ring-2 focus:ring-primary/20"
-                      >
-                        <option value="horizontal">Horizontal Scroll</option>
-                        <option value="grid">Grid</option>
-                      </select>
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-muted-foreground uppercase">Display Style</label>
-                      <select 
-                        value={formData.config?.style || 'full'} 
-                        onChange={(e) => setFormData({...formData, config: {...formData.config, style: e.target.value}})}
-                        className="w-full p-2.5 bg-background border rounded-lg text-sm outline-none focus:ring-2 focus:ring-primary/20"
-                      >
-                        <option value="full">Image + Name</option>
-                        <option value="minimal">Name Only (Auto-scroll)</option>
-                      </select>
-                    </div>
-                  </>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-muted-foreground uppercase">Display Style</label>
+                    <select 
+                      value={formData.config?.style || 'full'} 
+                      onChange={(e) => setFormData({...formData, config: {...formData.config, style: e.target.value}})}
+                      className="w-full p-2.5 bg-background border rounded-lg text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                    >
+                      <option value="full">Image + Name</option>
+                      <option value="minimal">Name Only (Auto-scroll)</option>
+                    </select>
+                  </div>
                 )}
               </div>
 

@@ -57,7 +57,7 @@ export class CMSController {
   @Get('sections/manage')
   @ApiOperation({ summary: 'List all sections for admin panel (with manage endpoint)' })
   manageSections(@Query('pageSlug') pageSlug: string) {
-    return this.cmsService.getSections(pageSlug);
+    return this.cmsService.listSections(pageSlug);
   }
 
   @Post('sections')
