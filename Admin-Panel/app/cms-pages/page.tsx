@@ -1236,10 +1236,20 @@ function CMSContent() {
     _apiCreate(addSectionPage, name, {}, undefined);
     toast.success('"' + name + '" added'); setAddSectionPage(null); setCustomSectionName('');
   };
-  const handleDeleteSection = (pageId: string, sectionName: string) => {
-    setData(d => d.map(p => p.id !== pageId ? p : { ...p, sections: p.sections.filter(s => s.name !== sectionName), lastEdited: new Date().toISOString().split('T')[0] }));
-    toast.success('Section removed');
-    if (selectedSectionName === sectionName) { setView('sections'); setSelectedSectionName(null); }
+  const handleDeleteSection = async (pageId: string, sectionName: string) => {
+    const page = data.find(p => p.id === pageId);
+    if (!page) return;
+    const section = page.sections.find(s => s.name === sectionName);
+    if (!section) return;
+    if (!confirm('Remove "' + sectionName + '" section? This will delete ' + section.items.length + ' item(s).')) return;
+    try {
+      await Promise.all(section.items.map(item => _apiDelete(item.id, pageId, sectionName)));
+      setData(d => d.map(p => p.id !== pageId ? p : { ...p, sections: p.sections.filter(s => s.name !== sectionName), lastEdited: new Date().toISOString().split('T')[0] }));
+      toast.success('Section removed');
+      if (selectedSectionName === sectionName) { setView('sections'); setSelectedSectionName(null); }
+    } catch {
+      toast.error('Delete failed — please try again');
+    }
   };
   const handleMoveSection = async (pageId: string, sectionName: string, direction: 'up' | 'down') => {
     const page = data.find(p => p.id === pageId);

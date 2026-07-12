@@ -13,7 +13,6 @@
 
 import { useMemo } from 'react';
 import ProductShelf from './ProductShelf';
-import BannerSlot from './BannerSlot';
 import CategoryGridShelf from './CategoryGridShelf';
 import BrandsSection from './BrandsSection';
 import CategorySection from './CategorySection';
@@ -25,7 +24,7 @@ import ProductSection from './ProductSection';
 import RecentlyViewedSection from './RecentlyViewedSection';
 import CategoryPromoBanners from './CategoryPromoBanners';
 import PromoBanners from './PromoBanners';
-import HeroBannerSection from './HeroBannerSection';
+import HeroSection from './HeroSection';
 import TopExpressSection from './TopExpressSection';
 
 interface CMSSection {
@@ -88,12 +87,8 @@ export default function DynamicSectionRendererV2({
           // ─────────────────────────────────────────────────────────────────
           case 'BannerSlot':
             return (
-              <BannerSlot
+              <HeroSection
                 key={section.id}
-                slotKey={section.slotKey || section.dataSourceId || 'homepage-hero-slider'}
-                autoRotate={section.config?.autoRotate || false}
-                rotationInterval={section.config?.rotationInterval || 4000}
-                className={section.config?.className}
               />
             );
 
@@ -214,24 +209,15 @@ export default function DynamicSectionRendererV2({
 
           case 'HeroSlider':
             return (
-              <BannerSlot
+              <HeroSection
                 key={section.id}
-                slotKey={section.slotKey || "homepage-hero-slider"}
-                autoRotate={true}
-                rotationInterval={4000}
               />
             );
 
           case 'HeroBanner':
             return (
-              <HeroBannerSection
+              <HeroSection
                 key={section.id}
-                imageUrl={section.config?.imageUrl || section.config?.image || section.config?.media}
-                title={section.title || section.config?.title || section.config?.heading}
-                subtitle={section.subtitle || section.config?.subtitle}
-                buttonText={section.config?.button_text || section.config?.buttonText}
-                buttonLink={section.config?.button_link || section.config?.buttonLink}
-                duration={section.config?.duration}
               />
             );
 

@@ -51,18 +51,10 @@ export class CMSService {
     const where: any = { isActive: true, pageSlug: 'homepage' };
     if (type) where.type = type;
 
-    let sections = await this.prisma.cMSSection.findMany({
+    const sections = await this.prisma.cMSSection.findMany({
       where,
       orderBy: { order: 'asc' },
     });
-
-    if (sections.length === 0) {
-      await this.resetAndSeedSectionsBySlug('homepage');
-      sections = await this.prisma.cMSSection.findMany({
-        where,
-        orderBy: { order: 'asc' },
-      });
-    }
 
     await this.cacheManager.set(cacheKey, sections, 5 * 60 * 1000);
     return sections;
@@ -595,24 +587,6 @@ export class CMSService {
       orderBy: { position: 'asc' },
     });
 
-    // Only auto-seed homepage banners (no tag filter)
-    if (!tag && banners.length === 0) {
-      await this.seedDefaultBanners();
-      banners = await this.prisma.cMSBanner.findMany({
-        where: { isActive: true },
-        orderBy: { position: 'asc' },
-      });
-    }
-
-    // Auto-seed tagged pages (get-now, wholesale) if empty
-    else if (tag && banners.length === 0) {
-      await this.seedDefaultPageBanners(tag);
-      banners = await this.prisma.cMSBanner.findMany({
-        where: { isActive: true, tag },
-        orderBy: { position: 'asc' },
-      });
-    }
-
     await this.cacheManager.set(cacheKey, banners, 5 * 60 * 1000);
     return banners;
   }
@@ -785,21 +759,7 @@ export class CMSService {
     const where: any = { isActive: true };
     if (normalizedSlug) where.pageSlug = normalizedSlug;
 
-    let sections = await this.prisma.cMSSection.findMany({ where, orderBy: { order: 'asc' } });
-
-    // Auto-seed if no sections exist for this specific page slug (same pattern as homepage)
-    if (normalizedSlug && sections.length === 0) {
-      const pageExists = await this.prisma.cMSPage.findUnique({ where: { slug: normalizedSlug } });
-      if (pageExists) {
-        await this.resetAndSeedSectionsBySlug(normalizedSlug);
-        sections = await this.prisma.cMSSection.findMany({
-          where: { pageSlug: normalizedSlug, isActive: true },
-          orderBy: { order: 'asc' },
-        });
-      }
-    }
-
-    return sections;
+    return this.prisma.cMSSection.findMany({ where, orderBy: { order: 'asc' } });
   }
 
   async getPage(slug: string) {
