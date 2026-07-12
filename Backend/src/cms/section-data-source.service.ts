@@ -128,6 +128,7 @@ export class SectionDataSourceService {
         break;
       case 'all-categories':
       case 'categories-grid':
+      case 'generic-category-section':
         // No additional filter, just isActive
         break;
       default:
@@ -148,6 +149,24 @@ export class SectionDataSourceService {
     });
 
     return categories;
+  }
+
+  /**
+   * Fetch brands for a section data source
+   */
+  async fetchBrandsByRule(
+    dataSourceId: string,
+    limit: number = 12
+  ) {
+    this.logger.debug(`Fetching brands for rule: ${dataSourceId}, limit: ${limit}`);
+    
+    const brands = await this.prisma.brand.findMany({
+      where: { isActive: true },
+      take: limit,
+      orderBy: { name: 'asc' }
+    });
+
+    return brands;
   }
 
   /**

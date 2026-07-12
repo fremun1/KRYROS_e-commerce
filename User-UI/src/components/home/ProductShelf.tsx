@@ -25,6 +25,8 @@ interface ProductShelfProps {
   limit?: number;
   layout?: 'horizontal-scroll' | 'grid';
   cardStyle?: 'default' | 'compact';
+  showTimer?: boolean;
+  showPercent?: boolean;
   
   // Navigation
   viewAllHref?: string;
@@ -32,6 +34,7 @@ interface ProductShelfProps {
   
   // Styling
   accentColor?: string;
+  headerBgColor?: string;
   
   // Optional decorative banner above the section
   topBanner?: ReactNode;
@@ -50,9 +53,12 @@ export default function ProductShelf({
   limit = 8,
   layout = 'horizontal-scroll',
   cardStyle = 'default',
+  showTimer = false,
+  showPercent = false,
   viewAllHref = '/shop',
   viewAllText = 'See All',
   accentColor,
+  headerBgColor,
   topBanner,
   loadingCount = 8,
   params = {}
@@ -128,6 +134,45 @@ export default function ProductShelf({
     ? 'w-full'
     : 'flex-shrink-0 w-[calc(50vw-20px)] md:w-full';
 
+  // ─── Timer logic (reused from FlashSaleSection) ───
+  const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0 });
+  const [saleEnded, setSaleEnded] = useState(false);
+  const endDateRef = useRef<Date | null>(null);
+
+  useEffect(() => {
+    if (!showTimer || products.length === 0) return;
+
+    // Set end date to end of today or earliest product flashSaleEnd
+    const timestamps = products
+      .filter((p) => p.flashSaleEnd)
+      .map((p) => new Date(p.flashSaleEnd!).getTime())
+      .filter((t) => !isNaN(t));
+    
+    let end = timestamps.length > 0 ? new Date(Math.min(...timestamps)) : null;
+    if (!end) {
+      end = new Date();
+      end.setHours(23, 59, 59, 999);
+    }
+    endDateRef.current = end;
+
+    const tick = setInterval(() => {
+      const totalSeconds = Math.max(0, Math.floor((endDateRef.current!.getTime() - Date.now()) / 1000));
+      setTimeLeft({
+        hours: Math.floor(totalSeconds / 3600),
+        minutes: Math.floor((totalSeconds % 3600) / 60),
+        seconds: totalSeconds % 60,
+      });
+      if (totalSeconds === 0) {
+        setSaleEnded(true);
+        clearInterval(tick);
+      }
+    }, 1000);
+
+    return () => clearInterval(tick);
+  }, [showTimer, products]);
+
+  const fmt = (v: number) => String(v).padStart(2, '0');
+
   return (
     <section className="pb-4 md:pb-6 bg-white">
       <div className="max-w-7xl mx-auto">
@@ -135,16 +180,34 @@ export default function ProductShelf({
         {topBanner}
 
         {/* Section header */}
-        <div className="flex items-center justify-between px-4 md:px-6 pt-4 pb-3">
+        <div 
+          className={`flex items-center justify-between px-4 md:px-6 py-3 ${headerBgColor ? 'text-white' : ''}`}
+          style={headerBgColor ? { backgroundColor: headerBgColor } : undefined}
+        >
           <div className="min-w-0">
-            <h2 
-              className="text-[20px] leading-[28px] font-bold text-foreground tracking-tight"
-              style={accentColor ? { color: accentColor } : undefined}
-            >
-              {title}
-            </h2>
+            <div className="flex items-center gap-3">
+              <h2 
+                className="text-[20px] leading-[28px] font-bold tracking-tight"
+                style={accentColor && !headerBgColor ? { color: accentColor } : undefined}
+              >
+                {title}
+              </h2>
+              
+              {showTimer && !loading && products.length > 0 && (
+                <div className="flex items-center gap-1.5 ml-2">
+                  <span className={`text-[11px] font-bold uppercase tracking-wider opacity-80 ${headerBgColor ? 'text-white' : 'text-muted-foreground'}`}>
+                    Ends in:
+                  </span>
+                  <div className={`flex items-center gap-1 font-bold ${headerBgColor ? 'text-white' : 'text-primary'}`}>
+                    <span className="text-sm bg-black/10 px-1.5 py-0.5 rounded">{fmt(timeLeft.hours)}h</span>
+                    <span className="text-sm bg-black/10 px-1.5 py-0.5 rounded">{fmt(timeLeft.minutes)}m</span>
+                    <span className="text-sm bg-black/10 px-1.5 py-0.5 rounded">{fmt(timeLeft.seconds)}s</span>
+                  </div>
+                </div>
+              )}
+            </div>
             {subtitle && (
-              <p className="text-[13px] leading-[18px] text-muted-foreground mt-0.5">
+              <p className={`text-[13px] leading-[18px] mt-0.5 ${headerBgColor ? 'text-white/80' : 'text-muted-foreground'}`}>
                 {subtitle}
               </p>
             )}
@@ -152,8 +215,8 @@ export default function ProductShelf({
 
           <a
             href={viewAllHref}
-            className="flex items-center gap-0.5 text-[14px] font-semibold text-primary hover:text-primary/80 transition-colors shrink-0 whitespace-nowrap ml-4"
-            style={accentColor ? { color: accentColor } : undefined}
+            className={`flex items-center gap-0.5 text-[14px] font-semibold hover:opacity-80 transition-colors shrink-0 whitespace-nowrap ml-4 ${headerBgColor ? 'text-white' : 'text-primary'}`}
+            style={accentColor && !headerBgColor ? { color: accentColor } : undefined}
           >
             {viewAllText}
             <ChevronRight className="w-4 h-4" strokeWidth={2.5} />

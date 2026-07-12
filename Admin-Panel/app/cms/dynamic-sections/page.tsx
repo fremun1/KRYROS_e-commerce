@@ -26,6 +26,7 @@ const TEMPLATE_ICONS: Record<string, any> = {
   BannerSlot: ImageIcon,
   CategoryGrid: Grid3x3,
   CategoryGridShelf: Grid3x3,
+  BrandGrid: Users,
   HeroSlider: Layout,
   FlashSale: Zap,
   Custom: Info
@@ -118,6 +119,12 @@ export default function DynamicSectionsPage() {
       slotKey: rule.templateType === 'BannerSlot' ? rule.id : undefined,
       title: rule.label,
       name: rule.label,
+      config: { 
+        ...formData.config,
+        limit: rule.templateType === 'CategoryGrid' ? 12 : 8,
+        layout: rule.templateType === 'ProductShelf' ? 'horizontal-scroll' : (rule.templateType === 'CategoryGrid' ? 'grid' : undefined),
+        style: rule.templateType === 'BrandGrid' ? 'full' : undefined
+      }
     });
     setShowTypeSelector(false);
     setShowModal(true);
@@ -323,6 +330,8 @@ export default function DynamicSectionsPage() {
                   onChange={(v) => setFormData({...formData, config: {...formData.config, limit: parseInt(v)}})}
                   isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
                 />
+                
+                {/* Product Layout */}
                 {formData.templateType === 'ProductShelf' && (
                   <div className="space-y-1.5">
                     <label className="text-xs font-bold text-muted-foreground uppercase">Layout</label>
@@ -336,7 +345,61 @@ export default function DynamicSectionsPage() {
                     </select>
                   </div>
                 )}
+
+                {/* Category Layout */}
+                {formData.templateType === 'CategoryGrid' && (
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-muted-foreground uppercase">Layout</label>
+                    <select 
+                      value={formData.config?.layout || 'grid'} 
+                      onChange={(e) => setFormData({...formData, config: {...formData.config, layout: e.target.value}})}
+                      className="w-full p-2.5 bg-background border rounded-lg text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                    >
+                      <option value="grid">Grid</option>
+                      <option value="horizontal">Horizontal Scroll</option>
+                    </select>
+                  </div>
+                )}
+
+                {/* Brand Layout */}
+                {formData.templateType === 'BrandGrid' && (
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-muted-foreground uppercase">Display Style</label>
+                    <select 
+                      value={formData.config?.style || 'full'} 
+                      onChange={(e) => setFormData({...formData, config: {...formData.config, style: e.target.value}})}
+                      className="w-full p-2.5 bg-background border rounded-lg text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                    >
+                      <option value="full">Image + Name</option>
+                      <option value="minimal">Name Only (Auto-scroll)</option>
+                    </select>
+                  </div>
+                )}
               </div>
+
+              {/* Special Options for Products */}
+              {formData.templateType === 'ProductShelf' && (
+                <div className="grid grid-cols-2 gap-4 mt-4">
+                  <div className="flex items-center gap-2">
+                    <input 
+                      type="checkbox" 
+                      id="show-timer"
+                      checked={formData.config?.showTimer} 
+                      onChange={(e) => setFormData({...formData, config: {...formData.config, showTimer: e.target.checked}})}
+                    />
+                    <label htmlFor="show-timer" className="text-xs font-bold text-muted-foreground uppercase">Show Countdown Timer</label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input 
+                      type="checkbox" 
+                      id="show-percent"
+                      checked={formData.config?.showPercent} 
+                      onChange={(e) => setFormData({...formData, config: {...formData.config, showPercent: e.target.checked}})}
+                    />
+                    <label htmlFor="show-percent" className="text-xs font-bold text-muted-foreground uppercase">Show % Off Badge</label>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="flex items-center gap-3 p-3 bg-primary/5 rounded-xl border border-primary/10">

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { fetchSiteConfig } from "@/lib/api";
+import { fetchSiteConfig, api } from "@/lib/api";
 
 interface CmsBrand {
   name: string;
@@ -7,7 +7,19 @@ interface CmsBrand {
   shopSlug: string;   // brand slug for /shop#brand-{shopSlug} scroll
 }
 
-export default function BrandsSection() {
+interface BrandsSectionProps {
+  title?: string;
+  subtitle?: string;
+  style?: 'full' | 'minimal';
+  dataSourceId?: string;
+}
+
+export default function BrandsSection({
+  title,
+  subtitle,
+  style = 'full',
+  dataSourceId = 'generic-brand-section'
+}: BrandsSectionProps) {
   const [brands, setBrands] = useState<CmsBrand[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const dirRef = useRef<1 | -1>(1);
@@ -16,20 +28,40 @@ export default function BrandsSection() {
   const lastTimeRef = useRef(0);
 
   useEffect(() => {
-    fetchSiteConfig<any>("trusted-brands")
-      .then((v) => {
-        if (!v) return;
-        const raw: any[] = Array.isArray(v) ? v : Array.isArray(v?.items) ? v.items : [];
-        if (raw.length > 0) {
-          setBrands(raw.map((b: any) => ({
+    // Try to fetch from the new endpoint first, fallback to site config
+    const fetchBrands = async () => {
+      try {
+        const response = await api.get(`/api/cms/sections/brands-by-source?dataSourceId=${dataSourceId}`);
+        if (response.data && response.data.length > 0) {
+          setBrands(response.data.map((b: any) => ({
             name: b.name || "",
             logo: b.logo || "",
-            shopSlug: b.shopSlug || b.slug || b.name?.toLowerCase().replace(/\s+/g, "-") || "",
+            shopSlug: b.slug || b.name?.toLowerCase().replace(/\s+/g, "-") || "",
           })));
+          return;
         }
-      })
-      .catch(() => {});
-  }, []);
+      } catch (err) {
+        console.warn("Failed to fetch brands from data source, falling back to site config");
+      }
+
+      // Fallback to legacy site config
+      fetchSiteConfig<any>("trusted-brands")
+        .then((v) => {
+          if (!v) return;
+          const raw: any[] = Array.isArray(v) ? v : Array.isArray(v?.items) ? v.items : [];
+          if (raw.length > 0) {
+            setBrands(raw.map((b: any) => ({
+              name: b.name || "",
+              logo: b.logo || "",
+              shopSlug: b.shopSlug || b.slug || b.name?.toLowerCase().replace(/\s+/g, "-") || "",
+            })));
+          }
+        })
+        .catch(() => {});
+    };
+
+    fetchBrands();
+  }, [dataSourceId]);
 
   // Auto-scroll left ↔ right
   useEffect(() => {
@@ -84,6 +116,13 @@ export default function BrandsSection() {
   return (
     <section className="py-5 md:py-6 border-t border-border">
       <div className="px-4 md:px-6 max-w-7xl mx-auto">
+        {(title || subtitle) && (
+          <div className="mb-4">
+            {title && <h2 className="text-xl font-black">{title}</h2>}
+            {subtitle && <p className="text-sm text-muted-foreground">{subtitle}</p>}
+          </div>
+        )}
+        
         {/* Auto-scrolling horizontal carousel */}
         <div
           ref={scrollRef}
@@ -94,9 +133,9 @@ export default function BrandsSection() {
             <button
               key={i}
               onClick={() => handleBrandClick(brand)}
-              className="flex-shrink-0 bg-card border border-border rounded-xl flex flex-col items-center justify-center hover:border-primary/40 hover:shadow-md transition-all cursor-pointer px-4 py-2.5 min-w-[80px] md:min-w-[100px] gap-1.5"
+              className={`flex-shrink-0 bg-card border border-border rounded-xl flex flex-col items-center justify-center hover:border-primary/40 hover:shadow-md transition-all cursor-pointer px-4 py-2.5 min-w-[80px] md:min-w-[100px] gap-1.5 ${style === 'minimal' ? 'bg-transparent border-none py-1 px-2 min-w-0' : ''}`}
             >
-              {brand.logo ? (
+              {brand.logo && style !== 'minimal' ? (
                 <img
                   src={brand.logo}
                   alt={brand.name}
@@ -104,9 +143,13 @@ export default function BrandsSection() {
                   loading="lazy" decoding="async"
                 />
               ) : (
-                <span className="text-xs md:text-sm font-bold text-foreground leading-tight whitespace-nowrap">{brand.name}</span>
+                <span className={`text-xs md:text-sm font-bold text-foreground leading-tight whitespace-nowrap ${style === 'minimal' ? 'text-muted-foreground hover:text-primary transition-colors' : ''}`}>
+                  {brand.name}
+                </span>
               )}
-              <span className="text-[10px] font-semibold text-muted-foreground leading-none">{brand.name}</span>
+              {style !== 'minimal' && (
+                <span className="text-[10px] font-semibold text-muted-foreground leading-none">{brand.name}</span>
+              )}
             </button>
           ))}
         </div>

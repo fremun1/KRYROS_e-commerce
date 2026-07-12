@@ -381,26 +381,29 @@ export class CMSService {
   private mapLegacyTypeToTemplate(type: string): string {
     const map: Record<string, string> = {
       HeroSlider: 'BannerSlot',
-      Brands: 'Brands',
+      HeroBanner: 'BannerSlot',
+      Brands: 'BrandGrid',
       TrustBadges: 'TrustBadges',
       CategoriesGrid: 'CategoryGrid',
-      FlashSale: 'FlashSale',
-      PromoBanners: 'PromoBanners',
-      promo_banners: 'PromoBanner',
-      CategoryPromoBanners: 'CategoryPromoBanners',
-      ProductSection: 'ProductSection',
-      RecommendedProducts: 'RecommendedProducts',
-      RecentlyViewed: 'RecentlyViewed',
-      UpgradeBanner: 'UpgradeBanner',
-      TopSelling: 'TopSelling',
-      NewestArrivals: 'NewestArrivals',
-      BestSellers: 'BestSellers',
-      Trending: 'Trending',
-      LimitedStockDeal: 'LimitedStockDeal',
-      AppliancesDeal: 'AppliancesDeal',
-      TopExpress: 'TopExpress',
+      Categories: 'CategoryGrid',
+      CategorySection: 'CategoryGrid',
+      FlashSale: 'ProductShelf',
+      PromoBanners: 'BannerSlot',
+      promo_banners: 'BannerSlot',
+      CategoryPromoBanners: 'BannerSlot',
+      ProductSection: 'ProductShelf',
+      RecommendedProducts: 'ProductShelf',
+      RecentlyViewed: 'Custom',
+      UpgradeBanner: 'BannerSlot',
+      TopSelling: 'ProductShelf',
+      NewestArrivals: 'ProductShelf',
+      BestSellers: 'ProductShelf',
+      Trending: 'ProductShelf',
+      LimitedStockDeal: 'ProductShelf',
+      AppliancesDeal: 'ProductShelf',
+      TopExpress: 'ProductShelf',
       Newsletter: 'Newsletter',
-      ProductGrid: 'ProductGrid',
+      ProductGrid: 'ProductShelf',
     };
     return map[type] || 'Custom';
   }
@@ -413,7 +416,14 @@ export class CMSService {
       BestSellers: 'top-selling',
       FlashSale: 'flash-sales',
       CategoriesGrid: 'homepage-categories',
+      Categories: 'homepage-categories',
+      CategorySection: 'homepage-categories',
       HeroSlider: 'homepage-hero-slider',
+      HeroBanner: 'homepage-hero-slider',
+      Brands: 'generic-brand-section',
+      LimitedStockDeal: 'sale-items',
+      AppliancesDeal: 'top-selling',
+      TopExpress: 'trending-products',
     };
     return map[type] || null;
   }
@@ -792,11 +802,35 @@ export class CMSService {
   }
 
   async createSection(data: CreateSectionDto) {
-    return this.prisma.cMSSection.create({ data: { ...data } as any });
+    // Auto-map templateType and dataSourceId if type is provided but they are not
+    let { templateType, dataSourceId, type } = data as any;
+    if (type && !templateType) {
+      templateType = this.mapLegacyTypeToTemplate(type);
+    }
+    if (type && !dataSourceId) {
+      dataSourceId = this.mapLegacyTypeToDataSource(type);
+    }
+
+    const section = await this.prisma.cMSSection.create({
+      data: {
+        ...data,
+        templateType,
+        dataSourceId,
+      } as any,
+    });
+    await this.invalidateCmsCache();
+    return section;
   }
 
   async updateSection(id: string, data: UpdateSectionDto) {
-    return this.prisma.cMSSection.update({ where: { id }, data: { ...data } as any });
+    const section = await this.prisma.cMSSection.update({
+      where: { id },
+      data: {
+        ...data,
+      } as any,
+    });
+    await this.invalidateCmsCache();
+    return section;
   }
 
   async deleteSection(id: string) {

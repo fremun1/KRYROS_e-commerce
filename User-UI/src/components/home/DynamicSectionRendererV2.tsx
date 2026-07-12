@@ -76,9 +76,12 @@ export default function DynamicSectionRendererV2({
                 limit={section.config?.limit || 8}
                 layout={section.config?.layout || 'horizontal-scroll'}
                 cardStyle={section.config?.cardStyle || 'default'}
+                showTimer={section.config?.showTimer || false}
+                showPercent={section.config?.showPercent || false}
                 viewAllHref={section.config?.viewAllHref || '/shop'}
                 viewAllText={section.config?.viewAllText || 'See All'}
                 accentColor={section.config?.accentColor}
+                headerBgColor={section.config?.headerBgColor}
               />
             );
 
@@ -89,6 +92,7 @@ export default function DynamicSectionRendererV2({
             return (
               <HeroSection
                 key={section.id}
+                slotKey={section.slotKey || section.dataSourceId || 'homepage-hero-slider'}
               />
             );
 
@@ -199,11 +203,22 @@ export default function DynamicSectionRendererV2({
                 subtitle={section.subtitle}
                 dataSourceId={section.dataSourceId || 'homepage-categories'}
                 limit={section.config?.limit || 12}
-                columns={section.config?.layout === 'horizontal' ? 6 : 'auto'}
-                showProductCount={section.config?.showProductCount === 'true'}
-                showViewAll={section.config?.showViewAll === 'true'}
+                columns={section.config?.layout === 'horizontal' || section.config?.layout === 'horizontal-scroll' ? 6 : 'auto'}
+                showProductCount={section.config?.showProductCount === 'true' || section.config?.showProductCount === true}
+                showViewAll={section.config?.showViewAll === 'true' || section.config?.showViewAll === true}
                 viewAllHref={section.config?.viewAllHref || '/shop'}
                 className={section.config?.className}
+              />
+            );
+
+          case 'BrandGrid':
+          case 'Brands':
+            return (
+              <BrandsSection 
+                key={section.id} 
+                title={section.title}
+                subtitle={section.subtitle}
+                style={section.config?.style || 'full'}
               />
             );
 

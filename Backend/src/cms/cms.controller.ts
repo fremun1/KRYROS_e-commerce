@@ -261,6 +261,18 @@ export class CMSController {
     );
   }
 
+  @Get('sections/brands-by-source')
+  @ApiOperation({ summary: 'Fetch brands for a section data source' })
+  fetchBrandsBySource(
+    @Query('dataSourceId') dataSourceId: string,
+    @Query('limit') limit?: string
+  ) {
+    return this.sectionDataSourceService.fetchBrandsByRule(
+      dataSourceId,
+      limit ? Number(limit) : 12
+    );
+  }
+
   @Patch('sections/:id/move')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)

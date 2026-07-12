@@ -13,106 +13,26 @@ export interface SectionRule {
   id: string;
   label: string;
   description: string;
-  category: 'products' | 'banner' | 'category' | 'custom';
+  category: 'products' | 'banner' | 'category' | 'brand' | 'custom';
   params: Record<string, any>;
   icon?: string;
+  templateType: 'ProductShelf' | 'BannerSlot' | 'CategoryGrid' | 'BrandGrid' | 'Custom';
 }
 
 export const SECTION_RULES: Record<string, SectionRule> = {
   // ─────────────────────────────────────────────────────────────────
-  // BANNER SLOTS (for BannerSlot template)
-  // ─────────────────────────────────────────────────────────────────
-  // Banners are positioned in specific "slots" on the page.
-  // Each slot can contain multiple banners, displayed in order.
-
-  'homepage-hero-slider': {
-    id: 'homepage-hero-slider',
-    label: 'Homepage Hero Slider',
-    description: 'Main hero banner slider at the top of homepage.',
-    category: 'banner',
-    params: { slotKey: 'homepage-hero-slider' },
-    icon: '🎬'
-  },
-
-  'homepage-after-flash-sale': {
-    id: 'homepage-after-flash-sale',
-    label: 'After Flash Sale Banner',
-    description: 'Banner positioned after the flash sale section.',
-    category: 'banner',
-    params: { slotKey: 'homepage-after-flash-sale' },
-    icon: '📍'
-  },
-
-  'homepage-mid-page': {
-    id: 'homepage-mid-page',
-    label: 'Mid-Page Banner',
-    description: 'Banner positioned in the middle of the homepage.',
-    category: 'banner',
-    params: { slotKey: 'homepage-mid-page' },
-    icon: '📍'
-  },
-
-  'shop-page-top': {
-    id: 'shop-page-top',
-    label: 'Shop Page Top Banner',
-    description: 'Banner at the top of the shop page.',
-    category: 'banner',
-    params: { slotKey: 'shop-page-top' },
-    icon: '📍'
-  },
-
-  'get-now-page-top': {
-    id: 'get-now-page-top',
-    label: 'Get Now Page Top Banner',
-    description: 'Banner at the top of the get now page.',
-    category: 'banner',
-    params: { slotKey: 'get-now-page-top' },
-    icon: '📍'
-  },
-
-  'wholesale-page-top': {
-    id: 'wholesale-page-top',
-    label: 'Wholesale Page Top Banner',
-    description: 'Banner at the top of the wholesale page.',
-    category: 'banner',
-    params: { slotKey: 'wholesale-page-top' },
-    icon: '📍'
-  },
-
-  // ─────────────────────────────────────────────────────────────────
-  // CATEGORY RULES (for CategoryGrid template)
-  // ─────────────────────────────────────────────────────────────────
-
-  'homepage-categories': {
-    id: 'homepage-categories',
-    label: 'Homepage Categories Grid',
-    description: 'Display product categories in a grid on the homepage.',
-    category: 'category',
-    params: { showOnHome: true },
-    icon: '🏷️'
-  },
-
-  'shop-page-categories': {
-    id: 'shop-page-categories',
-    label: 'Shop Page Categories',
-    description: 'Display product categories on the shop page.',
-    category: 'category',
-    params: { showOnShop: true },
-    icon: '🏷️'
-  },
-
-  'all-categories': {
-    id: 'all-categories',
-    label: 'All Categories',
-    description: 'Display all available product categories.',
-    category: 'category',
-    params: {},
-    icon: '🏷️'
-  },
-
-  // ─────────────────────────────────────────────────────────────────
   // PRODUCT-BASED RULES (for ProductShelf template)
   // ─────────────────────────────────────────────────────────────────
+
+  'generic-product-shelf': {
+    id: 'generic-product-shelf',
+    label: 'Product Section',
+    description: 'A generic product section that can be configured for any purpose.',
+    category: 'products',
+    params: {},
+    icon: '📦',
+    templateType: 'ProductShelf'
+  },
 
   'top-selling': {
     id: 'top-selling',
@@ -120,7 +40,8 @@ export const SECTION_RULES: Record<string, SectionRule> = {
     description: 'Products ordered by total sales count (most ordered first).',
     category: 'products',
     params: { popularity: 'bestseller' },
-    icon: '📊'
+    icon: '📊',
+    templateType: 'ProductShelf'
   },
 
   'trending-products': {
@@ -129,7 +50,8 @@ export const SECTION_RULES: Record<string, SectionRule> = {
     description: 'Products gaining popularity (ordered by recent orders + wishlist count).',
     category: 'products',
     params: { popularity: 'trending' },
-    icon: '🔥'
+    icon: '🔥',
+    templateType: 'ProductShelf'
   },
 
   'new-arrivals': {
@@ -138,16 +60,8 @@ export const SECTION_RULES: Record<string, SectionRule> = {
     description: 'Latest products added to the store (ordered by creation date).',
     category: 'products',
     params: { popularity: 'new' },
-    icon: '✨'
-  },
-
-  'hot-products': {
-    id: 'hot-products',
-    label: 'Hot Products',
-    description: 'Products with the most wishlist saves (most wishlisted first).',
-    category: 'products',
-    params: { popularity: 'hot' },
-    icon: '🌡️'
+    icon: '✨',
+    templateType: 'ProductShelf'
   },
 
   'flash-sales': {
@@ -156,7 +70,8 @@ export const SECTION_RULES: Record<string, SectionRule> = {
     description: 'Products with active flash sale pricing.',
     category: 'products',
     params: { isFlashSale: true },
-    icon: '⚡'
+    icon: '⚡',
+    templateType: 'ProductShelf'
   },
 
   'featured-products': {
@@ -165,7 +80,8 @@ export const SECTION_RULES: Record<string, SectionRule> = {
     description: 'Manually featured products (hand-picked by admin).',
     category: 'products',
     params: { featured: true },
-    icon: '⭐'
+    icon: '⭐',
+    templateType: 'ProductShelf'
   },
 
   'sale-items': {
@@ -174,7 +90,8 @@ export const SECTION_RULES: Record<string, SectionRule> = {
     description: 'Products with active sales or flash sale pricing.',
     category: 'products',
     params: { popularity: 'sale' },
-    icon: '🏷️'
+    icon: '🏷️',
+    templateType: 'ProductShelf'
   },
 
   'credit-eligible': {
@@ -183,7 +100,8 @@ export const SECTION_RULES: Record<string, SectionRule> = {
     description: 'Products available for purchase on credit (Get Now).',
     category: 'products',
     params: { allowCredit: true },
-    icon: '💳'
+    icon: '💳',
+    templateType: 'ProductShelf'
   },
 
   'wholesale-products': {
@@ -192,26 +110,84 @@ export const SECTION_RULES: Record<string, SectionRule> = {
     description: 'Products available for wholesale/bulk purchase.',
     category: 'products',
     params: { isWholesaleOnly: true },
-    icon: '📦'
+    icon: '📦',
+    templateType: 'ProductShelf'
   },
 
   // ─────────────────────────────────────────────────────────────────
-  // CATEGORY-BASED RULES
+  // CATEGORY RULES (for CategoryGrid template)
   // ─────────────────────────────────────────────────────────────────
 
-  'categories-grid': {
-    id: 'categories-grid',
-    label: 'Categories Grid',
-    description: 'Display all active product categories in a grid layout.',
+  'generic-category-section': {
+    id: 'generic-category-section',
+    label: 'Category Section',
+    description: 'A generic category section to display categories in grid or horizontal layout.',
     category: 'category',
     params: {},
-    icon: '🏷️'
+    icon: '🏷️',
+    templateType: 'CategoryGrid'
   },
 
-
+  'homepage-categories': {
+    id: 'homepage-categories',
+    label: 'Homepage Categories Grid',
+    description: 'Display product categories in a grid on the homepage.',
+    category: 'category',
+    params: { showOnHome: true },
+    icon: '🏷️',
+    templateType: 'CategoryGrid'
+  },
 
   // ─────────────────────────────────────────────────────────────────
-  // CUSTOM RULES (for special sections)
+  // BRAND RULES (for BrandGrid template)
+  // ─────────────────────────────────────────────────────────────────
+
+  'generic-brand-section': {
+    id: 'generic-brand-section',
+    label: 'Brand Section',
+    description: 'Display brands with options for image+name or just name with auto-scroll.',
+    category: 'brand',
+    params: {},
+    icon: '🛡️',
+    templateType: 'BrandGrid'
+  },
+
+  // ─────────────────────────────────────────────────────────────────
+  // BANNER SLOTS (for BannerSlot template)
+  // ─────────────────────────────────────────────────────────────────
+
+  'generic-banner-section': {
+    id: 'generic-banner-section',
+    label: 'Banner Section',
+    description: 'A generic banner section (Hero or Promo) that can be placed anywhere.',
+    category: 'banner',
+    params: { slotKey: 'generic' },
+    icon: '🖼️',
+    templateType: 'BannerSlot'
+  },
+
+  'homepage-hero-slider': {
+    id: 'homepage-hero-slider',
+    label: 'Homepage Hero Slider',
+    description: 'Main hero banner slider at the top of homepage.',
+    category: 'banner',
+    params: { slotKey: 'homepage-hero-slider' },
+    icon: '🎬',
+    templateType: 'BannerSlot'
+  },
+
+  'homepage-mid-page': {
+    id: 'homepage-mid-page',
+    label: 'Mid-Page Banner',
+    description: 'Banner positioned in the middle of the homepage.',
+    category: 'banner',
+    params: { slotKey: 'homepage-mid-page' },
+    icon: '📍',
+    templateType: 'BannerSlot'
+  },
+
+  // ─────────────────────────────────────────────────────────────────
+  // CUSTOM RULES
   // ─────────────────────────────────────────────────────────────────
 
   'recently-viewed': {
@@ -220,63 +196,27 @@ export const SECTION_RULES: Record<string, SectionRule> = {
     description: 'Products the user has recently viewed (client-side, localStorage).',
     category: 'custom',
     params: { clientSide: true },
-    icon: '👁️'
-  },
-
-  'recommended-for-you': {
-    id: 'recommended-for-you',
-    label: 'Recommended For You',
-    description: 'Products recommended based on user browsing history.',
-    category: 'custom',
-    params: { personalized: true },
-    icon: '💡'
+    icon: '👁️',
+    templateType: 'Custom'
   }
 };
 
-/**
- * Get a rule by its ID
- * @param ruleId The unique identifier of the rule
- * @returns The rule object, or null if not found
- */
 export function getRule(ruleId: string): SectionRule | null {
   return SECTION_RULES[ruleId] || null;
 }
 
-/**
- * Get all rules
- * @returns Array of all available rules
- */
 export function getAllRules(): SectionRule[] {
   return Object.values(SECTION_RULES);
 }
 
-/**
- * Get rules by category
- * @param category The category to filter by
- * @returns Array of rules in the specified category
- */
 export function getRulesByCategory(category: SectionRule['category']): SectionRule[] {
   return Object.values(SECTION_RULES).filter(rule => rule.category === category);
 }
 
-/**
- * Validate that a rule ID exists
- * @param ruleId The rule ID to validate
- * @returns true if the rule exists, false otherwise
- */
-/**
- * Validate that a rule ID exists
- * @param ruleId The rule ID to validate
- * @returns true if the rule exists, false otherwise
- */
 export function isValidRuleId(ruleId: string): boolean {
   return ruleId in SECTION_RULES;
 }
 
-/**
- * Get all available banner slots
- * @returns Array of unique slot keys
- */
 export function getAllBannerSlots(): string[] {
   const slots = new Set<string>();
   for (const rule of Object.values(SECTION_RULES)) {
@@ -287,11 +227,6 @@ export function getAllBannerSlots(): string[] {
   return Array.from(slots);
 }
 
-/**
- * Get all rules for a specific slot
- * @param slotKey The slot key to filter by
- * @returns Array of rules for that slot
- */
 export function getRulesBySlot(slotKey: string): SectionRule[] {
   return Object.values(SECTION_RULES).filter(
     rule => rule.category === 'banner' && rule.params.slotKey === slotKey
