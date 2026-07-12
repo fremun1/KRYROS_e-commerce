@@ -1,7 +1,16 @@
+import axios from "axios";
+
 export const API_BASE = (import.meta.env.VITE_API_URL || "").replace(/\/api$/, "");
 if (import.meta.env.PROD && !API_BASE) {
   console.warn("VITE_API_URL is not set in production environment.");
 }
+
+export const api = axios.create({
+  baseURL: API_BASE,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
 
 export interface Product {
   id: string;

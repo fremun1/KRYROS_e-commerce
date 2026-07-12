@@ -1,6 +1,4 @@
-import { useEffect, useState } from "react";
 import { Link } from "wouter";
-import { api } from "@/lib/api";
 
 interface BannerData {
   id: string;
@@ -48,7 +46,7 @@ export default function PromoBanner({
       <div
         className="w-full rounded-2xl p-6 md:p-10 text-center text-white"
         style={{
-          background: gradient || bgColor || 'linear-gradient(135deg, #1FA89A, #27B9AF)',
+          background: gradient || 'linear-gradient(135deg, #1FA89A, #27B9AF)',
           backgroundImage: image ? `url(${image})` : undefined,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
