@@ -30,8 +30,9 @@ export class ProductsService {
     isFlashSale?: boolean;
     showInactive?: boolean;
     popularity?: string;
+    lowStock?: boolean;
   }) {
-    const { skip = 0, take: rawTake = 20, categoryId, categorySlug, search, isFeatured, allowCredit, isWholesaleOnly, isFlashSale, showInactive, popularity } = params;
+    const { skip = 0, take: rawTake = 20, categoryId, categorySlug, search, isFeatured, allowCredit, isWholesaleOnly, isFlashSale, showInactive, popularity, lowStock } = params;
     const take = Math.min(Math.max(1, Number(rawTake) || 20), 500);
     
     const where: any = {};
@@ -52,18 +53,13 @@ export class ProductsService {
     if (allowCredit !== undefined) andFilters.push({ allowCredit });
     if (isWholesaleOnly !== undefined) andFilters.push({ isWholesaleOnly });
     if (!showInactive) andFilters.push({ isActive: true });
-
-
-
-    if (andFilters.length > 0) {
-      where.AND = andFilters;
-    }
-
-    if (search) {
-      where.OR = [
-        { name: { contains: search, mode: 'insensitive' } },
-        { sku: { contains: search, mode: 'insensitive' } },
-      ];
+    if (lowStock) {
+      andFilters.push({
+        OR: [
+          { stockCurrent: { not: null, lte: 10 } },
+          { inventory: { not: null, stock: { not: null, lte: 10 } } }
+        ]
+      });
     }
 
     if (popularity === 'sale' || popularity === 'promotion prices') {

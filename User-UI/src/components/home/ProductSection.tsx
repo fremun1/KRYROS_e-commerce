@@ -12,6 +12,7 @@ interface ApiParams {
   featured?: boolean;
   isFlashSale?: boolean;
   popularity?: "trending" | "bestseller" | "new" | "hot" | "sale";
+  lowStock?: boolean;
 }
 
 interface TabDef {

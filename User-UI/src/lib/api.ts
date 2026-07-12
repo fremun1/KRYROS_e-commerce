@@ -317,6 +317,7 @@ export async function fetchProducts(
     popularity?: "trending" | "bestseller" | "new" | "hot" | "sale";
     allowCredit?: boolean;
     isWholesaleOnly?: boolean;
+    lowStock?: boolean;
   } = {}
 ): Promise<Product[]> {
   const qs = new URLSearchParams();
@@ -329,6 +330,7 @@ export async function fetchProducts(
   if (params.isFlashSale !== undefined) qs.set("isFlashSale", String(params.isFlashSale));
   if (params.popularity) qs.set("popularity", params.popularity);
   if (params.allowCredit !== undefined) qs.set("allowCredit", String(params.allowCredit));
+  if (params.lowStock !== undefined) qs.set("lowStock", String(params.lowStock));
   // Default: exclude wholesale-only products from regular listings unless caller explicitly sets isWholesaleOnly
   qs.set("isWholesaleOnly", params.isWholesaleOnly !== undefined ? String(params.isWholesaleOnly) : "false");
 

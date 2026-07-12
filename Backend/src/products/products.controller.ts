@@ -46,6 +46,7 @@ export class ProductsController {
     @Query('isFlashSale') isFlashSale?: string,
     @Query('showInactive') showInactive?: string,
     @Query('popularity') popularity?: string,
+    @Query('lowStock') lowStock?: string,
   ) {
     const isAdmin = req.user && (
       req.user.role === UserRole.ADMIN ||
@@ -70,6 +71,7 @@ export class ProductsController {
       isFlashSale: isFlashSale === 'true' ? true : isFlashSale === 'false' ? false : undefined,
       showInactive: resolvedShowInactive,
       popularity,
+      lowStock: lowStock === 'true' ? true : lowStock === 'false' ? false : undefined,
     });
   }
 

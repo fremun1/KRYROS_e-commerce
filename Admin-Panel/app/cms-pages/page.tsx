@@ -810,7 +810,7 @@ function CMSContent() {
   // Reset & re-seed all sections for a non-home page (clears duplicates)
   const handleResetSections = async (pageId: string) => {
     const pg = data.find(p => p.id === pageId);
-    if (!pg || _isHome(pageId)) return;
+    if (!pg) return;
     if (!confirm('This will reset all sections for "' + pg.title + '" to defaults. Continue?')) return;
     try {
       toast('Resetting sections...', { icon: '🔄' });
@@ -1437,11 +1437,9 @@ function CMSContent() {
               </p>
             </div>
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-              {!_isHome(selectedPage.id) && (
-                <button onClick={() => handleResetSections(selectedPage.id)} title="Reset sections to defaults (clears duplicates)" style={{ display: 'flex', alignItems: 'center', gap: '6px', background: isDark ? '#1E293B' : '#F1F5F9', border: `1px solid ${border}`, borderRadius: '9px', color: textMuted, fontSize: '13px', fontWeight: 600, padding: '9px 14px', cursor: 'pointer', fontFamily: 'var(--font-inter)' }}>
-                  <RefreshCw size={13} /> Reset Sections
-                </button>
-              )}
+              <button onClick={() => handleResetSections(selectedPage.id)} title="Reset sections to defaults (clears duplicates)" style={{ display: 'flex', alignItems: 'center', gap: '6px', background: isDark ? '#1E293B' : '#F1F5F9', border: `1px solid ${border}`, borderRadius: '9px', color: textMuted, fontSize: '13px', fontWeight: 600, padding: '9px 14px', cursor: 'pointer', fontFamily: 'var(--font-inter)' }}>
+                <RefreshCw size={13} /> Reset Sections
+              </button>
               <button onClick={() => { setAddSectionPage(selectedPage.id); setNewSectionName('Hero Banner'); setCustomSectionName(''); }} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'linear-gradient(135deg,#1FA89A,#27B9AF)', border: 'none', borderRadius: '9px', color: 'white', fontSize: '13.5px', fontWeight: 600, padding: '9px 16px', cursor: 'pointer', fontFamily: 'var(--font-inter)', boxShadow: '0 4px 12px rgba(31,168,154,0.25)' }}>
                 <Plus size={15} /> Add Section
               </button>

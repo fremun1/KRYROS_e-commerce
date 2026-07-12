@@ -326,13 +326,76 @@ export class CMSService {
         config: { limit: 8, popularity: 'trending', scroll: true }
       },
       {
-        type: 'CategoryPromoBanners',
+        type: 'CategoryDeals',
         order: 18,
         isActive: true,
         title: 'Category Deals',
         subtitle: 'Special category promotions',
         animation: 'slideUp',
         config: {}
+      },
+      {
+        type: 'TopSelling',
+        order: 19,
+        isActive: true,
+        title: 'Top Selling Products',
+        subtitle: 'Our most popular products by sales volume',
+        animation: 'slideUp',
+        config: { limit: 8, popularity: 'bestseller' }
+      },
+      {
+        type: 'TrendingProducts',
+        order: 20,
+        isActive: true,
+        title: 'Trending Products',
+        subtitle: 'What\'s hot right now',
+        animation: 'slideUp',
+        config: { limit: 8, popularity: 'trending' }
+      },
+      {
+        type: 'BestSellers',
+        order: 21,
+        isActive: true,
+        title: 'Best Sellers',
+        subtitle: 'Customer favourites',
+        animation: 'slideUp',
+        config: { limit: 8, popularity: 'bestseller' }
+      },
+      {
+        type: 'NewArrivals',
+        order: 22,
+        isActive: true,
+        title: 'New Arrivals',
+        subtitle: 'Fresh drops just landed',
+        animation: 'slideUp',
+        config: { limit: 8, popularity: 'new' }
+      },
+      {
+        type: 'LimitedStockDeal',
+        order: 23,
+        isActive: true,
+        title: 'Limited Stock Deals',
+        subtitle: 'Grab them before they\'re gone',
+        animation: 'slideUp',
+        config: { limit: 8, sort: 'limited_stock' }
+      },
+      {
+        type: 'TopExpress',
+        order: 24,
+        isActive: true,
+        title: 'Top Express',
+        subtitle: 'Fast delivery essentials',
+        animation: 'slideUp',
+        config: { limit: 8 }
+      },
+      {
+        type: 'AppliancesDeal',
+        order: 25,
+        isActive: true,
+        title: 'Appliances Deal',
+        subtitle: 'Home appliances at unbeatable prices',
+        animation: 'slideUp',
+        config: { limit: 8, categorySlug: 'appliances' }
       },
       {
         type: 'promo_banners',
@@ -868,16 +931,10 @@ export class CMSService {
     let sections = PAGE_SECTIONS[normalizedSlug];
     
     // If it's the homepage and no specific sections are defined in PAGE_SECTIONS,
-    // we could either use resetAndSeedHomePageSections() or define them here.
-    // For the new dynamic system, we want them in cMSSection (cms_sections table).
+    // use the full homepage seeder so all frontend sections exist.
     if (!sections && normalizedSlug === 'homepage') {
-      sections = [
-        { type: 'HeroSlider', order: 1, isActive: true, title: 'Hero Banner' },
-        { type: 'CategoriesGrid', order: 2, isActive: true, title: 'Shop by Category' },
-        { type: 'FlashSale', order: 3, isActive: true, title: 'Flash Sale' },
-        { type: 'TopSelling', order: 4, isActive: true, title: 'Top Selling' },
-        { type: 'Trending', order: 5, isActive: true, title: 'Trending Now' },
-      ];
+      await this.resetAndSeedHomePageSections();
+      return { success: true, message: `Reset & seeded homepage sections via resetAndSeedHomePageSections` };
     }
 
     if (!sections) {
