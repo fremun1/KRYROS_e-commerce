@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import AdminShell from '@/components/admin/admin-shell';
 import PageHeader from '@/components/admin/page-header';
 import { Modal, ConfirmDialog, FormField, ModalFooter } from '@/components/admin/modal';
+import CloudinaryUpload from '@/components/ui/file-upload';
 import { useTheme } from '@/contexts/theme-context';
 import {
   Plus, Edit, Trash2, GripVertical, Eye, EyeOff, ChevronUp, ChevronDown,
@@ -501,32 +502,15 @@ export default function DynamicSectionsPage() {
                                 Remove
                               </button>
                             </div>
-                            <input
-                              type="file"
-                              accept="image/*"
-                              onChange={async (e) => {
-                                const file = e.target.files?.[0];
-                                if (file) {
-                                  const reader = new FileReader();
-                                  reader.onload = () => {
-                                    const banners = [...(formData.config?.banners || [])];
-                                    banners[idx] = {...banners[idx], image: reader.result as string};
-                                    setFormData({...formData, config: {...formData.config, banners}});
-                                  };
-                                  reader.readAsDataURL(file);
-                                }
-                              }}
-                              className="w-full p-2 bg-background border rounded-lg text-sm"
-                            />
-                            <FormField 
-                              label="Image URL" 
-                              value={banner.image || ''} 
-                              onChange={(v) => {
+                            <CloudinaryUpload
+                              value={banner.image || ''}
+                              onChange={(url) => {
                                 const banners = [...(formData.config?.banners || [])];
-                                banners[idx] = {...banners[idx], image: v};
+                                banners[idx] = {...banners[idx], image: url};
                                 setFormData({...formData, config: {...formData.config, banners}});
                               }}
-                              placeholder="https://example.com/image.jpg"
+                              folder="kryros/banners"
+                              accept="image/*"
                               isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
                             />
                             <FormField 
@@ -569,20 +553,12 @@ export default function DynamicSectionsPage() {
                     <>
                       <div className="space-y-2">
                         <label className="text-xs font-bold text-muted-foreground uppercase">Upload Image</label>
-                        <input
-                          type="file"
+                        <CloudinaryUpload
+                          value={formData.config?.image || formData.config?.media || ''}
+                          onChange={(url) => setFormData({...formData, config: {...formData.config, image: url, media: url}})}
+                          folder="kryros/banners"
                           accept="image/*"
-                          onChange={async (e) => {
-                            const file = e.target.files?.[0];
-                            if (file) {
-                              const reader = new FileReader();
-                              reader.onload = () => {
-                                setFormData({...formData, config: {...formData.config, image: reader.result as string, media: reader.result as string}});
-                              };
-                              reader.readAsDataURL(file);
-                            }
-                          }}
-                          className="w-full p-2.5 bg-background border rounded-lg text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                          isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
                         />
                       </div>
                       <FormField 

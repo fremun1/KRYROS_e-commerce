@@ -4,6 +4,7 @@ import AdminShell from '@/components/admin/admin-shell';
 import DataTable, { Column } from '@/components/admin/data-table';
 import PageHeader from '@/components/admin/page-header';
 import { Modal, ConfirmDialog, FormField, ModalFooter } from '@/components/admin/modal';
+import CloudinaryUpload from '@/components/ui/file-upload';
 import { useTheme } from '@/contexts/theme-context';
 import { Award } from 'lucide-react';
 import { createBrand, updateBrand, deleteBrand, getBrands, getCmsBrandBanners, createCmsBrandBanner } from '@/lib/api';
@@ -166,32 +167,13 @@ export default function BrandsPage() {
           </div>
           <div style={{ marginBottom: '14px' }}>
             <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: textMain, marginBottom: '6px' }}>Brand Logo</label>
-            <input
-              type="file"
+            <CloudinaryUpload
+              value={form.logo || ''}
+              onChange={(url) => setForm(p => ({ ...p, logo: url }))}
+              folder="kryros/brands"
               accept="image/*"
-              onChange={async (e) => {
-                const file = e.target.files?.[0];
-                if (file) {
-                  const reader = new FileReader();
-                  reader.onload = () => {
-                    setForm(p => ({ ...p, logo: reader.result as string }));
-                  };
-                  reader.readAsDataURL(file);
-                }
-              }}
-              style={{ width: '100%', padding: '8px', borderRadius: '6px', background: surface, border: `1px solid ${border}`, color: textMain, fontSize: '12px', outline: 'none' }}
+              isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
             />
-            {form.logo && (
-              <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <img src={form.logo} alt="Logo preview" style={{ width: '48px', height: '48px', objectFit: 'contain', borderRadius: '6px', border: `1px solid ${border}` }} />
-                <button
-                  onClick={() => setForm(p => ({ ...p, logo: '' }))}
-                  style={{ padding: '4px 8px', fontSize: '11px', background: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
-                >
-                  Remove
-                </button>
-              </div>
-            )}
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
             <FormField label="Country" value={form.country} onChange={(v) => f('country', v)} placeholder="e.g. South Korea" isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
