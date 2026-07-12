@@ -11,35 +11,40 @@ interface HeroSectionProps {
   ctaText?: string;
   ctaLink?: string;
   bgColor?: string;
+  banners?: Array<{ image: string; ctaLink?: string; ctaText?: string; title?: string; subtitle?: string }>;
 }
 
-export default function HeroSection({ image, title, subtitle, ctaText, ctaLink, bgColor }: HeroSectionProps) {
-  const [banners, setBanners] = useState<ApiBanner[]>([]);
+export default function HeroSection({ image, title, subtitle, ctaText, ctaLink, bgColor, banners }: HeroSectionProps) {
+  const [apiBanners, setApiBanners] = useState<ApiBanner[]>([]);
   const [current, setCurrent] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [translateX, setTranslateX] = useState(0);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // If props provided, use single banner mode
-  const useSingleBanner = !!image;
+  // If banners array provided, use it; otherwise use single image mode; otherwise fetch from API
+  const useBannersProp = banners && banners.length > 0;
+  const useSingleBanner = !!image && !useBannersProp;
+  const displayBanners = useBannersProp 
+    ? banners.map((b, i) => ({ id: String(i), image: b.image, link: b.ctaLink, title: b.title, subtitle: b.subtitle, ctaText: b.ctaText }))
+    : apiBanners;
 
   useEffect(() => {
-    if (useSingleBanner) return; // Don't fetch API if props provided
+    if (useBannersProp || useSingleBanner) return; // Don't fetch API if props provided
     fetchBanners().then((data) => {
-      if (data.length > 0) setBanners(data);
+      if (data.length > 0) setApiBanners(data);
     });
-  }, [useSingleBanner]);
+  }, [useBannersProp, useSingleBanner]);
 
   // Auto-rotate — pauses while dragging
   useEffect(() => {
-    if (banners.length <= 1) return;
+    if (displayBanners.length <= 1) return;
     if (timer.current) clearInterval(timer.current);
     timer.current = setInterval(() => {
-      if (!isDragging) setCurrent((c) => (c + 1) % banners.length);
+      if (!isDragging) setCurrent((c) => (c + 1) % displayBanners.length);
     }, 5000);
     return () => { if (timer.current) clearInterval(timer.current); };
-  }, [banners.length, isDragging]);
+  }, [displayBanners.length, isDragging]);
 
   // Single banner mode (from CMS section)
   if (useSingleBanner) {
@@ -95,7 +100,7 @@ export default function HeroSection({ image, title, subtitle, ctaText, ctaLink, 
     );
   }
 
-  if (banners.length === 0) {
+  if (displayBanners.length === 0) {
     return (
       <section
         className="w-full bg-muted/20 animate-pulse"
@@ -104,8 +109,8 @@ export default function HeroSection({ image, title, subtitle, ctaText, ctaLink, 
     );
   }
 
-  const goNext = () => setCurrent((c) => (c + 1) % banners.length);
-  const goPrev = () => setCurrent((c) => (c - 1 + banners.length) % banners.length);
+  const goNext = () => setCurrent((c) => (c + 1) % displayBanners.length);
+  const goPrev = () => setCurrent((c) => (c - 1 + displayBanners.length) % displayBanners.length);
 
   const handleDragStart = (clientX: number) => {
     setIsDragging(true);
@@ -147,12 +152,14 @@ export default function HeroSection({ image, title, subtitle, ctaText, ctaLink, 
           transition: isDragging ? "none" : "transform 500ms ease-out",
         }}
       >
-        {banners.map((banner) => {
-          const imgSrc = banner.image || banner.videoUrl || "";
-          return banner.link ? (
+        {displayBanners.map((banner) => {
+          const imgSrc = banner.image || "";
+          const bannerLink = (banner as any).link || banner.ctaLink;
+          const bannerId = (banner as any).id || String(displayBanners.indexOf(banner));
+          return bannerLink ? (
             <Link
-              key={banner.id}
-              href={banner.link}
+              key={bannerId}
+              href={bannerLink}
               className="min-w-full flex-shrink-0 w-full h-full block"
             >
               <img
@@ -163,7 +170,7 @@ export default function HeroSection({ image, title, subtitle, ctaText, ctaLink, 
               />
             </Link>
           ) : (
-            <div key={banner.id} className="min-w-full flex-shrink-0 w-full h-full">
+            <div key={bannerId} className="min-w-full flex-shrink-0 w-full h-full">
               <img
                 src={imgSrc}
                 alt=""
@@ -176,7 +183,7 @@ export default function HeroSection({ image, title, subtitle, ctaText, ctaLink, 
       </div>
 
       {/* Desktop arrows */}
-      {banners.length > 1 && (
+      {displayBanners.length > 1 && (
         <>
           <button
             onClick={goPrev}
@@ -194,9 +201,9 @@ export default function HeroSection({ image, title, subtitle, ctaText, ctaLink, 
       )}
 
       {/* Dot indicators */}
-      {banners.length > 1 && (
+      {displayBanners.length > 1 && (
         <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
-          {banners.map((_, i) => (
+          {displayBanners.map((_, i) => (
             <button
               key={i}
               onClick={() => setCurrent(i)}

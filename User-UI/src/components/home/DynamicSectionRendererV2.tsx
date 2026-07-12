@@ -63,7 +63,6 @@ export default function DynamicSectionRendererV2({
         // ═══════════════════════════════════════════════════════════════════
         switch (templateType) {
           case 'HeroBanner':
-          case 'HeroSlider':
             return (
               <HeroSection
                 key={section.id}
@@ -73,6 +72,14 @@ export default function DynamicSectionRendererV2({
                 ctaText={section.config?.ctaText || section.config?.button_text}
                 ctaLink={section.config?.ctaLink || section.config?.href || section.config?.link}
                 bgColor={section.config?.bgColor || section.config?.gradient}
+              />
+            );
+
+          case 'HeroSlider':
+            return (
+              <HeroSection
+                key={section.id}
+                banners={section.config?.banners}
               />
             );
 
