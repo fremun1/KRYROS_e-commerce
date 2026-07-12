@@ -18,7 +18,6 @@ import { useMemo } from 'react';
 import ProductShelf from './ProductShelf';
 import CategoryGridShelf from './CategoryGridShelf';
 import BrandsSection from './BrandsSection';
-import CategorySection from './CategorySection';
 import RecentlyViewedSection from './RecentlyViewedSection';
 import HeroSection from './HeroSection';
 import BannerSlot from './BannerSlot';
@@ -169,7 +168,20 @@ export default function DynamicSectionRendererV2({
             );
 
           case 'ShopCategories':
-            return <CategorySection key={section.id} />;
+            return (
+              <CategoryGridShelf
+                key={section.id}
+                title={section.title}
+                subtitle={section.subtitle}
+                dataSourceId={section.dataSourceId || 'shop-categories'}
+                limit={section.config?.limit || 12}
+                columns={section.config?.columns || 'auto'}
+                showProductCount={section.config?.showProductCount === 'true' || section.config?.showProductCount === true}
+                showViewAll={section.config?.showViewAll === 'true' || section.config?.showViewAll === true}
+                viewAllHref={section.config?.viewAllHref || '/shop'}
+                className={section.config?.className}
+              />
+            );
 
           // ═══════════════════════════════════════════════════════════════════
           // FAMILY 4: BRAND (BrandGrid, Brands)
