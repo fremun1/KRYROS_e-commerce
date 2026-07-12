@@ -332,4 +332,36 @@ export class CMSController {
   resetSeedHomePageSections() {
     return this.cmsService.resetAndSeedHomePageSections();
   }
+
+  // ==================== SITE CONFIG MANAGEMENT ====================
+
+  @Get('site-config')
+  @ApiOperation({ summary: 'Get all site configs' })
+  getSiteConfigs() {
+    return this.cmsService.getSiteConfigs();
+  }
+
+  @Get('site-config/:key')
+  @ApiOperation({ summary: 'Get site config by key' })
+  getSiteConfig(@Param('key') key: string) {
+    return this.cmsService.getSiteConfig(key);
+  }
+
+  @Put('site-config/:key')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Upsert site config' })
+  upsertSiteConfig(@Param('key') key: string, @Body() data: { value: unknown }) {
+    return this.cmsService.upsertSiteConfig(key, data.value);
+  }
+
+  @Post('site-config/seed')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Seed default site configs' })
+  seedSiteConfigs() {
+    return this.cmsService.seedSiteConfigs();
+  }
 }
