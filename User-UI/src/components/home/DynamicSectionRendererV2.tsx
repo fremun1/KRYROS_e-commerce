@@ -19,18 +19,11 @@ import ProductShelf from './ProductShelf';
 import CategoryGridShelf from './CategoryGridShelf';
 import BrandsSection from './BrandsSection';
 import CategorySection from './CategorySection';
-import FlashSaleSection from './FlashSaleSection';
-import LimitedStockDealSection from './LimitedStockDealSection';
-import AppliancesDealSection from './AppliancesDealSection';
-import CategoryDealSection from './CategoryDealSection';
 import RecentlyViewedSection from './RecentlyViewedSection';
-import PromoBanners from './PromoBanners';
 import HeroSection from './HeroSection';
-import TopExpressSection from './TopExpressSection';
 import BannerSlot from './BannerSlot';
 import PromoBanner from './PromoBanner';
 import NewsletterSection from './NewsletterSection';
-import TestimonialsSection from './TestimonialsSection';
 import ContentSection from './ContentSection';
 
 interface CMSSection {
@@ -87,6 +80,11 @@ export default function DynamicSectionRendererV2({
             );
 
           case 'PromoBanner':
+          case 'PromoBanners':
+          case 'Promotions':
+          case 'promo_banners':
+          case 'ShopPromoBanner':
+          case 'UpgradeBanner':
             return (
               <PromoBanner
                 key={section.id}
@@ -100,26 +98,36 @@ export default function DynamicSectionRendererV2({
               />
             );
 
-          case 'PromoBanners':
-          case 'Promotions':
-          case 'promo_banners':
-            return <PromoBanners key={section.id} />;
-
           // ═══════════════════════════════════════════════════════════════════
-          // FAMILY 2: PRODUCT (all product shelf variants)
+          // FAMILY 2: PRODUCT (all product shelf variants → ProductShelf)
           // ═══════════════════════════════════════════════════════════════════
           case 'ProductShelf':
           case 'ProductsGrid':
           case 'ProductGrid':
           case 'ProductSection':
           case 'ShopProductShelf':
+          case 'TopSelling':
+          case 'Trending':
+          case 'BestSellers':
+          case 'NewestArrivals':
+          case 'FeaturedProducts':
+          case 'RelatedProducts':
+            // Map legacy types to dataSourceId defaults
+            const dataSourceMap: Record<string, string> = {
+              'TopSelling': 'top-selling',
+              'Trending': 'trending-products',
+              'BestSellers': 'top-selling',
+              'NewestArrivals': 'new-arrivals',
+              'FeaturedProducts': 'featured-products',
+              'RelatedProducts': 'top-selling',
+            };
             return (
               <ProductShelf
                 key={section.id}
                 title={section.title || section.config?.heading || 'Products'}
                 subtitle={section.subtitle}
-                dataSourceId={section.dataSourceId || 'top-selling'}
-                limit={section.config?.productLimit || section.config?.product_limit || section.config?.limit || 8}
+                dataSourceId={section.dataSourceId || dataSourceMap[templateType] || 'top-selling'}
+                limit={section.config?.productLimit || section.config?.product_limit || section.config?.limit || (templateType === 'RelatedProducts' ? 4 : 8)}
                 layout={section.config?.scroll === 'true' ? 'horizontal-scroll' : (section.config?.layout || 'horizontal-scroll')}
                 cardStyle={section.config?.cardStyle || 'default'}
                 showTimer={section.config?.showTimer || false}
@@ -129,100 +137,11 @@ export default function DynamicSectionRendererV2({
                 accentColor={section.config?.accentColor}
                 headerBgColor={section.config?.headerBgColor}
                 params={{
-                  featured: section.config?.filter_by === 'Featured' || section.config?.filterType === 'Featured',
+                  isFeatured: section.config?.filter_by === 'Featured' || section.config?.filterType === 'Featured',
                   categoryId: section.config?.categoryId,
                   categorySlug: section.config?.categorySlug,
                   popularity: section.config?.popularity,
                 }}
-              />
-            );
-
-          case 'TopSelling':
-            return (
-              <ProductShelf
-                key={section.id}
-                title={section.title || 'Top Selling Items'}
-                subtitle={section.subtitle}
-                dataSourceId={section.dataSourceId || 'top-selling'}
-                limit={section.config?.productLimit || section.config?.limit || 8}
-                layout={section.config?.scroll === 'true' ? 'horizontal-scroll' : (section.config?.layout || 'horizontal-scroll')}
-                viewAllHref={section.config?.ctaLink || section.config?.viewAllLink || '/shop'}
-                viewAllText={section.config?.ctaText || 'See All'}
-                accentColor={section.config?.accentColor}
-              />
-            );
-
-          case 'Trending':
-            return (
-              <ProductShelf
-                key={section.id}
-                title={section.title || 'Trending Now'}
-                subtitle={section.subtitle}
-                dataSourceId={section.dataSourceId || 'trending-products'}
-                limit={section.config?.productLimit || section.config?.limit || 8}
-                layout={section.config?.scroll === 'true' ? 'horizontal-scroll' : (section.config?.layout || 'horizontal-scroll')}
-                viewAllHref={section.config?.ctaLink || section.config?.viewAllLink || '/shop'}
-                viewAllText={section.config?.ctaText || 'See All'}
-                accentColor={section.config?.accentColor}
-              />
-            );
-
-          case 'BestSellers':
-            return (
-              <ProductShelf
-                key={section.id}
-                title={section.title || 'Best Sellers'}
-                subtitle={section.subtitle}
-                dataSourceId={section.dataSourceId || 'top-selling'}
-                limit={section.config?.productLimit || section.config?.limit || 8}
-                layout={section.config?.scroll === 'true' ? 'horizontal-scroll' : (section.config?.layout || 'horizontal-scroll')}
-                viewAllHref={section.config?.ctaLink || section.config?.viewAllLink || '/shop'}
-                viewAllText={section.config?.ctaText || 'See All'}
-                accentColor={section.config?.accentColor}
-              />
-            );
-
-          case 'NewestArrivals':
-            return (
-              <ProductShelf
-                key={section.id}
-                title={section.title || 'Newest Arrivals'}
-                subtitle={section.subtitle}
-                dataSourceId={section.dataSourceId || 'new-arrivals'}
-                limit={section.config?.productLimit || section.config?.limit || 8}
-                layout={section.config?.scroll === 'true' ? 'horizontal-scroll' : (section.config?.layout || 'horizontal-scroll')}
-                viewAllHref={section.config?.ctaLink || section.config?.viewAllLink || '/shop'}
-                viewAllText={section.config?.ctaText || 'See All'}
-                accentColor={section.config?.accentColor}
-              />
-            );
-
-          case 'FeaturedProducts':
-            return (
-              <ProductShelf
-                key={section.id}
-                title={section.title || 'Featured Products'}
-                subtitle={section.subtitle}
-                dataSourceId={section.dataSourceId || 'featured-products'}
-                limit={section.config?.productLimit || section.config?.limit || 8}
-                layout={section.config?.scroll === 'true' ? 'horizontal-scroll' : (section.config?.layout || 'horizontal-scroll')}
-                viewAllHref={section.config?.ctaLink || section.config?.viewAllLink || '/shop'}
-                viewAllText={section.config?.ctaText || 'See All'}
-                accentColor={section.config?.accentColor}
-              />
-            );
-
-          case 'RelatedProducts':
-            return (
-              <ProductShelf
-                key={section.id}
-                title={section.title || 'You May Also Like'}
-                subtitle={section.subtitle}
-                dataSourceId={section.dataSourceId || 'top-selling'}
-                limit={section.config?.productLimit || section.config?.product_limit || 4}
-                layout={section.config?.layout || 'horizontal-scroll'}
-                viewAllHref={section.config?.ctaLink || '/shop'}
-                viewAllText={section.config?.ctaText || 'View All'}
               />
             );
 
@@ -366,18 +285,30 @@ export default function DynamicSectionRendererV2({
           // FAMILY 6: UTILITY (Testimonials, RecentlyViewed, Newsletter, etc.)
           // ═══════════════════════════════════════════════════════════════════
           case 'Testimonials':
+            const testimonials = section.config?.items || [{
+              rating: section.config?.rating,
+              customer_name: section.config?.customer_name,
+              review: section.config?.review,
+              customer_image: section.config?.customer_image,
+            }].filter((t): t is any => t.customer_name || t.review);
             return (
-              <TestimonialsSection
-                key={section.id}
-                title={section.title || section.config?.heading}
-                subtitle={section.subtitle}
-                items={section.config?.items || [{
-                  rating: section.config?.rating,
-                  customer_name: section.config?.customer_name,
-                  review: section.config?.review,
-                  customer_image: section.config?.customer_image,
-                }].filter((t): t is any => t.customer_name || t.review)}
-              />
+              <div key={section.id} className="max-w-5xl mx-auto px-4 py-8">
+                <h2 className="text-2xl font-bold mb-6">{section.title || section.config?.heading}</h2>
+                <div className="grid md:grid-cols-2 gap-4">
+                  {testimonials.map((t: any, i: number) => (
+                    <div key={i} className="bg-card border rounded-xl p-4">
+                      <div className="flex items-center gap-3 mb-2">
+                        {t.customer_image && <img src={t.customer_image} alt="" className="w-10 h-10 rounded-full object-cover" />}
+                        <div>
+                          <p className="font-semibold">{t.customer_name}</p>
+                          <div className="text-yellow-500 text-sm">{'★'.repeat(t.rating || 5)}</div>
+                        </div>
+                      </div>
+                      <p className="text-sm text-muted-foreground">{t.review}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
             );
 
           case 'Newsletter':
@@ -399,6 +330,7 @@ export default function DynamicSectionRendererV2({
             const badges = section.config?.items || [];
             return (
               <div key={section.id} className="max-w-5xl mx-auto px-4 py-8">
+                <h2 className="text-xl font-bold mb-4">{section.title || 'Trust Badges'}</h2>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {badges.slice(0, 4).map((badge: any, idx: number) => (
                     <div key={idx} className="bg-card border rounded-xl p-4 text-center">
@@ -432,104 +364,32 @@ export default function DynamicSectionRendererV2({
               </div>
             );
 
-          case 'ShopPromoBanner':
-            return (
-              <PromoBanner
-                key={section.id}
-                title={section.title || section.config?.title}
-                subtitle={section.subtitle}
-                cta={section.config?.ctaText}
-                href={section.config?.ctaLink}
-                image={section.config?.imageUrl}
-                gradient={section.config?.bgColor}
-              />
-            );
-
-          case 'UpgradeBanner':
-            return (
-              <div key={section.id} className="max-w-5xl mx-auto px-4 py-6">
-                <div className="bg-card border rounded-2xl p-6 text-center">
-                  <h3 className="text-xl font-black mb-2">{section.title || 'Upgrade Your Tech'}</h3>
-                  {(section.config?.images || []).length > 0 && (
-                    <div className="flex flex-wrap justify-center gap-2 mt-4">
-                      {section.config.images.map((img: string, idx: number) => (
-                        <img key={idx} src={img} alt="" className="h-32 rounded-lg object-cover" />
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-
           // ═══════════════════════════════════════════════════════════════════
           // FAMILY 7: DEAL (FlashSale, LimitedStock, Appliances, CategoryDeal, TopExpress)
+          // All mapped to ProductShelf with special config
           // ═══════════════════════════════════════════════════════════════════
           case 'FlashSale':
-            return (
-              <FlashSaleSection
-                key={section.id}
-                title={section.title || section.config?.title}
-                timerLabel={section.config?.countdownLabel}
-                ctaText={section.config?.ctaText}
-                ctaLink={section.config?.ctaLink || section.config?.viewAllLink}
-                endTime={section.config?.endTime || section.config?.timerEndDate}
-                headerBgColor={section.config?.headerBgColor}
-                productLimit={section.config?.productLimit || section.config?.limit}
-              />
-            );
-
           case 'LimitedStockDeal':
-            return (
-              <LimitedStockDealSection
-                key={section.id}
-                title={section.title || section.config?.title}
-                discountText={section.config?.discountText}
-                discountPercent={section.config?.discountPercent}
-                ctaText={section.config?.ctaText}
-                ctaLink={section.config?.ctaLink}
-                limit={section.config?.limit || 8}
-                scroll={section.config?.scroll === 'true'}
-                dataSourceId={section.dataSourceId || 'sale-items'}
-              />
-            );
-
           case 'AppliancesDeal':
-            return (
-              <AppliancesDealSection
-                key={section.id}
-                title={section.title || section.config?.title}
-                ctaText={section.config?.ctaText}
-                ctaLink={section.config?.ctaLink}
-                limit={section.config?.limit || 8}
-                scroll={section.config?.scroll === 'true'}
-                dataSourceId={section.dataSourceId || 'top-selling'}
-              />
-            );
-
           case 'TopExpress':
-            return (
-              <TopExpressSection
-                key={section.id}
-                title={section.title || section.config?.title}
-                ctaText={section.config?.ctaText}
-                ctaLink={section.config?.ctaLink}
-                limit={section.config?.limit || 8}
-                scroll={section.config?.scroll === 'true'}
-                dataSourceId={section.dataSourceId || 'trending-products'}
-              />
-            );
-
           case 'CategoryDeal':
             return (
-              <CategoryDealSection
+              <ProductShelf
                 key={section.id}
-                title={section.title || section.config?.title}
+                title={section.title || section.config?.title || 'Deals'}
                 subtitle={section.subtitle || section.config?.subtitle}
-                categoryId={section.config?.categoryId}
-                categorySlug={section.config?.categorySlug}
+                dataSourceId={section.dataSourceId || 'sale-items'}
+                limit={section.config?.productLimit || section.config?.limit || 8}
+                layout={section.config?.scroll === 'true' ? 'horizontal-scroll' : (section.config?.layout || 'horizontal-scroll')}
+                showTimer={templateType === 'FlashSale'}
+                showPercent={templateType === 'LimitedStockDeal'}
                 headerBgColor={section.config?.headerBgColor}
-                productLimit={section.config?.productLimit || section.config?.limit}
-                ctaLink={section.config?.ctaLink}
+                viewAllHref={section.config?.ctaLink || section.config?.viewAllLink || '/shop'}
+                viewAllText={section.config?.ctaText || 'See All'}
+                params={{
+                  categoryId: section.config?.categoryId,
+                  categorySlug: section.config?.categorySlug,
+                }}
               />
             );
 

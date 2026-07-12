@@ -46,6 +46,7 @@ export default function DynamicSectionsPage() {
   const [rulesGrouped, setRulesGrouped] = useState<Record<string, any[]>>({});
   const [pages, setPages] = useState<{ value: string; label: string }[]>([]);
   const [selectedPage, setSelectedPage] = useState<string>('');
+  const [view, setView] = useState<'page-list' | 'page-sections'>('page-list');
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -58,11 +59,11 @@ export default function DynamicSectionsPage() {
   }, []);
 
   useEffect(() => {
-    if (selectedPage) {
+    if (selectedPage && view === 'page-sections') {
       fetchSections();
       fetchRules();
     }
-  }, [selectedPage]);
+  }, [selectedPage, view]);
 
   const fetchPages = async () => {
     try {
@@ -70,12 +71,20 @@ export default function DynamicSectionsPage() {
       const list = Array.isArray(response.data) ? response.data : (response.data as any)?.data || [];
       const mapped = list.map((p: any) => ({ value: p.slug, label: p.title || p.slug }));
       setPages(mapped);
-      if (mapped.length > 0 && !selectedPage) {
-        setSelectedPage(mapped[0].value);
-      }
     } catch {
       toast.error('Failed to load pages');
     }
+  };
+
+  const handleSelectPage = (pageSlug: string) => {
+    setSelectedPage(pageSlug);
+    setView('page-sections');
+  };
+
+  const handleBackToPages = () => {
+    setView('page-list');
+    setSelectedPage('');
+    setSections([]);
   };
 
   // Normalize pageSlug: admin uses 'home' but backend stores as 'homepage'
@@ -187,105 +196,134 @@ export default function DynamicSectionsPage() {
   return (
     <AdminShell>
       <div className="space-y-6 max-w-5xl mx-auto">
-        <PageHeader
-          title="Dynamic Sections"
-          subtitle="Manage banners, product shelves, and categories across all pages"
-          icon={Layout}
-        />
-
-        {/* Page Filter & Actions */}
-        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between bg-card p-4 rounded-xl border">
-          <div className="flex items-center gap-3">
-            <span className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Page:</span>
-             <div className="flex bg-muted p-1 rounded-lg">
-               {pages.map(page => (
-                 <button
-                   key={page.value}
-                   onClick={() => setSelectedPage(page.value)}
-                   className={`px-4 py-1.5 rounded-md text-sm font-medium transition ${
-                     selectedPage === page.value 
-                     ? 'bg-background shadow-sm text-foreground' 
-                     : 'text-muted-foreground hover:text-foreground'
-                   }`}
-                 >
-                   {page.label}
-                 </button>
-               ))}
-             </div>
-          </div>
-          <button
-            onClick={handleAddSection}
-            className="flex items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-xl font-bold hover:opacity-90 transition shadow-lg shadow-primary/20"
-          >
-            <Plus size={18} />
-            Add Dynamic Section
-          </button>
-        </div>
-
-        {/* Active Sections List */}
-        <div className="space-y-3">
-          {loading ? (
-            <div className="flex items-center justify-center py-20"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>
-          ) : sections.length === 0 ? (
-            <div className="text-center py-20 bg-muted/30 rounded-2xl border-2 border-dashed">
-              <Layout className="mx-auto w-12 h-12 text-muted-foreground/30 mb-4" />
-              <p className="text-muted-foreground font-medium">No sections configured for this page.</p>
-              <button onClick={handleAddSection} className="mt-4 text-primary font-bold hover:underline">Add your first section</button>
-            </div>
-          ) : (
-            sections.map((section, index) => {
-              const Icon = TEMPLATE_ICONS[section.templateType || section.type] || Info;
-              return (
-                <div key={section.id} className="group flex items-center gap-4 p-4 bg-card border rounded-2xl hover:border-primary/50 transition shadow-sm">
-                  {/* Always-visible reorder controls */}
-                  <div className="flex flex-col gap-0.5">
-                    <button 
-                      onClick={() => handleMove(section.id, 'up')} 
-                      disabled={index === 0} 
-                      title="Move up" 
-                      className="p-1 hover:bg-muted rounded disabled:opacity-25 transition"
-                    ><ChevronUp size={14} /></button>
-                    <button 
-                      onClick={() => handleMove(section.id, 'down')} 
-                      disabled={index === sections.length - 1} 
-                      title="Move down" 
-                      className="p-1 hover:bg-muted rounded disabled:opacity-25 transition"
-                    ><ChevronDown size={14} /></button>
-                  </div>
-                  
-                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${section.isActive ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
-                    <Icon size={24} />
-                  </div>
-
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-bold text-lg truncate">{section.title || 'Untitled Section'}</h3>
-                      {!section.isActive && <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded font-bold uppercase">Hidden</span>}
-                    </div>
-                    <div className="flex items-center gap-3 text-xs text-muted-foreground font-medium">
-                      <span className="bg-muted px-2 py-0.5 rounded">{section.templateType || section.type}</span>
-                      <span>Source: <span className="text-foreground">{section.dataSourceId || section.slotKey || 'Custom'}</span></span>
-                    </div>
-                  </div>
-
-                  {/* Always-visible edit & delete buttons */}
-                  <div className="flex items-center gap-2">
-                    <button 
-                      onClick={() => handleEditSection(section)} 
-                      className="p-2.5 hover:bg-blue-50 text-blue-600 rounded-xl transition" 
-                      title="Edit section"
-                    ><Edit size={18} /></button>
-                    <button 
-                      onClick={() => handleDeleteSection(section.id)} 
-                      className="p-2.5 hover:bg-red-50 text-red-600 rounded-xl transition" 
-                      title="Delete section"
-                    ><Trash2 size={18} /></button>
-                  </div>
+        {view === 'page-list' ? (
+          <>
+            <PageHeader
+              title="Pages"
+              subtitle="Select a page to manage its sections"
+              icon={Layout}
+            />
+            <div className="grid gap-4">
+              {pages.length === 0 ? (
+                <div className="text-center py-20 bg-muted/30 rounded-2xl border-2 border-dashed">
+                  <Layout className="mx-auto w-12 h-12 text-muted-foreground/30 mb-4" />
+                  <p className="text-muted-foreground font-medium">No pages configured yet.</p>
                 </div>
-              );
-            })
-          )}
-        </div>
+              ) : (
+                pages.map(page => (
+                  <button
+                    key={page.value}
+                    onClick={() => handleSelectPage(page.value)}
+                    className="flex items-center justify-between p-6 bg-card border rounded-2xl hover:border-primary/50 hover:bg-primary/5 transition shadow-sm group"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-white transition">
+                        <Layout size={24} />
+                      </div>
+                      <div className="text-left">
+                        <h3 className="font-bold text-lg">{page.label}</h3>
+                        <p className="text-sm text-muted-foreground">Manage sections for this page</p>
+                      </div>
+                    </div>
+                    <div className="text-primary opacity-0 group-hover:opacity-100 transition">
+                      <ChevronDown size={20} />
+                    </div>
+                  </button>
+                ))
+              )}
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h1 className="text-2xl font-bold">{pages.find((p: any) => p.value === selectedPage)?.label || 'Page Sections'}</h1>
+                <p className="text-muted-foreground text-sm">Manage sections for this page</p>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleBackToPages}
+                  className="flex items-center gap-2 px-4 py-2 bg-muted hover:bg-muted/80 rounded-xl text-sm font-medium transition"
+                >
+                  <ChevronDown size={16} className="rotate-90" />
+                  Back to Pages
+                </button>
+                <button
+                  onClick={handleAddSection}
+                  className="flex items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-xl font-bold hover:opacity-90 transition shadow-lg shadow-primary/20"
+                >
+                  <Plus size={18} />
+                  Add Section
+                </button>
+              </div>
+            </div>
+
+            {/* Active Sections List */}
+            <div className="space-y-3">
+              {loading ? (
+                <div className="flex items-center justify-center py-20"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>
+              ) : sections.length === 0 ? (
+                <div className="text-center py-20 bg-muted/30 rounded-2xl border-2 border-dashed">
+                  <Layout className="mx-auto w-12 h-12 text-muted-foreground/30 mb-4" />
+                  <p className="text-muted-foreground font-medium">No sections configured for this page.</p>
+                  <button onClick={handleAddSection} className="mt-4 text-primary font-bold hover:underline">Add your first section</button>
+                </div>
+              ) : (
+                sections.map((section, index) => {
+                  const Icon = TEMPLATE_ICONS[section.templateType || section.type] || Info;
+                  return (
+                    <div key={section.id} className="group flex items-center gap-4 p-4 bg-card border rounded-2xl hover:border-primary/50 transition shadow-sm">
+                      {/* Always-visible reorder controls */}
+                      <div className="flex flex-col gap-0.5">
+                        <button 
+                          onClick={() => handleMove(section.id, 'up')} 
+                          disabled={index === 0} 
+                          title="Move up" 
+                          className="p-1 hover:bg-muted rounded disabled:opacity-25 transition"
+                        ><ChevronUp size={14} /></button>
+                        <button 
+                          onClick={() => handleMove(section.id, 'down')} 
+                          disabled={index === sections.length - 1} 
+                          title="Move down" 
+                          className="p-1 hover:bg-muted rounded disabled:opacity-25 transition"
+                        ><ChevronDown size={14} /></button>
+                      </div>
+                      
+                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${section.isActive ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
+                        <Icon size={24} />
+                      </div>
+
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-bold text-lg truncate">{section.title || 'Untitled Section'}</h3>
+                          {!section.isActive && <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded font-bold uppercase">Hidden</span>}
+                        </div>
+                        <div className="flex items-center gap-3 text-xs text-muted-foreground font-medium">
+                          <span className="bg-muted px-2 py-0.5 rounded">{section.templateType || section.type}</span>
+                          <span>Source: <span className="text-foreground">{section.dataSourceId || section.slotKey || 'Custom'}</span></span>
+                        </div>
+                      </div>
+
+                      {/* Always-visible edit & delete buttons */}
+                      <div className="flex items-center gap-2">
+                        <button 
+                          onClick={() => handleEditSection(section)} 
+                          className="p-2.5 hover:bg-blue-50 text-blue-600 rounded-xl transition" 
+                          title="Edit section"
+                        ><Edit size={18} /></button>
+                        <button 
+                          onClick={() => handleDeleteSection(section.id)} 
+                          className="p-2.5 hover:bg-red-50 text-red-600 rounded-xl transition" 
+                          title="Delete section"
+                        ><Trash2 size={18} /></button>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </>
+        )}
       </div>
 
       {/* Type Selector Modal */}
