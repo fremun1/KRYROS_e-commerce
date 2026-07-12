@@ -363,6 +363,8 @@ const SECTION_FIELDS: Record<string, Array<{ key: string; label: string; type: s
   ],
 };
 const PAGE_SECTION_NAME: Record<string, string> = {
+  HeroBanner: 'Hero Banner',
+  HeroSlider: 'Hero Slider',
   ShopHero: 'Shop Hero',
   ShopCategories: 'Shop Categories',
   ShopProductShelf: 'Shop Product Shelf',

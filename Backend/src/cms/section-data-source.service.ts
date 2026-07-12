@@ -116,10 +116,28 @@ export class SectionDataSourceService {
   ) {
     this.logger.debug(`Fetching categories for rule: ${dataSourceId}, limit: ${limit}`);
     
-    // For now, we return all active categories
-    // This can be expanded to support more complex category rules
+    // Build where clause based on dataSourceId
+    let whereClause: any = { isActive: true };
+    
+    switch (dataSourceId) {
+      case 'homepage-categories':
+        whereClause.showOnHome = true;
+        break;
+      case 'shop-page-categories':
+        whereClause.showOnShop = true;
+        break;
+      case 'all-categories':
+      case 'categories-grid':
+        // No additional filter, just isActive
+        break;
+      default:
+        // If unknown dataSourceId, return all active categories
+        this.logger.warn(`Unknown category dataSourceId: ${dataSourceId}, returning all active categories`);
+        break;
+    }
+    
     const categories = await this.prisma.category.findMany({
-      where: { isActive: true },
+      where: whereClause,
       take: limit,
       orderBy: { sortOrder: 'asc' },
       include: {
