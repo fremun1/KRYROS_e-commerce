@@ -195,6 +195,7 @@ export default function DynamicSectionRendererV2({
               />
             );
 
+          case 'CategoryGrid':
           case 'CategorySection':
             return (
               <CategoryGridShelf
@@ -203,7 +204,8 @@ export default function DynamicSectionRendererV2({
                 subtitle={section.subtitle}
                 dataSourceId={section.dataSourceId || 'homepage-categories'}
                 limit={section.config?.limit || 12}
-                columns={section.config?.layout === 'horizontal' || section.config?.layout === 'horizontal-scroll' ? 6 : 'auto'}
+                layout={section.config?.layout || 'grid'}
+                columns={section.config?.columns || 'auto'}
                 showProductCount={section.config?.showProductCount === 'true' || section.config?.showProductCount === true}
                 showViewAll={section.config?.showViewAll === 'true' || section.config?.showViewAll === true}
                 viewAllHref={section.config?.viewAllHref || '/shop'}
@@ -218,7 +220,9 @@ export default function DynamicSectionRendererV2({
                 key={section.id} 
                 title={section.title}
                 subtitle={section.subtitle}
+                layout={section.config?.layout || 'horizontal'}
                 style={section.config?.style || 'full'}
+                dataSourceId={section.dataSourceId || 'generic-brand-section'}
               />
             );
 

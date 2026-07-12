@@ -3,13 +3,14 @@ import { fetchSiteConfig, api } from "@/lib/api";
 
 interface CmsBrand {
   name: string;
-  logo: string;       // uploaded image URL or base64
-  shopSlug: string;   // brand slug for /shop#brand-{shopSlug} scroll
+  logo: string;
+  shopSlug: string;
 }
 
 interface BrandsSectionProps {
   title?: string;
   subtitle?: string;
+  layout?: 'grid' | 'horizontal';
   style?: 'full' | 'minimal';
   dataSourceId?: string;
 }
@@ -17,6 +18,7 @@ interface BrandsSectionProps {
 export default function BrandsSection({
   title,
   subtitle,
+  layout = 'horizontal',
   style = 'full',
   dataSourceId = 'generic-brand-section'
 }: BrandsSectionProps) {
@@ -28,7 +30,6 @@ export default function BrandsSection({
   const lastTimeRef = useRef(0);
 
   useEffect(() => {
-    // Try to fetch from the new endpoint first, fallback to site config
     const fetchBrands = async () => {
       try {
         const response = await api.get(`/api/cms/sections/brands-by-source?dataSourceId=${dataSourceId}`);
@@ -41,10 +42,9 @@ export default function BrandsSection({
           return;
         }
       } catch (err) {
-        console.warn("Failed to fetch brands from data source, falling back to site config");
+        console.warn("Falling back to site config");
       }
 
-      // Fallback to legacy site config
       fetchSiteConfig<any>("trusted-brands")
         .then((v) => {
           if (!v) return;
@@ -63,13 +63,12 @@ export default function BrandsSection({
     fetchBrands();
   }, [dataSourceId]);
 
-  // Auto-scroll left ↔ right
+  // Auto-scroll logic (only for horizontal)
   useEffect(() => {
     const el = scrollRef.current;
-    if (!el || brands.length === 0) return;
+    if (!el || brands.length === 0 || layout === 'grid') return;
 
-    const SPEED = 0.03; // px per ms — very slow, gentle drift
-
+    const SPEED = 0.03;
     const tick = (time: number) => {
       if (pausedRef.current) {
         animRef.current = requestAnimationFrame(tick);
@@ -89,23 +88,17 @@ export default function BrandsSection({
     };
 
     animRef.current = requestAnimationFrame(tick);
-
     const pause = () => { pausedRef.current = true; };
     const resume = () => { pausedRef.current = false; lastTimeRef.current = 0; };
 
     el.addEventListener("mouseenter", pause);
     el.addEventListener("mouseleave", resume);
-    el.addEventListener("touchstart", pause, { passive: true });
-    el.addEventListener("touchend", resume);
-
     return () => {
       cancelAnimationFrame(animRef.current);
       el.removeEventListener("mouseenter", pause);
       el.removeEventListener("mouseleave", resume);
-      el.removeEventListener("touchstart", pause);
-      el.removeEventListener("touchend", resume);
     };
-  }, [brands]);
+  }, [brands, layout]);
 
   if (brands.length === 0) return null;
 
@@ -114,33 +107,32 @@ export default function BrandsSection({
   };
 
   return (
-    <section className="py-5 md:py-6 border-t border-border">
+    <section className="py-5 md:py-6 border-t border-border bg-white">
       <div className="px-4 md:px-6 max-w-7xl mx-auto">
         {(title || subtitle) && (
           <div className="mb-4">
-            {title && <h2 className="text-xl font-black">{title}</h2>}
+            {title && <h2 className="text-xl font-bold">{title}</h2>}
             {subtitle && <p className="text-sm text-muted-foreground">{subtitle}</p>}
           </div>
         )}
         
-        {/* Auto-scrolling horizontal carousel */}
         <div
           ref={scrollRef}
-          className="flex items-center gap-2.5 overflow-x-auto no-scrollbar pb-2"
-          style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+          className={`${layout === 'grid' ? 'grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3' : 'flex items-center gap-2.5 overflow-x-auto no-scrollbar pb-2'}`}
+          style={layout === 'horizontal' ? { scrollbarWidth: "none", msOverflowStyle: "none" } : undefined}
         >
           {brands.map((brand, i) => (
             <button
               key={i}
               onClick={() => handleBrandClick(brand)}
-              className={`flex-shrink-0 bg-card border border-border rounded-xl flex flex-col items-center justify-center hover:border-primary/40 hover:shadow-md transition-all cursor-pointer px-4 py-2.5 min-w-[80px] md:min-w-[100px] gap-1.5 ${style === 'minimal' ? 'bg-transparent border-none py-1 px-2 min-w-0' : ''}`}
+              className={`flex-shrink-0 bg-card border border-border rounded-xl flex flex-col items-center justify-center hover:border-primary/40 hover:shadow-md transition-all cursor-pointer px-4 py-2.5 min-w-[80px] md:min-w-[100px] gap-1.5 ${style === 'minimal' ? 'bg-transparent border-none py-1 px-2 min-w-0' : ''} ${layout === 'grid' ? 'w-full' : ''}`}
             >
               {brand.logo && style !== 'minimal' ? (
                 <img
                   src={brand.logo}
                   alt={brand.name}
                   className="max-w-[56px] max-h-[32px] md:max-w-[64px] md:max-h-[36px] object-contain"
-                  loading="lazy" decoding="async"
+                  loading="lazy"
                 />
               ) : (
                 <span className={`text-xs md:text-sm font-bold text-foreground leading-tight whitespace-nowrap ${style === 'minimal' ? 'text-muted-foreground hover:text-primary transition-colors' : ''}`}>

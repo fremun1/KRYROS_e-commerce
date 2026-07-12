@@ -19,8 +19,8 @@ This update refactors the CMS section management into a unified, generic system 
     - Simplified the "Add Section" flow to focus on generic types.
     - Added new configuration options:
         - **Products**: Toggle Countdown Timer and % Off Badge.
-        - **Categories**: Choose between Grid and Horizontal Scroll layouts.
-        - **Brands**: Choose between Full (Image + Name) and Minimal (Name only with auto-scroll) styles.
+        - **Categories**: Choose between **Grid** and **Horizontal Scroll** layouts.
+        - **Brands**: Choose between **Grid** and **Horizontal Scroll** layouts, AND choose between **Full** (Image + Name) and **Minimal** (Name only with auto-scroll) styles.
 
 ### 3. Frontend (User-UI)
 - **Updated `DynamicSectionRendererV2`**:
