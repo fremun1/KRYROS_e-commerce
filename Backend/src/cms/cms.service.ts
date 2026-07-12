@@ -1358,6 +1358,15 @@ export class CMSService {
     return this.prisma.cMSSiteConfig.findMany({ orderBy: { key: 'asc' } });
   }
 
+  async getSiteConfigs() {
+    const configs = await this.prisma.cMSSiteConfig.findMany();
+    const result: Record<string, any> = {};
+    for (const config of configs) {
+      result[config.key] = config.value;
+    }
+    return result;
+  }
+
   async getSiteConfig(key: string) {
     let config = await this.prisma.cMSSiteConfig.findUnique({ where: { key } });
     // Auto-seed defaults on first access — ensures keys are present before rendering
@@ -1531,51 +1540,4 @@ export class CMSService {
     return { success: true, seeded: results.length };
   }
 
-  // ==================== SITE CONFIG MANAGEMENT ====================
-
-  async getSiteConfigs() {
-    const configs = await this.prisma.cMSSiteConfig.findMany();
-    const result: Record<string, any> = {};
-    for (const config of configs) {
-      result[config.key] = config.value;
-    }
-    return result;
-  }
-
-  async getSiteConfig(key: string) {
-    const config = await this.prisma.cMSSiteConfig.findUnique({
-      where: { key }
-    });
-    if (!config) {
-      return null;
-    }
-    return config.value;
-  }
-
-  async upsertSiteConfig(key: string, value: unknown) {
-    const config = await this.prisma.cMSSiteConfig.upsert({
-      where: { key },
-      update: { value },
-      create: { key, value }
-    });
-    return config;
-  }
-
-  async seedSiteConfigs() {
-    const defaults = [
-      { key: 'trusted-brands', value: [] },
-      { key: 'shop-brand-banners', value: [] },
-      { key: 'header', value: { announcementBar: { enabled: false, text: '' } } },
-      { key: 'shop', value: { membersBanner: null, heroBanner: null } },
-      { key: 'wholesale', value: { heroBanner: null } },
-    ];
-    const results = [];
-    for (const d of defaults) {
-      const existing = await this.prisma.cMSSiteConfig.findUnique({ where: { key: d.key } });
-      if (!existing) {
-        results.push(await this.prisma.cMSSiteConfig.create({ data: d }));
-      }
-    }
-    return { success: true, seeded: results.length };
-  }
 }
