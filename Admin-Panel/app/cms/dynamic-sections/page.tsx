@@ -78,10 +78,17 @@ export default function DynamicSectionsPage() {
     }
   };
 
+  // Normalize pageSlug: admin uses 'home' but backend stores as 'homepage'
+  const normalizePageSlug = (slug: string) => {
+    if (slug === 'home' || slug === '/' || slug === '') return 'homepage';
+    return slug;
+  };
+
   const fetchSections = async () => {
     try {
       setLoading(true);
-      const response = await getCmsSections(selectedPage);
+      const normalizedSlug = normalizePageSlug(selectedPage);
+      const response = await getCmsSections(normalizedSlug);
       setSections(response.data || []);
     } catch (error) {
       toast.error('Failed to load sections');
@@ -157,22 +164,23 @@ export default function DynamicSectionsPage() {
   };
 
   const handleDeleteSection = async (id: string) => {
-    if (!confirm('Delete this section?')) return;
+    if (!confirm('Delete this section? This cannot be undone.')) return;
     try {
       await deleteCmsSection(id);
-      toast.success('Section deleted');
+      toast.success('Section deleted successfully');
       fetchSections();
-    } catch (error) {
-      toast.error('Failed to delete');
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to delete section');
     }
   };
 
   const handleMove = async (id: string, direction: 'up' | 'down') => {
     try {
-      await moveCmsSection(id, direction, selectedPage);
+      const normalizedSlug = normalizePageSlug(selectedPage);
+      await moveCmsSection(id, direction, normalizedSlug);
       fetchSections();
-    } catch (error) {
-      toast.error('Failed to move');
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to move section');
     }
   };
 
@@ -229,9 +237,20 @@ export default function DynamicSectionsPage() {
               const Icon = TEMPLATE_ICONS[section.templateType || section.type] || Info;
               return (
                 <div key={section.id} className="group flex items-center gap-4 p-4 bg-card border rounded-2xl hover:border-primary/50 transition shadow-sm">
-                  <div className="flex flex-col gap-1">
-                    <button onClick={() => handleMove(section.id, 'up')} disabled={index === 0} className="p-1 hover:bg-muted rounded disabled:opacity-30"><ChevronUp size={14} /></button>
-                    <button onClick={() => handleMove(section.id, 'down')} disabled={index === sections.length - 1} className="p-1 hover:bg-muted rounded disabled:opacity-30"><ChevronDown size={14} /></button>
+                  {/* Always-visible reorder controls */}
+                  <div className="flex flex-col gap-0.5">
+                    <button 
+                      onClick={() => handleMove(section.id, 'up')} 
+                      disabled={index === 0} 
+                      title="Move up" 
+                      className="p-1 hover:bg-muted rounded disabled:opacity-25 transition"
+                    ><ChevronUp size={14} /></button>
+                    <button 
+                      onClick={() => handleMove(section.id, 'down')} 
+                      disabled={index === sections.length - 1} 
+                      title="Move down" 
+                      className="p-1 hover:bg-muted rounded disabled:opacity-25 transition"
+                    ><ChevronDown size={14} /></button>
                   </div>
                   
                   <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${section.isActive ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
@@ -249,9 +268,18 @@ export default function DynamicSectionsPage() {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition">
-                    <button onClick={() => handleEditSection(section)} className="p-2.5 hover:bg-blue-50 text-blue-600 rounded-xl transition"><Edit size={18} /></button>
-                    <button onClick={() => handleDeleteSection(section.id)} className="p-2.5 hover:bg-red-50 text-red-600 rounded-xl transition"><Trash2 size={18} /></button>
+                  {/* Always-visible edit & delete buttons */}
+                  <div className="flex items-center gap-2">
+                    <button 
+                      onClick={() => handleEditSection(section)} 
+                      className="p-2.5 hover:bg-blue-50 text-blue-600 rounded-xl transition" 
+                      title="Edit section"
+                    ><Edit size={18} /></button>
+                    <button 
+                      onClick={() => handleDeleteSection(section.id)} 
+                      className="p-2.5 hover:bg-red-50 text-red-600 rounded-xl transition" 
+                      title="Delete section"
+                    ><Trash2 size={18} /></button>
                   </div>
                 </div>
               );

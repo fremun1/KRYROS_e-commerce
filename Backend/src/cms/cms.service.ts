@@ -349,9 +349,10 @@ export class CMSService {
       return { success: true, message: `Seeded ${defaultSections.length} homepage sections for the current frontend.` };
     }
 
-    // Upsert: add missing sections, update existing ones order/config
+    // Upsert: ONLY add missing sections — NEVER overwrite existing ones
+    // This ensures user's custom order, config, and visibility are preserved
     let added = 0;
-    let updated = 0;
+    let skipped = 0;
     for (const def of defaultSections) {
       const existing = existingSections.find(s => s.type === def.type && s.title === def.title);
       if (!existing) {
@@ -364,17 +365,18 @@ export class CMSService {
         } as any });
         added++;
       } else {
-        await this.prisma.cMSSection.update({
-          where: { id: existing.id },
-          data: { order: def.order, isActive: true, config: (def as any).config || (existing as any).config }
-        });
-        updated++;
+        // Section already exists — skip it to preserve user's custom settings
+        skipped++;
       }
     }
 
     return {
       success: true,
-      message: `Sync complete — added ${added}, updated ${updated} sections.`
+      added,
+      skipped,
+      message: skipped > 0
+        ? `Added ${added} missing sections, ${skipped} existing sections preserved (not overwritten)`
+        : `Seeded ${added} homepage sections`
     };
   }
 
@@ -755,7 +757,9 @@ export class CMSService {
       return { success: false, message: `No section definition found for page slug: ${normalizedSlug}` };
     }
 
-    // Delete all existing cms_sections for this page slug
+    // WARNING: This is intentionally destructive — it wipes ALL existing sections for this page
+    // and replaces them with defaults. Only use when you want to start fresh.
+    // For non-destructive updates, use the admin UI to edit individual sections instead.
     await this.prisma.cMSSection.deleteMany({ where: { pageSlug: normalizedSlug } as any });
 
     // Re-seed with new dynamic fields
@@ -834,12 +838,39 @@ export class CMSService {
   }
 
   async deleteSection(id: string) {
-    const section = await this.prisma.cMSSection.delete({ where: { id } });
-    await this.invalidateCmsCache();
-    return section;
+    try {
+      const existing = await this.prisma.cMSSection.findUnique({ where: { id } });
+      if (!existing) {
+        throw new NotFoundException(`Section with id '${id}' not found`);
+      }
+      const section = await this.prisma.cMSSection.delete({ where: { id } });
+      await this.invalidateCmsCache();
+      return section;
+    } catch (err) {
+      if (err instanceof NotFoundException) throw err;
+      throw new InternalServerErrorException(`Failed to delete section: ${err.message}`);
+    }
   }
 
   async reorderSections(pageSlug: string, idsInOrder: string[]) {
+    // Normalize pageSlug for consistency
+    const normalizedSlug = (pageSlug === 'home' || pageSlug === '/' || pageSlug === '') ? 'homepage' : pageSlug;
+    
+    // Verify all sections exist and belong to this page
+    const existingSections = await this.prisma.cMSSection.findMany({
+      where: {
+        id: { in: idsInOrder },
+        pageSlug: normalizedSlug,
+      } as any,
+    });
+    
+    const foundIds = new Set(existingSections.map(s => s.id));
+    const missingIds = idsInOrder.filter(id => !foundIds.has(id));
+    
+    if (missingIds.length > 0) {
+      throw new BadRequestException(`Sections not found on page '${normalizedSlug}': ${missingIds.join(', ')}`);
+    }
+    
     const updates = idsInOrder.map((id, index) =>
       this.prisma.cMSSection.update({
         where: { id },
@@ -848,7 +879,7 @@ export class CMSService {
     );
     await Promise.all(updates);
     await this.invalidateCmsCache();
-    return { success: true, message: 'Sections reordered successfully' };
+    return { success: true, message: `${idsInOrder.length} sections reordered successfully` };
   }
 
   async seedSections() {
@@ -1052,14 +1083,17 @@ export class CMSService {
     direction: 'up' | 'down',
     pageSlug: string
   ) {
+    // Normalize pageSlug: 'home' → 'homepage', handle empty/undefined
+    const normalizedSlug = (pageSlug === 'home' || pageSlug === '/' || pageSlug === '') ? 'homepage' : pageSlug;
+    
     // Get all sections on this page, sorted by order
     const sections = await this.prisma.cMSSection.findMany({
-      where: { pageSlug } as any,
+      where: { pageSlug: normalizedSlug } as any,
       orderBy: { order: 'asc' },
     });
 
     const currentIndex = sections.findIndex(s => s.id === sectionId);
-    if (currentIndex === -1) throw new NotFoundException('Section not found on this page');
+    if (currentIndex === -1) throw new NotFoundException('Section not found on this page — make sure you are viewing the correct page');
 
     // Determine new index
     let newIndex = currentIndex;
