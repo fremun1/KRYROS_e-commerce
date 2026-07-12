@@ -65,7 +65,15 @@ export default function DynamicSectionRendererV2({
           case 'HeroBanner':
           case 'HeroSlider':
             return (
-              <HeroSection key={section.id} />
+              <HeroSection
+                key={section.id}
+                image={section.config?.image || section.config?.media}
+                title={section.title || section.config?.heading}
+                subtitle={section.subtitle || section.config?.subtitle}
+                ctaText={section.config?.ctaText || section.config?.button_text}
+                ctaLink={section.config?.ctaLink || section.config?.href || section.config?.link}
+                bgColor={section.config?.bgColor || section.config?.gradient}
+              />
             );
 
           case 'BannerSlot':

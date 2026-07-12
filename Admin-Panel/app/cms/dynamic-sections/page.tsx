@@ -482,8 +482,28 @@ export default function DynamicSectionsPage() {
               {/* Banner Image Upload */}
               {(formData.templateType === 'HeroBanner' || formData.templateType === 'HeroSlider' || formData.templateType === 'PromoBanner' || formData.templateType === 'BannerSlot') && (
                 <div className="grid grid-cols-1 gap-4 mt-4">
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-muted-foreground uppercase">Upload Image</label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          // Upload to Cloudinary or your image service
+                          // For now, convert to base64 as fallback
+                          const reader = new FileReader();
+                          reader.onload = () => {
+                            setFormData({...formData, config: {...formData.config, image: reader.result as string, media: reader.result as string}});
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                      className="w-full p-2.5 bg-background border rounded-lg text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                    />
+                  </div>
                   <FormField 
-                    label="Image URL" 
+                    label="Or Image URL" 
                     value={formData.config?.image || formData.config?.media || ''} 
                     onChange={(v) => setFormData({...formData, config: {...formData.config, image: v, media: v}})}
                     placeholder="https://example.com/image.jpg"
@@ -497,14 +517,14 @@ export default function DynamicSectionsPage() {
                     isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
                   />
                   <FormField 
-                    label="CTA Link" 
+                    label="CTA Link (Optional)" 
                     value={formData.config?.ctaLink || formData.config?.href || formData.config?.link || ''} 
                     onChange={(v) => setFormData({...formData, config: {...formData.config, ctaLink: v, href: v, link: v}})}
                     placeholder="/shop or https://..."
                     isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
                   />
                   <FormField 
-                    label="CTA Text" 
+                    label="CTA Text (Optional)" 
                     value={formData.config?.ctaText || formData.config?.button_text || formData.config?.linkText || ''} 
                     onChange={(v) => setFormData({...formData, config: {...formData.config, ctaText: v, button_text: v, linkText: v}})}
                     placeholder="Shop Now"

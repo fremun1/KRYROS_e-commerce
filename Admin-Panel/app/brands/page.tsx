@@ -11,10 +11,10 @@ import toast from 'react-hot-toast';
 
 type Brand = {
   id: string; name: string; slug: string; products: number; country: string;
-  status: string; website: string; description: string;
+  status: string; website: string; description: string; logo?: string;
 };
 
-const EMPTY_FORM = { name: '', slug: '', country: '', status: 'Active', website: '', description: '' };
+const EMPTY_FORM = { name: '', slug: '', country: '', status: 'Active', website: '', description: '', logo: '' };
 const EMPTY_BANNER = { tagline: '', bannerDesc: '', bgColor: '#f5f5f5', brandColor: '#1FA89A', ctaText: '', ctaLink: '' };
 const toSlug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 
@@ -56,6 +56,7 @@ export default function BrandsPage() {
         status: b.isActive === false ? 'Inactive' : 'Active',
         website: b.website ?? '',
         description: b.description ?? '',
+        logo: b.logo ?? '',
       })));
     }).catch(() => {});
   };
@@ -64,7 +65,7 @@ export default function BrandsPage() {
 
   const openAdd  = () => { setForm({ ...EMPTY_FORM }); setBannerForm({ ...EMPTY_BANNER }); setEditRow(null); setModalOpen(true); };
   const openEdit = (row: Brand) => {
-    setForm({ name: row.name, slug: row.slug, country: row.country, status: row.status, website: row.website, description: row.description });
+    setForm({ name: row.name, slug: row.slug, country: row.country, status: row.status, website: row.website, description: row.description, logo: row.logo || '' });
     const existing = allBanners[row.slug];
     setBannerForm(existing ? { tagline: existing.tagline || '', bannerDesc: existing.description || '', bgColor: existing.bgColor || '#f5f5f5', brandColor: existing.bgGradient || '#1FA89A', ctaText: existing.ctaText || '', ctaLink: existing.ctaLink || '' } : { ...EMPTY_BANNER });
     setEditRow(row); setModalOpen(true);
@@ -75,7 +76,7 @@ export default function BrandsPage() {
     setSaving(true);
     try {
       const slug = toSlug(form.slug || form.name);
-      const payload = { name: form.name.trim(), slug, country: form.country, isActive: form.status === 'Active', website: form.website, description: form.description };
+      const payload = { name: form.name.trim(), slug, country: form.country, isActive: form.status === 'Active', website: form.website, description: form.description, logo: form.logo };
       const existingBrand = !editRow
         ? brands.find((b) => toSlug(b.slug || b.name) === slug)
         : null;
@@ -162,6 +163,35 @@ export default function BrandsPage() {
           <div style={{ marginBottom: '14px' }}>
             <FormField label="Shop Scroll Anchor" value={form.slug} onChange={(v) => f('slug', v)} placeholder="e.g. samsung" isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
             <p style={{ fontSize: '11px', color: textMuted, marginTop: '4px', marginBottom: 0 }}>Auto-generated from name — scrolls to this brand section in the shop.</p>
+          </div>
+          <div style={{ marginBottom: '14px' }}>
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: textMain, marginBottom: '6px' }}>Brand Logo</label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  const reader = new FileReader();
+                  reader.onload = () => {
+                    setForm(p => ({ ...p, logo: reader.result as string }));
+                  };
+                  reader.readAsDataURL(file);
+                }
+              }}
+              style={{ width: '100%', padding: '8px', borderRadius: '6px', background: surface, border: `1px solid ${border}`, color: textMain, fontSize: '12px', outline: 'none' }}
+            />
+            {form.logo && (
+              <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <img src={form.logo} alt="Logo preview" style={{ width: '48px', height: '48px', objectFit: 'contain', borderRadius: '6px', border: `1px solid ${border}` }} />
+                <button
+                  onClick={() => setForm(p => ({ ...p, logo: '' }))}
+                  style={{ padding: '4px 8px', fontSize: '11px', background: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                >
+                  Remove
+                </button>
+              </div>
+            )}
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
             <FormField label="Country" value={form.country} onChange={(v) => f('country', v)} placeholder="e.g. South Korea" isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />

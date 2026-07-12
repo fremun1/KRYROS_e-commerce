@@ -4,7 +4,16 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { fetchBanners } from "@/lib/api";
 import type { ApiBanner } from "@/lib/api";
 
-export default function HeroSection() {
+interface HeroSectionProps {
+  image?: string;
+  title?: string;
+  subtitle?: string;
+  ctaText?: string;
+  ctaLink?: string;
+  bgColor?: string;
+}
+
+export default function HeroSection({ image, title, subtitle, ctaText, ctaLink, bgColor }: HeroSectionProps) {
   const [banners, setBanners] = useState<ApiBanner[]>([]);
   const [current, setCurrent] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
@@ -12,11 +21,15 @@ export default function HeroSection() {
   const [translateX, setTranslateX] = useState(0);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // If props provided, use single banner mode
+  const useSingleBanner = !!image;
+
   useEffect(() => {
+    if (useSingleBanner) return; // Don't fetch API if props provided
     fetchBanners().then((data) => {
       if (data.length > 0) setBanners(data);
     });
-  }, []);
+  }, [useSingleBanner]);
 
   // Auto-rotate — pauses while dragging
   useEffect(() => {
@@ -27,6 +40,60 @@ export default function HeroSection() {
     }, 5000);
     return () => { if (timer.current) clearInterval(timer.current); };
   }, [banners.length, isDragging]);
+
+  // Single banner mode (from CMS section)
+  if (useSingleBanner) {
+    return (
+      <section
+        className="relative w-full overflow-hidden"
+        style={{ height: "clamp(150px, 44vw, 420px)", backgroundColor: bgColor }}
+      >
+        {ctaLink ? (
+          <Link href={ctaLink} className="block w-full h-full">
+            <img
+              src={image}
+              alt={title || ''}
+              className="w-full h-full object-cover"
+            />
+            {(title || subtitle || ctaText) && (
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-8">
+                <div className="text-white">
+                  <h2 className="text-3xl font-bold mb-2">{title}</h2>
+                  {subtitle && <p className="text-lg mb-4" dangerouslySetInnerHTML={{ __html: subtitle }} />}
+                  {ctaText && (
+                    <span className="px-6 py-3 bg-primary text-white rounded-xl font-bold inline-block">
+                      {ctaText}
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
+          </Link>
+        ) : (
+          <div className="w-full h-full relative">
+            <img
+              src={image}
+              alt={title || ''}
+              className="w-full h-full object-cover"
+            />
+            {(title || subtitle || ctaText) && (
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-8">
+                <div className="text-white">
+                  <h2 className="text-3xl font-bold mb-2">{title}</h2>
+                  {subtitle && <p className="text-lg mb-4" dangerouslySetInnerHTML={{ __html: subtitle }} />}
+                  {ctaText && (
+                    <span className="px-6 py-3 bg-primary text-white rounded-xl font-bold inline-block">
+                      {ctaText}
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </section>
+    );
+  }
 
   if (banners.length === 0) {
     return (
