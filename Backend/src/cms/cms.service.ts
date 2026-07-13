@@ -101,23 +101,18 @@ export class CMSService {
 
   async seedHomePageSections() {
     // Sections that match the current User-UI frontend exactly:
-    // 1.  HeroSection          → type: HeroSlider          (reads from cms_banners via /api/cms/banners)
-    // 2.  TrustBadges          → type: TrustBadges         (reads from site-config/trust-badges)
-    // 3.  CategorySection      → type: CategoriesGrid      (reads from /api/categories)
-    // 4.  FlashSaleSection     → type: FlashSale           (reads flash-sale products)
-    // 5.  RecentlyViewed       → type: RecentlyViewed      (client-side, localStorage)
-    // 6.  TopSelling           → type: TopSelling          (auto-picked by order count)
-    // 7.  LimitedStockDeal     → type: LimitedStockDeal    (configurable discount % banner + products)
-    // 8.  AppliancesDeal       → type: AppliancesDeal      (appliance products)
-    // 9.  TopExpress           → type: TopExpress          (express/trending products)
-    // 10. UpgradeBanner        → type: UpgradeBanner       (image-only carousel)
-    // 11. PromoBanners         → type: PromoBanners        (reads from cms_banners filtered by tag)
-    // 12. NewestArrivals       → type: NewestArrivals      (auto-picked by createdAt)
-    // 13. BestSellers          → type: BestSellers         (auto-picked by order count)
-    // 14. Trending             → type: Trending            (auto-picked by orderItems + wishlists)
-    // 15. CategoryPromoBanners → type: CategoryPromoBanners
-    // 16. RecommendedProducts  → type: RecommendedProducts
-    // 17. Newsletter           → type: Newsletter          (popup subscription)
+    // 1.  TrustBadges          → type: TrustBadges         (reads from site-config/trust-badges)
+    // 2.  FlashSaleSection     → type: FlashSale           (reads flash-sale products)
+    // 3.  RecentlyViewed       → type: RecentlyViewed      (client-side, localStorage)
+    // 4.  TopSelling           → type: TopSelling          (auto-picked by order count)
+    // 5.  LimitedStockDeal     → type: LimitedStockDeal    (configurable discount % deal)
+    // 6.  AppliancesDeal       → type: AppliancesDeal      (appliance products)
+    // 7.  TopExpress           → type: TopExpress          (express/trending products)
+    // 8.  NewestArrivals       → type: NewestArrivals      (auto-picked by createdAt)
+    // 9.  BestSellers          → type: BestSellers         (auto-picked by order count)
+    // 10. Trending             → type: Trending            (auto-picked by orderItems + wishlists)
+    // 11. RecommendedProducts  → type: RecommendedProducts
+    // 12. Newsletter           → type: Newsletter          (popup subscription)
     const defaultSections = [
       {
         type: 'Brands',
@@ -1254,11 +1249,6 @@ export class CMSService {
         dataSourceId = dataSourceMapping[legacyType];
       }
 
-      // Set slotKey for banner types if not already set
-      let slotKey = (section as any).slotKey;
-      if (!slotKey && slotKeyMapping[legacyType]) {
-        slotKey = slotKeyMapping[legacyType];
-      }
 
       // Normalize pageSlug
       let pageSlug = section.pageSlug;
