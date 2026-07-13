@@ -3,13 +3,11 @@ import { fetchBrands, ApiBrand } from '../../lib/api';
 
 interface BrandSectionProps {
   title?: string;
-  layout?: 'grid' | 'horizontal-scroll';
   limit?: number;
 }
 
 export default function BrandSection({
   title = 'Top Brands',
-  layout = 'grid',
   limit = 8,
 }: BrandSectionProps) {
   const [brands, setBrands] = useState<ApiBrand[]>([]);
@@ -45,54 +43,32 @@ export default function BrandSection({
 
   if (brands.length === 0) return null;
 
-  const BrandCard = ({ brand }: { brand: ApiBrand }) => {
-    const href = brand.slug
-      ? `/shop?brandSlug=${brand.slug}`
-      : `/shop?brandId=${brand.id}`;
-
-    return (
-      <a href={href} className="group flex flex-col items-center text-center">
-        <div className="w-full aspect-square overflow-hidden rounded-xl bg-muted/60 flex items-center justify-center p-3 group-hover:bg-muted/80 transition-colors">
-          {brand.logo ? (
-            <img
-              src={brand.logo}
-              alt={brand.name}
-              className="max-w-full max-h-full object-contain group-hover:scale-105 transition-transform duration-300"
-              loading="lazy"
-            />
-          ) : (
-            <span className="text-xs font-bold text-muted-foreground/50 line-clamp-2">
-              {brand.name}
-            </span>
-          )}
-        </div>
-        <p className="mt-2 text-sm font-medium leading-snug text-foreground group-hover:text-primary transition-colors line-clamp-2">
-          {brand.name}
-        </p>
-      </a>
-    );
-  };
+  const hrefFor = (brand: ApiBrand) =>
+    brand.slug ? `/shop?brandSlug=${brand.slug}` : `/shop?brandId=${brand.id}`;
 
   return (
     <section className="w-full max-w-7xl mx-auto px-4 py-6">
       {title && <h2 className="text-xl font-bold mb-4 text-foreground">{title}</h2>}
 
-      {layout === 'horizontal-scroll' ? (
-        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory"
-          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-          {brands.map((brand) => (
-            <div key={brand.id} className="flex-shrink-0 w-[100px] snap-start">
-              <BrandCard brand={brand} />
+      <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory"
+        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+        {brands.map((brand) => (
+          <a key={brand.id} href={hrefFor(brand)}
+            className="flex-shrink-0 w-[100px] snap-start group flex flex-col items-center text-center">
+            <div className="w-full aspect-square overflow-hidden rounded-xl bg-muted/60 flex items-center justify-center p-3 group-hover:bg-muted/80 transition-colors">
+              <img
+                src={brand.logo}
+                alt={brand.name}
+                className="max-w-full max-h-full object-contain group-hover:scale-105 transition-transform duration-300"
+                loading="lazy"
+              />
             </div>
-          ))}
-        </div>
-      ) : (
-        <div className="grid grid-cols-4 gap-2">
-          {brands.map((brand) => (
-            <BrandCard key={brand.id} brand={brand} />
-          ))}
-        </div>
-      )}
+            <p className="mt-2 text-sm font-medium leading-snug text-foreground group-hover:text-primary transition-colors line-clamp-2">
+              {brand.name}
+            </p>
+          </a>
+        ))}
+      </div>
     </section>
   );
 }

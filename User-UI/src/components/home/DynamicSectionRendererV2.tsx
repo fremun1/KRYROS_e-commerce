@@ -112,7 +112,6 @@ export default function DynamicSectionRendererV2({
               <BrandSection
                 key={section.id}
                 title={section.title}
-                layout={section.config?.layout || 'grid'}
                 limit={section.config?.limit || 8}
               />
             );

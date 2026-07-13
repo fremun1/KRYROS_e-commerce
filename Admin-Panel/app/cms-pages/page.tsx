@@ -138,7 +138,6 @@ export default function CMSPagesPage() {
       name: rule.label,
       config: { 
         ...formData.config,
-        layout: rule.templateType === 'BrandGrid' ? 'grid' : undefined,
         limit: rule.templateType === 'BrandGrid' ? 8 : undefined,
         slides: rule.templateType === 'BannerCarousel' ? [] : undefined,
         autoplay: rule.templateType === 'BannerCarousel' ? true : undefined,
