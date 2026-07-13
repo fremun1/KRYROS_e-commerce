@@ -112,6 +112,20 @@ export default function BrandsPage() {
         </div>
       );
     }},
+    { key: 'logo', label: 'Logo', render: (v, row) => {
+      const r = row as Brand;
+      return r.logo ? (
+        <div style={{ width: '56px', height: '36px', borderRadius: '8px', border: `1px solid ${border}`, background: isDark ? '#0f172a' : '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '4px' }}>
+          <img
+            src={r.logo}
+            alt={`${r.name} logo`}
+            style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
+          />
+        </div>
+      ) : (
+        <span style={{ color: textMuted, fontSize: '12px' }}>No logo</span>
+      );
+    }},
     { key: 'products', label: 'Products', render: (v) => (
       <span style={{ background: isDark ? '#1e2a35' : '#f0f9ff', color: accent, fontWeight: 700, fontSize: '12px', padding: '2px 10px', borderRadius: '20px' }}>{String(v ?? 0)}</span>
     )},

@@ -26,10 +26,66 @@ export class BrandsService {
       .replace(/--+/g, '-');
   }
 
-  private resolveLogo(dto: CreateBrandDto | UpdateBrandDto): string | null | undefined {
-    // Accept either logo or logoUrl — frontend may send either
-    const raw = (dto as any).logoUrl || (dto as any).logo;
-    return raw || null;
+  private normalizeBrandKey(name?: string | null): string {
+    return (name || '')
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, ' ');
+  }
+
+  private resolveLogo(
+    dto: CreateBrandDto | UpdateBrandDto,
+    preserveUndefined = false,
+  ): string | null | undefined {
+    // Accept either logo or logoUrl — frontend may send either.
+    // On update, preserveUndefined lets us keep the existing logo if neither field was sent.
+    const hasLogoUrl = Object.prototype.hasOwnProperty.call(dto, 'logoUrl');
+    const hasLogo = Object.prototype.hasOwnProperty.call(dto, 'logo');
+
+    if (!hasLogoUrl && !hasLogo) {
+      return preserveUndefined ? undefined : null;
+    }
+
+    const raw = (dto as any).logoUrl ?? (dto as any).logo;
+    if (raw === undefined) return preserveUndefined ? undefined : null;
+    if (raw === null || raw === '') return null;
+    return raw;
+  }
+
+  private dedupeBrands<T extends { id: number; name?: string | null; logo?: string | null; updatedAt?: Date }>(
+    brands: T[],
+  ): T[] {
+    const deduped = new Map<string, T>();
+
+    for (const brand of brands) {
+      const key = this.normalizeBrandKey(brand.name) || `brand:${brand.id}`;
+      const existing = deduped.get(key);
+
+      if (!existing) {
+        deduped.set(key, brand);
+        continue;
+      }
+
+      const existingHasLogo = Boolean(existing.logo);
+      const nextHasLogo = Boolean(brand.logo);
+
+      if (!existingHasLogo && nextHasLogo) {
+        deduped.set(key, brand);
+        continue;
+      }
+
+      if (existingHasLogo === nextHasLogo) {
+        const existingUpdated = existing.updatedAt ? new Date(existing.updatedAt).getTime() : 0;
+        const nextUpdated = brand.updatedAt ? new Date(brand.updatedAt).getTime() : 0;
+        if (nextUpdated > existingUpdated) {
+          deduped.set(key, brand);
+        }
+      }
+    }
+
+    return Array.from(deduped.values()).sort((a, b) =>
+      (a.name || '').localeCompare(b.name || ''),
+    );
   }
 
   async create(dto: CreateBrandDto) {
@@ -91,8 +147,9 @@ export class BrandsService {
         },
         orderBy: { name: 'asc' },
       });
-      await this.cacheManager.set('brands:all', result, 5 * 60 * 1000);
-      return result;
+      const deduped = this.dedupeBrands(result);
+      await this.cacheManager.set('brands:all', deduped, 5 * 60 * 1000);
+      return deduped;
     } catch {
       return [];
     }
@@ -124,7 +181,7 @@ export class BrandsService {
     if (dto.categoryId !== undefined) updateData.categoryId = dto.categoryId;
 
     // Handle logo — accept both logo and logoUrl
-    const logoRaw = this.resolveLogo(dto);
+    const logoRaw = this.resolveLogo(dto, true);
     if (logoRaw !== undefined) {
       if (logoRaw && logoRaw.startsWith('data:image')) {
         updateData.logo = await compressImage(logoRaw, 300, 120, 80);
@@ -133,7 +190,9 @@ export class BrandsService {
       }
     }
 
-    return this.prisma.brand.update({ where: { id }, data: updateData });
+    const updated = await this.prisma.brand.update({ where: { id }, data: updateData });
+    await this.invalidateBrandCache();
+    return updated;
   }
 
   async remove(id: number) {

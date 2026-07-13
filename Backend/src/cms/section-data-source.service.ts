@@ -64,6 +64,41 @@ export class SectionDataSourceService {
     return ruleId in SECTION_RULES;
   }
 
+  private normalizeBrandKey(name?: string | null): string {
+    return (name || '')
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, ' ');
+  }
+
+  private dedupeBrands<T extends { id: number; name?: string | null; logo?: string | null; updatedAt?: Date }>(
+    brands: T[],
+  ): T[] {
+    const deduped = new Map<string, T>();
+
+    for (const brand of brands) {
+      const key = this.normalizeBrandKey(brand.name) || `brand:${brand.id}`;
+      const existing = deduped.get(key);
+
+      if (!existing || (!existing.logo && brand.logo)) {
+        deduped.set(key, brand);
+        continue;
+      }
+
+      if (existing.logo === brand.logo) {
+        const existingUpdated = existing.updatedAt ? new Date(existing.updatedAt).getTime() : 0;
+        const nextUpdated = brand.updatedAt ? new Date(brand.updatedAt).getTime() : 0;
+        if (nextUpdated > existingUpdated) {
+          deduped.set(key, brand);
+        }
+      }
+    }
+
+    return Array.from(deduped.values()).sort((a, b) =>
+      (a.name || '').localeCompare(b.name || ''),
+    );
+  }
+
   /**
    * Fetch products based on a section rule
    * 
@@ -118,11 +153,10 @@ export class SectionDataSourceService {
     
     const brands = await this.prisma.brand.findMany({
       where: { isActive: true },
-      take: limit,
       orderBy: { name: 'asc' }
     });
 
-    return brands;
+    return this.dedupeBrands(brands).slice(0, limit);
   }
 
   /**

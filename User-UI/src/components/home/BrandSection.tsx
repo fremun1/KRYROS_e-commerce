@@ -12,12 +12,32 @@ export default function BrandSection({
 }: BrandSectionProps) {
   const [brands, setBrands] = useState<ApiBrand[]>([]);
   const [loading, setLoading] = useState(true);
+  const [failedLogos, setFailedLogos] = useState<Record<number, boolean>>({});
 
   useEffect(() => {
     fetchBrands()
       .then((data) => {
         const list = Array.isArray(data) ? data : [];
-        setBrands(list.slice(0, limit));
+        const deduped = Array.from(
+          list.reduce((map, brand) => {
+            const key = brand.name.trim().toLowerCase();
+            const existing = map.get(key);
+
+            if (!existing) {
+              map.set(key, brand);
+              return map;
+            }
+
+            if (!existing.logo && brand.logo) {
+              map.set(key, brand);
+            }
+
+            return map;
+          }, new Map<string, ApiBrand>()).values()
+        );
+
+        setFailedLogos({});
+        setBrands(deduped.slice(0, limit));
       })
       .catch(() => setBrands([]))
       .finally(() => setLoading(false));
@@ -48,7 +68,7 @@ export default function BrandSection({
     <section className="w-full max-w-7xl mx-auto px-4 py-6">
       {title && <h2 className="text-xl font-bold mb-4 text-foreground">{title}</h2>}
       <div
-        className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory"
+        className="flex flex-nowrap gap-3 overflow-x-auto pb-2 snap-x snap-mandatory"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
         {brands.map((brand) => (
@@ -58,12 +78,15 @@ export default function BrandSection({
             className="flex-shrink-0 w-[100px] snap-start group flex flex-col items-center text-center"
           >
             <div className="w-full aspect-square overflow-hidden rounded-xl bg-muted/60 flex items-center justify-center p-2 group-hover:bg-muted/80 transition-colors">
-              {brand.logo ? (
+              {brand.logo && !failedLogos[brand.id] ? (
                 <img
                   src={brand.logo}
                   alt={brand.name}
                   className="max-w-full max-h-full object-contain group-hover:scale-105 transition-transform duration-300"
                   loading="lazy"
+                  onError={() =>
+                    setFailedLogos((prev) => ({ ...prev, [brand.id]: true }))
+                  }
                 />
               ) : (
                 <span className="text-[11px] font-bold text-foreground/70 text-center leading-tight px-1 line-clamp-3">
