@@ -551,12 +551,17 @@ export default function CMSPagesPage() {
                     <button
                       type="button"
                       onClick={() => setFormData({...formData, config: {...formData.config, layout: 'grid'}})}
-                      className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
+                      className={`relative flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
                         (formData.config?.layout ?? 'grid') === 'grid'
-                          ? 'border-primary bg-primary/10 text-primary'
-                          : 'border-border hover:border-primary/40'
+                          ? 'border-primary bg-primary/10 text-primary ring-2 ring-primary/30 shadow-md'
+                          : 'border-muted/60 text-muted-foreground hover:border-primary/40 hover:text-foreground'
                       }`}
                     >
+                      {(formData.config?.layout ?? 'grid') === 'grid' && (
+                        <span className="absolute top-2 right-2 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="white" strokeWidth="2.5"><path d="M2 6l3 3 5-6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                        </span>
+                      )}
                       {/* Grid icon */}
                       <svg width="40" height="32" viewBox="0 0 40 32" fill="none" stroke="currentColor" strokeWidth="1.5" className="opacity-80">
                         <rect x="2" y="2" width="16" height="13" rx="2"/>
@@ -572,12 +577,17 @@ export default function CMSPagesPage() {
                     <button
                       type="button"
                       onClick={() => setFormData({...formData, config: {...formData.config, layout: 'horizontal-scroll'}})}
-                      className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
+                      className={`relative flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
                         formData.config?.layout === 'horizontal-scroll'
-                          ? 'border-primary bg-primary/10 text-primary'
-                          : 'border-border hover:border-primary/40'
+                          ? 'border-primary bg-primary/10 text-primary ring-2 ring-primary/30 shadow-md'
+                          : 'border-muted/60 text-muted-foreground hover:border-primary/40 hover:text-foreground'
                       }`}
                     >
+                      {formData.config?.layout === 'horizontal-scroll' && (
+                        <span className="absolute top-2 right-2 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="white" strokeWidth="2.5"><path d="M2 6l3 3 5-6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                        </span>
+                      )}
                       {/* Horizontal scroll icon */}
                       <svg width="40" height="32" viewBox="0 0 40 32" fill="none" stroke="currentColor" strokeWidth="1.5" className="opacity-80">
                         <rect x="2" y="6" width="10" height="20" rx="2"/>
