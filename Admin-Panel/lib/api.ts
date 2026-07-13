@@ -260,6 +260,10 @@ export const seedCmsSiteConfigs = () =>
   api.post("/api/cms/site-config/seed");
 
 // ── Settings ──────────────────────────────────────────────
+export const getSettings = (params?: Record<string, unknown>) =>
+  api.get("/api/settings", { params });
+export const updateSettings = (data: Record<string, unknown>) =>
+  api.put("/api/settings", data);
 
 // ── Shipping ──────────────────────────────────────────────
 export const getShippingZones = (params?: Record<string, unknown>) =>

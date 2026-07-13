@@ -704,31 +704,6 @@ model CMSPage {
   @@map("cms_pages")
 }
 
-model CMSBanner {
-  id               String    @id @default(uuid())
-  title            String
-  subtitle         String?
-  image            String?
-  link             String?
-  linkText         String?
-  isActive         Boolean   @default(true)
-  position         Int       @default(0)
-  startDate        DateTime?
-  endDate          DateTime?
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
-  mediaType        String    @default("image")
-  videoUrl         String?
-  duration         Int?
-  displayDays      Int?
-  badge            String?
-  secondaryCta     String?
-  secondaryCtaLink String?
-  tag              String?
-
-  @@map("cms_banners")
-}
-
 model CMSSection {
   id              String   @id @default(uuid())
   type            String
@@ -847,24 +822,6 @@ model CMSSiteConfig {
   updatedAt DateTime @updatedAt
 
   @@map("cms_site_configs")
-}
-
-model CMSBrandBanner {
-  id          String   @id @default(uuid())
-  brandSlug   String   @unique
-  brandName   String
-  tagline     String?
-  description String?
-  bgColor     String?
-  bgGradient  String?
-  imageUrl    String?
-  ctaText     String   @default("Shop Now")
-  ctaLink     String?
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@map("cms_brand_banners")
 }
 
 model Notification {
