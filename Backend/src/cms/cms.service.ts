@@ -28,23 +28,15 @@ export class CMSService {
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
-  // ── Cache invalidation helper — call after any write to banners/sections ──
+  // ── Cache invalidation helper — call after any write to sections ──
   async invalidateCmsCache(type?: string) {
     const keys = [
-      'cms:banners',
-      'cms:banners:wholesale',
-      'cms:banners:get-now',
       'cms:sections',
       type ? `cms:sections:${type}` : null,
     ].filter(Boolean) as string[];
     await Promise.all(keys.map(k => this.cacheManager.del(k)));
   }
 
-  private async invalidateBannerCache(tag?: string) {
-    const keys = ['cms:banners'];
-    if (tag) keys.push(`cms:banners:${tag}`);
-    await Promise.all(keys.map((key) => this.cacheManager.del(key)));
-  }
 
   // ==================== HOME PAGE SECTIONS ====================
 
@@ -128,15 +120,6 @@ export class CMSService {
     // 17. Newsletter           → type: Newsletter          (popup subscription)
     const defaultSections = [
       {
-        type: 'HeroSlider',
-        order: 1,
-        isActive: true,
-        title: 'Hero Banner',
-        subtitle: 'Main hero slider — banners managed in CMS → Banners',
-        animation: 'fadeIn',
-        config: { showBanners: true, source: 'cms_banners' }
-      },
-      {
         type: 'Brands',
         order: 2,
         isActive: true,
@@ -163,15 +146,6 @@ export class CMSService {
         }
       },
       {
-        type: 'CategoriesGrid',
-        order: 4,
-        isActive: true,
-        title: 'Shop by Category',
-        subtitle: 'Browse our collections — driven by product categories',
-        animation: 'zoomIn',
-        config: {}
-      },
-      {
         type: 'FlashSale',
         order: 5,
         isActive: true,
@@ -186,52 +160,6 @@ export class CMSService {
           ctaLink: '/shop',
           limit: 8,
           endTime: new Date(Date.now() + 86400000).toISOString()
-        }
-      },
-      {
-        type: 'PromoBanners',
-        order: 6,
-        isActive: true,
-        title: 'Get Now Promo Banner',
-        animation: 'slideUp',
-        config: {
-          tag: 'GET NOW',
-          title: 'Smart Payment Plan',
-          subtitle: 'Buy now, pay in easy monthly instalments.',
-          cta: 'Learn More',
-          href: '/get-now',
-          image: 'https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=800&q=80',
-        }
-      },
-      {
-        type: 'PromoBanners',
-        order: 7,
-        isActive: true,
-        title: 'Free Shipping Promo Banner',
-        animation: 'slideUp',
-        config: {
-          tag: 'FREE SHIPPING',
-          title: 'Free Shipping Nationwide',
-          subtitle: 'On all orders over $500.',
-          cta: 'Shop Now',
-          href: '/shop',
-          image: 'https://images.unsplash.com/photo-1578575437130-527eed3abbec?w=800&q=80',
-        }
-      },
-      {
-        type: 'PromoBanners',
-        order: 8,
-        isActive: true,
-        title: 'Flash Sale Promo Banner',
-        animation: 'slideUp',
-        config: {
-          tag: 'LIMITED TIME',
-          title: 'Flash Sale',
-          subtitle: "Today's Hot Deals",
-          desc: "Grab the best prices before they're gone — limited stock only",
-          href: '/shop',
-          gradient: 'linear-gradient(135deg, #7c1d1d 0%, #b91c1c 50%, #ef4444 100%)',
-          emoji: '⚡'
         }
       },
       {
@@ -300,15 +228,6 @@ export class CMSService {
           scroll: true,
           popularity: 'trending'
         }
-      },
-      {
-        type: 'UpgradeBanner',
-        order: 14,
-        isActive: true,
-        title: 'Upgrade Banner',
-        subtitle: 'Image-only carousel — upload multiple banner images via CMS',
-        animation: 'fadeIn',
-        config: { images: [], autoSlide: true, interval: 4000 }
       },
       {
         type: 'NewestArrivals',
@@ -387,21 +306,12 @@ export class CMSService {
 
   private mapLegacyTypeToTemplate(type: string): string {
     const map: Record<string, string> = {
-      HeroSlider: 'BannerSlot',
-      HeroBanner: 'BannerSlot',
       Brands: 'BrandGrid',
       TrustBadges: 'TrustBadges',
-      CategoriesGrid: 'CategoryGrid',
-      Categories: 'CategoryGrid',
-      CategorySection: 'CategoryGrid',
       FlashSale: 'ProductShelf',
-      PromoBanners: 'BannerSlot',
-      promo_banners: 'BannerSlot',
-      CategoryPromoBanners: 'BannerSlot',
       ProductSection: 'ProductShelf',
       RecommendedProducts: 'ProductShelf',
       RecentlyViewed: 'Custom',
-      UpgradeBanner: 'BannerSlot',
       TopSelling: 'ProductShelf',
       NewestArrivals: 'ProductShelf',
       BestSellers: 'ProductShelf',
@@ -497,22 +407,14 @@ export class CMSService {
       shop: [
         // Shop page is now a curated "storefront" composed of blocks.
         // Admin can add/remove/re-order blocks from CMS → Pages → Shop → Sections.
-        { type: 'ShopHero',         title: 'Shop Hero',         subtitle: 'Top hero banner (managed via CMS → Shop Hero Banner)', order: 1, isActive: true, config: { source: 'site-config', key: 'shop', path: 'heroBanner' } },
-        { type: 'ShopCategories',   title: 'Shop Categories',   subtitle: 'Horizontal category browsing row',                        order: 2, isActive: true, config: { mode: 'carousel' } },
-
         // Product shelves (horizontal)
         { type: 'ShopProductShelf', title: 'Top Selling',       subtitle: 'Best sellers shelf',                                    order: 3, isActive: true, config: { sectionSlug: 'top-selling', title: 'Top Selling Products', ctaText: 'See All', limit: 10, scroll: true, popularity: 'bestseller' } },
         { type: 'ShopProductShelf', title: 'Flash Sales',       subtitle: 'Flash sale deals shelf',                                 order: 4, isActive: true, config: { sectionSlug: 'flash-sales', title: 'Flash Sales', ctaText: 'See All', limit: 10, scroll: true, isFlashSale: true } },
-
-        // Promo banner between shelves
-        { type: 'ShopPromoBanner',  title: 'Mid Promo Banner',  subtitle: 'Break up shelves with a promo banner',                    order: 5, isActive: true, config: { tag: 'LIMITED TIME', title: 'Mega Deals', subtitle: 'Up to 50% Off Selected Items', ctaText: 'Shop Now', ctaLink: '/shop/section/flash-sales', bgColor: 'linear-gradient(135deg, #0f4c35 0%, #1a7a52 50%, #0d9488 100%)' } },
 
         // Category shelves (examples — update categorySlug to match your categories)
         { type: 'ShopProductShelf', title: 'Smartphones',       subtitle: 'Top smartphone picks',                                   order: 6, isActive: true, config: { sectionSlug: 'smartphones', title: 'Smartphones', ctaText: 'See All', limit: 10, scroll: true, categorySlug: 'smartphones' } },
         { type: 'ShopProductShelf', title: 'Accessories',       subtitle: 'Headphones, cases, chargers, and more',                   order: 7, isActive: true, config: { sectionSlug: 'accessories', title: 'Accessories', ctaText: 'See All', limit: 10, scroll: true, categorySlug: 'accessories' } },
 
-        // Members banner near the bottom (managed in CMS → Shop Members Banner)
-        { type: 'MembersBanner',    title: 'Members Banner',    subtitle: 'Join KRYROS for exclusive deals',                          order: 100, isActive: true, config: { source: 'site-config', key: 'shop', path: 'membersBanner' } },
       ],
       'product-detail': [
         { type: 'ProductGallery',   title: 'Product Gallery',   subtitle: 'Images & media',        order: 1, isActive: true, config: {} },
@@ -555,7 +457,6 @@ export class CMSService {
       checkout:            [{ type: 'PageContent', title: 'Checkout',           order: 1, isActive: true, config: {} }],
       account:             [{ type: 'PageContent', title: 'My Account',         order: 1, isActive: true, config: {} }],
       'flash-sale': [
-        { type: 'SaleBanner',    title: 'Sale Banner',    subtitle: 'Flash sale promotion', order: 1, isActive: true, config: {} },
         { type: 'ProductsGrid',  title: 'Products Grid',  subtitle: 'Sale items listing',   order: 2, isActive: true, config: { filter: 'sale', limit: 12 } },
       ],
     };
@@ -590,13 +491,7 @@ export class CMSService {
       let slotKey = (s as any).slotKey || null;
 
       // Map legacy types to new system for seeded defaults
-      if (s.type === 'HeroSlider') {
-        templateType = 'BannerSlot';
-        slotKey = 'homepage-hero-slider';
-      } else if (s.type === 'CategoriesGrid') {
-        templateType = 'CategoryGrid';
-        dataSourceId = 'homepage-categories';
-      } else if (['TopSelling', 'Trending', 'BestSellers', 'NewestArrivals', 'FlashSale'].includes(s.type)) {
+      if (['TopSelling', 'Trending', 'BestSellers', 'NewestArrivals', 'FlashSale'].includes(s.type)) {
         templateType = 'ProductShelf';
         dataSourceId = s.type === 'Trending' ? 'trending-products' : 
                        s.type === 'NewestArrivals' ? 'new-arrivals' : 
@@ -1148,33 +1043,7 @@ export class CMSService {
           { icon: 'Headphones', title: '24/7 Support', subtitle: 'We are here' },
         ],
       },
-      'upgrade-banner': {
-        heading: 'Upgrade Your Tech Game',
-        subtitle: 'Unbeatable performance. Unmatched style.',
-        ctaText: 'Shop Now',
-        ctaLink: '/shop',
-        discountText: '30%',
-        discountSubtext: 'OFF',
-        bgImage: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=800&q=85',
-      },
-      'members-banner': {
-        title: 'KRYROS Members',
-        subtitle: 'Join and get exclusive discounts on every order',
-        discount: '5%',
-        ctaText: 'Join Now',
-        ctaLink: '/signup',
-        bgColor: '#050F1A',
-      },
       // Page-level site configs — keyed by page slug
-      'shop': {
-        membersBanner: {
-          tag: 'KRYROS+',
-          title: 'Extra 5% Off',
-          subtitle: 'Exclusive discount for KRYROS members on all products',
-          ctaText: 'Join Now',
-          ctaLink: '/register',
-        },
-      },
       'get-now': {
         title1: 'Shop Now.',
         title2: 'Pay Later.',
@@ -1289,23 +1158,6 @@ export class CMSService {
       'ShopProductShelf': 'ProductShelf',
       'RelatedProducts': 'ProductShelf',
       
-      // Banner family
-      'HeroSlider': 'BannerSlot',
-      'HeroBanner': 'BannerSlot',
-      'BannerSlot': 'BannerSlot',
-      'PromoBanners': 'PromoBanner',
-      'Promotions': 'PromoBanner',
-      'promo_banners': 'PromoBanner',
-      'ShopPromoBanner': 'PromoBanner',
-      
-      // Category family
-      'CategoryGrid': 'CategoryGrid',
-      'CategoryGridShelf': 'CategoryGrid',
-      'CategoriesGrid': 'CategoryGrid',
-      'Categories': 'CategoryGrid',
-      'CategorySection': 'CategoryGrid',
-      'ShopCategories': 'CategoryGrid',
-      
       // Brand family
       'BrandGrid': 'BrandGrid',
       'Brands': 'BrandGrid',
@@ -1327,8 +1179,6 @@ export class CMSService {
       'Newsletter': 'Newsletter',
       'RecentlyViewed': 'RecentlyViewed',
       'TrustBadges': 'TrustBadges',
-      'MembersBanner': 'MembersBanner',
-      'UpgradeBanner': 'UpgradeBanner',
       'ShopFilters': 'ShopFilters',
       
       // Deal family
@@ -1337,10 +1187,7 @@ export class CMSService {
       'AppliancesDeal': 'AppliancesDeal',
       'TopExpress': 'TopExpress',
       'CategoryDeal': 'CategoryDeal',
-      
-      // Category (direct)
-      'category': 'CategoryGrid',
-      'categories': 'CategoryGrid',
+
     };
 
     // dataSourceId mapping table: legacy type -> default dataSourceId
@@ -1350,9 +1197,6 @@ export class CMSService {
       'BestSellers': 'top-selling',
       'NewestArrivals': 'new-arrivals',
       'FeaturedProducts': 'featured-products',
-      'CategoryGrid': 'homepage-categories',
-      'CategoriesGrid': 'homepage-categories',
-      'Categories': 'homepage-categories',
       'BrandGrid': 'generic-brand-section',
       'Brands': 'generic-brand-section',
       'FlashSale': 'flash-sales',
@@ -1362,18 +1206,11 @@ export class CMSService {
       'RecentlyViewed': 'recently-viewed',
     };
 
-    // slotKey mapping for banner types
-    const slotKeyMapping: Record<string, string> = {
-      'HeroSlider': 'homepage-hero-slider',
-      'HeroBanner': 'homepage-hero-slider',
-    };
 
     // config normalization: add canonical fields based on templateType
     const configNormalization: Record<string, Partial<any>> = {
       'ProductShelf': { layout: 'horizontal-scroll', limit: 8 },
-      'CategoryGrid': { layout: 'grid', limit: 12 },
       'BrandGrid': { displayMode: 'full', autoScroll: true },
-      'BannerSlot': { bannerMode: 'hero' },
     };
 
     for (const section of sections) {
