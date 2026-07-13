@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 interface BannerSlide {
   image: string;
@@ -11,6 +11,7 @@ interface BannerSlide {
 interface BannerCarouselProps {
   slides?: BannerSlide[];
   autoplay?: boolean;
+  duration?: number;
   showDots?: boolean;
   showArrows?: boolean;
 }
@@ -18,35 +19,55 @@ interface BannerCarouselProps {
 export default function BannerCarousel({
   slides = [],
   autoplay = true,
+  duration = 5,
   showDots = true,
   showArrows = true,
 }: BannerCarouselProps) {
   const [current, setCurrent] = useState(0);
-  const [isHovered, setIsHovered] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const touchStartX = useRef(0);
+  const touchStartRef = useRef({ x: 0, y: 0 });
+  const touchMoved = useRef(false);
   const total = slides.length;
 
+  // Stable callback using ref to avoid recreating intervals
+  const currentRef = useRef(current);
+  currentRef.current = current;
+
   const goTo = useCallback((index: number) => {
-    setCurrent((index + total) % total);
+    const next = ((index % total) + total) % total;
+    setCurrent(next);
   }, [total]);
 
-  const next = useCallback(() => goTo(current + 1), [current, goTo]);
-  const prev = useCallback(() => goTo(current - 1), [current, goTo]);
+  // Arrow handlers
+  const goNext = useCallback(() => goTo(currentRef.current + 1), [goTo]);
+  const goPrev = useCallback(() => goTo(currentRef.current - 1), [goTo]);
 
-  // Autoplay
+  // Autoplay — uses ref to avoid re-creating interval on every current change
   useEffect(() => {
-    if (!autoplay || total <= 1 || isHovered) {
-      if (timerRef.current) clearInterval(timerRef.current);
-      return;
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
     }
-    timerRef.current = setInterval(next, 5000);
-    return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  }, [autoplay, total, isHovered, next]);
+    if (!autoplay || total <= 1) return;
 
+    const intervalMs = Math.max(1, (duration || 5)) * 1000;
+    timerRef.current = setInterval(() => {
+      if (!isPaused) {
+        setCurrent((prev) => (prev + 1) % total);
+      }
+    }, intervalMs);
+
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [autoplay, total, duration, isPaused]);
+
+  // Empty state
   if (!slides || total === 0) return null;
+
+  // Single slide — no carousel
   if (total === 1) {
-    // Single slide, no carousel needed
     const slide = slides[0];
     return (
       <div className="w-full">
@@ -61,46 +82,62 @@ export default function BannerCarousel({
     );
   }
 
+  // ── Touch handlers ──
   const handleTouchStart = (e: React.TouchEvent) => {
-    touchStartX.current = e.touches[0].clientX;
+    touchStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    touchMoved.current = false;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    // Prevent vertical scroll when swiping horizontally
+    const dx = Math.abs(e.touches[0].clientX - touchStartRef.current.x);
+    const dy = Math.abs(e.touches[0].clientY - touchStartRef.current.y);
+    if (dx > dy && dx > 10) {
+      e.preventDefault();
+      touchMoved.current = true;
+    }
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
-    const diff = touchStartX.current - e.changedTouches[0].clientX;
-    if (Math.abs(diff) > 50) {
-      if (diff > 0) next();
-      else prev();
+    const diff = touchStartRef.current.x - e.changedTouches[0].clientX;
+    if (Math.abs(diff) > 40) {
+      if (diff > 0) goNext();
+      else goPrev();
     }
   };
 
   return (
     <div
       className="relative w-full overflow-hidden group"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
+      onTouchStart={() => setIsPaused(true)}
+      onTouchEnd={() => setTimeout(() => setIsPaused(false), 3000)}
     >
-      {/* Slides track */}
+      {/* Track */}
       <div
-        className="flex transition-transform duration-500 ease-out"
+        className="flex transition-transform duration-500 ease-out will-change-transform"
         style={{ transform: `translateX(-${current * 100}%)` }}
         onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
         {slides.map((slide, idx) => (
-          <div key={idx} className="min-w-full relative flex-shrink-0">
+          <div key={idx} className="min-w-full relative flex-shrink-0 select-none">
             <a
               href={slide.linkUrl || '#'}
               className="block w-full"
+              draggable={false}
             >
               <img
                 src={slide.image}
                 alt={slide.title || `Banner ${idx + 1}`}
-                className="w-full h-[200px] sm:h-[280px] md:h-[340px] object-cover"
+                className="w-full h-[200px] sm:h-[280px] md:h-[340px] object-cover pointer-events-none"
                 loading={idx === 0 ? 'eager' : 'lazy'}
+                draggable={false}
               />
-              {/* Text overlay - only if title or subtitle exists */}
               {(slide.title || slide.subtitle || slide.ctaText) && (
-                <div className="absolute inset-0 bg-gradient-to-r from-black/50 via-transparent to-transparent flex flex-col justify-end p-6 sm:p-8 md:p-12">
+                <div className="absolute inset-0 bg-gradient-to-r from-black/50 via-transparent to-transparent flex flex-col justify-end p-6 sm:p-8 md:p-12 pointer-events-none">
                   {slide.title && (
                     <h2 className="text-white text-xl sm:text-2xl md:text-3xl font-bold mb-1 drop-shadow-lg">
                       {slide.title}
@@ -112,7 +149,7 @@ export default function BannerCarousel({
                     </p>
                   )}
                   {slide.ctaText && (
-                    <span className="inline-block bg-white text-black px-5 py-2 rounded-lg text-sm font-semibold hover:bg-gray-100 transition w-fit">
+                    <span className="inline-block bg-white text-black px-5 py-2 rounded-lg text-sm font-semibold pointer-events-auto">
                       {slide.ctaText}
                     </span>
                   )}
@@ -123,19 +160,19 @@ export default function BannerCarousel({
         ))}
       </div>
 
-      {/* Arrows */}
-      {showArrows && (
+      {/* Arrows — always visible on mobile, hover on desktop */}
+      {showArrows && total > 1 && (
         <>
           <button
-            onClick={prev}
-            className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center transition opacity-0 group-hover:opacity-100 focus:opacity-100 z-10"
+            onClick={goPrev}
+            className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/40 hover:bg-black/70 text-white flex items-center justify-center transition-all z-10 active:scale-90"
             aria-label="Previous slide"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M15 18l-6-6 6-6"/></svg>
           </button>
           <button
-            onClick={next}
-            className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center transition opacity-0 group-hover:opacity-100 focus:opacity-100 z-10"
+            onClick={goNext}
+            className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/40 hover:bg-black/70 text-white flex items-center justify-center transition-all z-10 active:scale-90"
             aria-label="Next slide"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M9 18l6-6-6-6"/></svg>
@@ -144,7 +181,7 @@ export default function BannerCarousel({
       )}
 
       {/* Dots */}
-      {showDots && (
+      {showDots && total > 1 && (
         <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2 z-10">
           {slides.map((_, idx) => (
             <button
