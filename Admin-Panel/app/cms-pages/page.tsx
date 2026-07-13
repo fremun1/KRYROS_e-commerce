@@ -27,6 +27,7 @@ const TEMPLATE_ICONS: Record<string, any> = {
   BrandGrid: Users,
   FlashSale: Zap,
   BannerCarousel: Image,
+  CategorySection: Layout,
   Custom: Info
 };
 
@@ -142,7 +143,9 @@ export default function CMSPagesPage() {
         displayMode: rule.templateType === 'BrandGrid' ? 'full' : undefined,
         autoScroll: rule.templateType === 'BrandGrid' ? true : undefined,
         slides: rule.templateType === 'BannerCarousel' ? [] : undefined,
-        autoplay: rule.templateType === 'BannerCarousel' ? true : undefined
+        autoplay: rule.templateType === 'BannerCarousel' ? true : undefined,
+        layout: rule.templateType === 'CategorySection' ? 'grid' : (rule.templateType === 'ProductShelf' ? 'horizontal-scroll' : undefined),
+        limit: rule.templateType === 'CategorySection' ? 8 : (rule.templateType === 'ProductShelf' ? 8 : undefined)
       }
     });
     setShowTypeSelector(false);
@@ -537,6 +540,72 @@ export default function CMSPagesPage() {
                       onChange={(e) => setFormData({...formData, config: {...formData.config, filter_by: e.target.checked ? 'Featured' : '', filterType: e.target.checked ? 'Featured' : ''}})}
                     />
                     <label htmlFor="filter-featured" className="text-xs font-bold text-muted-foreground uppercase">Featured Products Only</label>
+                  </div>
+                </div>
+              )}
+
+              {/* Category Section Configuration */}
+              {formData.templateType === 'CategorySection' && (
+                <div className="mt-4 space-y-4">
+                  <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">Category Layout</label>
+                  <div className="grid grid-cols-2 gap-3">
+                    {/* Grid option */}
+                    <button
+                      type="button"
+                      onClick={() => setFormData({...formData, config: {...formData.config, layout: 'grid'}})}
+                      className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
+                        (formData.config?.layout ?? 'grid') === 'grid'
+                          ? 'border-primary bg-primary/10 text-primary'
+                          : 'border-border hover:border-primary/40'
+                      }`}
+                    >
+                      {/* Grid icon */}
+                      <svg width="40" height="32" viewBox="0 0 40 32" fill="none" stroke="currentColor" strokeWidth="1.5" className="opacity-80">
+                        <rect x="2" y="2" width="16" height="13" rx="2"/>
+                        <rect x="22" y="2" width="16" height="13" rx="2"/>
+                        <rect x="2" y="19" width="16" height="11" rx="2"/>
+                        <rect x="22" y="19" width="16" height="11" rx="2"/>
+                      </svg>
+                      <span className="text-xs font-semibold">Grid</span>
+                      <span className="text-[10px] text-muted-foreground text-center">4 columns,<br/>multiple rows</span>
+                    </button>
+
+                    {/* Horizontal scroll option */}
+                    <button
+                      type="button"
+                      onClick={() => setFormData({...formData, config: {...formData.config, layout: 'horizontal-scroll'}})}
+                      className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
+                        formData.config?.layout === 'horizontal-scroll'
+                          ? 'border-primary bg-primary/10 text-primary'
+                          : 'border-border hover:border-primary/40'
+                      }`}
+                    >
+                      {/* Horizontal scroll icon */}
+                      <svg width="40" height="32" viewBox="0 0 40 32" fill="none" stroke="currentColor" strokeWidth="1.5" className="opacity-80">
+                        <rect x="2" y="6" width="10" height="20" rx="2"/>
+                        <rect x="15" y="6" width="10" height="20" rx="2"/>
+                        <rect x="28" y="6" width="10" height="20" rx="2"/>
+                        <path d="M36 16h3M1 16h-3" strokeLinecap="round"/>
+                      </svg>
+                      <span className="text-xs font-semibold">Horizontal Scroll</span>
+                      <span className="text-[10px] text-muted-foreground text-center">Single row,<br/>swipe to browse</span>
+                    </button>
+                  </div>
+
+                  {/* Max items */}
+                  <div>
+                    <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block mb-1.5">
+                      Max Categories to Show
+                    </label>
+                    <input
+                      type="number"
+                      min={2}
+                      max={20}
+                      value={formData.config?.limit ?? 8}
+                      onChange={e => setFormData({...formData, config: {...formData.config, limit: Number(e.target.value)}})}
+                      className="w-full px-3 py-2 bg-background border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">Fetches from your category list (active categories only)</p>
                   </div>
                 </div>
               )}
