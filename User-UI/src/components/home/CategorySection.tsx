@@ -112,7 +112,7 @@ export default function CategorySection({
         </div>
       ) : (
         /* ── Grid layout ── */
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-4 gap-2">
           {categories.map(cat => (
             <CategoryCard key={cat.id} cat={cat} />
           ))}
