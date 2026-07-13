@@ -108,50 +108,6 @@ export class SectionDataSourceService {
   }
 
   /**
-   * Fetch categories for a section data source
-   */
-  async fetchCategoriesByRule(
-    dataSourceId: string,
-    limit: number = 12
-  ) {
-    this.logger.debug(`Fetching categories for rule: ${dataSourceId}, limit: ${limit}`);
-    
-    // Build where clause based on dataSourceId
-    let whereClause: any = { isActive: true };
-    
-    switch (dataSourceId) {
-      case 'homepage-categories':
-        whereClause.showOnHome = true;
-        break;
-      case 'shop-page-categories':
-        // whereClause.showOnShop = true; // Field does not exist in schema
-        break;
-      case 'all-categories':
-      case 'categories-grid':
-      case 'generic-category-section':
-        // No additional filter, just isActive
-        break;
-      default:
-        // If unknown dataSourceId, return all active categories
-        this.logger.warn(`Unknown category dataSourceId: ${dataSourceId}, returning all active categories`);
-        break;
-    }
-    
-    const categories = await this.prisma.category.findMany({
-      where: whereClause,
-      take: limit,
-      orderBy: { sortOrder: 'asc' },
-      include: {
-        _count: {
-          select: { products: true }
-        }
-      }
-    });
-
-    return categories;
-  }
-
-  /**
    * Fetch brands for a section data source
    */
   async fetchBrandsByRule(
