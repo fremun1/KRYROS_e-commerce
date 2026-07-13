@@ -266,6 +266,7 @@ export default function DynamicSectionRendererV2({
                 key={section.id}
                 slides={section.config?.slides || []}
                 autoplay={section.config?.autoplay !== false}
+                duration={section.config?.duration || 5}
                 showDots={section.config?.showDots !== false}
                 showArrows={section.config?.showArrows !== false}
               />
