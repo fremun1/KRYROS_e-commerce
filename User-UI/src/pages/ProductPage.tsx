@@ -104,6 +104,7 @@ export default function ProductPage() {
   const addToCart = useCartStore((s) => s.addToCart);
   const { toggleWishlist, isWishlisted } = useWishlistStore();
   const format = useCurrencyStore((s) => s.format);
+  const addProduct = useRecentlyViewedStore((s) => s.addProduct);
   
   const wishlisted = product ? isWishlisted(product.id) : false;
 
@@ -187,29 +188,16 @@ export default function ProductPage() {
     }
   };
 
-  if (loading) return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-    </div>
-  );
-
-  const addProduct = useRecentlyViewedStore((s) => s.addProduct);
-
   // Track this product in recently viewed
   useEffect(() => {
     if (product) {
       addProduct(product);
     }
-  }, [product]);
+  }, [product, addProduct]);
 
-  if (!product) return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-background p-6 text-center">
-      <Package className="w-16 h-16 text-muted-foreground mb-4" />
-      <h1 className="text-xl font-bold mb-2">Product Not Found</h1>
-      <p className="text-muted-foreground mb-6">The product you're looking for doesn't exist or has been removed.</p>
-      <Link href="/shop">
-        <button className="bg-primary text-white px-8 py-3 rounded-2xl font-bold">Back to Shop</button>
-      </Link>
+  if (loading) return (
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
     </div>
   );
 
@@ -223,6 +211,17 @@ export default function ProductPage() {
       <button onClick={() => window.location.reload()} className="bg-primary text-white px-8 py-3 rounded-2xl font-bold mt-4">
         Try Again
       </button>
+    </div>
+  );
+
+  if (!product) return (
+    <div className="min-h-screen flex flex-col items-center justify-center bg-background p-6 text-center">
+      <Package className="w-16 h-16 text-muted-foreground mb-4" />
+      <h1 className="text-xl font-bold mb-2">Product Not Found</h1>
+      <p className="text-muted-foreground mb-6">The product you're looking for doesn't exist or has been removed.</p>
+      <Link href="/shop">
+        <button className="bg-primary text-white px-8 py-3 rounded-2xl font-bold">Back to Shop</button>
+      </Link>
     </div>
   );
 
