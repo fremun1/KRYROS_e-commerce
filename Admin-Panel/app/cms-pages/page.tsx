@@ -138,11 +138,10 @@ export default function CMSPagesPage() {
       name: rule.label,
       config: { 
         ...formData.config,
-        limit: rule.templateType === 'BrandGrid' ? 8 : undefined,
+        limit: (rule.templateType === 'CategorySection' || rule.templateType === 'ProductShelf' || rule.templateType === 'BrandGrid') ? 8 : undefined,
         slides: rule.templateType === 'BannerCarousel' ? [] : undefined,
         autoplay: rule.templateType === 'BannerCarousel' ? true : undefined,
-        layout: rule.templateType === 'CategorySection' ? 'grid' : (rule.templateType === 'ProductShelf' ? 'horizontal-scroll' : undefined),
-        limit: rule.templateType === 'CategorySection' ? 8 : (rule.templateType === 'ProductShelf' ? 8 : undefined)
+        layout: rule.templateType === 'CategorySection' ? 'grid' : (rule.templateType === 'ProductShelf' ? 'horizontal-scroll' : undefined)
       }
     });
     setShowTypeSelector(false);
