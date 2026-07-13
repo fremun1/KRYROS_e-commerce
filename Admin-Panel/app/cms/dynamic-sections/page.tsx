@@ -7,7 +7,7 @@ import CloudinaryUpload from '@/components/ui/file-upload';
 import { useTheme } from '@/contexts/theme-context';
 import {
   Plus, Edit, Trash2, GripVertical, Eye, EyeOff, ChevronUp, ChevronDown,
-  Zap, Grid3x3, ImageIcon, ShoppingBag, Users, TrendingUp, Layout, MousePointer, Info
+  Zap, ShoppingBag, Users, TrendingUp, Layout, MousePointer, Info
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { 
