@@ -30,6 +30,7 @@ export default function ShopPage() {
 
       try {
         // Fetch all sections for the shop page from the CMS API
+        console.log('[ShopPage] Fetching sections with pageSlug=shop');
         const response = await fetch(
           `${API_BASE}/api/cms/sections?pageSlug=shop`,
           { cache: "no-store" }
@@ -40,18 +41,21 @@ export default function ShopPage() {
         }
 
         const data = await response.json();
+        console.log('[ShopPage] Sections response:', data);
 
         // Handle both array and { data } response formats
         const sectionList = Array.isArray(data) ? data : (data.data || []);
+        console.log('[ShopPage] Section list:', sectionList);
 
         // Filter active sections and sort by order
         const activeSections = sectionList
           .filter((s: any) => s.isActive !== false)
           .sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
 
+        console.log('[ShopPage] Active sections:', activeSections);
         setSections(activeSections);
       } catch (err) {
-        console.error("Error fetching shop sections:", err);
+        console.error("[ShopPage] Error fetching shop sections:", err);
         setError(err instanceof Error ? err.message : "Failed to load sections");
         setSections([]);
       } finally {

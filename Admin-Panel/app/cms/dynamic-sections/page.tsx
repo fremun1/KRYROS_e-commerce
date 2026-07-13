@@ -98,9 +98,12 @@ export default function DynamicSectionsPage() {
     try {
       setLoading(true);
       const normalizedSlug = normalizePageSlug(selectedPage);
+      console.log('[CMS] Fetching sections for page:', selectedPage, 'Normalized:', normalizedSlug);
       const response = await getCmsSections(normalizedSlug);
+      console.log('[CMS] Sections response:', response.data);
       setSections(response.data || []);
     } catch (error) {
+      console.error('[CMS] Failed to load sections:', error);
       toast.error('Failed to load sections');
     } finally {
       setLoading(false);
@@ -161,16 +164,21 @@ export default function DynamicSectionsPage() {
         ...formData,
         pageSlug: normalizePageSlug(selectedPage)
       };
+      console.log('[CMS] Saving section with payload:', payload);
+      console.log('[CMS] Selected page:', selectedPage, 'Normalized:', normalizePageSlug(selectedPage));
+      
       if (editingSection) {
         await updateCmsSection(editingSection.id, payload);
         toast.success('Section updated');
       } else {
-        await createCmsSection(payload);
+        const response = await createCmsSection(payload);
+        console.log('[CMS] Create section response:', response.data);
         toast.success('Section created');
       }
       setShowModal(false);
       fetchSections();
     } catch (error) {
+      console.error('[CMS] Failed to save section:', error);
       toast.error('Failed to save section');
     } finally {
       setSaving(false);
