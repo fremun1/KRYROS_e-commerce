@@ -24,11 +24,7 @@ import {
 // Reusable template icons mapping
 const TEMPLATE_ICONS: Record<string, any> = {
   ProductShelf: ShoppingBag,
-  BannerSlot: ImageIcon,
-  CategoryGrid: Grid3x3,
-  CategoryGridShelf: Grid3x3,
   BrandGrid: Users,
-  HeroSlider: Layout,
   FlashSale: Zap,
   Custom: Info
 };
@@ -140,8 +136,8 @@ export default function DynamicSectionsPage() {
       name: rule.label,
       config: { 
         ...formData.config,
-        limit: rule.templateType === 'CategoryGrid' ? 12 : 8,
-        layout: rule.templateType === 'ProductShelf' ? 'horizontal-scroll' : (rule.templateType === 'CategoryGrid' ? 'grid' : undefined),
+        limit: rule.templateType === 'ProductShelf' ? 8 : 8,
+        layout: rule.templateType === 'ProductShelf' ? 'horizontal-scroll' : undefined,
         displayMode: rule.templateType === 'BrandGrid' ? 'full' : undefined,
         autoScroll: rule.templateType === 'BrandGrid' ? true : undefined
       }
@@ -421,21 +417,6 @@ export default function DynamicSectionsPage() {
                     >
                       <option value="horizontal-scroll">Horizontal Scroll</option>
                       <option value="grid">Fixed Grid</option>
-                    </select>
-                  </div>
-                )}
-
-                {/* Category Layout */}
-                {formData.templateType === 'CategoryGrid' && (
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-muted-foreground uppercase">Layout</label>
-                    <select 
-                      value={formData.config?.layout || 'grid'} 
-                      onChange={(e) => setFormData({...formData, config: {...formData.config, layout: e.target.value}})}
-                      className="w-full p-2.5 bg-background border rounded-lg text-sm outline-none focus:ring-2 focus:ring-primary/20"
-                    >
-                      <option value="grid">Grid</option>
-                      <option value="horizontal">Horizontal Scroll</option>
                     </select>
                   </div>
                 )}

@@ -1,20 +1,18 @@
 /**
  * DynamicSectionRendererV2.tsx
- * 
- * Clean renderer organized into 5 generic families:
+ *
+ * Clean renderer organized into 4 generic families:
  * 1. PRODUCT     — ProductShelf (all variants)
- * 2. CATEGORY    — CategoryGrid, CategorySection
- * 3. BRAND       — BrandsSection
- * 4. CONTENT     — RichText, FAQ, ContactForm, FeaturesGrid, Gallery
- * 5. UTILITY     — Testimonials, RecentlyViewed, Newsletter, ContentSection
- * 
+ * 2. BRAND       — BrandsSection
+ * 3. CONTENT     — RichText, FAQ, ContactForm, FeaturesGrid, Gallery
+ * 4. UTILITY     — Testimonials, RecentlyViewed, Newsletter, ContentSection
+ *
  * Each family maps multiple legacy section types into a single canonical component.
  * The `default` branch renders unknown types as raw JSON for safe debugging.
  */
 
 import { useMemo } from 'react';
 import ProductShelf from './ProductShelf';
-import CategoryGridShelf from './CategoryGridShelf';
 import BrandsSection from './BrandsSection';
 import RecentlyViewedSection from './RecentlyViewedSection';
 import NewsletterSection from './NewsletterSection';
@@ -102,46 +100,7 @@ export default function DynamicSectionRendererV2({
             );
 
           // ═══════════════════════════════════════════════════════════════════
-          // FAMILY 2: CATEGORY (CategoryGrid, CategorySection)
-          // ═══════════════════════════════════════════════════════════════════
-          case 'CategoryGrid':
-          case 'CategoryGridShelf':
-          case 'CategoriesGrid':
-          case 'Categories':
-          case 'CategorySection':
-            return (
-              <CategoryGridShelf
-                key={section.id}
-                title={section.title}
-                subtitle={section.subtitle}
-                dataSourceId={section.dataSourceId || 'homepage-categories'}
-                limit={section.config?.limit || 12}
-                columns={section.config?.columns || 'auto'}
-                showProductCount={section.config?.showProductCount === 'true' || section.config?.showProductCount === true}
-                showViewAll={section.config?.showViewAll === 'true' || section.config?.showViewAll === true}
-                viewAllHref={section.config?.viewAllHref || '/shop'}
-                className={section.config?.className}
-              />
-            );
-
-          case 'ShopCategories':
-            return (
-              <CategoryGridShelf
-                key={section.id}
-                title={section.title}
-                subtitle={section.subtitle}
-                dataSourceId={section.dataSourceId || 'shop-categories'}
-                limit={section.config?.limit || 12}
-                columns={section.config?.columns || 'auto'}
-                showProductCount={section.config?.showProductCount === 'true' || section.config?.showProductCount === true}
-                showViewAll={section.config?.showViewAll === 'true' || section.config?.showViewAll === true}
-                viewAllHref={section.config?.viewAllHref || '/shop'}
-                className={section.config?.className}
-              />
-            );
-
-          // ═══════════════════════════════════════════════════════════════════
-          // FAMILY 3: BRAND (BrandGrid, Brands)
+          // FAMILY 2: BRAND (BrandGrid, Brands)
           // ═══════════════════════════════════════════════════════════════════
           case 'BrandGrid':
           case 'Brands':
