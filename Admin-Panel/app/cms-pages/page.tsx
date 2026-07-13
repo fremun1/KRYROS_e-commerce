@@ -311,8 +311,12 @@ export default function CMSPagesPage() {
                           {!section.isActive && <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded font-bold uppercase">Hidden</span>}
                         </div>
                         <div className="flex items-center gap-3 text-xs text-muted-foreground font-medium">
-                          <span className="bg-muted px-2 py-0.5 rounded">{section.templateType || section.type}</span>
-                          <span>Source: <span className="text-foreground">{section.dataSourceId || section.slotKey || 'Custom'}</span></span>
+                          <span className="bg-muted px-2 py-0.5 rounded">
+                            {({'BrandGrid':'Brand Section','BannerCarousel':'Banner Carousel','CategorySection':'Category Section','ProductShelf':'Product Shelf'} as Record<string,string>)[section.templateType||section.type||'']||(section.templateType||section.type)}
+                          </span>
+                          {section.templateType !== 'BrandGrid' && section.templateType !== 'CategorySection' && (
+                            <span>Source: <span className="text-foreground">{section.dataSourceId || section.slotKey || 'Custom'}</span></span>
+                          )}
                         </div>
                       </div>
 
