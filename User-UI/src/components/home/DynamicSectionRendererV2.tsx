@@ -19,6 +19,7 @@ import RecentlyViewedSection from './RecentlyViewedSection';
 import NewsletterSection from './NewsletterSection';
 import ContentSection from './ContentSection';
 import BannerCarousel from './BannerCarousel';
+import CategorySection from './CategorySection';
 
 export interface CMSSection {
   id: string;
@@ -256,6 +257,19 @@ export default function DynamicSectionRendererV2({
               </div>
             );
 
+
+          // ═══════════════════════════════════════════════════════════════════
+          // FAMILY 7: CATEGORIES (CategorySection — Grid or Horizontal Scroll)
+          // ═══════════════════════════════════════════════════════════════════
+          case 'CategorySection':
+            return (
+              <CategorySection
+                key={section.id}
+                title={section.title}
+                layout={section.config?.layout || 'grid'}
+                limit={section.config?.limit || 8}
+              />
+            );
 
           // ═══════════════════════════════════════════════════════════════════
           // FAMILY 5: MEDIA (Banner Carousel)
