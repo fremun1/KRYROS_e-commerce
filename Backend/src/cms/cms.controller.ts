@@ -148,18 +148,6 @@ export class CMSController {
     );
   }
 
-  @Get('sections/categories-by-source')
-  @ApiOperation({ summary: 'Fetch categories for a section data source' })
-  fetchCategoriesBySource(
-    @Query('dataSourceId') dataSourceId: string,
-    @Query('limit') limit?: string
-  ) {
-    return this.sectionDataSourceService.fetchCategoriesByRule(
-      dataSourceId,
-      limit ? Number(limit) : 12
-    );
-  }
-
   @Get('sections/brands-by-source')
   @ApiOperation({ summary: 'Fetch brands for a section data source' })
   fetchBrandsBySource(
