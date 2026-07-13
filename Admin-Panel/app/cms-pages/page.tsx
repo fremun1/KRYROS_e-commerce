@@ -138,8 +138,8 @@ export default function CMSPagesPage() {
       name: rule.label,
       config: { 
         ...formData.config,
-        displayMode: rule.templateType === 'BrandGrid' ? 'full' : undefined,
-        autoScroll: rule.templateType === 'BrandGrid' ? true : undefined,
+        layout: rule.templateType === 'BrandGrid' ? 'grid' : undefined,
+        limit: rule.templateType === 'BrandGrid' ? 8 : undefined,
         slides: rule.templateType === 'BannerCarousel' ? [] : undefined,
         autoplay: rule.templateType === 'BannerCarousel' ? true : undefined,
         layout: rule.templateType === 'CategorySection' ? 'grid' : (rule.templateType === 'ProductShelf' ? 'horizontal-scroll' : undefined),

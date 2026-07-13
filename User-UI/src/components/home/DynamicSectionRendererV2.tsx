@@ -20,6 +20,7 @@ import NewsletterSection from './NewsletterSection';
 import ContentSection from './ContentSection';
 import BannerCarousel from './BannerCarousel';
 import CategorySection from './CategorySection';
+import BrandSection from './BrandSection';
 
 export interface CMSSection {
   id: string;
@@ -108,13 +109,11 @@ export default function DynamicSectionRendererV2({
           case 'BrandGrid':
           case 'Brands':
             return (
-              <BrandsSection
+              <BrandSection
                 key={section.id}
                 title={section.title}
-                subtitle={section.subtitle}
-                displayMode={section.config?.displayMode || 'full'}
-                autoScroll={section.config?.autoScroll !== false}
-                dataSourceId={section.dataSourceId || 'generic-brand-section'}
+                layout={section.config?.layout || 'grid'}
+                limit={section.config?.limit || 8}
               />
             );
 
