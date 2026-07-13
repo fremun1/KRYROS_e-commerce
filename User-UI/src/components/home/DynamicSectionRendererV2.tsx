@@ -18,7 +18,7 @@ import RecentlyViewedSection from './RecentlyViewedSection';
 import NewsletterSection from './NewsletterSection';
 import ContentSection from './ContentSection';
 
-interface CMSSection {
+export interface CMSSection {
   id: string;
   templateType?: string;
   type?: string;
@@ -27,7 +27,7 @@ interface CMSSection {
   title?: string;
   subtitle?: string;
   config?: Record<string, any>;
-  order: number;
+  order?: number;
   isActive: boolean;
 }
 
@@ -43,7 +43,7 @@ export default function DynamicSectionRendererV2({
   const sortedSections = useMemo(() => {
     return sections
       .filter(s => s.isActive)
-      .sort((a, b) => a.order - b.order);
+      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
   }, [sections]);
 
   return (

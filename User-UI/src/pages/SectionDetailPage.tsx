@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'wouter';
-import { fetchPageSections, fetchProducts } from '@/lib/api';
+import { fetchPageSections, fetchProductsPage } from '@/lib/api';
+import type { Product } from '@/lib/api';
 import UnifiedProductCard from '@/components/UnifiedProductCard';
 import { ChevronLeft } from 'lucide-react';
 
@@ -19,7 +20,7 @@ import { ChevronLeft } from 'lucide-react';
 export default function SectionDetailPage() {
   const { slug } = useParams<{ slug: string }>();
   const [section, setSection] = useState<any>(null);
-  const [products, setProducts] = useState<any[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
@@ -77,9 +78,9 @@ export default function SectionDetailPage() {
           params.isFlashSale = true;
         }
 
-        const result = await fetchProducts(params);
+        const result = await fetchProductsPage(params);
         setProducts(result.data || []);
-        setTotal(result.meta?.total || 0);
+        setTotal(Number(result.meta?.total || result.data?.length || 0));
       } catch (err) {
         console.error('Failed to load section:', err);
         setError('Failed to load section');

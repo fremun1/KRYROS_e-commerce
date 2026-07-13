@@ -16,7 +16,11 @@ export default function AuthPage({ initialTab = "login" }: AuthPageProps) {
   const [forgotStep, setForgotStep] = useState(1);
   const [notice, setNotice] = useState<string>("");
 
-  const { login, register, isLoading, error, clearError } = useAuthStore();
+  const login = useAuthStore((state) => state.login);
+  const register = useAuthStore((state) => state.register);
+  const isLoading = useAuthStore((state) => state.isLoading);
+  const error = useAuthStore((state) => state.error);
+  const clearError = useAuthStore((state) => state.clearError);
 
   // ── Form state ────────────────────────────────────────────────────────────
   const [loginIdentifier, setLoginIdentifier] = useState("");
@@ -34,14 +38,16 @@ export default function AuthPage({ initialTab = "login" }: AuthPageProps) {
     setShowPassword(false);
     setShowRegisterPassword(false);
     setNotice("");
-    clearError();
-  }, [activeTab, clearError]);
+    if (error) {
+      clearError();
+    }
+  }, [activeTab, error, clearError]);
 
   useEffect(() => {
-    setActiveTab(initialTab);
+    setActiveTab((prev) => (prev === initialTab ? prev : initialTab));
 
     if (initialTab !== "forgot") {
-      setForgotStep(1);
+      setForgotStep((prev) => (prev === 1 ? prev : 1));
       return;
     }
 
@@ -50,13 +56,13 @@ export default function AuthPage({ initialTab = "login" }: AuthPageProps) {
       : "";
 
     if (tokenFromUrl) {
-      setResetToken(tokenFromUrl);
-      setForgotStep(2);
+      setResetToken((prev) => (prev === tokenFromUrl ? prev : tokenFromUrl));
+      setForgotStep((prev) => (prev === 2 ? prev : 2));
       setNotice("Enter your new password to finish resetting your account.");
       return;
     }
 
-    setForgotStep(1);
+    setForgotStep((prev) => (prev === 1 ? prev : 1));
   }, [initialTab, location]);
 
   const parsedRegisterName = useMemo(() => {

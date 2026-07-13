@@ -314,21 +314,23 @@ async function apiFetch<T>(path: string, token?: string): Promise<T | null> {
   }
 }
 
-export async function fetchProducts(
-  params: {
-    take?: number;
-    skip?: number;
-    categoryId?: string;
-    categorySlug?: string;
-    search?: string;
-    featured?: boolean;
-    isFlashSale?: boolean;
-    popularity?: "trending" | "bestseller" | "new" | "hot" | "sale";
-    allowCredit?: boolean;
-    isWholesaleOnly?: boolean;
-    lowStock?: boolean;
-  } = {}
-): Promise<Product[]> {
+export interface ProductQueryParams {
+  take?: number;
+  skip?: number;
+  categoryId?: string;
+  categorySlug?: string;
+  search?: string;
+  featured?: boolean;
+  isFlashSale?: boolean;
+  popularity?: "trending" | "bestseller" | "new" | "hot" | "sale";
+  allowCredit?: boolean;
+  isWholesaleOnly?: boolean;
+  lowStock?: boolean;
+}
+
+export async function fetchProductsPage(
+  params: ProductQueryParams = {}
+): Promise<{ data: Product[]; meta: Record<string, any> }> {
   const qs = new URLSearchParams();
   if (params.take !== undefined) qs.set("take", String(params.take));
   if (params.skip !== undefined) qs.set("skip", String(params.skip));
@@ -344,8 +346,18 @@ export async function fetchProducts(
   qs.set("isWholesaleOnly", params.isWholesaleOnly !== undefined ? String(params.isWholesaleOnly) : "false");
 
   const result = await apiFetch<{ data: any[]; meta: any }>(`/api/products?${qs.toString()}`);
-  if (!result?.data) return [];
-  return result.data.map(normalizeProduct);
+  if (!result?.data) return { data: [], meta: {} };
+  return {
+    data: result.data.map(normalizeProduct),
+    meta: result.meta ?? {},
+  };
+}
+
+export async function fetchProducts(
+  params: ProductQueryParams = {}
+): Promise<Product[]> {
+  const result = await fetchProductsPage(params);
+  return result.data;
 }
 
 export async function fetchFlashSaleProducts(): Promise<Product[]> {
@@ -505,7 +517,10 @@ export async function fetchPageSections(pageSlug: string): Promise<ApiCMSSection
     const res = await fetch(`${API_BASE}/api/cms/sections?pageSlug=${encodeURIComponent(pageSlug)}`, { cache: "no-store" });
     if (!res.ok) return [];
     const data = await res.json();
-    return Array.isArray(data) ? data.filter((s: ApiCMSSection) => s.isActive !== false) : [];
+    const sections = Array.isArray(data) ? data : data?.data || [];
+    return Array.isArray(sections)
+      ? sections.filter((s: ApiCMSSection) => s.isActive !== false)
+      : [];
   } catch {
     return [];
   }
