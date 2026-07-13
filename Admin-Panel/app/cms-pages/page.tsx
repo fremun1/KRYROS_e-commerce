@@ -7,7 +7,7 @@ import CloudinaryUpload from '@/components/ui/file-upload';
 import { useTheme } from '@/contexts/theme-context';
 import {
   Plus, Edit, Trash2, GripVertical, Eye, EyeOff, ChevronUp, ChevronDown,
-  Zap, ShoppingBag, Users, TrendingUp, Layout, MousePointer, Info
+  Zap, ShoppingBag, Users, TrendingUp, Layout, MousePointer, Info, Image
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { 
@@ -26,6 +26,7 @@ const TEMPLATE_ICONS: Record<string, any> = {
   ProductShelf: ShoppingBag,
   BrandGrid: Users,
   FlashSale: Zap,
+  BannerCarousel: Image,
   Custom: Info
 };
 
@@ -139,7 +140,9 @@ export default function CMSPagesPage() {
         limit: rule.templateType === 'ProductShelf' ? 8 : 8,
         layout: rule.templateType === 'ProductShelf' ? 'horizontal-scroll' : undefined,
         displayMode: rule.templateType === 'BrandGrid' ? 'full' : undefined,
-        autoScroll: rule.templateType === 'BrandGrid' ? true : undefined
+        autoScroll: rule.templateType === 'BrandGrid' ? true : undefined,
+        slides: rule.templateType === 'BannerCarousel' ? [] : undefined,
+        autoplay: rule.templateType === 'BannerCarousel' ? true : undefined
       }
     });
     setShowTypeSelector(false);
@@ -532,6 +535,126 @@ export default function CMSPagesPage() {
                       onChange={(e) => setFormData({...formData, config: {...formData.config, filter_by: e.target.checked ? 'Featured' : '', filterType: e.target.checked ? 'Featured' : ''}})}
                     />
                     <label htmlFor="filter-featured" className="text-xs font-bold text-muted-foreground uppercase">Featured Products Only</label>
+                  </div>
+                </div>
+              )}
+
+              {/* Banner Carousel Configuration */}
+              {formData.templateType === 'BannerCarousel' && (
+                <div className="mt-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-muted-foreground uppercase">Banner Slides</label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const slides = [...(formData.config?.slides || [])];
+                        slides.push({ image: '', title: '', subtitle: '', ctaText: 'Shop Now', linkUrl: '' });
+                        setFormData({...formData, config: {...formData.config, slides}});
+                      }}
+                      className="text-xs font-bold text-primary hover:underline"
+                    >+ Add Slide</button>
+                  </div>
+                  {(formData.config?.slides || []).map((slide: any, idx: number) => (
+                    <div key={idx} className="p-3 bg-background border rounded-lg space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-muted-foreground">Slide {idx + 1}</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const slides = [...(formData.config?.slides || [])];
+                            slides.splice(idx, 1);
+                            setFormData({...formData, config: {...formData.config, slides}});
+                          }}
+                          className="text-xs text-red-500 hover:underline"
+                        >Remove</button>
+                      </div>
+                      <FormField
+                        label="Image URL"
+                        value={slide.image || ''}
+                        onChange={(v) => {
+                          const slides = [...(formData.config?.slides || [])];
+                          slides[idx] = {...slides[idx], image: v};
+                          setFormData({...formData, config: {...formData.config, slides}});
+                        }}
+                        placeholder="https://res.cloudinary.com/.../banner.jpg"
+                        isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
+                      />
+                      <div className="grid grid-cols-2 gap-2">
+                        <FormField
+                          label="Title (optional)"
+                          value={slide.title || ''}
+                          onChange={(v) => {
+                            const slides = [...(formData.config?.slides || [])];
+                            slides[idx] = {...slides[idx], title: v};
+                            setFormData({...formData, config: {...formData.config, slides}});
+                          }}
+                          placeholder="Summer Sale"
+                          isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
+                        />
+                        <FormField
+                          label="Subtitle (optional)"
+                          value={slide.subtitle || ''}
+                          onChange={(v) => {
+                            const slides = [...(formData.config?.slides || [])];
+                            slides[idx] = {...slides[idx], subtitle: v};
+                            setFormData({...formData, config: {...formData.config, slides}});
+                          }}
+                          placeholder="Up to 50% off"
+                          isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <FormField
+                          label="CTA Text"
+                          value={slide.ctaText || 'Shop Now'}
+                          onChange={(v) => {
+                            const slides = [...(formData.config?.slides || [])];
+                            slides[idx] = {...slides[idx], ctaText: v};
+                            setFormData({...formData, config: {...formData.config, slides}});
+                          }}
+                          placeholder="Shop Now"
+                          isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
+                        />
+                        <FormField
+                          label="Link URL"
+                          value={slide.linkUrl || ''}
+                          onChange={(v) => {
+                            const slides = [...(formData.config?.slides || [])];
+                            slides[idx] = {...slides[idx], linkUrl: v};
+                            setFormData({...formData, config: {...formData.config, slides}});
+                          }}
+                          placeholder="/shop/sale"
+                          isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="banner-autoplay"
+                      checked={formData.config?.autoplay !== false}
+                      onChange={(e) => setFormData({...formData, config: {...formData.config, autoplay: e.target.checked}})}
+                    />
+                    <label htmlFor="banner-autoplay" className="text-xs font-bold text-muted-foreground uppercase">Auto-play (5s interval)</label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="banner-dots"
+                      checked={formData.config?.showDots !== false}
+                      onChange={(e) => setFormData({...formData, config: {...formData.config, showDots: e.target.checked}})}
+                    />
+                    <label htmlFor="banner-dots" className="text-xs font-bold text-muted-foreground uppercase">Show dot indicators</label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="banner-arrows"
+                      checked={formData.config?.showArrows !== false}
+                      onChange={(e) => setFormData({...formData, config: {...formData.config, showArrows: e.target.checked}})}
+                    />
+                    <label htmlFor="banner-arrows" className="text-xs font-bold text-muted-foreground uppercase">Show navigation arrows</label>
                   </div>
                 </div>
               )}
