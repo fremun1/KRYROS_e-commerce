@@ -58,7 +58,7 @@ export default function CategorySection({
         <div
           className={`
             w-full overflow-hidden rounded-xl bg-muted/60
-            ${layout === 'horizontal-scroll' ? 'aspect-square' : 'aspect-[4/5]'}
+            aspect-square
           `}
         >
           {cat.image ? (
@@ -112,7 +112,7 @@ export default function CategorySection({
         </div>
       ) : (
         /* ── Grid layout ── */
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
           {categories.map(cat => (
             <CategoryCard key={cat.id} cat={cat} />
           ))}
