@@ -1262,7 +1262,7 @@ export class CMSService {
           data: {
             templateType: canonicalTemplateType,
             dataSourceId: dataSourceId || null,
-            slotKey: slotKey || null,
+            slotKey: null,
             pageSlug: pageSlug,
             config: normalizedConfig,
             name: section.name || section.title || canonicalTemplateType,
