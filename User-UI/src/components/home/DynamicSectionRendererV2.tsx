@@ -6,6 +6,7 @@
  * 2. BRAND       — BrandsSection
  * 3. CONTENT     — RichText, FAQ, ContactForm, FeaturesGrid, Gallery
  * 4. UTILITY     — Testimonials, RecentlyViewed, Newsletter, ContentSection
+ * 5. MEDIA        — BannerCarousel (swipeable image banners)
  *
  * Each family maps multiple legacy section types into a single canonical component.
  * The `default` branch renders unknown types as raw JSON for safe debugging.
@@ -17,6 +18,7 @@ import BrandsSection from './BrandsSection';
 import RecentlyViewedSection from './RecentlyViewedSection';
 import NewsletterSection from './NewsletterSection';
 import ContentSection from './ContentSection';
+import BannerCarousel from './BannerCarousel';
 
 export interface CMSSection {
   id: string;
@@ -256,7 +258,21 @@ export default function DynamicSectionRendererV2({
 
 
           // ═══════════════════════════════════════════════════════════════════
-          // FAMILY 5: UTILITY (Testimonials, RecentlyViewed, Newsletter, ContentSection)
+          // FAMILY 5: MEDIA (Banner Carousel)
+          // ═══════════════════════════════════════════════════════════════════
+          case 'BannerCarousel':
+            return (
+              <BannerCarousel
+                key={section.id}
+                slides={section.config?.slides || []}
+                autoplay={section.config?.autoplay !== false}
+                showDots={section.config?.showDots !== false}
+                showArrows={section.config?.showArrows !== false}
+              />
+            );
+
+          // ═══════════════════════════════════════════════════════════════════
+          // FAMILY 6: UTILITY (Testimonials, RecentlyViewed, Newsletter, ContentSection)
           // ═══════════════════════════════════════════════════════════════════
           default:
             return (
