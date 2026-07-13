@@ -157,11 +157,15 @@ export default function DynamicSectionsPage() {
   const handleSaveSection = async () => {
     try {
       setSaving(true);
+      const payload = {
+        ...formData,
+        pageSlug: normalizePageSlug(selectedPage)
+      };
       if (editingSection) {
-        await updateCmsSection(editingSection.id, formData);
+        await updateCmsSection(editingSection.id, payload);
         toast.success('Section updated');
       } else {
-        await createCmsSection(formData);
+        await createCmsSection(payload);
         toast.success('Section created');
       }
       setShowModal(false);
