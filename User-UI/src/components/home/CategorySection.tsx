@@ -105,7 +105,7 @@ export default function CategorySection({
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
           {categories.map(cat => (
-            <div key={cat.id} className="flex-shrink-0 w-[140px] snap-start">
+            <div key={cat.id} className="flex-shrink-0 w-[100px] snap-start">
               <CategoryCard cat={cat} />
             </div>
           ))}
