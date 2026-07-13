@@ -13,10 +13,10 @@ export interface SectionRule {
   id: string;
   label: string;
   description: string;
-  category: 'products' | 'banner' | 'category' | 'brand' | 'custom';
+  category: 'products' | 'brand' | 'custom';
   params: Record<string, any>;
   icon?: string;
-  templateType: 'ProductShelf' | 'BannerSlot' | 'CategoryGrid' | 'BrandGrid' | 'Custom';
+  templateType: 'ProductShelf' | 'BrandGrid' | 'Custom';
 }
 
 export const SECTION_RULES: Record<string, SectionRule> = {
@@ -115,30 +115,6 @@ export const SECTION_RULES: Record<string, SectionRule> = {
   },
 
   // ─────────────────────────────────────────────────────────────────
-  // CATEGORY RULES (for CategoryGrid template)
-  // ─────────────────────────────────────────────────────────────────
-
-  'generic-category-section': {
-    id: 'generic-category-section',
-    label: 'Category Section',
-    description: 'A generic category section to display categories in grid or horizontal layout.',
-    category: 'category',
-    params: {},
-    icon: '🏷️',
-    templateType: 'CategoryGrid'
-  },
-
-  'homepage-categories': {
-    id: 'homepage-categories',
-    label: 'Homepage Categories Grid',
-    description: 'Display product categories in a grid on the homepage.',
-    category: 'category',
-    params: { showOnHome: true },
-    icon: '🏷️',
-    templateType: 'CategoryGrid'
-  },
-
-  // ─────────────────────────────────────────────────────────────────
   // BRAND RULES (for BrandGrid template)
   // ─────────────────────────────────────────────────────────────────
 
@@ -150,40 +126,6 @@ export const SECTION_RULES: Record<string, SectionRule> = {
     params: {},
     icon: '🛡️',
     templateType: 'BrandGrid'
-  },
-
-  // ─────────────────────────────────────────────────────────────────
-  // BANNER SLOTS (for BannerSlot template)
-  // ─────────────────────────────────────────────────────────────────
-
-  'generic-banner-section': {
-    id: 'generic-banner-section',
-    label: 'Banner Section',
-    description: 'A generic banner section (Hero or Promo) that can be placed anywhere.',
-    category: 'banner',
-    params: { slotKey: 'generic' },
-    icon: '🖼️',
-    templateType: 'BannerSlot'
-  },
-
-  'homepage-hero-slider': {
-    id: 'homepage-hero-slider',
-    label: 'Homepage Hero Slider',
-    description: 'Main hero banner slider at the top of homepage.',
-    category: 'banner',
-    params: { slotKey: 'homepage-hero-slider' },
-    icon: '🎬',
-    templateType: 'BannerSlot'
-  },
-
-  'homepage-mid-page': {
-    id: 'homepage-mid-page',
-    label: 'Mid-Page Banner',
-    description: 'Banner positioned in the middle of the homepage.',
-    category: 'banner',
-    params: { slotKey: 'homepage-mid-page' },
-    icon: '📍',
-    templateType: 'BannerSlot'
   },
 
   // ─────────────────────────────────────────────────────────────────
@@ -215,20 +157,4 @@ export function getRulesByCategory(category: SectionRule['category']): SectionRu
 
 export function isValidRuleId(ruleId: string): boolean {
   return ruleId in SECTION_RULES;
-}
-
-export function getAllBannerSlots(): string[] {
-  const slots = new Set<string>();
-  for (const rule of Object.values(SECTION_RULES)) {
-    if (rule.category === 'banner' && rule.params.slotKey) {
-      slots.add(rule.params.slotKey);
-    }
-  }
-  return Array.from(slots);
-}
-
-export function getRulesBySlot(slotKey: string): SectionRule[] {
-  return Object.values(SECTION_RULES).filter(
-    rule => rule.category === 'banner' && rule.params.slotKey === slotKey
-  );
 }
