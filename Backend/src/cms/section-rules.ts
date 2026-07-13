@@ -16,7 +16,7 @@ export interface SectionRule {
   category: 'products' | 'brand' | 'media' | 'custom';
   params: Record<string, any>;
   icon?: string;
-  templateType: 'ProductShelf' | 'BrandGrid' | 'BannerCarousel' | 'Custom';
+  templateType: 'ProductShelf' | 'BrandGrid' | 'BannerCarousel' | 'CategorySection' | 'Custom';
 }
 
 export const SECTION_RULES: Record<string, SectionRule> = {
@@ -140,6 +140,20 @@ export const SECTION_RULES: Record<string, SectionRule> = {
     params: { clientSide: true },
     icon: '🖼️',
     templateType: 'BannerCarousel'
+  },
+
+  // ─────────────────────────────────────────────────────────────────
+  // CATEGORY RULES (for CategorySection template)
+  // ─────────────────────────────────────────────────────────────────
+
+  'category-section': {
+    id: 'category-section',
+    label: 'Category Section',
+    description: 'Display store categories in a grid or horizontal scroll layout. Fetches from /api/categories.',
+    category: 'custom',
+    params: { clientSide: true },
+    icon: '🗂️',
+    templateType: 'CategorySection'
   },
 
   // ─────────────────────────────────────────────────────────────────
