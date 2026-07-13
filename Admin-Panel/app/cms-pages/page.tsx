@@ -315,27 +315,6 @@ export default function CMSPagesPage() {
                           <span className="bg-muted px-2 py-0.5 rounded">{section.templateType || section.type}</span>
                           <span>Source: <span className="text-foreground">{section.dataSourceId || section.slotKey || 'Custom'}</span></span>
                         </div>
-                        {/* Banner slide previews */}
-                        {(section.templateType === 'BannerCarousel' || section.type === 'BannerCarousel') && section.config?.slides && section.config.slides.length > 0 && (
-                          <div className="flex gap-2 mt-2 overflow-x-auto pb-1">
-                            {section.config.slides.slice(0, 4).map((slide: any, si: number) => (
-                              <div key={si} className="relative flex-shrink-0 w-16 h-10 rounded-md overflow-hidden bg-muted border">
-                                {slide.image ? (
-                                  <img src={slide.image} alt={slide.title || `Slide ${si+1}`} className="w-full h-full object-cover" />
-                                ) : (
-                                  <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                                    <Image size={14} />
-                                  </div>
-                                )}
-                              </div>
-                            ))}
-                            {section.config.slides.length > 4 && (
-                              <div className="flex-shrink-0 w-16 h-10 rounded-md bg-muted border flex items-center justify-center text-[10px] text-muted-foreground font-bold">
-                                +{section.config.slides.length - 4}
-                              </div>
-                            )}
-                          </div>
-                        )}
                       </div>
 
                       {/* Always-visible edit & delete buttons */}
@@ -591,8 +570,14 @@ export default function CMSPagesPage() {
                           className="text-xs text-red-500 hover:underline"
                         >Remove</button>
                       </div>
-                      <div className="space-y-1.5">
+                      <div className="space-y-2">
                         <label className="text-xs font-bold text-muted-foreground uppercase">Banner Image</label>
+                        {/* Preview of current image */}
+                        {slide.image && (
+                          <div className="relative w-full h-32 rounded-lg overflow-hidden bg-muted border">
+                            <img src={slide.image} alt={slide.title || 'Preview'} className="w-full h-full object-cover" />
+                          </div>
+                        )}
                         <CloudinaryUpload
                           value={slide.image || ''}
                           onChange={(url) => {
