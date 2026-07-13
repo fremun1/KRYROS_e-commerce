@@ -1,14 +1,12 @@
 /**
  * DynamicSectionRendererV2.tsx
  * 
- * Clean renderer organized into 7 generic families:
- * 1. BANNER      — HeroBanner, PromoBanner, BannerSlot
- * 2. PRODUCT     — ProductShelf (all variants)
- * 3. CATEGORY    — CategoryGrid, CategorySection
- * 4. BRAND       — BrandsSection
- * 5. CONTENT     — Hero, RichText, FAQ, ContactForm, FeaturesGrid, Gallery
- * 6. UTILITY     — Testimonials, RecentlyViewed, Newsletter, ContentSection
- * 7. DEAL        — FlashSale, LimitedStockDeal, AppliancesDeal, CategoryDeal, TopExpress
+ * Clean renderer organized into 5 generic families:
+ * 1. PRODUCT     — ProductShelf (all variants)
+ * 2. CATEGORY    — CategoryGrid, CategorySection
+ * 3. BRAND       — BrandsSection
+ * 4. CONTENT     — RichText, FAQ, ContactForm, FeaturesGrid, Gallery
+ * 5. UTILITY     — Testimonials, RecentlyViewed, Newsletter, ContentSection
  * 
  * Each family maps multiple legacy section types into a single canonical component.
  * The `default` branch renders unknown types as raw JSON for safe debugging.
@@ -19,9 +17,6 @@ import ProductShelf from './ProductShelf';
 import CategoryGridShelf from './CategoryGridShelf';
 import BrandsSection from './BrandsSection';
 import RecentlyViewedSection from './RecentlyViewedSection';
-import HeroSection from './HeroSection';
-import BannerSlot from './BannerSlot';
-import PromoBanner from './PromoBanner';
 import NewsletterSection from './NewsletterSection';
 import ContentSection from './ContentSection';
 
@@ -59,62 +54,9 @@ export default function DynamicSectionRendererV2({
         const templateType = section.templateType || section.type;
 
         // ═══════════════════════════════════════════════════════════════════
-        // FAMILY 1: BANNER (HeroBanner, PromoBanner, BannerSlot)
+        // FAMILY 1: PRODUCT (all product shelf variants → ProductShelf)
         // ═══════════════════════════════════════════════════════════════════
         switch (templateType) {
-          case 'HeroBanner':
-            return (
-              <HeroSection
-                key={section.id}
-                image={section.config?.image || section.config?.media}
-                title={section.title || section.config?.heading}
-                subtitle={section.subtitle || section.config?.subtitle}
-                ctaText={section.config?.ctaText || section.config?.button_text}
-                ctaLink={section.config?.ctaLink || section.config?.href || section.config?.link}
-                bgColor={section.config?.bgColor || section.config?.gradient}
-              />
-            );
-
-          case 'HeroSlider':
-            return (
-              <HeroSection
-                key={section.id}
-                banners={section.config?.banners}
-              />
-            );
-
-          case 'BannerSlot':
-            return (
-              <BannerSlot
-                key={section.id}
-                bannerMode={section.config?.bannerMode || 'hero'}
-                tag={section.config?.tag}
-                slotKey={section.slotKey || section.dataSourceId || 'homepage-hero-slider'}
-              />
-            );
-
-          case 'PromoBanner':
-          case 'PromoBanners':
-          case 'Promotions':
-          case 'promo_banners':
-          case 'ShopPromoBanner':
-          case 'UpgradeBanner':
-            return (
-              <PromoBanner
-                key={section.id}
-                tag={section.config?.tag}
-                title={section.title || section.config?.heading}
-                subtitle={section.subtitle || section.config?.subtitle}
-                cta={section.config?.ctaText || section.config?.button_text}
-                href={section.config?.ctaLink || section.config?.href || section.config?.button_link}
-                image={section.config?.image || section.config?.media}
-                gradient={section.config?.gradient || section.config?.bgColor}
-              />
-            );
-
-          // ═══════════════════════════════════════════════════════════════════
-          // FAMILY 2: PRODUCT (all product shelf variants → ProductShelf)
-          // ═══════════════════════════════════════════════════════════════════
           case 'ProductShelf':
           case 'ProductsGrid':
           case 'ProductGrid':
@@ -160,7 +102,7 @@ export default function DynamicSectionRendererV2({
             );
 
           // ═══════════════════════════════════════════════════════════════════
-          // FAMILY 3: CATEGORY (CategoryGrid, CategorySection)
+          // FAMILY 2: CATEGORY (CategoryGrid, CategorySection)
           // ═══════════════════════════════════════════════════════════════════
           case 'CategoryGrid':
           case 'CategoryGridShelf':
@@ -199,7 +141,7 @@ export default function DynamicSectionRendererV2({
             );
 
           // ═══════════════════════════════════════════════════════════════════
-          // FAMILY 4: BRAND (BrandGrid, Brands)
+          // FAMILY 3: BRAND (BrandGrid, Brands)
           // ═══════════════════════════════════════════════════════════════════
           case 'BrandGrid':
           case 'Brands':
@@ -215,25 +157,8 @@ export default function DynamicSectionRendererV2({
             );
 
           // ═══════════════════════════════════════════════════════════════════
-          // FAMILY 5: CONTENT (Hero, RichText, FAQ, ContactForm, FeaturesGrid)
+          // FAMILY 4: CONTENT (RichText, FAQ, ContactForm, FeaturesGrid)
           // ═══════════════════════════════════════════════════════════════════
-          case 'PageHero':
-          case 'ShopHero':
-          case 'WholesaleHero':
-          case 'GetNowHero':
-            return (
-              <ContentSection
-                key={section.id}
-                title={section.title || section.config?.tagline || section.config?.heading || 'Welcome'}
-                subtitle={section.subtitle || section.config?.subtitle}
-                layout="hero"
-                backgroundImage={section.config?.backgroundImage || section.config?.image || section.config?.imageUrl}
-                bgColor={section.config?.bgColor}
-                ctaText={section.config?.ctaText}
-                ctaLink={section.config?.ctaLink || section.config?.href}
-              />
-            );
-
           case 'PageContent':
             return (
               <ContentSection
@@ -371,57 +296,11 @@ export default function DynamicSectionRendererV2({
             );
 
           case 'MembersBanner':
-            return (
-              <div key={section.id} className="max-w-5xl mx-auto px-4 py-6">
-                <div className="bg-card border rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-4">
-                  <div className="flex items-center gap-4">
-                    {section.config?.imageUrl && <img src={section.config.imageUrl} alt="" className="w-16 h-16 object-cover rounded-full" />}
-                    <div>
-                      {section.config?.tag && <span className="text-[10px] font-bold text-primary uppercase tracking-wider">{section.config.tag}</span>}
-                      <h3 className="text-lg font-black">{section.title || section.config?.title || 'Members Get More'}</h3>
-                      {section.subtitle && <p className="text-sm text-muted-foreground">{section.subtitle}</p>}
-                    </div>
-                  </div>
-                  {(section.config?.ctaText || section.config?.ctaLink) && (
-                    <a href={section.config?.ctaLink || '/register'} className="px-5 py-2 bg-primary text-white rounded-xl text-sm font-bold">
-                      {section.config?.ctaText || 'Join Now'}
-                    </a>
-                  )}
-                </div>
-              </div>
-            );
+            // Skip banner sections
+            return null;
 
           // ═══════════════════════════════════════════════════════════════════
-          // FAMILY 7: DEAL (FlashSale, LimitedStock, Appliances, CategoryDeal, TopExpress)
-          // All mapped to ProductShelf with special config
-          // ═══════════════════════════════════════════════════════════════════
-          case 'FlashSale':
-          case 'LimitedStockDeal':
-          case 'AppliancesDeal':
-          case 'TopExpress':
-          case 'CategoryDeal':
-            return (
-              <ProductShelf
-                key={section.id}
-                title={section.title || section.config?.title || 'Deals'}
-                subtitle={section.subtitle || section.config?.subtitle}
-                dataSourceId={section.dataSourceId || 'sale-items'}
-                limit={section.config?.productLimit || section.config?.limit || 8}
-                layout={section.config?.scroll === 'true' ? 'horizontal-scroll' : (section.config?.layout || 'horizontal-scroll')}
-                showTimer={templateType === 'FlashSale'}
-                showPercent={templateType === 'LimitedStockDeal'}
-                headerBgColor={section.config?.headerBgColor}
-                viewAllHref={section.config?.ctaLink || section.config?.viewAllLink || '/shop'}
-                viewAllText={section.config?.ctaText || 'See All'}
-                params={{
-                  categoryId: section.config?.categoryId,
-                  categorySlug: section.config?.categorySlug,
-                }}
-              />
-            );
-
-          // ═══════════════════════════════════════════════════════════════════
-          // UNKNOWN: render raw config for safe debugging
+          // FAMILY 5: UTILITY (Testimonials, RecentlyViewed, Newsletter, ContentSection)
           // ═══════════════════════════════════════════════════════════════════
           default:
             return (

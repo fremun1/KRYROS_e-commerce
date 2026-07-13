@@ -136,7 +136,6 @@ export default function DynamicSectionsPage() {
       templateType: rule.templateType,
       type: rule.templateType, // Backward compatibility
       dataSourceId: rule.id,
-      slotKey: rule.templateType === 'BannerSlot' ? rule.id : undefined,
       title: rule.label,
       name: rule.label,
       config: { 
@@ -489,120 +488,6 @@ export default function DynamicSectionsPage() {
                     />
                     <label htmlFor="show-percent" className="text-xs font-bold text-muted-foreground uppercase">Show % Off Badge</label>
                   </div>
-                </div>
-              )}
-
-              {/* Banner Image Upload */}
-              {(formData.templateType === 'HeroBanner' || formData.templateType === 'HeroSlider' || formData.templateType === 'PromoBanner' || formData.templateType === 'BannerSlot') && (
-                <div className="grid grid-cols-1 gap-4 mt-4">
-                  {formData.templateType === 'HeroSlider' ? (
-                    <>
-                      <label className="text-xs font-bold text-muted-foreground uppercase">Multiple Banners (Slider)</label>
-                      <div className="space-y-2">
-                        {(formData.config?.banners || []).map((banner: any, idx: number) => (
-                          <div key={idx} className="p-3 bg-muted/30 rounded-lg border space-y-2">
-                            <div className="flex justify-between items-center">
-                              <span className="text-xs font-bold">Banner {idx + 1}</span>
-                              <button
-                                onClick={() => {
-                                  const banners = [...(formData.config?.banners || [])];
-                                  banners.splice(idx, 1);
-                                  setFormData({...formData, config: {...formData.config, banners}});
-                                }}
-                                className="text-red-500 text-xs font-bold"
-                              >
-                                Remove
-                              </button>
-                            </div>
-                            <CloudinaryUpload
-                              value={banner.image || ''}
-                              onChange={(url) => {
-                                const banners = [...(formData.config?.banners || [])];
-                                banners[idx] = {...banners[idx], image: url};
-                                setFormData({...formData, config: {...formData.config, banners}});
-                              }}
-                              folder="kryros/banners"
-                              accept="image/*"
-                              isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
-                            />
-                            <FormField 
-                              label="CTA Link" 
-                              value={banner.ctaLink || ''} 
-                              onChange={(v) => {
-                                const banners = [...(formData.config?.banners || [])];
-                                banners[idx] = {...banners[idx], ctaLink: v};
-                                setFormData({...formData, config: {...formData.config, banners}});
-                              }}
-                              placeholder="/shop"
-                              isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
-                            />
-                            <FormField 
-                              label="CTA Text" 
-                              value={banner.ctaText || ''} 
-                              onChange={(v) => {
-                                const banners = [...(formData.config?.banners || [])];
-                                banners[idx] = {...banners[idx], ctaText: v};
-                                setFormData({...formData, config: {...formData.config, banners}});
-                              }}
-                              placeholder="Shop Now"
-                              isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
-                            />
-                          </div>
-                        ))}
-                        <button
-                          onClick={() => {
-                            const banners = [...(formData.config?.banners || [])];
-                            banners.push({ image: '', ctaLink: '', ctaText: '' });
-                            setFormData({...formData, config: {...formData.config, banners}});
-                          }}
-                          className="w-full p-2 bg-primary text-white rounded-lg text-sm font-bold"
-                        >
-                          + Add Banner
-                        </button>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div className="space-y-2">
-                        <label className="text-xs font-bold text-muted-foreground uppercase">Upload Image</label>
-                        <CloudinaryUpload
-                          value={formData.config?.image || formData.config?.media || ''}
-                          onChange={(url) => setFormData({...formData, config: {...formData.config, image: url, media: url}})}
-                          folder="kryros/banners"
-                          accept="image/*"
-                          isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
-                        />
-                      </div>
-                      <FormField 
-                        label="Or Image URL" 
-                        value={formData.config?.image || formData.config?.media || ''} 
-                        onChange={(v) => setFormData({...formData, config: {...formData.config, image: v, media: v}})}
-                        placeholder="https://example.com/image.jpg"
-                        isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
-                      />
-                      <FormField 
-                        label="Background Color" 
-                        value={formData.config?.bgColor || formData.config?.gradient || ''} 
-                        onChange={(v) => setFormData({...formData, config: {...formData.config, bgColor: v, gradient: v}})}
-                        placeholder="#000000 or linear-gradient(...)"
-                        isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
-                      />
-                      <FormField 
-                        label="CTA Link (Optional)" 
-                        value={formData.config?.ctaLink || formData.config?.href || formData.config?.link || ''} 
-                        onChange={(v) => setFormData({...formData, config: {...formData.config, ctaLink: v, href: v, link: v}})}
-                        placeholder="/shop or https://..."
-                        isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
-                      />
-                      <FormField 
-                        label="CTA Text (Optional)" 
-                        value={formData.config?.ctaText || formData.config?.button_text || formData.config?.linkText || ''} 
-                        onChange={(v) => setFormData({...formData, config: {...formData.config, ctaText: v, button_text: v, linkText: v}})}
-                        placeholder="Shop Now"
-                        isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
-                      />
-                    </>
-                  )}
                 </div>
               )}
 

@@ -187,16 +187,6 @@ export const updateService = (id: string, data: Record<string, unknown>) =>
 export const deleteService = (id: string) =>
   api.delete(`/api/services/${id}`);
 
-// ── CMS — Banners ─────────────────────────────────────────
-export const getCmsBanners = () =>
-  api.get("/api/cms/banners/manage");
-export const createCmsBanner = (data: Record<string, unknown>) =>
-  api.post("/api/cms/banners", data);
-export const updateCmsBanner = (id: string, data: Record<string, unknown>) =>
-  api.put(`/api/cms/banners/${id}`, data);
-export const deleteCmsBanner = (id: string) =>
-  api.delete(`/api/cms/banners/${id}`);
-
 // ── CMS — Pages ───────────────────────────────────────────
 export const getCmsPages = () =>
   api.get("/api/cms/pages");
@@ -269,21 +259,7 @@ export const upsertCmsSiteConfig = (key: string, value: unknown) =>
 export const seedCmsSiteConfigs = () =>
   api.post("/api/cms/site-config/seed");
 
-// ── CMS — Brand Banners ───────────────────────────────────
-export const getCmsBrandBanners = () =>
-  api.get("/api/cms/brand-banners/manage");
-export const createCmsBrandBanner = (data: Record<string, unknown>) =>
-  api.post("/api/cms/brand-banners", data);
-export const updateCmsBrandBanner = (id: string, data: Record<string, unknown>) =>
-  api.put(`/api/cms/brand-banners/${id}`, data);
-export const deleteCmsBrandBanner = (id: string) =>
-  api.delete(`/api/cms/brand-banners/${id}`);
-
 // ── Settings ──────────────────────────────────────────────
-export const getSettings = (params?: Record<string, unknown>) =>
-  api.get("/api/settings", { params });
-export const updateSettings = (data: Record<string, unknown>) =>
-  api.put("/api/settings", data);
 
 // ── Shipping ──────────────────────────────────────────────
 export const getShippingZones = (params?: Record<string, unknown>) =>

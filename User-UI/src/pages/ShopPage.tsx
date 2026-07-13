@@ -11,8 +11,9 @@ import DynamicSectionRendererV2 from "@/components/home/DynamicSectionRendererV2
  * 
  * The DynamicSectionRendererV2 component handles:
  * - ProductShelf sections (product listings by category, popularity, etc.)
- * - BannerSlot sections (shop banners, promo banners)
  * - CategoryGridShelf sections (category carousels)
+ * - BrandsSection sections (brand displays)
+ * - ContentSection sections (Rich text, FAQ, Contact forms, etc.)
  * - Legacy section types (for backward compatibility)
  * 
  * Sections are sorted by the `order` field and displayed in that sequence.

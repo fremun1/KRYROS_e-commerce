@@ -12,8 +12,9 @@ import NewsletterPopup from "@/components/NewsletterPopup";
  * 
  * The DynamicSectionRendererV2 component handles:
  * - ProductShelf sections (Top Selling, Trending, New Arrivals, etc.)
- * - BannerSlot sections (Hero, Promo banners)
  * - CategoryGridShelf sections (Category displays)
+ * - BrandsSection sections (Brand displays)
+ * - ContentSection sections (Rich text, FAQ, Contact forms, etc.)
  * - Legacy section types (for backward compatibility)
  * 
  * Sections are sorted by the `order` field and displayed in that sequence.

@@ -7,7 +7,7 @@ import { Modal, ConfirmDialog, FormField, ModalFooter } from '@/components/admin
 import CloudinaryUpload from '@/components/ui/file-upload';
 import { useTheme } from '@/contexts/theme-context';
 import { Award } from 'lucide-react';
-import { createBrand, updateBrand, deleteBrand, getBrands, getCmsBrandBanners, createCmsBrandBanner } from '@/lib/api';
+import { createBrand, updateBrand, deleteBrand, getBrands } from '@/lib/api';
 import toast from 'react-hot-toast';
 
 type Brand = {
@@ -16,7 +16,6 @@ type Brand = {
 };
 
 const EMPTY_FORM = { name: '', slug: '', country: '', status: 'Active', website: '', description: '', logo: '' };
-const EMPTY_BANNER = { tagline: '', bannerDesc: '', bgColor: '#f5f5f5', brandColor: '#1FA89A', ctaText: '', ctaLink: '' };
 const toSlug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 
 export default function BrandsPage() {
@@ -36,16 +35,8 @@ export default function BrandsPage() {
   const [deleting,  setDeleting] = useState(false);
   const [saving,    setSaving]   = useState(false);
   const [form,      setForm]     = useState({ ...EMPTY_FORM });
-  const [bannerForm, setBannerForm] = useState({ ...EMPTY_BANNER });
-  const [allBanners, setAllBanners] = useState<Record<string, any>>({});
 
   const load = () => {
-    getCmsBrandBanners().then((r: any) => {
-      const bannersArr: any[] = Array.isArray(r.data) ? r.data : Array.isArray(r.data?.data) ? r.data.data : [];
-      const bySlug: Record<string, any> = {};
-      bannersArr.forEach((b: any) => { bySlug[b.brandSlug] = b; });
-      setAllBanners(bySlug);
-    }).catch(() => {});
     getBrands().then((r: any) => {
       const raw: any[] = Array.isArray(r.data?.data) ? r.data.data : Array.isArray(r.data) ? r.data : [];
       setBrands(raw.map((b: any) => ({
@@ -64,11 +55,9 @@ export default function BrandsPage() {
 
   useEffect(load, []);
 
-  const openAdd  = () => { setForm({ ...EMPTY_FORM }); setBannerForm({ ...EMPTY_BANNER }); setEditRow(null); setModalOpen(true); };
+  const openAdd  = () => { setForm({ ...EMPTY_FORM }); setEditRow(null); setModalOpen(true); };
   const openEdit = (row: Brand) => {
     setForm({ name: row.name, slug: row.slug, country: row.country, status: row.status, website: row.website, description: row.description, logo: row.logo || '' });
-    const existing = allBanners[row.slug];
-    setBannerForm(existing ? { tagline: existing.tagline || '', bannerDesc: existing.description || '', bgColor: existing.bgColor || '#f5f5f5', brandColor: existing.bgGradient || '#1FA89A', ctaText: existing.ctaText || '', ctaLink: existing.ctaLink || '' } : { ...EMPTY_BANNER });
     setEditRow(row); setModalOpen(true);
   };
 
@@ -91,11 +80,6 @@ export default function BrandsPage() {
       } else {
         await createBrand(payload);
         toast.success('Brand created');
-      }
-
-      // Save promotional banner if any banner field is filled
-      if (bannerForm.tagline || bannerForm.bannerDesc || bannerForm.ctaText || bannerForm.ctaLink) {
-        await createCmsBrandBanner({ brandSlug: slug, brandName: form.name.trim(), tagline: bannerForm.tagline, description: bannerForm.bannerDesc, bgColor: bannerForm.bgColor, bgGradient: bannerForm.brandColor, ctaText: bannerForm.ctaText, ctaLink: bannerForm.ctaLink, isActive: true });
       }
       setModalOpen(false); load();
     } catch (e: any) { toast.error(e?.message ?? 'Save failed'); }
@@ -181,33 +165,6 @@ export default function BrandsPage() {
           </div>
           <FormField label="Website" value={form.website} onChange={(v) => f('website', v)} placeholder="https://samsung.com" isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
           <FormField label="Description" type="textarea" value={form.description} onChange={(v) => f('description', v)} placeholder="Short description of this brand" isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-          {/* ── Promotional Banner Section ── */}
-          <div style={{ borderTop: `1px solid ${border}`, paddingTop: '16px', marginTop: '4px' }}>
-            <p style={{ fontSize: '11.5px', fontWeight: 700, color: '#1FA89A', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '12px' }}>Shop Page — Promotional Banner</p>
-            <p style={{ fontSize: '11px', color: textMuted, marginBottom: '12px' }}>When a user taps this brand in the shop, this banner appears above their products.</p>
-            <FormField label="Pre-text / Tagline (e.g. Innovate with)" value={bannerForm.tagline} onChange={(v) => setBannerForm(f => ({ ...f, tagline: v }))} placeholder="e.g. Innovate with" isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-            <FormField label="Banner Description / Subtitle" type="textarea" value={bannerForm.bannerDesc} onChange={(v) => setBannerForm(f => ({ ...f, bannerDesc: v }))} placeholder="e.g. Galaxy experience.&#10;Bold tech, smarter life." isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-              <div>
-                <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: textMuted, marginBottom: '5px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Background Color</label>
-                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                  <input type="color" value={bannerForm.bgColor} onChange={(e) => setBannerForm(f => ({ ...f, bgColor: e.target.value }))} style={{ width: '36px', height: '36px', borderRadius: '6px', border: `1px solid ${border}`, cursor: 'pointer', padding: '2px' }} />
-                  <input type="text" value={bannerForm.bgColor} onChange={(e) => setBannerForm(f => ({ ...f, bgColor: e.target.value }))} style={{ flex: 1, padding: '8px', borderRadius: '6px', background: surface, border: `1px solid ${border}`, color: textMain, fontSize: '12px', outline: 'none' }} />
-                </div>
-              </div>
-              <div>
-                <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: textMuted, marginBottom: '5px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Brand Text/Accent Color</label>
-                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                  <input type="color" value={bannerForm.brandColor} onChange={(e) => setBannerForm(f => ({ ...f, brandColor: e.target.value }))} style={{ width: '36px', height: '36px', borderRadius: '6px', border: `1px solid ${border}`, cursor: 'pointer', padding: '2px' }} />
-                  <input type="text" value={bannerForm.brandColor} onChange={(e) => setBannerForm(f => ({ ...f, brandColor: e.target.value }))} style={{ flex: 1, padding: '8px', borderRadius: '6px', background: surface, border: `1px solid ${border}`, color: textMain, fontSize: '12px', outline: 'none' }} />
-                </div>
-              </div>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '12px' }}>
-              <FormField label="Button Text" value={bannerForm.ctaText} onChange={(v) => setBannerForm(f => ({ ...f, ctaText: v }))} placeholder="e.g. Shop Samsung" isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-              <FormField label="Button Link (URL)" value={bannerForm.ctaLink} onChange={(v) => setBannerForm(f => ({ ...f, ctaLink: v }))} placeholder="/shop?brand=Samsung" isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-            </div>
-          </div>
           <ModalFooter onClose={() => setModalOpen(false)} onSubmit={handleSave} loading={saving} submitLabel={editRow ? 'Save Changes' : 'Add Brand'} isDark={isDark} border={border} textMain={textMain} />
         </Modal>
 
