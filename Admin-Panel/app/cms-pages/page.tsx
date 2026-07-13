@@ -646,7 +646,22 @@ export default function CMSPagesPage() {
                       checked={formData.config?.autoplay !== false}
                       onChange={(e) => setFormData({...formData, config: {...formData.config, autoplay: e.target.checked}})}
                     />
-                    <label htmlFor="banner-autoplay" className="text-xs font-bold text-muted-foreground uppercase">Auto-play (5s interval)</label>
+                    <label htmlFor="banner-autoplay" className="text-xs font-bold text-muted-foreground uppercase">Auto-play</label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-muted-foreground uppercase w-20">Duration</span>
+                    <select
+                      value={formData.config?.duration || 5}
+                      onChange={(e) => setFormData({...formData, config: {...formData.config, duration: parseInt(e.target.value)}})}
+                      className="p-1.5 bg-background border rounded text-xs outline-none focus:ring-2 focus:ring-primary/20"
+                    >
+                      <option value={2}>2 seconds</option>
+                      <option value={3}>3 seconds</option>
+                      <option value={5}>5 seconds</option>
+                      <option value={7}>7 seconds</option>
+                      <option value={10}>10 seconds</option>
+                      <option value={15}>15 seconds</option>
+                    </select>
                   </div>
                   <div className="flex items-center gap-2">
                     <input
