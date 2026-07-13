@@ -225,19 +225,20 @@ export default function CMSPagesPage() {
                   <button
                     key={page.value}
                     onClick={() => handleSelectPage(page.value)}
-                    className="flex items-center justify-between p-6 bg-card border rounded-2xl hover:border-primary/50 hover:bg-primary/5 transition shadow-sm group"
+                    className="flex items-center justify-between p-5 bg-card border rounded-2xl hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5 transition-all group relative overflow-hidden"
                   >
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-white transition">
-                        <Layout size={24} />
+                    <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <div className="flex items-center gap-4 relative z-10">
+                      <div className="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center group-hover:scale-110 group-hover:bg-primary group-hover:text-white transition-all duration-300">
+                        <Layout size={26} />
                       </div>
                       <div className="text-left">
                         <h3 className="font-bold text-lg">{page.label}</h3>
-                        <p className="text-sm text-muted-foreground">Manage sections for this page</p>
+                        <p className="text-sm text-muted-foreground">Click to manage sections • Drag & drop ordering</p>
                       </div>
                     </div>
-                    <div className="text-primary opacity-0 group-hover:opacity-100 transition">
-                      <ChevronDown size={20} />
+                    <div className="flex items-center gap-3 relative z-10">
+                      <span className="text-xs text-muted-foreground bg-muted px-3 py-1 rounded-full font-medium">Manage →</span>
                     </div>
                   </button>
                 ))
@@ -246,27 +247,28 @@ export default function CMSPagesPage() {
           </>
         ) : (
           <>
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
               <div>
-                <h1 className="text-2xl font-bold">{pages.find((p: any) => p.value === selectedPage)?.label || 'Page Sections'}</h1>
-                <p className="text-muted-foreground text-sm">Manage sections for this page</p>
+                <div className="flex items-center gap-3 mb-1">
+                  <button
+                    onClick={handleBackToPages}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground bg-muted/50 hover:bg-muted rounded-lg transition"
+                  >
+                    <ChevronDown size={14} className="rotate-90" />
+                    All Pages
+                  </button>
+                  <span className="text-muted-foreground">/</span>
+                  <h1 className="text-2xl font-bold">{pages.find((p: any) => p.value === selectedPage)?.label || 'Page Sections'}</h1>
+                </div>
+                <p className="text-muted-foreground text-sm ml-1">{sections.length} section{sections.length !== 1 ? 's' : ''} • Drag to reorder</p>
               </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={handleBackToPages}
-                  className="flex items-center gap-2 px-4 py-2 bg-muted hover:bg-muted/80 rounded-xl text-sm font-medium transition"
-                >
-                  <ChevronDown size={16} className="rotate-90" />
-                  Back to Pages
-                </button>
-                <button
-                  onClick={handleAddSection}
-                  className="flex items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-xl font-bold hover:opacity-90 transition shadow-lg shadow-primary/20"
-                >
-                  <Plus size={18} />
-                  Add Section
-                </button>
-              </div>
+              <button
+                onClick={handleAddSection}
+                className="flex items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-xl font-bold hover:opacity-90 transition shadow-lg shadow-primary/20 active:scale-95"
+              >
+                <Plus size={18} />
+                Add Section
+              </button>
             </div>
 
             {/* Active Sections List */}
@@ -283,7 +285,7 @@ export default function CMSPagesPage() {
                 sections.map((section, index) => {
                   const Icon = TEMPLATE_ICONS[section.templateType || section.type] || Info;
                   return (
-                    <div key={section.id} className="group flex items-center gap-4 p-4 bg-card border rounded-2xl hover:border-primary/50 transition shadow-sm">
+                    <div key={section.id} className="group flex items-center gap-4 p-4 bg-card border rounded-2xl hover:border-primary/50 hover:shadow-md transition-all">
                       {/* Always-visible reorder controls */}
                       <div className="flex flex-col gap-0.5">
                         <button 
@@ -313,6 +315,27 @@ export default function CMSPagesPage() {
                           <span className="bg-muted px-2 py-0.5 rounded">{section.templateType || section.type}</span>
                           <span>Source: <span className="text-foreground">{section.dataSourceId || section.slotKey || 'Custom'}</span></span>
                         </div>
+                        {/* Banner slide previews */}
+                        {(section.templateType === 'BannerCarousel' || section.type === 'BannerCarousel') && section.config?.slides && section.config.slides.length > 0 && (
+                          <div className="flex gap-2 mt-2 overflow-x-auto pb-1">
+                            {section.config.slides.slice(0, 4).map((slide: any, si: number) => (
+                              <div key={si} className="relative flex-shrink-0 w-16 h-10 rounded-md overflow-hidden bg-muted border">
+                                {slide.image ? (
+                                  <img src={slide.image} alt={slide.title || `Slide ${si+1}`} className="w-full h-full object-cover" />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                                    <Image size={14} />
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                            {section.config.slides.length > 4 && (
+                              <div className="flex-shrink-0 w-16 h-10 rounded-md bg-muted border flex items-center justify-center text-[10px] text-muted-foreground font-bold">
+                                +{section.config.slides.length - 4}
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
 
                       {/* Always-visible edit & delete buttons */}
@@ -568,17 +591,19 @@ export default function CMSPagesPage() {
                           className="text-xs text-red-500 hover:underline"
                         >Remove</button>
                       </div>
-                      <FormField
-                        label="Image URL"
-                        value={slide.image || ''}
-                        onChange={(v) => {
-                          const slides = [...(formData.config?.slides || [])];
-                          slides[idx] = {...slides[idx], image: v};
-                          setFormData({...formData, config: {...formData.config, slides}});
-                        }}
-                        placeholder="https://res.cloudinary.com/.../banner.jpg"
-                        isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
-                      />
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-muted-foreground uppercase">Banner Image</label>
+                        <CloudinaryUpload
+                          value={slide.image || ''}
+                          onChange={(url) => {
+                            const slides = [...(formData.config?.slides || [])];
+                            slides[idx] = {...slides[idx], image: url};
+                            setFormData({...formData, config: {...formData.config, slides}});
+                          }}
+                          folder="kryros/banners"
+                          isDark={isDark} border={border} surface={surface} textMuted={textMuted} textMain={textMain}
+                        />
+                      </div>
                       <div className="grid grid-cols-2 gap-2">
                         <FormField
                           label="Title (optional)"
