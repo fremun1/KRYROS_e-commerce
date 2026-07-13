@@ -39,6 +39,7 @@ export default function ProductPage() {
   const [product, setProduct] = useState<Product | null>(null);
   const [related, setRelated] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [qty, setQty] = useState(1);
   const [activeImg, setActiveImg] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
@@ -118,6 +119,9 @@ export default function ProductPage() {
       setRelated(r);
       setStoreStatus(s);
       if (p?.image) setActiveImg(p.image);
+    }).catch((err) => {
+      console.error("Error loading product:", err);
+      setError(err instanceof Error ? err.message : "Failed to load product details");
     }).finally(() => setLoading(false));
     window.scrollTo(0, 0);
   }, [id]);
@@ -206,6 +210,19 @@ export default function ProductPage() {
       <Link href="/shop">
         <button className="bg-primary text-white px-8 py-3 rounded-2xl font-bold">Back to Shop</button>
       </Link>
+    </div>
+  );
+
+  if (error) return (
+    <div className="min-h-screen flex flex-col items-center justify-center bg-background p-6 text-center">
+      <div className="w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/20 flex items-center justify-center mb-4">
+        <span className="text-2xl">⚠️</span>
+      </div>
+      <h1 className="text-xl font-bold mb-2 text-foreground">Something went wrong</h1>
+      <p className="text-muted-foreground mb-2">{error}</p>
+      <button onClick={() => window.location.reload()} className="bg-primary text-white px-8 py-3 rounded-2xl font-bold mt-4">
+        Try Again
+      </button>
     </div>
   );
 
