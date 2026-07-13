@@ -254,9 +254,6 @@ export default function DynamicSectionRendererV2({
               </div>
             );
 
-          case 'MembersBanner':
-            // Skip banner sections
-            return null;
 
           // ═══════════════════════════════════════════════════════════════════
           // FAMILY 5: UTILITY (Testimonials, RecentlyViewed, Newsletter, ContentSection)
