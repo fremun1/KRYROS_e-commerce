@@ -13,10 +13,10 @@ export interface SectionRule {
   id: string;
   label: string;
   description: string;
-  category: 'products' | 'brand' | 'custom';
+  category: 'products' | 'brand' | 'media' | 'custom';
   params: Record<string, any>;
   icon?: string;
-  templateType: 'ProductShelf' | 'BrandGrid' | 'Custom';
+  templateType: 'ProductShelf' | 'BrandGrid' | 'BannerCarousel' | 'Custom';
 }
 
 export const SECTION_RULES: Record<string, SectionRule> = {
@@ -126,6 +126,20 @@ export const SECTION_RULES: Record<string, SectionRule> = {
     params: {},
     icon: '🛡️',
     templateType: 'BrandGrid'
+  },
+
+  // ─────────────────────────────────────────────────────────────────
+  // MEDIA RULES (for BannerCarousel template)
+  // ─────────────────────────────────────────────────────────────────
+
+  'banner-carousel': {
+    id: 'banner-carousel',
+    label: 'Banner Carousel',
+    description: 'Swipeable image banners with optional text overlays, arrows, and dot indicators.',
+    category: 'media',
+    params: { clientSide: true },
+    icon: '🖼️',
+    templateType: 'BannerCarousel'
   },
 
   // ─────────────────────────────────────────────────────────────────
