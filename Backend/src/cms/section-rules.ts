@@ -16,7 +16,7 @@ export interface SectionRule {
   category: 'products' | 'brand' | 'media' | 'custom';
   params: Record<string, any>;
   icon?: string;
-  templateType: 'ProductShelf' | 'BrandGrid' | 'BannerCarousel' | 'CategorySection' | 'Custom';
+  templateType: 'ProductShelf' | 'BrandGrid' | 'BannerCarousel' | 'CategorySection' | 'RecentlyViewed' | 'Custom';
 }
 
 export const SECTION_RULES: Record<string, SectionRule> = {
