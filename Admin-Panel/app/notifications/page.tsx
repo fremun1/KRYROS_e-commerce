@@ -901,6 +901,120 @@ function EmailContent() {
   );
 }
 
+// ─── Diagnostics Tab ─────────────────────────────────────────────────────────
+function DiagnosticsContent() {
+  const { card, border, textMain, textMuted, surface, primary } = useColors();
+  const [status, setStatus] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+
+  const checkStatus = async () => {
+    setLoading(true);
+    try {
+      const r = await api.get('/api/notifications/status');
+      setStatus(r.data);
+      toast.success('System diagnostics complete');
+    } catch (e: any) {
+      toast.error('Failed to run diagnostics');
+      console.error(e);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => { checkStatus(); }, []);
+
+  const renderStatus = (key: string, data: any) => {
+    if (!data) return null;
+    const isOk = data.status === 'OK';
+    const isError = data.status === 'ERROR';
+    const isMissing = data.status === 'MISSING';
+
+    return (
+      <div key={key} style={{ background: card, border: `1px solid ${border}`, borderRadius: 12, padding: 20, display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <span style={{ fontWeight: 800, color: textMain, textTransform: 'uppercase', fontSize: 12, letterSpacing: 1 }}>{key}</span>
+          <span style={{
+            padding: '4px 10px',
+            borderRadius: 20,
+            fontSize: 10,
+            fontWeight: 700,
+            background: isOk ? '#22c55e20' : (isError ? '#ef444420' : '#f59e0b20'),
+            color: isOk ? '#22c55e' : (isError ? '#ef4444' : '#f59e0b'),
+            border: `1px solid ${isOk ? '#22c55e44' : (isError ? '#ef444444' : '#f59e0b44')}`
+          }}>
+            {data.status}
+          </span>
+        </div>
+        <div style={{ fontSize: 13, color: isError ? '#ef4444' : textMuted, fontWeight: isError ? 600 : 400 }}>
+          {data.message}
+        </div>
+        {isMissing && (
+          <div style={{ fontSize: 11, color: '#f59e0b', background: '#f59e0b10', padding: 8, borderRadius: 6, border: '1px dashed #f59e0b44' }}>
+            Check your .env file on the server.
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  return (
+    <div style={{ paddingBottom: 40 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+        <div>
+          <h3 style={{ fontSize: 16, fontWeight: 700, color: textMain }}>System Diagnostics</h3>
+          <p style={{ fontSize: 12, color: textMuted }}>Verify connectivity to all external services and database</p>
+        </div>
+        <button
+          onClick={checkStatus}
+          disabled={loading}
+          style={{
+            padding: '8px 16px',
+            borderRadius: 8,
+            background: primary,
+            color: '#fff',
+            border: 'none',
+            fontWeight: 600,
+            fontSize: 13,
+            cursor: loading ? 'wait' : 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8
+          }}
+        >
+          {loading ? <Loader2 style={{ width: 14, height: 14, animation: 'spin 1s linear infinite' }} /> : <CheckCircle2 style={{ width: 14, height: 14 }} />}
+          Run Check
+        </button>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 20 }}>
+        {status ? (
+          <>
+            {renderStatus('Database', status.database)}
+            {renderStatus('Firebase FCM', status.push)}
+            {renderStatus('Beem Africa SMS', status.sms)}
+            {renderStatus('SMTP Email', status.smtp)}
+          </>
+        ) : (
+          <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: 40, color: textMuted }}>
+            {loading ? 'Running diagnostics...' : 'No data available'}
+          </div>
+        )}
+      </div>
+
+      {status && (
+        <div style={{ marginTop: 30, background: surface, border: `1px solid ${border}`, borderRadius: 12, padding: 20 }}>
+          <h4 style={{ fontSize: 14, fontWeight: 700, color: textMain, marginBottom: 10 }}>Troubleshooting Guide</h4>
+          <ul style={{ fontSize: 13, color: textMuted, paddingLeft: 20, display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <li><strong>Database ERROR:</strong> Ensure the <code>DATABASE_URL</code> in your <code>.env</code> file is correct and the DigitalOcean database is accepting connections.</li>
+            <li><strong>Firebase MISSING/ERROR:</strong> Check if <code>FIREBASE_SERVICE_ACCOUNT_JSON</code> is set. It must be the full JSON string from Firebase Console (Admin SDK).</li>
+            <li><strong>SMS MISSING:</strong> Ensure <code>BEEM_API_KEY</code> and <code>BEEM_SECRET_KEY</code> are set in the backend environment.</li>
+            <li><strong>SMTP MISSING:</strong> Verify <code>SMTP_HOST</code>, <code>SMTP_PORT</code>, <code>SMTP_USER</code>, and <code>SMTP_PASS</code> are correctly configured.</li>
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function NotificationsPage() {
   const [activeSection, setActiveSection] = useState<'push' | 'sms' | 'newsletter' | 'email'>('push');
@@ -911,6 +1025,7 @@ export default function NotificationsPage() {
     { id: 'sms',        label: 'SMS',           Icon: Smartphone },
     { id: 'newsletter', label: 'Newsletter',     Icon: Mail },
     { id: 'email',      label: 'Email Contacts', Icon: Send },
+    { id: 'diagnostics', label: 'Diagnostics',   Icon: CheckCircle2 },
   ] as const;
 
   return (
@@ -928,6 +1043,7 @@ export default function NotificationsPage() {
       {activeSection === 'sms'        && <SmsContent />}
       {activeSection === 'newsletter' && <NewsletterContent />}
       {activeSection === 'email'      && <EmailContent />}
+      {activeSection === 'diagnostics' && <DiagnosticsContent />}
     </AdminShell>
   );
 }

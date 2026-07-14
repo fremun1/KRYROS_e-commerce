@@ -68,6 +68,26 @@ export class NotificationsController {
     return this.notificationsService.sendSMS(body.phoneNumber, body.message);
   }
 
+  @Get('status')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Comprehensive check of all notification services (Admin only)' })
+  async getSystemStatus() {
+    const dbStatus = await this.notificationsService.checkDatabase();
+    const pushStatus = await this.notificationsService.checkFirebase();
+    const smsStatus = await this.notificationsService.checkBeem();
+    const smtpStatus = await this.notificationsService.checkSmtp();
+
+    return {
+      database: dbStatus,
+      push: pushStatus,
+      sms: smsStatus,
+      smtp: smtpStatus,
+      serverTime: new Date().toISOString(),
+    };
+  }
+
   @Get('smtp/status')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER)

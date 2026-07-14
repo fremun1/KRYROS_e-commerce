@@ -804,6 +804,45 @@ export class NotificationsService implements OnModuleInit {
     }
   }
 
+  // ─── Diagnostics ───────────────────────────────────────────────────────────
+  async checkDatabase() {
+    try {
+      await this.prisma.$queryRaw`SELECT 1`;
+      return { status: 'OK', message: 'Connected' };
+    } catch (e) {
+      return { status: 'ERROR', message: e.message };
+    }
+  }
+
+  async checkFirebase() {
+    if (!this.isPushConfigured) {
+      return { status: 'MISSING', message: 'FIREBASE_SERVICE_ACCOUNT_JSON not configured' };
+    }
+    try {
+      // Just check if we can access the messaging service
+      admin.messaging();
+      return { status: 'OK', message: 'Firebase Admin Initialized' };
+    } catch (e) {
+      return { status: 'ERROR', message: e.message };
+    }
+  }
+
+  async checkBeem() {
+    const apiKey = this.configService.get('BEEM_API_KEY');
+    const secretKey = this.configService.get('BEEM_SECRET_KEY');
+    if (!apiKey || !secretKey) {
+      return { status: 'MISSING', message: 'BEEM credentials missing' };
+    }
+    return { status: 'OK', message: 'Configured' };
+  }
+
+  async checkSmtp() {
+    if (!this.mailerService.isConfigured) {
+      return { status: 'MISSING', message: 'SMTP credentials missing' };
+    }
+    return { status: 'OK', message: 'Configured' };
+  }
+
   // ─── Email Contacts ──────────────────────────────────────────────────────────
   async getEmailContacts() {
     return this.prisma.emailContact.findMany({
