@@ -1017,7 +1017,7 @@ function DiagnosticsContent() {
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function NotificationsPage() {
-  const [activeSection, setActiveSection] = useState<'push' | 'sms' | 'newsletter' | 'email'>('push');
+  const [activeSection, setActiveSection] = useState<'push' | 'sms' | 'newsletter' | 'email' | 'diagnostics'>('push');
   const { card, border, textMuted, surface } = useColors();
 
   const tabs = [
