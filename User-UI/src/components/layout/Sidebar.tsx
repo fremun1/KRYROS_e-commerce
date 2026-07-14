@@ -149,8 +149,17 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
             {/* Header */}
             <div className="flex items-center justify-between p-5 border-b border-border">
               <Link href="/" onClick={onClose}>
-                <span className="text-xl font-black tracking-tight">
-                  KRY<span className="text-primary">ROS</span>
+                <span className="flex items-center gap-2 text-xl font-black tracking-tight">
+                  <img
+                    src="/kryros-logo.png"
+                    alt="KRYROS"
+                    className="w-8 h-8 object-contain"
+                    loading="eager"
+                    decoding="async"
+                  />
+                  <span>
+                    KRY<span className="text-primary">ROS</span>
+                  </span>
                 </span>
               </Link>
               <button
