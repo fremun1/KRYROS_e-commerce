@@ -331,6 +331,7 @@ export class CMSService {
 
   private mapLegacyTypeToDataSource(type: string): string | null {
     const map: Record<string, string> = {
+      RecentlyViewed: 'recently-viewed',
       TopSelling: 'top-selling',
       Trending: 'trending-products',
       NewestArrivals: 'new-arrivals',
@@ -546,10 +547,16 @@ export class CMSService {
   }
 
   async updateSection(id: string, data: UpdateSectionDto) {
+    let { templateType, type } = data as any;
+    if (type && !templateType) {
+      templateType = this.mapLegacyTypeToTemplate(type);
+    }
+
     const section = await this.prisma.cMSSection.update({
       where: { id },
       data: {
         ...data,
+        ...(templateType ? { templateType } : {}),
       } as any,
     });
     await this.invalidateCmsCache();

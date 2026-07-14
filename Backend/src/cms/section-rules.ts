@@ -177,7 +177,7 @@ export const SECTION_RULES: Record<string, SectionRule> = {
     category: 'custom',
     params: { clientSide: true },
     icon: '👁️',
-    templateType: 'Custom'
+    templateType: 'RecentlyViewed'
   }
 };
 
