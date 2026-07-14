@@ -15,6 +15,7 @@ type Product = {
   category: string; brand: string; price: string; salePrice: string;
   stock: number; weight: string; sold: number; status: string;
   featured: boolean;
+  isNew: boolean;
   isFlashSale: boolean; flashSalePrice: string; flashSaleEnd: string;
   showGuaranteeBadge: boolean; showReturnsBadge: boolean;
   tags: string; metaTitle: string; metaDescription: string; imageUrl: string; specifications: string;
@@ -49,6 +50,7 @@ const EMPTY_FORM = {
   name: '', slug: '', sku: '', description: '', category: 'Electronics', brand: 'Apple',
   price: '', salePrice: '', stock: '0', weight: '', status: 'Active',
   featured: 'No',
+  isNew: 'No',
   isFlashSale: 'No', flashSalePrice: '', flashSaleEnd: '',
   allowCredit: 'No', creditMessage: '', creditMinimum: '',
   showGuaranteeBadge: 'No', showReturnsBadge: 'No',
@@ -99,6 +101,7 @@ function ProductsContent() {
         sold: p._count?.orderItems ?? 0,
         status: p.isActive !== false ? 'Active' : 'Inactive',
         featured: !!p.isFeatured,
+        isNew: !!p.isNew,
         isFlashSale: !!p.isFlashSale,
         flashSalePrice: p.flashSalePrice != null ? String(Number(p.flashSalePrice)) : '',
         flashSaleEnd: p.flashSaleEnd ? new Date(p.flashSaleEnd).toISOString().slice(0, 16) : '',
@@ -176,8 +179,9 @@ function ProductsContent() {
     setForm({
       name: r.name, slug: r.slug || toSlug(r.name), sku: r.sku, description: r.description || '',
       category: r.category, brand: r.brand || 'Apple', price: r.price, salePrice: r.salePrice || '',
-      stock: String(r.stock), weight: r.weight || '', status: r.status,
+      stock: String(r.stock), weight: r.weight || '',       status: r.status,
       featured: boolToStr(r.featured),
+      isNew: boolToStr(r.isNew),
       isFlashSale: boolToStr(r.isFlashSale),
       flashSalePrice: r.flashSalePrice || '',
       flashSaleEnd: r.flashSaleEnd || '',
@@ -260,6 +264,7 @@ function ProductsContent() {
       stockCurrent: Number(form.stock),
       isActive: form.status !== 'Inactive',
       isFeatured: strToBool(form.featured),
+      isNew: strToBool(form.isNew),
       isFlashSale: strToBool(form.isFlashSale),
       allowCredit: strToBool(form.allowCredit),
       creditMessage: strToBool(form.allowCredit) ? (form.creditMessage || undefined) : undefined,
@@ -306,6 +311,7 @@ function ProductsContent() {
         images: productImages,
         stock: Number(form.stock), sold: 0,
         featured: strToBool(form.featured),
+        isNew: strToBool(form.isNew),
         isFlashSale: strToBool(form.isFlashSale),
         allowCredit: strToBool(form.allowCredit),
         creditMessage: form.creditMessage,
@@ -334,6 +340,7 @@ function ProductsContent() {
         images: productImages,
         stock: Number(form.stock),
         featured: strToBool(form.featured),
+        isNew: strToBool(form.isNew),
         isFlashSale: strToBool(form.isFlashSale),
         allowCredit: strToBool(form.allowCredit),
         creditMessage: form.creditMessage,
