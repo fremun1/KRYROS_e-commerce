@@ -115,6 +115,15 @@ export class CMSService {
     // 12. Newsletter           → type: Newsletter          (popup subscription)
     const defaultSections = [
       {
+        type: 'RecentlyViewed',
+        order: 1,
+        isActive: true,
+        title: 'Recently Viewed',
+        subtitle: 'Products you\'ve recently viewed — client-side from localStorage',
+        animation: 'slideUp',
+        config: {}
+      },
+      {
         type: 'Brands',
         order: 2,
         isActive: true,
@@ -142,7 +151,7 @@ export class CMSService {
       },
       {
         type: 'FlashSale',
-        order: 5,
+        order: 4,
         isActive: true,
         title: 'Flash Sale',
         subtitle: 'Limited time offers — products marked with flash sale pricing',
@@ -159,7 +168,7 @@ export class CMSService {
       },
       {
         type: 'RecommendedProducts',
-        order: 9,
+        order: 5,
         isActive: true,
         title: 'Recommended For You',
         subtitle: 'Personalised product recommendations',
@@ -168,7 +177,7 @@ export class CMSService {
       },
       {
         type: 'TopSelling',
-        order: 10,
+        order: 6,
         isActive: true,
         title: 'Top Selling Items',
         subtitle: 'Auto-picked based on sales performance — most ordered products',
@@ -177,7 +186,7 @@ export class CMSService {
       },
       {
         type: 'LimitedStockDeal',
-        order: 11,
+        order: 7,
         isActive: true,
         title: 'Limited Stock Deal',
         subtitle: 'Grab them before they\'re gone — configurable discount banner',
@@ -195,7 +204,7 @@ export class CMSService {
       },
       {
         type: 'AppliancesDeal',
-        order: 12,
+        order: 8,
         isActive: true,
         title: 'Appliances Deal',
         subtitle: 'Home appliances at unbeatable prices',
@@ -210,7 +219,7 @@ export class CMSService {
       },
       {
         type: 'TopExpress',
-        order: 13,
+        order: 9,
         isActive: true,
         title: 'Top Express',
         subtitle: 'Fast delivery, top picks',
@@ -226,7 +235,7 @@ export class CMSService {
       },
       {
         type: 'NewestArrivals',
-        order: 15,
+        order: 10,
         isActive: true,
         title: 'Newest Arrivals',
         subtitle: 'The latest products added to our store',
@@ -235,7 +244,7 @@ export class CMSService {
       },
       {
         type: 'BestSellers',
-        order: 16,
+        order: 11,
         isActive: true,
         title: 'Best Sellers',
         subtitle: 'Our most popular products',
@@ -244,7 +253,7 @@ export class CMSService {
       },
       {
         type: 'Trending',
-        order: 17,
+        order: 12,
         isActive: true,
         title: 'Trending Now',
         subtitle: 'Hot products right now',
