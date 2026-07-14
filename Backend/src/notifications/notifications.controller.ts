@@ -21,9 +21,15 @@ export class NotificationsController {
   @Post('token')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Update user FCM token' })
+  @ApiOperation({ summary: 'Update user FCM token (authenticated)' })
   async updateToken(@Request() req: any, @Body() body: UpdateTokenDto) {
     return this.notificationsService.updateToken(req.user.id, body.token, body.platform || 'android');
+  }
+
+  @Post('token/public')
+  @ApiOperation({ summary: 'Register FCM token without authentication' })
+  async registerPublicToken(@Body() body: { token: string; platform?: string }) {
+    return this.notificationsService.registerPublicToken(body.token, body.platform || 'android');
   }
 
   @Post('broadcast')

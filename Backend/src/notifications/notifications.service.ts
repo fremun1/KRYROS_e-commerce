@@ -290,6 +290,14 @@ export class NotificationsService implements OnModuleInit {
     });
   }
 
+  async registerPublicToken(token: string, platform: string = 'android') {
+    return this.prisma.userDevice.upsert({
+      where: { fcmToken: token },
+      update: { platform, updatedAt: new Date() },
+      create: { fcmToken: token, platform },
+    });
+  }
+
   // ==================== SMS (BEEM AFRICA) ====================
 
   // ─── Country support check ───────────────────────────────────────────────────
