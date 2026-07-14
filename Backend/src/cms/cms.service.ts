@@ -315,7 +315,7 @@ export class CMSService {
       FlashSale: 'ProductShelf',
       ProductSection: 'ProductShelf',
       RecommendedProducts: 'ProductShelf',
-      RecentlyViewed: 'Custom',
+      RecentlyViewed: 'RecentlyViewed',
       TopSelling: 'ProductShelf',
       NewestArrivals: 'ProductShelf',
       BestSellers: 'ProductShelf',
