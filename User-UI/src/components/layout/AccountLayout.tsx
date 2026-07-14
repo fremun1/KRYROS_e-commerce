@@ -60,8 +60,15 @@ export default function AccountLayout({ children, showTopBar = true }: AccountLa
     <div className="flex flex-col h-full bg-background">
       <div className="flex items-center justify-between px-5 py-4 border-b border-border">
         <Link href="/">
-          <span className="text-lg font-black text-foreground cursor-pointer">
-            KRY<span className="text-primary">ROS</span>
+          <span className="flex items-center gap-2 text-lg font-black text-foreground cursor-pointer">
+            <img
+              src="/kryros-logo.png"
+              alt="KRYROS"
+              className="w-8 h-8 object-contain"
+            />
+            <span>
+              KRY<span className="text-primary">ROS</span>
+            </span>
           </span>
         </Link>
         <button

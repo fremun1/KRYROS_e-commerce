@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard, Users, ShoppingCart, Tag, Award, Star, Package,
   Truck, CreditCard, Wallet, MapPin, DollarSign, Wrench, FileText,
-  Layout, Bell, BarChart3, Settings, X, ShieldCheck,
+  Layout, Bell, BarChart3, Settings, X,
   LogOut, User, ChevronUp,
 } from "lucide-react";
 import { useTheme } from "@/contexts/theme-context";
@@ -76,9 +76,11 @@ export default function Sidebar({ collapsed, mobileOpen, onMobileClose }: Sideba
         flexShrink: 0,
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ width: 34, height: 34, background: "linear-gradient(135deg, #1FA89A, #27B9AF)", borderRadius: 9, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-            <ShieldCheck size={17} color="white" />
-          </div>
+          <img
+            src="/kryros-logo.png"
+            alt="KRYROS"
+            style={{ width: 34, height: 34, objectFit: "contain", flexShrink: 0 }}
+          />
           {!collapsed && (
             <span style={{ fontSize: 15, fontWeight: 800, color: textMain, letterSpacing: "-0.3px" }}>
               KR<span style={{ color: "#1FA89A" }}>YROS</span>

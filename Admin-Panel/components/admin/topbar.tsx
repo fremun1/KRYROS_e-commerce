@@ -138,6 +138,11 @@ export default function Topbar({ collapsed, sidebarW, onMenuToggle, onMobileMenu
         <button onClick={onMenuToggle} style={{ background: "none", border: "none", cursor: "pointer", color: textMuted, padding: 6, borderRadius: 6, display: "flex", alignItems: "center", flexShrink: 0 }}>
           <Menu size={20} />
         </button>
+        <img
+          src="/kryros-logo.png"
+          alt="KRYROS"
+          style={{ width: 30, height: 30, objectFit: "contain", flexShrink: 0 }}
+        />
         <span style={{ fontSize: 15, fontWeight: 800, color: textMain, letterSpacing: "-0.3px", whiteSpace: "nowrap", flexShrink: 0 }}>
           KR<span style={{ color: "#1FA89A" }}>YROS</span>
         </span>
@@ -173,6 +178,11 @@ export default function Topbar({ collapsed, sidebarW, onMenuToggle, onMobileMenu
         <button onClick={onMobileMenuToggle} style={{ background: "none", border: "none", cursor: "pointer", color: textMuted, padding: 6, borderRadius: 6, display: "flex", alignItems: "center", flexShrink: 0 }}>
           <Menu size={22} />
         </button>
+        <img
+          src="/kryros-logo.png"
+          alt="KRYROS"
+          style={{ width: 28, height: 28, objectFit: "contain", flexShrink: 0 }}
+        />
         <span style={{ fontSize: 16, fontWeight: 800, color: textMain, letterSpacing: "-0.3px" }}>
           KR<span style={{ color: "#1FA89A" }}>YROS</span>
         </span>
