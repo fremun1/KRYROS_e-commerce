@@ -214,7 +214,7 @@ model Product {
   hasFiveYearGuarantee   Boolean             @default(true)
   hasFreeReturns         Boolean             @default(true)
   hasInstallmentOptions  Boolean             @default(true)
-  isNew                  Boolean             @default(true)
+  isNew                  Boolean             @default(false)
   rating                 Float?              @default(0)
   reviewCount            Int?                @default(0)
   stockCurrent           Int                 @default(42)

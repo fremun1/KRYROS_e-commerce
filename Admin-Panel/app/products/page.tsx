@@ -468,6 +468,7 @@ function ProductsContent() {
       {sectionLabel('Visibility & Status')}
       <FormField label="Status" value={form.status} onChange={fp('status')} options={STATUSES} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
       <FormField label="Featured on Homepage" value={form.featured} onChange={fp('featured')} options={BOOL_OPTS} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+      <FormField label="Mark as New Arrival" value={form.isNew} onChange={fp('isNew')} options={BOOL_OPTS} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
 
       {sectionLabel('Flash Sale')}
       <FormField label="Enable Flash Sale" value={form.isFlashSale} onChange={fp('isFlashSale')} options={BOOL_OPTS} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />

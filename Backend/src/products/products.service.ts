@@ -23,36 +23,75 @@ export class ProductsService {
     take?: number;
     categoryId?: string;
     categorySlug?: string;
+    brandId?: number;
+    brandSlug?: string;
     search?: string;
     isFeatured?: boolean;
     allowCredit?: boolean;
     isWholesaleOnly?: boolean;
     isFlashSale?: boolean;
+    isNew?: boolean;
     showInactive?: boolean;
     popularity?: string;
     lowStock?: boolean;
+    minPrice?: number;
+    maxPrice?: number;
+    sortBy?: string;
+    order?: 'asc' | 'desc';
   }) {
-    const { skip = 0, take: rawTake = 20, categoryId, categorySlug, search, isFeatured, allowCredit, isWholesaleOnly, isFlashSale, showInactive, popularity, lowStock } = params;
+    const { 
+      skip = 0, 
+      take: rawTake = 20, 
+      categoryId, 
+      categorySlug, 
+      brandId,
+      brandSlug,
+      search, 
+      isFeatured, 
+      allowCredit, 
+      isWholesaleOnly, 
+      isFlashSale, 
+      isNew,
+      showInactive, 
+      popularity, 
+      lowStock,
+      minPrice,
+      maxPrice,
+      sortBy,
+      order = 'desc'
+    } = params;
     const take = Math.min(Math.max(1, Number(rawTake) || 20), 500);
     
     const where: any = {};
-    if (!showInactive) {
-      where.isActive = true;
-    }
     
-    if (categoryId) where.categoryId = categoryId;
-    if (categorySlug) {
-      where.category = { slug: categorySlug };
-    }
-    
-    // Use an AND array to combine all boolean filters cleanly
+    // Use an AND array to combine all filters cleanly
     const andFilters: any[] = [];
     
-    if (isFeatured !== undefined) andFilters.push({ isFeatured });
-    if (isFlashSale !== undefined) andFilters.push({ isFlashSale });
-    if (allowCredit !== undefined) andFilters.push({ allowCredit });
-    if (isWholesaleOnly !== undefined) andFilters.push({ isWholesaleOnly });
     if (!showInactive) andFilters.push({ isActive: true });
+    if (categoryId) andFilters.push({ categoryId });
+    if (categorySlug) andFilters.push({ category: { slug: categorySlug } });
+    if (brandId) andFilters.push({ brandId: Number(brandId) });
+    if (brandSlug) andFilters.push({ brand: { slug: brandSlug } });
+    
+    if (search) {
+      andFilters.push({
+        OR: [
+          { name: { contains: search, mode: 'insensitive' } },
+          { description: { contains: search, mode: 'insensitive' } },
+          { sku: { contains: search, mode: 'insensitive' } }
+        ]
+      });
+    }
+
+    if (isFeatured !== undefined) andFilters.push({ isFeatured: String(isFeatured) === 'true' });
+    if (isFlashSale !== undefined) andFilters.push({ isFlashSale: String(isFlashSale) === 'true' });
+    if (allowCredit !== undefined) andFilters.push({ allowCredit: String(allowCredit) === 'true' });
+    if (isWholesaleOnly !== undefined) andFilters.push({ isWholesaleOnly: String(isWholesaleOnly) === 'true' });
+    if (isNew !== undefined) andFilters.push({ isNew: String(isNew) === 'true' });
+    
+    if (minPrice !== undefined) andFilters.push({ price: { gte: Number(minPrice) } });
+    if (maxPrice !== undefined) andFilters.push({ price: { lte: Number(maxPrice) } });
+
     if (lowStock) {
       andFilters.push({
         OR: [
@@ -63,22 +102,33 @@ export class ProductsService {
     }
 
     if (popularity === 'sale' || popularity === 'promotion prices') {
-      const saleFilter = {
+      andFilters.push({
         OR: [
           { salePrice: { not: null, gt: 0 } },
           { isFlashSale: true }
         ]
-      };
-      if (where.AND) {
-        (where.AND as any[]).push(saleFilter);
-      } else {
-        where.AND = [saleFilter];
-      }
+      });
+    }
+
+    if (andFilters.length > 0) {
+      where.AND = andFilters;
     }
 
     let orderBy: any = { createdAt: 'desc' };
     
-    if (params.popularity === 'trending') {
+    if (sortBy) {
+      if (sortBy === 'price') {
+        orderBy = { price: order };
+      } else if (sortBy === 'name') {
+        orderBy = { name: order };
+      } else if (sortBy === 'sales' || sortBy === 'popularity') {
+        orderBy = { orderItems: { _count: order } };
+      } else if (sortBy === 'wishlist') {
+        orderBy = { wishlists: { _count: order } };
+      } else if (sortBy === 'newest' || sortBy === 'createdAt') {
+        orderBy = { createdAt: order };
+      }
+    } else if (params.popularity === 'trending') {
       orderBy = [
         { orderItems: { _count: 'desc' } },
         { wishlists: { _count: 'desc' } },

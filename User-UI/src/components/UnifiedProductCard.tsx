@@ -148,7 +148,9 @@ export default function UnifiedProductCard({
 
         {/* Price + old price */}
         <div className="flex items-center flex-wrap gap-x-1 mb-0.5">
-          <span className="text-[13px] md:text-[15px] font-bold text-foreground dark:text-white">{format(product.price)}</span>
+          <span className="text-[13px] md:text-[15px] font-bold text-foreground dark:text-white">
+            {product.isWholesaleOnly && product.wholesalePrice ? format(product.wholesalePrice) : format(product.price)}
+          </span>
           {product.oldPrice > product.price && (
             <span className="text-[9px] md:text-xs text-muted-foreground dark:text-[#A9B4C7] line-through">{format(product.oldPrice)}</span>
           )}
@@ -256,8 +258,8 @@ export default function UnifiedProductCard({
                 addToCart({
                   id: product.id,
                   name: product.name,
-                  price: product.price,
-                  qty: 1,
+                  price: product.isWholesaleOnly ? (product.wholesalePrice || product.price) : product.price,
+                  qty: product.isWholesaleOnly ? (product.wholesaleMoq || 1) : 1,
                   image: product.image,
                   shippingFee: product.shippingFee,
                   estimatedDeliveryDays: product.estimatedDeliveryDays,
@@ -265,7 +267,7 @@ export default function UnifiedProductCard({
                   estimatedDeliveryMaxDays: product.estimatedDeliveryMaxDays,
                   condition: product.condition,
                 });
-                toast.success("Added to cart", { description: product.name });
+                toast.success(product.isWholesaleOnly ? "Added to wholesale request" : "Added to cart", { description: product.name });
               }}
               disabled={!inStock}
               className={`w-8 h-7 md:w-9 md:h-8 flex items-center justify-center border rounded-lg flex-shrink-0 transition-colors ${

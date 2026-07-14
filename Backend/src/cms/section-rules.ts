@@ -113,6 +113,16 @@ export const SECTION_RULES: Record<string, SectionRule> = {
     icon: '📦',
     templateType: 'ProductShelf'
   },
+  
+  'dynamic-query': {
+    id: 'dynamic-query',
+    label: 'Custom Dynamic Section',
+    description: 'A fully customizable section where you define the filters (Brand, Category, Price, etc.).',
+    category: 'products',
+    params: {},
+    icon: '🛠️',
+    templateType: 'ProductShelf'
+  },
 
   // ─────────────────────────────────────────────────────────────────
   // BRAND RULES (for BrandGrid template)

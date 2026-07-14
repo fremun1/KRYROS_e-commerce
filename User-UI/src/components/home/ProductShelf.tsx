@@ -75,27 +75,34 @@ export default function ProductShelf({
       try {
         // Try products-by-source first
         let url = new URL(`${API_BASE}/api/cms/sections/products-by-source`);
-        url.searchParams.set('dataSourceId', dataSourceId);
+        
+        // If it's a dynamic-query or we have params, ensure we use the right dataSourceId
+        const effectiveSourceId = dataSourceId || 'dynamic-query';
+        url.searchParams.set('dataSourceId', effectiveSourceId);
         url.searchParams.set('limit', String(limit));
         
-        // Add extra params if provided
-        Object.entries(params).forEach(([key, value]) => {
-          if (value !== undefined && value !== null) {
-            url.searchParams.set(key, String(value));
-          }
-        });
-
-        let response = await fetch(url.toString());
-
-        // If that fails or returns empty, try the general products API as fallback
-        if (!response.ok || (await response.clone().json()).length === 0) {
-          url = new URL(`${API_BASE}/api/products`);
-          url.searchParams.set('take', String(limit));
+        // Add all params from the config object
+        if (params) {
           Object.entries(params).forEach(([key, value]) => {
-            if (value !== undefined && value !== null) {
+            if (value !== undefined && value !== null && value !== '') {
               url.searchParams.set(key, String(value));
             }
           });
+        }
+
+        let response = await fetch(url.toString());
+
+        // Fallback logic for legacy or empty responses
+        if (!response.ok) {
+          url = new URL(`${API_BASE}/api/products`);
+          url.searchParams.set('take', String(limit));
+          if (params) {
+            Object.entries(params).forEach(([key, value]) => {
+              if (value !== undefined && value !== null && value !== '') {
+                url.searchParams.set(key, String(value));
+              }
+            });
+          }
           response = await fetch(url.toString());
         }
 

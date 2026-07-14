@@ -565,8 +565,33 @@ export default function ProductPage() {
               <ChevronRight className={`w-4 h-4 text-muted-foreground transition-transform flex-shrink-0 ${openSection === "specs" ? "rotate-90" : ""}`} />
             </button>
             {openSection === "specs" && (
-              <div className="px-4 pb-4 text-xs text-muted-foreground leading-relaxed border-t border-border pt-3">
+              <div className="px-4 pb-4 text-xs text-muted-foreground leading-relaxed border-t border-border pt-3 space-y-3">
                 {renderSpecs(product.specs)}
+                
+                {/* Dynamically show additional info if it exists but isn't in specs */}
+                {product.isWholesaleOnly && (
+                  <div className="pt-2 border-t border-border/50">
+                    <p className="font-bold text-foreground mb-1">Wholesale Information</p>
+                    <div className="grid grid-cols-2 gap-y-1">
+                      <span>Minimum Order:</span>
+                      <span className="font-semibold">{product.wholesaleMoq || 1} units</span>
+                      <span>Wholesale Price:</span>
+                      <span className="font-semibold text-blue-600">{format(product.wholesalePrice || product.price)}</span>
+                    </div>
+                  </div>
+                )}
+                
+                {product.allowCredit && (
+                  <div className="pt-2 border-t border-border/50">
+                    <p className="font-bold text-foreground mb-1">Credit Information</p>
+                    <div className="grid grid-cols-2 gap-y-1">
+                      <span>Initial Deposit:</span>
+                      <span className="font-semibold text-primary">{format(product.creditMinimum || 0)}</span>
+                      <span>Credit Plan:</span>
+                      <span className="font-semibold">12 Months</span>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>

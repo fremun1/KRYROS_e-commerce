@@ -346,31 +346,46 @@ export default function CMSPagesPage() {
       {showTypeSelector && (
         <Modal open={showTypeSelector} onClose={() => setShowTypeSelector(false)} title="Add New Section">
           <div className="space-y-6 max-h-[70vh] overflow-y-auto pr-2">
-            {Object.entries(rulesGrouped).map(([category, rules]) => (
-              <div key={category} className="space-y-3">
-                <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-widest px-1">{category}</h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {rules.map((rule: any) => {
-                    const Icon = TEMPLATE_ICONS[rule.templateType] || Info;
-                    return (
-                      <button
-                        key={rule.id}
-                        onClick={() => handleSelectRule(rule)}
-                        className="flex items-start gap-3 p-4 border rounded-xl hover:border-primary hover:bg-primary/5 text-left transition group"
-                      >
-                        <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center group-hover:bg-primary/10 group-hover:text-primary transition">
-                          <Icon size={20} />
-                        </div>
-                        <div>
-                          <div className="font-bold text-sm">{rule.label}</div>
-                          <div className="text-[11px] text-muted-foreground line-clamp-2 mt-0.5">{rule.description}</div>
-                        </div>
-                      </button>
-                    );
-                  })}
+            {Object.entries(rulesGrouped).map(([category, rules]) => {
+              // Filter out the messy individual product rules if it's the 'products' category
+              const displayRules = category === 'products' 
+                ? rules.filter((r: any) => r.id === 'dynamic-query' || r.id === 'recently-viewed') 
+                : rules;
+              
+              if (displayRules.length === 0) return null;
+
+              return (
+                <div key={category} className="space-y-3">
+                  <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-widest px-1">{category}</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {displayRules.map((rule: any) => {
+                      const Icon = TEMPLATE_ICONS[rule.templateType] || Info;
+                      return (
+                        <button
+                          key={rule.id}
+                          onClick={() => handleSelectRule(rule)}
+                          className="flex items-start gap-3 p-4 border rounded-xl hover:border-primary hover:bg-primary/5 text-left transition group"
+                        >
+                          <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center group-hover:bg-primary/10 group-hover:text-primary transition">
+                            <Icon size={20} />
+                          </div>
+                          <div>
+                            <div className="font-bold text-sm">
+                              {category === 'products' && rule.id === 'dynamic-query' ? 'Product Section' : rule.label}
+                            </div>
+                            <div className="text-[11px] text-muted-foreground line-clamp-2 mt-0.5">
+                              {category === 'products' && rule.id === 'dynamic-query'
+                                ? 'Add a powerful product section with custom filters and smart fetching.' 
+                                : rule.description}
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </Modal>
       )}
@@ -405,6 +420,100 @@ export default function CMSPagesPage() {
             
             <div className="p-4 bg-muted/30 rounded-xl border space-y-4">
               <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Configuration</h4>
+              
+              {/* Dynamic Query Builder for Products */}
+              {formData.templateType === 'ProductShelf' && (
+                <div className="space-y-4 pb-4 border-b border-border/50">
+                  <h5 className="text-[11px] font-black text-primary uppercase tracking-widest">Dynamic Query Builder</h5>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-muted-foreground uppercase">Data Source</label>
+                      <select 
+                        value={formData.dataSourceId || 'dynamic-query'} 
+                        onChange={(e) => setFormData({...formData, dataSourceId: e.target.value})}
+                        className="w-full p-2.5 bg-background border rounded-lg text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                      >
+                        <option value="dynamic-query">Custom Dynamic Filter</option>
+                        <option value="top-selling">Top Selling</option>
+                        <option value="new-arrivals">New Arrivals</option>
+                        <option value="trending-products">Trending</option>
+                        <option value="flash-sales">Flash Sales</option>
+                        <option value="credit-eligible">Get Now (Credit)</option>
+                        <option value="wholesale-products">Wholesale</option>
+                      </select>
+                    </div>
+
+                    {formData.dataSourceId === 'dynamic-query' && (
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-muted-foreground uppercase">Sort By</label>
+                        <select 
+                          value={formData.config?.sortBy || 'newest'} 
+                          onChange={(e) => setFormData({...formData, config: {...formData.config, sortBy: e.target.value}})}
+                          className="w-full p-2.5 bg-background border rounded-lg text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                        >
+                          <option value="newest">Newest First</option>
+                          <option value="price-asc">Price: Low to High</option>
+                          <option value="price-desc">Price: High to Low</option>
+                          <option value="popularity">Most Popular</option>
+                        </select>
+                      </div>
+                    )}
+                  </div>
+
+                  {formData.dataSourceId === 'dynamic-query' && (
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField 
+                        label="Brand Slug" 
+                        value={formData.config?.brandSlug || ''} 
+                        onChange={(v) => setFormData({...formData, config: {...formData.config, brandSlug: v}})}
+                        placeholder="e.g. apple"
+                        isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
+                      />
+                      <FormField 
+                        label="Category Slug" 
+                        value={formData.config?.categorySlug || ''} 
+                        onChange={(v) => setFormData({...formData, config: {...formData.config, categorySlug: v}})}
+                        placeholder="e.g. electronics"
+                        isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
+                      />
+                    </div>
+                  )}
+
+                  {formData.dataSourceId === 'dynamic-query' && (
+                    <div className="grid grid-cols-3 gap-3 pt-2">
+                      <div className="flex items-center gap-2">
+                        <input 
+                          type="checkbox" 
+                          id="filter-featured-dynamic"
+                          checked={formData.config?.isFeatured} 
+                          onChange={(e) => setFormData({...formData, config: {...formData.config, isFeatured: e.target.checked}})}
+                        />
+                        <label htmlFor="filter-featured-dynamic" className="text-[10px] font-bold text-muted-foreground uppercase">Featured</label>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <input 
+                          type="checkbox" 
+                          id="filter-credit-dynamic"
+                          checked={formData.config?.allowCredit} 
+                          onChange={(e) => setFormData({...formData, config: {...formData.config, allowCredit: e.target.checked}})}
+                        />
+                        <label htmlFor="filter-credit-dynamic" className="text-[10px] font-bold text-muted-foreground uppercase">Credit</label>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <input 
+                          type="checkbox" 
+                          id="filter-wholesale-dynamic"
+                          checked={formData.config?.isWholesaleOnly} 
+                          onChange={(e) => setFormData({...formData, config: {...formData.config, isWholesaleOnly: e.target.checked}})}
+                        />
+                        <label htmlFor="filter-wholesale-dynamic" className="text-[10px] font-bold text-muted-foreground uppercase">Wholesale</label>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
               <div className="grid grid-cols-2 gap-4">
                 <FormField 
                   label="Item Limit" 

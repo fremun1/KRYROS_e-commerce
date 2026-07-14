@@ -114,16 +114,23 @@ export class SectionDataSourceService {
   async fetchProductsByRule(
     ruleId: string,
     limit: number = 8,
-    skip: number = 0
+    skip: number = 0,
+    extraParams: Record<string, any> = {}
   ) {
-    const rule = this.getRule(ruleId);
+    // If it's a dynamic query, we don't look up a rule, we use the params directly
+    let baseParams = {};
+    if (ruleId !== 'dynamic-query') {
+      const rule = this.getRule(ruleId);
+      baseParams = rule.params || {};
+    }
 
     this.logger.debug(`Fetching products for rule: ${ruleId}, limit: ${limit}, skip: ${skip}`);
 
     try {
-      // Merge rule parameters with the limit and skip
+      // Merge rule parameters with extra params, limit, and skip
       const params = {
-        ...rule.params,
+        ...baseParams,
+        ...extraParams,
         take: limit,
         skip: skip
       };

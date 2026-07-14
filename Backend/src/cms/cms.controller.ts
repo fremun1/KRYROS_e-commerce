@@ -137,14 +137,14 @@ export class CMSController {
   @Get('sections/products-by-source')
   @ApiOperation({ summary: 'Fetch products for a section data source' })
   fetchProductsBySource(
-    @Query('dataSourceId') dataSourceId: string,
-    @Query('limit') limit?: string,
-    @Query('skip') skip?: string
+    @Query() query: any
   ) {
+    const { dataSourceId, limit, skip, ...extraParams } = query;
     return this.sectionDataSourceService.fetchProductsByRule(
       dataSourceId,
       limit ? Number(limit) : 8,
-      skip ? Number(skip) : 0
+      skip ? Number(skip) : 0,
+      extraParams
     );
   }
 
