@@ -46,7 +46,8 @@ export default function SectionDetailPage() {
           (s: any) =>
             s.dedicatedPageSlug === slug ||
             s.config?.sectionSlug === slug ||
-            s.id === slug
+            s.id === slug ||
+            (slug === "flash-sale" && s.type === "FlashSale")
         );
 
         if (!matchedSection) {

@@ -68,11 +68,13 @@ export default function ShopSectionPage() {
   const resolved = useMemo(() => {
     const matchByCfg = sections.find((s) => {
       const cfg = (s.config ?? {}) as Record<string, unknown>;
+      const sType = (s as any).type || s.templateType || "";
       return (
         toStr(cfg.sectionSlug).toLowerCase() === slug.toLowerCase() ||
         toStr(cfg.slug).toLowerCase() === slug.toLowerCase() ||
         (s as any).slotKey?.toLowerCase() === slug.toLowerCase() ||
-        s.id?.toLowerCase() === slug.toLowerCase()
+        s.id?.toLowerCase() === slug.toLowerCase() ||
+        (slug.toLowerCase() === "flash-sale" && sType === "FlashSale")
       );
     });
     if (matchByCfg) return { kind: "cms" as const, section: matchByCfg };

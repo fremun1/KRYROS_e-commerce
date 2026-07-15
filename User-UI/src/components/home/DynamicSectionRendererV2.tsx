@@ -91,7 +91,7 @@ export default function DynamicSectionRendererV2({
                 showTimer={section.config?.showTimer || false}
                 showPercent={section.config?.showPercent || false}
                 viewAllHref={section.config?.viewAllHref || section.config?.ctaLink || section.config?.viewAllLink || section.config?.button_link || (() => {
-                  const sectionSlug = section.config?.sectionSlug || section.config?.slug || section.slotKey || section.id;
+                  const sectionSlug = section.config?.sectionSlug || section.config?.slug || (templateType === 'FlashSale' ? 'flash-sale' : (section.slotKey || section.id));
                   return sectionSlug ? `/shop/section/${sectionSlug}` : '/shop';
                 })()}
                 viewAllText={section.config?.viewAllText || section.config?.ctaText || section.config?.button_text || 'See All'}
