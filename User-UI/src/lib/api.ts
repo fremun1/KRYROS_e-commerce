@@ -486,6 +486,14 @@ export async function fetchHomepageSections(type?: string): Promise<ApiHomepageS
   return result.filter((s) => s.isActive !== false);
 }
 
+export async function fetchSectionByIdOrSlug(idOrSlug: string): Promise<ApiCMSSection | null> {
+  try {
+    return await apiFetch<ApiCMSSection>(`/api/cms/sections/${idOrSlug}`);
+  } catch {
+    return null;
+  }
+}
+
 export async function fetchAllBrandBanners(): Promise<ApiBrandBanner[]> {
   try {
     const res = await fetch(`${API_BASE}/api/cms/brand-banners`, { cache: "no-store" });

@@ -353,6 +353,53 @@ export class CMSService {
     return this.prisma.cMSSection.findMany({ where, orderBy: { order: 'asc' } });
   }
 
+  async getSectionByIdOrSlug(identifier: string) {
+    // 1. Try finding by ID
+    let section = await this.prisma.cMSSection.findUnique({
+      where: { id: identifier }
+    });
+
+    // 2. If not found, try finding by config.sectionSlug or config.slug or slotKey
+    if (!section) {
+      section = await this.prisma.cMSSection.findFirst({
+        where: {
+          OR: [
+            { slotKey: identifier },
+            { dedicatedPageSlug: identifier },
+            {
+              config: {
+                path: ['sectionSlug'],
+                equals: identifier
+              }
+            },
+            {
+              config: {
+                path: ['slug'],
+                equals: identifier
+              }
+            }
+          ],
+          isActive: true
+        }
+      });
+    }
+
+    // 3. Special case for system-defined sections if still not found
+    if (!section) {
+      if (identifier === 'flash-sale' || identifier === 'flash-sales') {
+        section = await this.prisma.cMSSection.findFirst({
+          where: { type: 'FlashSale', isActive: true }
+        });
+      } else if (identifier === 'top-selling') {
+        section = await this.prisma.cMSSection.findFirst({
+          where: { type: 'TopSelling', isActive: true }
+        });
+      }
+    }
+
+    return section;
+  }
+
   async getPage(slug: string) {
     return this.prisma.cMSPage.findUnique({ where: { slug } });
   }

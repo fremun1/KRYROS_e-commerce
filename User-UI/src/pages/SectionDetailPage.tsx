@@ -38,26 +38,8 @@ export default function SectionDetailPage() {
         setLoading(true);
         setError(null);
 
-        // Fetch all sections for shop and homepage
-        const [cmsSections, homepageSections] = await Promise.all([
-          fetchPageSections('shop'),
-          fetchHomepageSections(),
-        ]);
-        const allSections = [...(cmsSections || []), ...(homepageSections || [])];
-        
-        // Find section matching the slug
-        const matchedSection = allSections?.find(
-          (s: any) => {
-            const sId = s.id || s._id;
-            return (
-              s.dedicatedPageSlug === slug ||
-              s.config?.sectionSlug === slug ||
-              (sId && sId === slug) ||
-              (slug === "flash-sale" && s.type === "FlashSale") ||
-              (slug === "flash-sales" && s.type === "FlashSale")
-            );
-          }
-        );
+        // 1. Fetch section directly from backend
+        const matchedSection = await fetchSectionByIdOrSlug(slug);
 
         if (!matchedSection) {
           setError('Section not found');

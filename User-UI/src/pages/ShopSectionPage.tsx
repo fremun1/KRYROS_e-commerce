@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, useRef } from "react";
 import { Link, useRoute } from "wouter";
 import { ArrowLeft, LayoutGrid, Filter } from "lucide-react";
-import { fetchCategories, fetchHomepageSections, fetchPageSections, fetchProducts } from "@/lib/api";
+import { fetchCategories, fetchSectionByIdOrSlug, fetchProducts } from "@/lib/api";
 import type { ApiCMSSection, ApiCategory, Product } from "@/lib/api";
 import UnifiedProductCard from "@/components/UnifiedProductCard";
 
@@ -39,8 +39,8 @@ export default function ShopSectionPage() {
   const [, params] = useRoute("/shop/section/:slug");
   const slug = params?.slug ? decodeURIComponent(params.slug) : "all";
 
-  const [sections, setSections] = useState<ApiCMSSection[]>([]);
-  const [categories, setCategories] = useState<ApiCategory[]>([]);
+  const [section, setSection] = useState<ApiCMSSection | null>(null);
+  const [category, setCategory] = useState<ApiCategory | null>(null);
   const [loading, setLoading] = useState(true);
 
   const [products, setProducts] = useState<Product[]>([]);
@@ -55,46 +55,44 @@ export default function ShopSectionPage() {
   const endDateRef = useRef<Date | null>(null);
 
   useEffect(() => {
-    setLoading(true);
-    Promise.all([
-      fetchPageSections("shop"),
-      fetchHomepageSections(),
-      fetchCategories(),
-    ])
-      .then(([cmsSecs, homeSecs, cats]) => {
-        const allSecs = [...(cmsSecs || []), ...(homeSecs || [])];
-        setSections(allSecs.filter((s) => s.isActive !== false));
-        setCategories((cats || []).filter((c: any) => c.isActive !== false));
-      })
-      .finally(() => setLoading(false));
-  }, []);
+    const loadMetadata = async () => {
+      setLoading(true);
+      try {
+        // 1. Try to fetch as a CMS section directly from backend
+        const cmsSection = await fetchSectionByIdOrSlug(slug);
+        if (cmsSection) {
+          setSection(cmsSection);
+          setCategory(null);
+          return;
+        }
+
+        // 2. Fallback to category lookup
+        const cats = await fetchCategories();
+        const matchCat = cats?.find(
+          (c: any) => (c.slug || c.id).toLowerCase() === slug.toLowerCase()
+        );
+        if (matchCat) {
+          setCategory(matchCat);
+          setSection(null);
+        } else {
+          setSection(null);
+          setCategory(null);
+        }
+      } catch (err) {
+        console.error("Error loading section metadata:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadMetadata();
+  }, [slug]);
 
   const resolved = useMemo(() => {
-    // 1. Try to find a CMS section (homepage or page section) that matches the slug/ID
-    const matchByCfg = sections.find((s) => {
-      const cfg = (s.config ?? {}) as Record<string, unknown>;
-      const sType = (s as any).type || s.templateType || "";
-      const sId = s.id || (s as any)._id;
-      
-      return (
-        toStr(cfg.sectionSlug).toLowerCase() === slug.toLowerCase() ||
-        toStr(cfg.slug).toLowerCase() === slug.toLowerCase() ||
-        (s as any).slotKey?.toLowerCase() === slug.toLowerCase() ||
-        (sId && sId.toLowerCase() === slug.toLowerCase()) ||
-        (slug.toLowerCase() === "flash-sale" && sType === "FlashSale") ||
-        (slug.toLowerCase() === "flash-sales" && sType === "FlashSale")
-      );
-    });
-    
-    if (matchByCfg) return { kind: "cms" as const, section: matchByCfg };
-
-    const matchCat = categories.find(
-      (c) => (c.slug || c.id).toLowerCase() === slug.toLowerCase()
-    );
-    if (matchCat) return { kind: "category" as const, category: matchCat };
-
+    if (section) return { kind: "cms" as const, section };
+    if (category) return { kind: "category" as const, category };
     return { kind: "all" as const };
-  }, [sections, categories, slug]);
+  }, [section, category]);
 
   const buildQuery = useMemo(() => {
     if (resolved.kind === "cms") {

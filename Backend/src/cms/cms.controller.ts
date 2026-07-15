@@ -54,6 +54,12 @@ export class CMSController {
     return this.cmsService.getSections(pageSlug);
   }
 
+  @Get('sections/:idOrSlug')
+  @ApiOperation({ summary: 'Get a single section by ID or slug' })
+  getSectionByIdOrSlug(@Param('idOrSlug') idOrSlug: string) {
+    return this.cmsService.getSectionByIdOrSlug(idOrSlug);
+  }
+
   @Get('sections/manage')
   @ApiOperation({ summary: 'List all sections for admin panel (with manage endpoint)' })
   manageSections(@Query('pageSlug') pageSlug: string) {
