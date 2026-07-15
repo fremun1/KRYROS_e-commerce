@@ -62,7 +62,7 @@ export default function BrandSection({
   if (brands.length === 0) return null;
 
   const hrefFor = (brand: ApiBrand) =>
-    brand.slug ? `/shop?brandSlug=${brand.slug}` : `/shop?brandId=${brand.id}`;
+    brand.slug ? `/shop/brand/${brand.slug}` : `/shop?brandId=${brand.id}`;
 
   return (
     <section className="w-full max-w-7xl mx-auto px-4 py-6">
