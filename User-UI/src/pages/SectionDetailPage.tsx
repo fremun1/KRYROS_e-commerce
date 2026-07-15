@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'wouter';
-import { fetchPageSections, fetchProductsPage } from '@/lib/api';
+import { fetchHomepageSections, fetchPageSections, fetchProductsPage } from '@/lib/api';
 import type { Product } from '@/lib/api';
 import UnifiedProductCard from '@/components/UnifiedProductCard';
 import { ChevronLeft } from 'lucide-react';
@@ -34,12 +34,19 @@ export default function SectionDetailPage() {
         setLoading(true);
         setError(null);
 
-        // Fetch all sections for shop page
-        const sections = await fetchPageSections('shop');
+        // Fetch all sections for shop and homepage
+        const [cmsSections, homepageSections] = await Promise.all([
+          fetchPageSections('shop'),
+          fetchHomepageSections(),
+        ]);
+        const allSections = [...(cmsSections || []), ...(homepageSections || [])];
         
         // Find section matching the slug
-        const matchedSection = sections?.find(
-          (s: any) => s.dedicatedPageSlug === slug || s.config?.sectionSlug === slug
+        const matchedSection = allSections?.find(
+          (s: any) =>
+            s.dedicatedPageSlug === slug ||
+            s.config?.sectionSlug === slug ||
+            s.id === slug
         );
 
         if (!matchedSection) {
@@ -75,8 +82,17 @@ export default function SectionDetailPage() {
         }
 
         // Handle special section types
-        if (matchedSection.type === 'FlashSale' || config.isFlashSale === true || config.isFlashSale === 'true') {
+        const sType = matchedSection.type || '';
+        if (sType === 'FlashSale' || config.isFlashSale === true || config.isFlashSale === 'true') {
           params.isFlashSale = true;
+        } else if (sType === 'TopSelling' || sType === 'BestSellers') {
+          if (!params.popularity) params.popularity = 'bestseller';
+        } else if (sType === 'Trending') {
+          if (!params.popularity) params.popularity = 'trending';
+        } else if (sType === 'NewestArrivals') {
+          if (!params.popularity) params.popularity = 'new';
+        } else if (sType === 'FeaturedProducts') {
+          params.featured = true;
         }
 
         const result = await fetchProductsPage(params);

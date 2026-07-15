@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useRoute } from "wouter";
 import { ArrowLeft, LayoutGrid, Filter } from "lucide-react";
-import { fetchCategories, fetchPageSections, fetchProducts } from "@/lib/api";
+import { fetchCategories, fetchHomepageSections, fetchPageSections, fetchProducts } from "@/lib/api";
 import type { ApiCMSSection, ApiCategory, Product } from "@/lib/api";
 import UnifiedProductCard from "@/components/UnifiedProductCard";
 
@@ -52,9 +52,14 @@ export default function ShopSectionPage() {
 
   useEffect(() => {
     setLoading(true);
-    Promise.all([fetchPageSections("shop"), fetchCategories()])
-      .then(([secs, cats]) => {
-        setSections((secs || []).filter((s) => s.isActive !== false));
+    Promise.all([
+      fetchPageSections("shop"),
+      fetchHomepageSections(),
+      fetchCategories(),
+    ])
+      .then(([cmsSecs, homeSecs, cats]) => {
+        const allSecs = [...(cmsSecs || []), ...(homeSecs || [])];
+        setSections(allSecs.filter((s) => s.isActive !== false));
         setCategories((cats || []).filter((c: any) => c.isActive !== false));
       })
       .finally(() => setLoading(false));
@@ -63,7 +68,12 @@ export default function ShopSectionPage() {
   const resolved = useMemo(() => {
     const matchByCfg = sections.find((s) => {
       const cfg = (s.config ?? {}) as Record<string, unknown>;
-      return toStr(cfg.sectionSlug).toLowerCase() === slug.toLowerCase();
+      return (
+        toStr(cfg.sectionSlug).toLowerCase() === slug.toLowerCase() ||
+        toStr(cfg.slug).toLowerCase() === slug.toLowerCase() ||
+        (s as any).slotKey?.toLowerCase() === slug.toLowerCase() ||
+        s.id?.toLowerCase() === slug.toLowerCase()
+      );
     });
     if (matchByCfg) return { kind: "cms" as const, section: matchByCfg };
 
@@ -78,13 +88,41 @@ export default function ShopSectionPage() {
   const buildQuery = useMemo(() => {
     if (resolved.kind === "cms") {
       const cfg = (resolved.section.config ?? {}) as Record<string, unknown>;
+      const sectionType = (resolved.section as any).type || "";
       const q: any = {};
+
+      // Category filter
       const categorySlug = toStr(cfg.categorySlug);
-      const popularity = toStr(cfg.popularity);
       if (categorySlug) q.categorySlug = categorySlug;
-      if (popularity) q.popularity = popularity;
-      if (cfg.isFlashSale !== undefined) q.isFlashSale = toBool(cfg.isFlashSale);
-      if (cfg.featured !== undefined) q.featured = toBool(cfg.featured);
+
+      // Popularity filter — from config OR from section type
+      const popularity = toStr(cfg.popularity);
+      if (popularity) {
+        q.popularity = popularity;
+      } else if (sectionType === "TopSelling" || sectionType === "BestSellers") {
+        q.popularity = "bestseller";
+      } else if (sectionType === "Trending") {
+        q.popularity = "trending";
+      } else if (sectionType === "NewestArrivals") {
+        q.popularity = "new";
+      }
+
+      // Flash sale filter — from config OR from section type
+      if (cfg.isFlashSale !== undefined) {
+        q.isFlashSale = toBool(cfg.isFlashSale);
+      } else if (sectionType === "FlashSale") {
+        q.isFlashSale = true;
+      }
+
+      // Featured filter — from config OR from section type
+      if (cfg.featured !== undefined) {
+        q.featured = toBool(cfg.featured);
+      } else if (cfg.isFeatured !== undefined) {
+        q.featured = toBool(cfg.isFeatured);
+      } else if (sectionType === "FeaturedProducts") {
+        q.featured = true;
+      }
+
       // Ensure all config is preserved for complex sections
       return { ...q, ...cfg };
     }
