@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams } from 'wouter';
 import { fetchHomepageSections, fetchPageSections, fetchProductsPage } from '@/lib/api';
 import type { Product } from '@/lib/api';
 import UnifiedProductCard from '@/components/UnifiedProductCard';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, Clock, LayoutGrid } from 'lucide-react';
 
 /**
  * SectionDetailPage
@@ -26,7 +26,11 @@ export default function SectionDetailPage() {
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
 
-  const itemsPerPage = 12;
+  // Timer state
+  const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0 });
+  const endDateRef = useRef<Date | null>(null);
+
+  const itemsPerPage = 24;
 
   useEffect(() => {
     const loadData = async () => {
@@ -112,6 +116,59 @@ export default function SectionDetailPage() {
 
   const totalPages = Math.ceil(total / itemsPerPage);
 
+  const sectionConfig = useMemo(() => {
+    return section?.config || {};
+  }, [section]);
+
+  const isFlashSale = useMemo(() => {
+    if (!section) return false;
+    return section.type === 'FlashSale' || sectionConfig.isFlashSale === true || sectionConfig.isFlashSale === 'true';
+  }, [section, sectionConfig]);
+
+  const showTimer = useMemo(() => {
+    return isFlashSale || sectionConfig.showTimer === true || sectionConfig.showTimer === 'true';
+  }, [isFlashSale, sectionConfig]);
+
+  const accentColor = useMemo(() => {
+    if (sectionConfig.accentColor) return sectionConfig.accentColor;
+    return isFlashSale ? "#ef4444" : "var(--color-primary, #0d9488)";
+  }, [isFlashSale, sectionConfig]);
+
+  const headerBgColor = sectionConfig.headerBgColor;
+
+  useEffect(() => {
+    if (!showTimer || products.length === 0) return;
+
+    const timestamps = products
+      .filter((p) => p.flashSaleEnd)
+      .map((p) => new Date(p.flashSaleEnd!).getTime())
+      .filter((t) => !isNaN(t));
+
+    let end = timestamps.length > 0 ? new Date(Math.min(...timestamps)) : null;
+    if (!end) {
+      if (sectionConfig.endTime) {
+        end = new Date(sectionConfig.endTime);
+      } else {
+        end = new Date();
+        end.setHours(23, 59, 59, 999);
+      }
+    }
+    endDateRef.current = end;
+
+    const tick = setInterval(() => {
+      const totalSeconds = Math.max(0, Math.floor((endDateRef.current!.getTime() - Date.now()) / 1000));
+      setTimeLeft({
+        hours: Math.floor(totalSeconds / 3600),
+        minutes: Math.floor((totalSeconds % 3600) / 60),
+        seconds: totalSeconds % 60,
+      });
+    }, 1000);
+
+    return () => clearInterval(tick);
+  }, [showTimer, products, sectionConfig.endTime]);
+
+  const fmt = (v: number) => String(v).padStart(2, '0');
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -138,29 +195,50 @@ export default function SectionDetailPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
-      {/* Breadcrumb */}
-      <div className="flex items-center gap-2 mb-6 text-sm text-muted-foreground">
-        <a href="/" className="hover:text-foreground">Home</a>
-        <span>/</span>
-        <a href="/shop" className="hover:text-foreground">Shop</a>
-        <span>/</span>
-        <span className="text-foreground">{section.title || section.name}</span>
+    <div className="min-h-screen bg-background pb-12">
+      {/* ── Sticky header ── */}
+      <div 
+        className={`sticky top-0 z-20 border-b border-border ${headerBgColor ? "text-white" : "bg-background/95 backdrop-blur-sm"}`}
+        style={headerBgColor ? { backgroundColor: headerBgColor } : undefined}
+      >
+        <div className="max-w-7xl mx-auto px-4 md:px-6 h-16 flex items-center gap-3">
+          <button onClick={() => window.history.back()} className={`flex items-center justify-center w-9 h-9 rounded-xl transition-colors flex-shrink-0 ${headerBgColor ? "bg-white/10 hover:bg-white/20" : "bg-muted hover:bg-muted/80"}`}>
+            <ChevronLeft className={`w-5 h-5 ${headerBgColor ? "text-white" : "text-foreground"}`} />
+          </button>
+
+          <div className="flex flex-col min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              <h1 className="text-base md:text-lg font-black truncate leading-tight">
+                {section.title || section.name}
+              </h1>
+              {showTimer && products.length > 0 && (
+                <div className={`flex items-center gap-1 font-bold ml-2 ${headerBgColor ? "text-white" : "text-primary"}`}>
+                  <Clock className="w-3.5 h-3.5 mr-0.5" />
+                  <span className="text-xs bg-black/10 px-1.5 py-0.5 rounded">{fmt(timeLeft.hours)}h</span>
+                  <span className="text-xs bg-black/10 px-1.5 py-0.5 rounded">{fmt(timeLeft.minutes)}m</span>
+                  <span className="text-xs bg-black/10 px-1.5 py-0.5 rounded">{fmt(timeLeft.seconds)}s</span>
+                </div>
+              )}
+            </div>
+            <p className="text-[10px] leading-none mt-0.5 opacity-70">
+              {total} products available
+            </p>
+          </div>
+
+          <div className={`flex items-center justify-center w-9 h-9 rounded-xl flex-shrink-0 ${headerBgColor ? "bg-white/10" : "bg-muted"}`}>
+            <LayoutGrid className={`w-5 h-5 ${headerBgColor ? "text-white" : "text-muted-foreground"}`} />
+          </div>
+        </div>
       </div>
 
-      {/* Section Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">{section.title || section.name}</h1>
-        {section.subtitle && (
-          <p className="text-lg text-muted-foreground">{section.subtitle}</p>
+      <div className="max-w-7xl mx-auto px-4 md:px-6 py-6">
+        {/* Description Banner if exists */}
+        {(section.subtitle || section.description) && (
+          <div className="mb-8 p-6 rounded-2xl bg-muted/30 border border-border/50">
+            {section.subtitle && <p className="text-lg font-bold text-foreground mb-2">{section.subtitle}</p>}
+            {section.description && <p className="text-muted-foreground leading-relaxed">{section.description}</p>}
+          </div>
         )}
-        {section.description && (
-          <p className="text-muted-foreground mt-2">{section.description}</p>
-        )}
-        <p className="text-sm text-muted-foreground mt-4">
-          Showing {products.length > 0 ? (page - 1) * itemsPerPage + 1 : 0} to {Math.min(page * itemsPerPage, total)} of {total} products
-        </p>
-      </div>
 
       {/* Products Grid */}
       {products.length > 0 ? (

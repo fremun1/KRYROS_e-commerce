@@ -50,6 +50,10 @@ export default function ShopSectionPage() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [initialLoad, setInitialLoad] = useState(true);
 
+  // Timer state
+  const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0 });
+  const endDateRef = useRef<Date | null>(null);
+
   useEffect(() => {
     setLoading(true);
     Promise.all([
@@ -144,13 +148,61 @@ export default function ShopSectionPage() {
   }, [resolved]);
 
   // Detect flash sale for accent color
-  const isFlashSale = useMemo(() => {
-    if (resolved.kind !== "cms") return false;
-    const cfg = (resolved.section.config ?? {}) as Record<string, unknown>;
-    return toBool(cfg.isFlashSale);
+  const sectionConfig = useMemo(() => {
+    if (resolved.kind !== "cms") return {};
+    return (resolved.section.config ?? {}) as Record<string, any>;
   }, [resolved]);
 
-  const accentColor = isFlashSale ? "#ef4444" : "var(--color-primary, #0d9488)";
+  const isFlashSale = useMemo(() => {
+    if (resolved.kind !== "cms") return false;
+    const sType = (resolved.section as any).type || "";
+    return toBool(sectionConfig.isFlashSale) || sType === "FlashSale";
+  }, [resolved, sectionConfig]);
+
+  const showTimer = useMemo(() => {
+    return isFlashSale || toBool(sectionConfig.showTimer);
+  }, [isFlashSale, sectionConfig]);
+
+  const accentColor = useMemo(() => {
+    if (sectionConfig.accentColor) return sectionConfig.accentColor;
+    return isFlashSale ? "#ef4444" : "var(--color-primary, #0d9488)";
+  }, [isFlashSale, sectionConfig]);
+
+  const headerBgColor = sectionConfig.headerBgColor;
+
+  // Timer logic
+  useEffect(() => {
+    if (!showTimer || products.length === 0) return;
+
+    const timestamps = products
+      .filter((p) => p.flashSaleEnd)
+      .map((p) => new Date(p.flashSaleEnd!).getTime())
+      .filter((t) => !isNaN(t));
+
+    let end = timestamps.length > 0 ? new Date(Math.min(...timestamps)) : null;
+    if (!end) {
+      if (sectionConfig.endTime) {
+        end = new Date(sectionConfig.endTime);
+      } else {
+        end = new Date();
+        end.setHours(23, 59, 59, 999);
+      }
+    }
+    endDateRef.current = end;
+
+    const tick = setInterval(() => {
+      const totalSeconds = Math.max(0, Math.floor((endDateRef.current!.getTime() - Date.now()) / 1000));
+      setTimeLeft({
+        hours: Math.floor(totalSeconds / 3600),
+        minutes: Math.floor((totalSeconds % 3600) / 60),
+        seconds: totalSeconds % 60,
+      });
+    }, 1000);
+
+    return () => clearInterval(tick);
+  }, [showTimer, products, sectionConfig.endTime]);
+
+  const fmt = (v: number) => String(v).padStart(2, "0");
 
   const load = async (nextSkip: number, append: boolean) => {
     const result = await fetchProducts({ ...buildQuery, take, skip: nextSkip });
@@ -185,38 +237,43 @@ export default function ShopSectionPage() {
   return (
     <div className="pb-24 md:pb-10 min-h-screen">
       {/* ── Sticky header ── */}
-      <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm border-b border-border">
-        <div className="max-w-7xl mx-auto px-3 md:px-6 h-14 flex items-center gap-3">
+      <div 
+        className={`sticky top-0 z-20 border-b border-border ${headerBgColor ? "text-white" : "bg-background/95 backdrop-blur-sm"}`}
+        style={headerBgColor ? { backgroundColor: headerBgColor } : undefined}
+      >
+        <div className="max-w-7xl mx-auto px-3 md:px-6 h-16 flex items-center gap-3">
           {/* Back */}
           <Link href="/shop">
-            <a className="flex items-center justify-center w-8 h-8 rounded-xl bg-muted hover:bg-muted/80 transition-colors flex-shrink-0">
-              <ArrowLeft className="w-4 h-4 text-foreground" />
+            <a className={`flex items-center justify-center w-9 h-9 rounded-xl transition-colors flex-shrink-0 ${headerBgColor ? "bg-white/10 hover:bg-white/20" : "bg-muted hover:bg-muted/80"}`}>
+              <ArrowLeft className={`w-5 h-5 ${headerBgColor ? "text-white" : "text-foreground"}`} />
             </a>
           </Link>
 
-          {/* Title */}
-          <div className="flex items-center gap-2 min-w-0 flex-1">
-            {/* Accent bar */}
-            <div
-              className="flex-shrink-0 w-1 h-5 rounded-full"
-              style={{ background: accentColor }}
-            />
-            <div className="min-w-0">
-              <h1 className="text-sm md:text-base font-black text-foreground truncate leading-tight">
+          {/* Title & Info */}
+          <div className="flex flex-col min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              <h1 className="text-base md:text-lg font-black truncate leading-tight">
                 {pageTitle}
               </h1>
-              {products.length > 0 && !initialLoad && (
-                <p className="text-[10px] text-muted-foreground leading-none">
-                  {products.length}
-                  {showLoadMore ? "+" : ""} products
-                </p>
+              {showTimer && products.length > 0 && (
+                <div className={`flex items-center gap-1 font-bold ml-2 ${headerBgColor ? "text-white" : "text-primary"}`}>
+                  <span className="text-[10px] uppercase opacity-70 mr-1 hidden sm:inline">Ends in:</span>
+                  <span className="text-xs bg-black/10 px-1.5 py-0.5 rounded">{fmt(timeLeft.hours)}h</span>
+                  <span className="text-xs bg-black/10 px-1.5 py-0.5 rounded">{fmt(timeLeft.minutes)}m</span>
+                  <span className="text-xs bg-black/10 px-1.5 py-0.5 rounded">{fmt(timeLeft.seconds)}s</span>
+                </div>
               )}
             </div>
+            {products.length > 0 && !initialLoad && (
+              <p className={`text-[10px] leading-none mt-0.5 opacity-70`}>
+                {products.length}{showLoadMore ? "+" : ""} products available
+              </p>
+            )}
           </div>
 
-          {/* Grid icon */}
-          <div className="flex items-center justify-center w-8 h-8 rounded-xl bg-muted flex-shrink-0">
-            <LayoutGrid className="w-4 h-4 text-muted-foreground" />
+          {/* Layout Toggle / Icon */}
+          <div className={`flex items-center justify-center w-9 h-9 rounded-xl flex-shrink-0 ${headerBgColor ? "bg-white/10" : "bg-muted"}`}>
+            <LayoutGrid className={`w-5 h-5 ${headerBgColor ? "text-white" : "text-muted-foreground"}`} />
           </div>
         </div>
       </div>
