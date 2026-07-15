@@ -44,7 +44,7 @@ export default function AccountLayout({ children, showTopBar = true }: AccountLa
   const [location, setLocation] = useLocation();
 
   const { user, logout } = useAuthStore();
-  const selectedCurrency = useCurrencyStore((s) => s.selected);
+  const selectedCurrency = useCurrencyStore((s) => s.selected) || { code: 'USD', name: 'US Dollar', symbol: '$', symbolPosition: 'BEFORE' as const, exchangeRate: 1, flag: '🇺🇸', id: 'usd' };
 
   const displayName = user ? `${user.firstName} ${user.lastName}` : "Guest";
   const initials = user

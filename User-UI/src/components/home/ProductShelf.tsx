@@ -74,7 +74,9 @@ export default function ProductShelf({
 
       try {
         // Try products-by-source first
-        let url = new URL(`${API_BASE}/api/cms/sections/products-by-source`);
+        const apiPath = `${API_BASE}/api/cms/sections/products-by-source`;
+        let url: URL;
+        try { url = new URL(apiPath); } catch { url = new URL(apiPath, window.location.origin); }
         
         // If it's a dynamic-query or we have params, ensure we use the right dataSourceId
         const effectiveSourceId = dataSourceId || 'dynamic-query';
@@ -94,7 +96,8 @@ export default function ProductShelf({
 
         // Fallback logic for legacy or empty responses
         if (!response.ok) {
-          url = new URL(`${API_BASE}/api/products`);
+          const fallbackPath = `${API_BASE}/api/products`;
+          try { url = new URL(fallbackPath); } catch { url = new URL(fallbackPath, window.location.origin); }
           url.searchParams.set('take', String(limit));
           if (params) {
             Object.entries(params).forEach(([key, value]) => {
