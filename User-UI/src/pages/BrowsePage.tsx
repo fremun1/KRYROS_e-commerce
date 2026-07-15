@@ -4,8 +4,6 @@ import { ArrowLeft, ChevronRight, Package } from "lucide-react";
 import {
   API_BASE,
   fetchPageSections,
-  fetchProducts,
-  fetchBrandBySlug,
 } from "@/lib/api";
 import type { ApiCMSSection, Product } from "@/lib/api";
 import DynamicSectionRendererV2 from "@/components/home/DynamicSectionRendererV2";
