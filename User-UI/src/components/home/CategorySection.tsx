@@ -48,7 +48,7 @@ export default function CategorySection({
 
   const CategoryCard = ({ cat }: { cat: ApiCategory }) => {
     const href = cat.slug
-      ? `/shop?categorySlug=${cat.slug}`
+      ? `/shop/category/${cat.slug}`
       : `/shop?categoryId=${cat.id}`;
 
     return (
