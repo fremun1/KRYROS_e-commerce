@@ -46,6 +46,7 @@ const WholesaleCheckoutPage = lazy(
 );
 const NotFound = lazy(() => import("@/pages/not-found"));
 const AllCategoriesPage = lazy(() => import("@/pages/AllCategoriesPage"));
+const BrowsePage = lazy(() => import("@/pages/BrowsePage"));
 
 import SplashScreen from "@/components/SplashScreen";
 import PwaInstallPrompt from "@/components/PwaInstallPrompt";
@@ -362,6 +363,8 @@ function AppRoutes() {
           <Route path="/apply-credit" component={ApplyCreditPage} />
           <Route path="/wholesale-checkout" component={WholesaleCheckoutPage} />
           <Route path="/categories" component={AllCategoriesPage} />
+          <Route path="/shop/category/:slug" component={BrowsePage} />
+          <Route path="/shop/brand/:slug" component={BrowsePage} />
           <Route component={NotFound} />
         </Switch>
       </Suspense>
