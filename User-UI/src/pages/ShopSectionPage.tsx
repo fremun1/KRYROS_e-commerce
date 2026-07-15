@@ -93,44 +93,42 @@ export default function ShopSectionPage() {
 
   const buildQuery = useMemo(() => {
     if (resolved.kind === "cms") {
-      const cfg = (resolved.section.config ?? {}) as Record<string, unknown>;
-      const sectionType = (resolved.section as any).type || "";
-      const q: any = {};
+      const section = resolved.section as any;
+      const cfg = (section.config ?? {}) as Record<string, any>;
+      const dataSourceId = section.dataSourceId || "";
+      
+      // 1. Define base parameters from dataSourceId (mirroring backend section-rules.ts)
+      const ruleParams: Record<string, any> = {};
+      if (dataSourceId === "top-selling") ruleParams.popularity = "bestseller";
+      else if (dataSourceId === "trending-products") ruleParams.popularity = "trending";
+      else if (dataSourceId === "new-arrivals") ruleParams.popularity = "new";
+      else if (dataSourceId === "flash-sales") ruleParams.isFlashSale = true;
+      else if (dataSourceId === "featured-products") ruleParams.isFeatured = true;
+      else if (dataSourceId === "sale-items") ruleParams.popularity = "sale";
+      else if (dataSourceId === "credit-eligible") ruleParams.allowCredit = true;
+      else if (dataSourceId === "wholesale-products") ruleParams.isWholesaleOnly = true;
 
-      // Category filter
-      const categorySlug = toStr(cfg.categorySlug);
-      if (categorySlug) q.categorySlug = categorySlug;
-
-      // Popularity filter — from config OR from section type
-      const popularity = toStr(cfg.popularity);
-      if (popularity) {
-        q.popularity = popularity;
-      } else if (sectionType === "TopSelling" || sectionType === "BestSellers") {
-        q.popularity = "bestseller";
-      } else if (sectionType === "Trending") {
-        q.popularity = "trending";
-      } else if (sectionType === "NewestArrivals") {
-        q.popularity = "new";
+      // 2. Fallback for legacy section types if dataSourceId is missing
+      const sectionType = section.type || "";
+      if (!dataSourceId) {
+        if (sectionType === "TopSelling" || sectionType === "BestSellers") ruleParams.popularity = "bestseller";
+        else if (sectionType === "Trending") ruleParams.popularity = "trending";
+        else if (sectionType === "NewestArrivals") ruleParams.popularity = "new";
+        else if (sectionType === "FlashSale") ruleParams.isFlashSale = true;
+        else if (sectionType === "FeaturedProducts") ruleParams.isFeatured = true;
       }
 
-      // Flash sale filter — from config OR from section type
-      if (cfg.isFlashSale !== undefined) {
-        q.isFlashSale = toBool(cfg.isFlashSale);
-      } else if (sectionType === "FlashSale") {
-        q.isFlashSale = true;
-      }
-
-      // Featured filter — from config OR from section type
-      if (cfg.featured !== undefined) {
-        q.featured = toBool(cfg.featured);
-      } else if (cfg.isFeatured !== undefined) {
-        q.featured = toBool(cfg.isFeatured);
-      } else if (sectionType === "FeaturedProducts") {
-        q.featured = true;
-      }
-
-      // Ensure all config is preserved for complex sections
-      return { ...q, ...cfg };
+      // 3. Merge everything: Rule Defaults < CMS Config < URL Query Params
+      // This makes the system fully flexible for any new dataSourceId or custom config
+      return {
+        ...ruleParams,
+        ...cfg,
+        // Ensure UI-specific config doesn't break API
+        dataSourceId: undefined, 
+        sectionSlug: undefined,
+        title: undefined,
+        subtitle: undefined,
+      };
     }
     if (resolved.kind === "category") {
       return { categorySlug: resolved.category.slug || resolved.category.id };

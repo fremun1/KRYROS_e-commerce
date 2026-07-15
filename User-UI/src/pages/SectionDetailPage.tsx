@@ -122,7 +122,7 @@ export default function SectionDetailPage() {
 
   const isFlashSale = useMemo(() => {
     if (!section) return false;
-    return section.type === 'FlashSale' || sectionConfig.isFlashSale === true || sectionConfig.isFlashSale === 'true';
+    return section.type === 'FlashSale' || section.dataSourceId === 'flash-sales' || sectionConfig.isFlashSale === true || sectionConfig.isFlashSale === 'true';
   }, [section, sectionConfig]);
 
   const showTimer = useMemo(() => {
