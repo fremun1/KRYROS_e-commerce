@@ -63,10 +63,17 @@ export default function ProductShelf({
   loadingCount = 8,
   params = {}
 }: ProductShelfProps) {
+  // ─── ALL hooks must be declared first, before any conditional returns ───
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Timer state - MUST be here before any early return to avoid React error #300
+  const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0 });
+  const [saleEnded, setSaleEnded] = useState(false);
+  const endDateRef = useRef<Date | null>(null);
+
+  // Fetch products
   useEffect(() => {
     const fetchProducts = async () => {
       setLoading(true);
@@ -130,25 +137,7 @@ export default function ProductShelf({
     fetchProducts();
   }, [dataSourceId, limit, JSON.stringify(params)]);
 
-  // Don't render if no products and not loading
-  if (!loading && products.length === 0) {
-    return null;
-  }
-
-  // Determine CSS classes based on layout
-  const containerClasses = layout === 'grid'
-    ? 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3'
-    : 'flex gap-3 overflow-x-auto no-scrollbar pb-2 md:grid md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 md:overflow-visible';
-
-  const cardClasses = layout === 'grid'
-    ? 'w-full'
-    : 'flex-shrink-0 w-[calc(50vw-20px)] md:w-full';
-
-  // ─── Timer logic (reused from FlashSaleSection) ───
-  const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0 });
-  const [saleEnded, setSaleEnded] = useState(false);
-  const endDateRef = useRef<Date | null>(null);
-
+  // Timer effect - also before early return
   useEffect(() => {
     if (!showTimer || products.length === 0) return;
 
@@ -180,6 +169,21 @@ export default function ProductShelf({
 
     return () => clearInterval(tick);
   }, [showTimer, products]);
+
+  // ─── Early return AFTER all hooks ───
+  // Don't render if no products and not loading (and no error to show)
+  if (!loading && products.length === 0 && !error) {
+    return null;
+  }
+
+  // Determine CSS classes based on layout
+  const containerClasses = layout === 'grid'
+    ? 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3'
+    : 'flex gap-3 overflow-x-auto no-scrollbar pb-2 md:grid md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 md:overflow-visible';
+
+  const cardClasses = layout === 'grid'
+    ? 'w-full'
+    : 'flex-shrink-0 w-[calc(50vw-20px)] md:w-full';
 
   const fmt = (v: number) => String(v).padStart(2, '0');
 
