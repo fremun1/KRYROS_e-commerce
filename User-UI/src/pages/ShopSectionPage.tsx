@@ -85,7 +85,8 @@ export default function ShopSectionPage() {
       if (popularity) q.popularity = popularity;
       if (cfg.isFlashSale !== undefined) q.isFlashSale = toBool(cfg.isFlashSale);
       if (cfg.featured !== undefined) q.featured = toBool(cfg.featured);
-      return q;
+      // Ensure all config is preserved for complex sections
+      return { ...q, ...cfg };
     }
     if (resolved.kind === "category") {
       return { categorySlug: resolved.category.slug || resolved.category.id };

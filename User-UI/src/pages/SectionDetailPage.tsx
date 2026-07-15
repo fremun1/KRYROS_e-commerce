@@ -60,7 +60,11 @@ export default function SectionDetailPage() {
         // Apply section-specific filters
         const config = matchedSection.config || {};
         
-        if (config.filterType === 'Featured') {
+        // Spread all config values first (handles categoryId, categorySlug, popularity, etc.)
+        Object.assign(params, config);
+
+        // Normalize filterType to query params
+        if (config.filterType === 'Featured' || config.filter_by === 'Featured') {
           params.featured = true;
         } else if (config.filterType === 'Best Selling') {
           params.popularity = 'bestseller';
@@ -70,11 +74,8 @@ export default function SectionDetailPage() {
           params.popularity = 'trending';
         }
 
-        if (config.categoryId) {
-          params.categoryId = config.categoryId;
-        }
-
-        if (matchedSection.type === 'FlashSale') {
+        // Handle special section types
+        if (matchedSection.type === 'FlashSale' || config.isFlashSale === true || config.isFlashSale === 'true') {
           params.isFlashSale = true;
         }
 

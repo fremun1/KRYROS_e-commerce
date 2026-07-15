@@ -4,6 +4,7 @@ import { ArrowLeft, ChevronRight, Package } from "lucide-react";
 import {
   API_BASE,
   fetchPageSections,
+  normalizeProduct,
 } from "@/lib/api";
 import type { ApiCMSSection, Product } from "@/lib/api";
 import DynamicSectionRendererV2 from "@/components/home/DynamicSectionRendererV2";
@@ -114,7 +115,7 @@ export default function BrowsePage() {
         if (!res.ok) throw new Error("Failed to fetch products");
         const data = await res.json();
         const list = Array.isArray(data) ? data : data.data || [];
-        return list;
+        return list.map(normalizeProduct);
       } catch (err) {
         console.error("Error fetching products:", err);
         return [];
@@ -126,13 +127,12 @@ export default function BrowsePage() {
       type === "brand"
         ? (async () => {
             try {
-              const res = await fetch(
-                `${API_BASE}/api/brands?slug=${encodeURIComponent(slug)}`,
-              );
+              const res = await fetch(`${API_BASE}/api/brands`);
               if (!res.ok) return null;
               const data = await res.json();
               const brands = Array.isArray(data) ? data : data.data || [];
-              return brands[0]?.name || null;
+              const match = brands.find((b: any) => (b.slug || "").toLowerCase() === slug);
+              return match?.name || null;
             } catch {
               return null;
             }
@@ -144,13 +144,12 @@ export default function BrowsePage() {
       type === "category"
         ? (async () => {
             try {
-              const res = await fetch(
-                `${API_BASE}/api/categories?slug=${encodeURIComponent(slug)}`,
-              );
+              const res = await fetch(`${API_BASE}/api/categories`);
               if (!res.ok) return null;
               const data = await res.json();
               const cats = Array.isArray(data) ? data : data.data || [];
-              return cats[0]?.name || null;
+              const match = cats.find((c: any) => (c.slug || "").toLowerCase() === slug);
+              return match?.name || null;
             } catch {
               return null;
             }
@@ -165,13 +164,9 @@ export default function BrowsePage() {
     ])
       .then(([secs, prods, brandName, catName]) => {
         setSections(secs);
-        const normalized = prods.map((p: any) => ({
-          ...p,
-          id: String(p.id || ""),
-        }));
-        setProducts(normalized);
-        setTotalLoaded(normalized.length);
-        setHasMore(normalized.length >= take);
+        setProducts(prods);
+        setTotalLoaded(prods.length);
+        setHasMore(prods.length >= take);
 
         if (brandName) setPageTitle(brandName);
         else if (catName) setPageTitle(catName);
@@ -209,10 +204,7 @@ export default function BrowsePage() {
       if (!res.ok) throw new Error("Failed to load more products");
       const data = await res.json();
       const list = Array.isArray(data) ? data : data.data || [];
-      const normalized = list.map((p: any) => ({
-        ...p,
-        id: String(p.id || ""),
-      }));
+      const normalized = list.map(normalizeProduct);
 
       setProducts((prev) => [...prev, ...normalized]);
       setTotalLoaded((prev) => prev + normalized.length);
