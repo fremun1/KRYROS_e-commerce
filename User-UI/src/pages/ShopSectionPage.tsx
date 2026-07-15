@@ -70,17 +70,22 @@ export default function ShopSectionPage() {
   }, []);
 
   const resolved = useMemo(() => {
+    // 1. Try to find a CMS section (homepage or page section) that matches the slug/ID
     const matchByCfg = sections.find((s) => {
       const cfg = (s.config ?? {}) as Record<string, unknown>;
       const sType = (s as any).type || s.templateType || "";
+      const sId = s.id || (s as any)._id;
+      
       return (
         toStr(cfg.sectionSlug).toLowerCase() === slug.toLowerCase() ||
         toStr(cfg.slug).toLowerCase() === slug.toLowerCase() ||
         (s as any).slotKey?.toLowerCase() === slug.toLowerCase() ||
-        s.id?.toLowerCase() === slug.toLowerCase() ||
-        (slug.toLowerCase() === "flash-sale" && sType === "FlashSale")
+        (sId && sId.toLowerCase() === slug.toLowerCase()) ||
+        (slug.toLowerCase() === "flash-sale" && sType === "FlashSale") ||
+        (slug.toLowerCase() === "flash-sales" && sType === "FlashSale")
       );
     });
+    
     if (matchByCfg) return { kind: "cms" as const, section: matchByCfg };
 
     const matchCat = categories.find(

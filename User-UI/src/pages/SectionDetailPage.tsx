@@ -47,11 +47,16 @@ export default function SectionDetailPage() {
         
         // Find section matching the slug
         const matchedSection = allSections?.find(
-          (s: any) =>
-            s.dedicatedPageSlug === slug ||
-            s.config?.sectionSlug === slug ||
-            s.id === slug ||
-            (slug === "flash-sale" && s.type === "FlashSale")
+          (s: any) => {
+            const sId = s.id || s._id;
+            return (
+              s.dedicatedPageSlug === slug ||
+              s.config?.sectionSlug === slug ||
+              (sId && sId === slug) ||
+              (slug === "flash-sale" && s.type === "FlashSale") ||
+              (slug === "flash-sales" && s.type === "FlashSale")
+            );
+          }
         );
 
         if (!matchedSection) {
