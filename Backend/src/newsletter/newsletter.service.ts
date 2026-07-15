@@ -69,8 +69,12 @@ export class NewsletterService {
   }
 
   /** Send bulk newsletter to given emails (or all active subscribers if none provided) */
-  async sendBulkNewsletter(emails: string[], subject: string, body: string): Promise<{ sent: number; failed: number }> {
+  async sendBulkNewsletter(emails: string[], subject: string, body: string): Promise<{ success: boolean; sent: number; failed: number; message: string }> {
     const targets = emails.length > 0 ? emails : (await this.findActive()).map((s) => s.email);
+
+    if (targets.length === 0) {
+      return { success: false, sent: 0, failed: 0, message: 'No subscribers found' };
+    }
 
     let sent = 0;
     let failed = 0;
@@ -86,7 +90,13 @@ export class NewsletterService {
     }
 
     this.logger.log(`Newsletter sent: ${sent} success, ${failed} failed`);
-    return { sent, failed };
+    const success = sent > 0;
+    return { 
+      success, 
+      sent, 
+      failed, 
+      message: success ? `Successfully sent ${sent} newsletters.` : `Failed to send newsletters. All ${failed} attempts failed.`
+    };
   }
 
   private async sendWelcomeEmail(email: string): Promise<void> {

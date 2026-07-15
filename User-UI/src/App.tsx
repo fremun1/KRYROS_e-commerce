@@ -267,6 +267,16 @@ function AppRoutes() {
     getMe();
     // Use location-based currency detection instead of manual selection
     fetchCurrenciesByLocation();
+    
+    // Initial notification setup for both guests and authenticated users
+    // This allows public device registration on first visit
+    const token = useAuthStore.getState().token;
+    // We use a small delay to ensure Firebase is ready and not blocking initial render
+    setTimeout(() => {
+      import('@/store/authStore').then(m => {
+        m.hydrateNotifications(token);
+      });
+    }, 2000);
   }, []);
 
   // Trigger page transition overlay on every route change

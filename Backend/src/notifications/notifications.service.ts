@@ -905,7 +905,31 @@ export class NotificationsService implements OnModuleInit {
         failed++;
       }
     }
-    return { success: true, sent, failed, total: contacts.length };
+    
+    const success = sent > 0;
+    return { 
+      success, 
+      sent, 
+      failed, 
+      total: contacts.length,
+      message: success ? `Successfully sent ${sent} emails.` : `Failed to send emails. All ${failed} attempts failed.`
+    };
+  }
+
+  async getRecentNotifications(limit: number = 20) {
+    return this.prisma.notification.findMany({
+      take: limit,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        user: {
+          select: {
+            firstName: true,
+            lastName: true,
+            email: true
+          }
+        }
+      }
+    });
   }
 
 

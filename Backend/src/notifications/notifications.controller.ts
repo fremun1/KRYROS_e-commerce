@@ -74,6 +74,15 @@ export class NotificationsController {
     return this.notificationsService.sendSMS(body.phoneNumber, body.message);
   }
 
+  @Get()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get recent notifications (Admin only)' })
+  async getNotifications(@Request() req: any) {
+    return this.notificationsService.getRecentNotifications();
+  }
+
   @Get('status')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER)

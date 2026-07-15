@@ -68,7 +68,8 @@ export class MailerService {
       this.logger.log(`Email sent: ${info.messageId} → ${to}`);
       return info;
     } catch (error) {
-      this.logger.error(`Failed to send email to ${to}: ${error.message}`);
+      this.logger.error(`SMTP Error for ${to}: [${error.code}] ${error.message}`);
+      if (error.response) this.logger.error(`SMTP Response: ${error.response}`);
       throw error;
     }
   }

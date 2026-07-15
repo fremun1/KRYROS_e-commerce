@@ -18,14 +18,15 @@ function normalizeIdentifier(value: string) {
 }
 
 async function registerFcmToken(authToken: string | null, fcmToken: string | null) {
-  if (!fcmToken || !authToken) return;
+  if (!fcmToken) return;
   try {
-    await fetch(`${API_BASE}/api/notifications/token`, {
+    const endpoint = authToken ? `${API_BASE}/api/notifications/token` : `${API_BASE}/api/notifications/token/public`;
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
+
+    await fetch(endpoint, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${authToken}`,
-      },
+      headers,
       body: JSON.stringify({ token: fcmToken, platform: 'web' }),
     });
   } catch {
@@ -33,13 +34,14 @@ async function registerFcmToken(authToken: string | null, fcmToken: string | nul
   }
 }
 
-async function hydrateNotifications(authToken: string | null) {
-  if (!authToken) return;
+export async function hydrateNotifications(authToken: string | null) {
   try {
     const { messaging } = await initFirebase();
     messagingInstance = messaging;
     const fcmToken = await requestNotificationPermission(messagingInstance);
-    await registerFcmToken(authToken, fcmToken);
+    if (fcmToken) {
+      await registerFcmToken(authToken, fcmToken);
+    }
   } catch {
     // Notification setup must never block auth flows
   }
