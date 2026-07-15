@@ -93,6 +93,12 @@ export default function DynamicSectionRendererV2({
                 viewAllHref={section.config?.viewAllHref || section.config?.ctaLink || section.config?.viewAllLink || section.config?.button_link || (() => {
                   const sId = section.id || section._id;
                   const sectionSlug = section.config?.sectionSlug || section.config?.slug || (templateType === 'FlashSale' ? 'flash-sale' : (section.slotKey || sId));
+                  
+                  // If it's a flash sale, use the specific flash-sale route
+                  if (templateType === 'FlashSale' || section.dataSourceId === 'flash-sales') {
+                    return '/shop/section/flash-sale';
+                  }
+                  
                   return sectionSlug ? `/shop/section/${sectionSlug}` : '/shop';
                 })()}
                 viewAllText={section.config?.viewAllText || section.config?.ctaText || section.config?.button_text || 'See All'}

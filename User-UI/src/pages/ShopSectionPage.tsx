@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { Link, useRoute } from "wouter";
 import { ArrowLeft, LayoutGrid, Filter } from "lucide-react";
 import { fetchCategories, fetchHomepageSections, fetchPageSections, fetchProducts } from "@/lib/api";
