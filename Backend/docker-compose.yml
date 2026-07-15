@@ -23,6 +23,7 @@ services:
       - .:/app
     environment:
       NODE_ENV: production
+      PORT: 3000
       JWT_SECRET: "kryros_super_secret_2026_change_me"
       DATABASE_URL: "postgres://kryros_admin:%400969597029Golden@postgres_db:5432/kryros_prod_db"
       TZ: "Africa/Lagos"

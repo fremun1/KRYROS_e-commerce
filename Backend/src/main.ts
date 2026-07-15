@@ -20,7 +20,7 @@ import * as helmet from 'helmet';
 import { json, urlencoded } from 'express';
 import { execSync } from 'child_process';
 import { PrismaClient } from '@prisma/client';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 
 async function bootstrap() {
   const isProd = process.env.NODE_ENV === 'production';
@@ -108,6 +108,9 @@ async function bootstrap() {
   const rawOrigins = process.env.CORS_ORIGINS || (isProd
     ? ''
     : 'http://localhost:3000,http://localhost:3001,http://localhost:5000');
+  if (isProd && !process.env.CORS_ORIGINS?.trim()) {
+    console.warn('[config] CORS_ORIGINS is not set in production. Browser requests from the frontend will be blocked until it is configured.');
+  }
   const corsList = rawOrigins
     .split(',')
     .map((s) => s.trim())

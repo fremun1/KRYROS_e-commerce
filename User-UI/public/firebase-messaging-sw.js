@@ -15,9 +15,9 @@ if (firebaseConfig.apiKey && firebaseConfig.projectId) {
   firebase.initializeApp(firebaseConfig);
   const messaging = firebase.messaging();
 
-  messaging.onBackgroundMessage((payload: any) => {
+  messaging.onBackgroundMessage((payload) => {
     const notificationTitle = payload.notification?.title || 'KRYROS';
-    const notificationOptions: NotificationOptions = {
+    const notificationOptions = {
       body: payload.notification?.body || '',
       icon: '/kryros-logo.png',
       badge: '/favicon.svg',
@@ -26,7 +26,7 @@ if (firebaseConfig.apiKey && firebaseConfig.projectId) {
     self.registration.showNotification(notificationTitle, notificationOptions);
   });
 
-  self.addEventListener('notificationclick', (event: any) => {
+  self.addEventListener('notificationclick', (event) => {
     event.notification.close();
     const url = event.notification.data?.url || '/';
     event.waitUntil(clients.openWindow(url));
