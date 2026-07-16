@@ -354,7 +354,36 @@ export class CMSService {
   }
 
   async getSectionByIdOrSlug(identifier: string, pageSlug?: string) {
-    const normalizedPageSlug = pageSlug === 'homepage' ? 'home' : pageSlug;
+    const normalizedPageSlug =
+      pageSlug === 'home' || pageSlug === 'homepage' || pageSlug === '/' || pageSlug === ''
+        ? 'homepage'
+        : pageSlug;
+    const normalizedIdentifier = identifier.trim().toLowerCase();
+    const sectionLookupClauses: any[] = [
+      { slotKey: identifier },
+      { dedicatedPageSlug: identifier },
+      { name: identifier },
+      { dataSourceId: identifier },
+      {
+        config: {
+          path: ['sectionSlug'],
+          equals: identifier
+        }
+      },
+      {
+        config: {
+          path: ['slug'],
+          equals: identifier
+        }
+      }
+    ];
+
+    if (normalizedIdentifier === 'flash-sale' || normalizedIdentifier === 'flash-sales') {
+      sectionLookupClauses.push(
+        { type: 'FlashSale' },
+        { dataSourceId: 'flash-sales' },
+      );
+    }
 
     // 1. Try finding by ID
     let section = await this.prisma.cMSSection.findUnique({
@@ -368,24 +397,7 @@ export class CMSService {
         section = await this.prisma.cMSSection.findFirst({
           where: {
             pageSlug: normalizedPageSlug,
-            OR: [
-              { slotKey: identifier },
-              { dedicatedPageSlug: identifier },
-              { name: identifier },
-              { dataSourceId: identifier },
-              {
-                config: {
-                  path: ['sectionSlug'],
-                  equals: identifier
-                }
-              },
-              {
-                config: {
-                  path: ['slug'],
-                  equals: identifier
-                }
-              }
-            ],
+            OR: sectionLookupClauses,
             isActive: true
           }
         });
@@ -396,22 +408,7 @@ export class CMSService {
         section = await this.prisma.cMSSection.findFirst({
           where: {
             OR: [
-              { slotKey: identifier },
-              { dedicatedPageSlug: identifier },
-              { name: identifier },
-              { dataSourceId: identifier },
-              {
-                config: {
-                  path: ['sectionSlug'],
-                  equals: identifier
-                }
-              },
-              {
-                config: {
-                  path: ['slug'],
-                  equals: identifier
-                }
-              },
+              ...sectionLookupClauses,
               {
                 config: {
                   path: ['pageSlug'],
@@ -427,9 +424,10 @@ export class CMSService {
 
     // 3. Special case for system-defined sections if still not found
     if (!section) {
-      if (identifier === 'flash-sale' || identifier === 'flash-sales') {
+      if (normalizedIdentifier === 'flash-sale' || normalizedIdentifier === 'flash-sales') {
         section = await this.prisma.cMSSection.findFirst({
           where: {
+            ...(normalizedPageSlug ? { pageSlug: normalizedPageSlug } : {}),
             OR: [
               { type: 'FlashSale' },
               { dataSourceId: 'flash-sales' }
@@ -437,9 +435,10 @@ export class CMSService {
             isActive: true
           }
         });
-      } else if (identifier === 'top-selling') {
+      } else if (normalizedIdentifier === 'top-selling') {
         section = await this.prisma.cMSSection.findFirst({
           where: {
+            ...(normalizedPageSlug ? { pageSlug: normalizedPageSlug } : {}),
             OR: [
               { type: 'TopSelling' },
               { dataSourceId: 'top-selling' }

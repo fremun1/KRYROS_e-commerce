@@ -7,6 +7,7 @@ interface ContentSectionProps {
   items?: any[];
   backgroundImage?: string;
   bgColor?: string;
+  backgroundColor?: string;
   ctaText?: string;
   ctaLink?: string;
   content?: string;
@@ -22,6 +23,7 @@ export default function ContentSection({
   items,
   backgroundImage,
   bgColor,
+  backgroundColor,
   ctaText,
   ctaLink,
   content,
@@ -34,7 +36,10 @@ export default function ContentSection({
     // ── HERO LAYOUT ──
     case 'hero':
       return (
-        <div className="relative w-full h-64 md:h-80 flex items-center justify-center text-center px-4 overflow-hidden">
+        <div
+          className="relative w-full h-64 md:h-80 flex items-center justify-center text-center px-4 overflow-hidden"
+          style={backgroundColor || bgColor ? { backgroundColor: backgroundColor || bgColor } : undefined}
+        >
           {backgroundImage && (
             <img src={backgroundImage} alt="" className="absolute inset-0 w-full h-full object-cover" />
           )}

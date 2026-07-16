@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { useMemo } from "react";
-import { inferPageContext, getPageContextDisplayPath } from "@/lib/pageContext";
+import { inferPageContext, getPageContextDisplayPath, normalizePageContext } from "@/lib/pageContext";
 import { Clock, ChevronRight } from "lucide-react";
 import { useRecentlyViewedStore } from "@/store/recentlyViewedStore";
 import UnifiedProductCard from "@/components/UnifiedProductCard";
@@ -12,7 +12,10 @@ interface RecentlyViewedSectionProps {
 export default function RecentlyViewedSection({ pageSlug }: RecentlyViewedSectionProps) {
   const { items, clear } = useRecentlyViewedStore();
   const [location] = useLocation();
-  const pageContext = useMemo(() => pageSlug || inferPageContext(location), [location, pageSlug]);
+  const pageContext = useMemo(
+    () => (pageSlug ? normalizePageContext(pageSlug) : inferPageContext(location)),
+    [location, pageSlug],
+  );
   const displayBasePath = useMemo(() => getPageContextDisplayPath(pageContext), [pageContext]);
 
   if (items.length === 0) return null;

@@ -109,11 +109,14 @@ export interface ApiSiteConfig {
 export interface ApiCMSSection {
   id: string;
   type: string;
+  templateType?: string;
   title?: string;
   subtitle?: string;
   isActive: boolean;
   order?: number;
   pageSlug?: string;
+  dataSourceId?: string;
+  slotKey?: string;
   config?: Record<string, unknown>;
 }
 export interface ApiBrandBanner {

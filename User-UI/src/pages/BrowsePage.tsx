@@ -328,7 +328,7 @@ export default function BrowsePage() {
               {sections.length > 0 && (
                 <DynamicSectionRendererV2
                   sections={sections}
-                  pageSlug={pageSlug}
+                  pageSlug={pageContext}
                 />
               )}
 

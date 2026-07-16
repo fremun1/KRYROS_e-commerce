@@ -79,6 +79,7 @@ export default function DynamicSectionRendererV2({
           case 'BestSellers':
           case 'NewestArrivals':
           case 'FeaturedProducts':
+          case 'FlashSale':
           case 'RelatedProducts':
             // Map legacy types to dataSourceId defaults
             const dataSourceMap: Record<string, string> = {
@@ -87,8 +88,11 @@ export default function DynamicSectionRendererV2({
               'BestSellers': 'top-selling',
               'NewestArrivals': 'new-arrivals',
               'FeaturedProducts': 'featured-products',
+              'FlashSale': 'flash-sales',
               'RelatedProducts': 'top-selling',
             };
+            const isFlashSaleSection =
+              templateType === 'FlashSale' || section.dataSourceId === 'flash-sales';
             return (
               <ProductShelf
                 key={section.id}
@@ -102,10 +106,10 @@ export default function DynamicSectionRendererV2({
                 showPercent={toBool(section.config?.showPercent)}
                 viewAllHref={section.config?.viewAllHref || section.config?.ctaLink || section.config?.viewAllLink || section.config?.button_link || (() => {
                   const sId = section.id || (section as any)._id;
-                  const sectionSlug = section.config?.sectionSlug || section.config?.slug || (templateType === 'FlashSale' ? 'flash-sale' : (section.slotKey || sId));
+                  const sectionSlug = section.config?.sectionSlug || section.config?.slug || (isFlashSaleSection ? 'flash-sale' : (section.slotKey || sId));
                   
                   // If it's a flash sale, use the specific flash-sale route
-                  if (templateType === 'FlashSale' || section.dataSourceId === 'flash-sales') {
+                  if (isFlashSaleSection) {
                     return getScopedSectionPath(pageContext, 'flash-sale');
                   }
                   

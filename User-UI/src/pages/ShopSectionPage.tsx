@@ -130,7 +130,7 @@ export default function ShopSectionPage() {
 
       // 3. Merge everything: Rule Defaults < CMS Config < URL Query Params
       // This makes the system fully flexible for any new dataSourceId or custom config
-      const params = {
+      const params: Record<string, any> = {
         ...ruleParams,
         ...cfg,
         // Ensure UI-specific config doesn't break API
@@ -178,6 +178,11 @@ export default function ShopSectionPage() {
   const showTimer = useMemo(() => {
     return isFlashSale || toBool(sectionConfig.showTimer);
   }, [isFlashSale, sectionConfig]);
+  const showPercent = useMemo(() => toBool(sectionConfig.showPercent, true), [sectionConfig]);
+  const sectionSubtitle = useMemo(() => {
+    if (resolved.kind !== "cms") return "";
+    return toStr(sectionConfig.subtitle, resolved.section.subtitle || "");
+  }, [resolved, sectionConfig]);
 
   const accentColor = useMemo(() => {
     if (sectionConfig.accentColor) return sectionConfig.accentColor;
@@ -312,7 +317,10 @@ export default function ShopSectionPage() {
           {/* Title & Info */}
           <div className="flex flex-col min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <h1 className="text-base md:text-lg font-black truncate leading-tight">
+              <h1
+                className="text-base md:text-lg font-black truncate leading-tight"
+                style={accentColor && !headerBgColor ? { color: accentColor } : undefined}
+              >
                 {pageTitle}
               </h1>
               {showTimer && products.length > 0 && (
@@ -324,6 +332,11 @@ export default function ShopSectionPage() {
                 </div>
               )}
             </div>
+            {sectionSubtitle && (
+              <p className={`text-[11px] leading-tight mt-0.5 truncate ${headerBgColor ? "text-white/80" : "text-muted-foreground"}`}>
+                {sectionSubtitle}
+              </p>
+            )}
             {products.length > 0 && !initialLoad && (
               <p className={`text-[10px] leading-none mt-0.5 opacity-70`}>
                 {products.length}{showLoadMore ? "+" : ""} products available
@@ -366,7 +379,12 @@ export default function ShopSectionPage() {
           <>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5 pb-4">
               {products.map((p) => (
-                <UnifiedProductCard key={p.id} product={p} className="w-full" />
+                <UnifiedProductCard
+                  key={p.id}
+                  product={p}
+                  className="w-full"
+                  showDiscountBadge={showPercent}
+                />
               ))}
             </div>
 
@@ -377,6 +395,7 @@ export default function ShopSectionPage() {
                   onClick={handleLoadMore}
                   disabled={loadingMore}
                   className="group flex items-center gap-2 px-6 py-2.5 rounded-full border-2 border-primary text-primary text-sm font-bold hover:bg-primary hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={accentColor && !headerBgColor ? { borderColor: accentColor, color: accentColor } : undefined}
                 >
                   {loadingMore ? (
                     <>
