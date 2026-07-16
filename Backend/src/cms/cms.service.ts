@@ -366,6 +366,8 @@ export class CMSService {
           OR: [
             { slotKey: identifier },
             { dedicatedPageSlug: identifier },
+            { name: identifier },
+            { dataSourceId: identifier },
             {
               config: {
                 path: ['sectionSlug'],
@@ -375,6 +377,12 @@ export class CMSService {
             {
               config: {
                 path: ['slug'],
+                equals: identifier
+              }
+            },
+            {
+              config: {
+                path: ['pageSlug'],
                 equals: identifier
               }
             }
@@ -388,11 +396,23 @@ export class CMSService {
     if (!section) {
       if (identifier === 'flash-sale' || identifier === 'flash-sales') {
         section = await this.prisma.cMSSection.findFirst({
-          where: { type: 'FlashSale', isActive: true }
+          where: {
+            OR: [
+              { type: 'FlashSale' },
+              { dataSourceId: 'flash-sales' }
+            ],
+            isActive: true
+          }
         });
       } else if (identifier === 'top-selling') {
         section = await this.prisma.cMSSection.findFirst({
-          where: { type: 'TopSelling', isActive: true }
+          where: {
+            OR: [
+              { type: 'TopSelling' },
+              { dataSourceId: 'top-selling' }
+            ],
+            isActive: true
+          }
         });
       }
     }

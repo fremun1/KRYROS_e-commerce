@@ -282,6 +282,29 @@ All changes are **backward compatible** and **preserve existing data**.
 
 ---
 
+## Additional Fixes Applied (Current Session)
+
+### Fix 6: Backend Section Seeding Endpoint (DONE)
+**File**: `Backend/src/cms/cms.controller.ts` (lines 108-115)
+- Fixed `POST /sections/seed/:slug` endpoint to use page-specific seeding
+- Was calling generic `seedSections()` regardless of slug parameter
+- Now correctly calls `resetAndSeedSectionsBySlug(slug)`
+
+### Fix 7: Frontend Section Type Handlers (DONE)
+**File**: `User-UI/src/components/home/DynamicSectionRendererV2.tsx` (lines 133-147)
+- Added explicit cases for `PageHero`, `ShopHero`, `WholesaleHero`, `GetNowHero`
+- Maps these types to `ContentSection` with `layout="hero"`
+- Extracts background image/color from config
+
+### Fix 8: Backend Section Resolver Enhancement (DONE)
+**File**: `Backend/src/cms/cms.service.ts` (lines 356-421)
+- Enhanced `getSectionByIdOrSlug()` to check more fields
+- Now checks: `slotKey`, `dedicatedPageSlug`, `name`, `dataSourceId`
+- Also checks config fields: `sectionSlug`, `slug`, `pageSlug`
+- Special case handling for `flash-sale` and `top-selling` now checks both `type` and `dataSourceId`
+
+---
+
 **Status:** ✅ All issues identified and fixed
 **Data Loss:** ❌ None - all existing data preserved
 **Backward Compatibility:** ✅ Yes - old sections still work

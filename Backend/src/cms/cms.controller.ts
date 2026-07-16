@@ -111,7 +111,7 @@ export class CMSController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Seed default sections for a page' })
   seedSections(@Param('slug') slug: string) {
-    return this.cmsService.seedSections();
+    return this.cmsService.resetAndSeedSectionsBySlug(slug);
   }
 
   // ==================== SECTION DATA SOURCES ====================

@@ -291,17 +291,25 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                               const isCatExpanded = expandedCat === cat.id;
                               return (
                                 <div key={cat.id}>
-                                  <button
-                                    onClick={() => setExpandedCat(isCatExpanded ? null : cat.id)}
-                                    className="w-full flex items-center justify-between px-4 py-2.5 rounded-lg hover:bg-muted transition-colors text-foreground text-sm font-medium"
-                                  >
-                                    <span>{cat.name}</span>
+                                  <div className="flex items-center">
+                                    <Link 
+                                      href={`/shop/category/${encodeURIComponent(cat.slug || String(cat.id))}`}
+                                      onClick={onClose}
+                                      className="flex-grow flex items-center px-4 py-2.5 rounded-l-lg hover:bg-muted transition-colors text-foreground text-sm font-medium"
+                                    >
+                                      {cat.name}
+                                    </Link>
                                     {catBrands.length > 0 && (
-                                      <ChevronRight
-                                        className={`w-3 h-3 transition-transform ${isCatExpanded ? "rotate-90" : ""}`}
-                                      />
+                                      <button
+                                        onClick={() => setExpandedCat(isCatExpanded ? null : cat.id)}
+                                        className="px-3 py-2.5 rounded-r-lg hover:bg-muted transition-colors border-l border-border/10"
+                                      >
+                                        <ChevronRight
+                                          className={`w-3 h-3 transition-transform ${isCatExpanded ? "rotate-90" : ""}`}
+                                        />
+                                      </button>
                                     )}
-                                  </button>
+                                  </div>
                                   {isCatExpanded && catBrands.length > 0 && (
                                     <div className="pl-6 space-y-1 mt-1 mb-2 border-l-2 border-primary/20 ml-4">
                                       {catBrands.map((brand) => (

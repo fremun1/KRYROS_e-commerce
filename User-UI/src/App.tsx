@@ -47,6 +47,7 @@ const WholesaleCheckoutPage = lazy(
 const NotFound = lazy(() => import("@/pages/not-found"));
 const AllCategoriesPage = lazy(() => import("@/pages/AllCategoriesPage"));
 const BrowsePage = lazy(() => import("@/pages/BrowsePage"));
+const GenericCMSPage = lazy(() => import("@/pages/GenericCMSPage"));
 
 import SplashScreen from "@/components/SplashScreen";
 import PwaInstallPrompt from "@/components/PwaInstallPrompt";
@@ -346,16 +347,16 @@ function AppRoutes() {
             path="/forgot-password"
             component={() => <AuthPage initialTab="forgot" />}
           />
-          <Route path="/about" component={AboutPage} />
-          <Route path="/contact" component={ContactPage} />
-          <Route path="/privacy" component={PrivacyPage} />
-          <Route path="/terms" component={TermsPage} />
-          <Route path="/refund" component={RefundPage} />
-          <Route path="/help" component={HelpPage} />
-          <Route path="/faq" component={FaqPage} />
-          <Route path="/returns" component={ReturnsPage} />
-          <Route path="/shipping" component={ShippingPage} />
-          <Route path="/security" component={SecurityPage} />
+          <Route path="/about" component={() => <GenericCMSPage slug="about" title="About Us" />} />
+          <Route path="/contact" component={() => <GenericCMSPage slug="contact" title="Contact Us" />} />
+          <Route path="/privacy" component={() => <GenericCMSPage slug="privacy" title="Privacy Policy" />} />
+          <Route path="/terms" component={() => <GenericCMSPage slug="terms" title="Terms & Conditions" />} />
+          <Route path="/refund" component={() => <GenericCMSPage slug="refund" title="Refund Policy" />} />
+          <Route path="/help" component={() => <GenericCMSPage slug="help" title="Help Center" />} />
+          <Route path="/faq" component={() => <GenericCMSPage slug="faq" title="FAQ" />} />
+          <Route path="/returns" component={() => <GenericCMSPage slug="returns" title="Returns Policy" />} />
+          <Route path="/shipping" component={() => <GenericCMSPage slug="shipping" title="Shipping Policy" />} />
+          <Route path="/security" component={() => <GenericCMSPage slug="security" title="Security" />} />
           <Route path="/pay/:linkId" component={PayPage} />
           <Route path="/pay" component={PayPage} />
           <Route path="/track-payment/:paymentNumber" component={TrackPaymentPage} />

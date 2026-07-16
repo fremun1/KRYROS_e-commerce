@@ -130,6 +130,22 @@ export default function DynamicSectionRendererV2({
           // ═══════════════════════════════════════════════════════════════════
           // FAMILY 4: CONTENT (RichText, FAQ, ContactForm, FeaturesGrid)
           // ═══════════════════════════════════════════════════════════════════
+          case 'PageHero':
+          case 'ShopHero':
+          case 'WholesaleHero':
+          case 'GetNowHero':
+            return (
+              <ContentSection
+                key={section.id}
+                title={section.title || section.config?.heading || 'Hero'}
+                subtitle={section.subtitle || section.config?.subheading}
+                layout="hero"
+                content={section.config?.content || section.config?.description}
+                backgroundImage={section.config?.backgroundImage || section.config?.bgImage}
+                backgroundColor={section.config?.backgroundColor || section.config?.bgColor}
+              />
+            );
+
           case 'PageContent':
             return (
               <ContentSection
