@@ -1,14 +1,17 @@
 import { useState, useEffect } from 'react';
 import { fetchBrands, ApiBrand } from '../../lib/api';
+import { normalizePageContext, getScopedBrowsePath } from '@/lib/pageContext';
 
 interface BrandSectionProps {
   title?: string;
   limit?: number;
+  pageSlug?: string;
 }
 
 export default function BrandSection({
   title = 'Top Brands',
   limit = 12,
+  pageSlug = 'shop'
 }: BrandSectionProps) {
   const [brands, setBrands] = useState<ApiBrand[]>([]);
   const [loading, setLoading] = useState(true);
@@ -62,7 +65,7 @@ export default function BrandSection({
   if (brands.length === 0) return null;
 
   const hrefFor = (brand: ApiBrand) =>
-    `/shop/brand/${encodeURIComponent(brand.slug || String(brand.id))}`;
+    getScopedBrowsePath(normalizePageContext(pageSlug), 'brand', brand.slug || String(brand.id));
 
   return (
     <section className="w-full max-w-7xl mx-auto px-4 py-6">

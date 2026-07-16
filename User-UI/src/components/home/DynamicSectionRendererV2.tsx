@@ -13,6 +13,7 @@
  */
 
 import { useMemo } from 'react';
+import { normalizePageContext, getScopedSectionPath, getPageContextDisplayPath } from "@/lib/pageContext";
 import ProductShelf from './ProductShelf';
 import BrandsSection from './BrandsSection';
 import RecentlyViewedSection from './RecentlyViewedSection';
@@ -40,10 +41,19 @@ interface DynamicSectionRendererV2Props {
   pageSlug?: string;
 }
 
+function toBool(v: unknown, fallback = false) {
+  if (typeof v === "boolean") return v;
+  if (typeof v === "string") return v.toLowerCase() === "true";
+  if (typeof v === "number") return v === 1;
+  return fallback;
+}
+
 export default function DynamicSectionRendererV2({
   sections,
   pageSlug = 'homepage'
 }: DynamicSectionRendererV2Props) {
+  const pageContext = useMemo(() => normalizePageContext(pageSlug), [pageSlug]);
+
   const sortedSections = useMemo(() => {
     return sections
       .filter(s => s.isActive)
@@ -88,18 +98,18 @@ export default function DynamicSectionRendererV2({
                 limit={section.config?.productLimit || section.config?.product_limit || section.config?.limit || (templateType === 'RelatedProducts' ? 4 : 8)}
                 layout={section.config?.scroll === 'true' ? 'horizontal-scroll' : (section.config?.layout || 'horizontal-scroll')}
                 cardStyle={section.config?.cardStyle || 'default'}
-                showTimer={section.config?.showTimer || false}
-                showPercent={section.config?.showPercent || false}
+                showTimer={toBool(section.config?.showTimer)}
+                showPercent={toBool(section.config?.showPercent)}
                 viewAllHref={section.config?.viewAllHref || section.config?.ctaLink || section.config?.viewAllLink || section.config?.button_link || (() => {
-                  const sId = section.id || section._id;
+                  const sId = section.id || (section as any)._id;
                   const sectionSlug = section.config?.sectionSlug || section.config?.slug || (templateType === 'FlashSale' ? 'flash-sale' : (section.slotKey || sId));
                   
                   // If it's a flash sale, use the specific flash-sale route
                   if (templateType === 'FlashSale' || section.dataSourceId === 'flash-sales') {
-                    return '/shop/section/flash-sale';
+                    return getScopedSectionPath(pageContext, 'flash-sale');
                   }
                   
-                  return sectionSlug ? `/shop/section/${sectionSlug}` : '/shop';
+                  return sectionSlug ? getScopedSectionPath(pageContext, sectionSlug) : getPageContextDisplayPath(pageContext);
                 })()}
                 viewAllText={section.config?.viewAllText || section.config?.ctaText || section.config?.button_text || 'See All'}
                 accentColor={section.config?.accentColor}
@@ -124,6 +134,7 @@ export default function DynamicSectionRendererV2({
                 key={section.id}
                 title={section.title}
                 limit={section.config?.limit || 8}
+                pageSlug={pageContext}
               />
             );
 
@@ -263,7 +274,7 @@ export default function DynamicSectionRendererV2({
             );
 
           case 'RecentlyViewed':
-            return <RecentlyViewedSection key={section.id} />;
+            return <RecentlyViewedSection key={section.id} pageSlug={pageSlug} />;
 
           case 'TrustBadges':
             const badges = section.config?.items || [];
@@ -293,6 +304,7 @@ export default function DynamicSectionRendererV2({
                 title={section.title}
                 layout={section.config?.layout || 'grid'}
                 limit={section.config?.limit || 8}
+                pageSlug={pageContext}
               />
             );
 

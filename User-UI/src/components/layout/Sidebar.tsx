@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { Link, useLocation } from "wouter";
+import { inferPageContext, getScopedBrowsePath } from "@/lib/pageContext";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X, Home, ShoppingBag, Zap, Package, MapPin, Truck, Info, Phone, Shield, FileText, RefreshCw,
@@ -55,6 +56,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
   const [expandedSection, setExpandedSection] = useState<string | null>("account");
   const [expandedCat, setExpandedCat] = useState<string | number | null>(null);
   const [location, setLocation] = useLocation();
+  const pageContext = inferPageContext(location);
   const { theme, toggleTheme } = useThemeStore();
 
   const { currencies, selected, setCurrency, fetchCurrencies } = useCurrencyStore();
@@ -293,7 +295,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                                 <div key={cat.id}>
                                   <div className="flex items-center">
                                     <Link 
-                                      href={`/shop/category/${encodeURIComponent(cat.slug || String(cat.id))}`}
+                                      href={getScopedBrowsePath(pageContext, 'category', cat.slug || String(cat.id))}
                                       onClick={onClose}
                                       className="flex-grow flex items-center px-4 py-2.5 rounded-l-lg hover:bg-muted transition-colors text-foreground text-sm font-medium"
                                     >
@@ -313,7 +315,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                                   {isCatExpanded && catBrands.length > 0 && (
                                     <div className="pl-6 space-y-1 mt-1 mb-2 border-l-2 border-primary/20 ml-4">
                                       {catBrands.map((brand) => (
-                                        <Link key={brand.id} href={`/shop/brand/${encodeURIComponent(brand.slug || String(brand.id))}`} onClick={onClose}>
+                                        <Link key={brand.id} href={getScopedBrowsePath(pageContext, 'brand', brand.slug || String(brand.id))} onClick={onClose}>
                                           <div className="px-3 py-1.5 rounded-lg hover:bg-muted transition-colors text-foreground text-xs cursor-pointer">
                                             {brand.name}
                                           </div>

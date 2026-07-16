@@ -84,7 +84,20 @@ export class ProductsService {
     }
 
     if (isFeatured !== undefined) andFilters.push({ isFeatured: typeof isFeatured === 'boolean' ? isFeatured : String(isFeatured) === 'true' });
-    if (isFlashSale !== undefined) andFilters.push({ isFlashSale: typeof isFlashSale === 'boolean' ? isFlashSale : String(isFlashSale) === 'true' });
+    if (isFlashSale !== undefined) {
+      const isFlash = typeof isFlashSale === 'boolean' ? isFlashSale : String(isFlashSale) === 'true';
+      if (isFlash) {
+        andFilters.push({ 
+          isFlashSale: true,
+          OR: [
+            { flashSaleEnd: null },
+            { flashSaleEnd: { gt: new Date() } }
+          ]
+        });
+      } else {
+        andFilters.push({ isFlashSale: false });
+      }
+    }
     if (allowCredit !== undefined) andFilters.push({ allowCredit: typeof allowCredit === 'boolean' ? allowCredit : String(allowCredit) === 'true' });
     if (isWholesaleOnly !== undefined) andFilters.push({ isWholesaleOnly: typeof isWholesaleOnly === 'boolean' ? isWholesaleOnly : String(isWholesaleOnly) === 'true' });
     if (isNew !== undefined) andFilters.push({ isNew: typeof isNew === 'boolean' ? isNew : String(isNew) === 'true' });

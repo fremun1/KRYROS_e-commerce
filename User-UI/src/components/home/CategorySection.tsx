@@ -1,16 +1,19 @@
 import { useState, useEffect, useRef } from 'react';
 import { fetchCategories, ApiCategory } from '../../lib/api';
+import { normalizePageContext, getScopedBrowsePath } from '@/lib/pageContext';
 
 interface CategorySectionProps {
   title?: string;
   layout?: 'grid' | 'horizontal-scroll';
   limit?: number;
+  pageSlug?: string;
 }
 
 export default function CategorySection({
   title = 'Shop by Category',
   layout = 'grid',
   limit = 8,
+  pageSlug = 'shop'
 }: CategorySectionProps) {
   const [categories, setCategories] = useState<ApiCategory[]>([]);
   const [loading, setLoading] = useState(true);
@@ -47,7 +50,7 @@ export default function CategorySection({
   if (categories.length === 0) return null;
 
   const CategoryCard = ({ cat }: { cat: ApiCategory }) => {
-    const href = `/shop/category/${encodeURIComponent(cat.slug || String(cat.id))}`;
+    const href = getScopedBrowsePath(normalizePageContext(pageSlug), 'category', cat.slug || String(cat.id));
 
     return (
       <a href={href} className="group flex flex-col items-center text-center">

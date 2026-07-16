@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Link, useLocation } from "wouter";
+import { inferPageContext, getPageContextDisplayPath } from "@/lib/pageContext";
 import {
   LayoutDashboard, Package, Heart, MapPin, CreditCard, Zap,
   MessageCircle, RefreshCcw, Star, Settings, X, Menu,
@@ -26,7 +27,7 @@ const sidebarItems = [
   { icon: MapPin, label: "Pickup Stations", href: "/pickup-stations" },
   { icon: MessageCircle, label: "Messages", href: "/contact" },
   { icon: RefreshCcw, label: "Returns & Refunds", href: "/returns" },
-  { icon: Star, label: "My Reviews", href: "/shop" },
+  { icon: Star, label: "My Reviews", href: "/" }, // Root is always safer than hardcoded /shop
   { icon: Settings, label: "Settings", href: "/dashboard" },
 ];
 
@@ -42,6 +43,8 @@ interface AccountLayoutProps {
 export default function AccountLayout({ children, showTopBar = true }: AccountLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [location, setLocation] = useLocation();
+  const pageContext = useMemo(() => inferPageContext(location), [location]);
+  const displayBasePath = useMemo(() => getPageContextDisplayPath(pageContext), [pageContext]);
 
   const { user, logout } = useAuthStore();
   const selectedCurrency = useCurrencyStore((s) => s.selected) || { code: 'USD', name: 'US Dollar', symbol: '$', symbolPosition: 'BEFORE' as const, exchangeRate: 1, flag: '🇺🇸', id: 'usd' };
@@ -154,7 +157,7 @@ export default function AccountLayout({ children, showTopBar = true }: AccountLa
             <div className="hidden lg:block" />
 
             <div className="flex items-center gap-3">
-              <Link href="/shop">
+              <Link href={displayBasePath}>
                 <button className="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-muted transition-colors">
                   <Search style={{ width: 18, height: 18 }} className="text-foreground" />
                 </button>

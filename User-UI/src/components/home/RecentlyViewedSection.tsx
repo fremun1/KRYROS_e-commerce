@@ -1,10 +1,19 @@
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
+import { useMemo } from "react";
+import { inferPageContext, getPageContextDisplayPath } from "@/lib/pageContext";
 import { Clock, ChevronRight } from "lucide-react";
 import { useRecentlyViewedStore } from "@/store/recentlyViewedStore";
 import UnifiedProductCard from "@/components/UnifiedProductCard";
 
-export default function RecentlyViewedSection() {
+interface RecentlyViewedSectionProps {
+  pageSlug?: string;
+}
+
+export default function RecentlyViewedSection({ pageSlug }: RecentlyViewedSectionProps) {
   const { items, clear } = useRecentlyViewedStore();
+  const [location] = useLocation();
+  const pageContext = useMemo(() => pageSlug || inferPageContext(location), [location, pageSlug]);
+  const displayBasePath = useMemo(() => getPageContextDisplayPath(pageContext), [pageContext]);
 
   if (items.length === 0) return null;
 
@@ -23,7 +32,7 @@ export default function RecentlyViewedSection() {
             >
               Clear
             </button>
-            <Link href="/shop">
+            <Link href={displayBasePath}>
               <span className="text-xs md:text-sm text-primary font-semibold cursor-pointer hover:underline flex items-center gap-0.5 whitespace-nowrap">
                 View All <ChevronRight className="w-3.5 h-3.5" />
               </span>

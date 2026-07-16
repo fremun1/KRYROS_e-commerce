@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState, useRef } from "react";
-import { Link, useRoute } from "wouter";
+import { Link, useRoute, useLocation } from "wouter";
 import { ArrowLeft, LayoutGrid, Filter } from "lucide-react";
-import { fetchCategories, fetchSectionByIdOrSlug, fetchProducts } from "@/lib/api";
+import { fetchCategories, fetchSectionByIdOrSlug, fetchProducts, API_BASE, normalizeProduct } from "@/lib/api";
 import type { ApiCMSSection, ApiCategory, Product } from "@/lib/api";
 import UnifiedProductCard from "@/components/UnifiedProductCard";
+import { inferPageContext, getPageContextBasePath, getPageContextDisplayPath } from "@/lib/pageContext";
 
 function toBool(v: unknown, fallback = false) {
   if (typeof v === "boolean") return v;
@@ -36,7 +37,12 @@ function CardSkeleton() {
 }
 
 export default function ShopSectionPage() {
-  const [, params] = useRoute("/shop/section/:slug");
+  const [location] = useLocation();
+  const pageContext = useMemo(() => inferPageContext(location), [location]);
+  const pageBasePath = useMemo(() => getPageContextDisplayPath(pageContext), [pageContext]);
+  const internalBasePath = useMemo(() => getPageContextBasePath(pageContext), [pageContext]);
+
+  const [, params] = useRoute(`${internalBasePath}/section/:slug`);
   const slug = params?.slug ? decodeURIComponent(params.slug) : "all";
 
   const [section, setSection] = useState<ApiCMSSection | null>(null);
@@ -59,7 +65,8 @@ export default function ShopSectionPage() {
       setLoading(true);
       try {
         // 1. Try to fetch as a CMS section directly from backend
-        const cmsSection = await fetchSectionByIdOrSlug(slug);
+        // Use pageContext to avoid collisions
+        const cmsSection = await fetchSectionByIdOrSlug(slug, pageContext);
         if (cmsSection) {
           setSection(cmsSection);
           setCategory(null);
@@ -86,7 +93,7 @@ export default function ShopSectionPage() {
     };
 
     loadMetadata();
-  }, [slug]);
+  }, [slug, pageContext]);
 
   const resolved = useMemo(() => {
     if (section) return { kind: "cms" as const, section };
@@ -219,16 +226,30 @@ export default function ShopSectionPage() {
       const apiPath = `${API_BASE}/api/cms/sections/products-by-source`;
       const url = new URL(apiPath, window.location.origin);
       
-      const effectiveSourceId = section.dataSourceId || 'dynamic-query';
+      // Get derived rule params from buildQuery
+      const derivedParams = buildQuery;
+      
+      const effectiveSourceId = section.dataSourceId || (derivedParams as any).dataSourceId || 'dynamic-query';
       url.searchParams.set('dataSourceId', effectiveSourceId);
       url.searchParams.set('limit', String(take));
       url.searchParams.set('skip', String(nextSkip));
       
+      // Add derived params
+      Object.entries(derivedParams).forEach(([key, value]) => {
+        if (key === 'dataSourceId') return;
+        if (value !== undefined && value !== null && value !== '') {
+          url.searchParams.set(key, String(value));
+        }
+      });
+
+      // Merge with any other params from the section config not covered by buildQuery
       const cfg = (section.config ?? {}) as Record<string, any>;
       Object.entries(cfg).forEach(([key, value]) => {
         if (value !== undefined && value !== null && value !== '' && 
-            !['dataSourceId', 'sectionSlug', 'title', 'subtitle'].includes(key)) {
-          url.searchParams.set(key, String(value));
+            !['dataSourceId', 'sectionSlug', 'title', 'subtitle', 'layout', 'limit', 'showTimer', 'showPercent'].includes(key)) {
+          if (!url.searchParams.has(key)) {
+            url.searchParams.set(key, String(value));
+          }
         }
       });
 
@@ -282,7 +303,7 @@ export default function ShopSectionPage() {
       >
         <div className="max-w-7xl mx-auto px-3 md:px-6 h-16 flex items-center gap-3">
           {/* Back */}
-          <Link href="/shop">
+          <Link href={pageBasePath}>
             <a className={`flex items-center justify-center w-9 h-9 rounded-xl transition-colors flex-shrink-0 ${headerBgColor ? "bg-white/10 hover:bg-white/20" : "bg-muted hover:bg-muted/80"}`}>
               <ArrowLeft className={`w-5 h-5 ${headerBgColor ? "text-white" : "text-foreground"}`} />
             </a>
@@ -335,9 +356,9 @@ export default function ShopSectionPage() {
             <p className="text-sm text-muted-foreground mt-1 max-w-xs">
               This section doesn't have any products yet. Check back soon!
             </p>
-            <Link href="/shop">
+            <Link href={pageBasePath}>
               <a className="mt-4 inline-flex items-center gap-1.5 bg-primary text-white text-sm font-bold px-5 py-2.5 rounded-full hover:bg-primary/90 transition-colors">
-                ← Back to Shop
+                ← Back to {pageContext.charAt(0).toUpperCase() + pageContext.slice(1)}
               </a>
             </Link>
           </div>

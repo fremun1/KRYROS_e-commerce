@@ -1,5 +1,7 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
+import { useLocation } from "wouter";
 import { api } from "@/lib/api";
+import { inferPageContext, getScopedBrowsePath } from "@/lib/pageContext";
 
 interface CmsBrand {
   name: string;
@@ -22,6 +24,8 @@ export default function BrandsSection({
   autoScroll = true,
   dataSourceId = 'generic-brand-section'
 }: BrandsSectionProps) {
+  const [location] = useLocation();
+  const pageContext = useMemo(() => inferPageContext(location), [location]);
   const [brands, setBrands] = useState<CmsBrand[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const dirRef = useRef<1 | -1>(1);
@@ -89,7 +93,7 @@ export default function BrandsSection({
   if (brands.length === 0) return null;
 
   const handleBrandClick = (brand: CmsBrand) => {
-    window.location.href = `/shop#brand-${brand.shopSlug}`;
+    window.location.href = getScopedBrowsePath(pageContext, 'brand', brand.shopSlug);
   };
 
   return (

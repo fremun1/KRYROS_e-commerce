@@ -162,8 +162,11 @@ export class CMSController {
 
   @Get('sections/:idOrSlug')
   @ApiOperation({ summary: 'Get a single section by ID or slug' })
-  getSectionByIdOrSlug(@Param('idOrSlug') idOrSlug: string) {
-    return this.cmsService.getSectionByIdOrSlug(idOrSlug);
+  getSectionByIdOrSlug(
+    @Param('idOrSlug') idOrSlug: string,
+    @Query('pageSlug') pageSlug?: string
+  ) {
+    return this.cmsService.getSectionByIdOrSlug(idOrSlug, pageSlug);
   }
 
   @Patch('sections/:id/move')

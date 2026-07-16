@@ -21,6 +21,8 @@ interface UnifiedProductCardProps {
    *   Use for electronics / isolated product cuts with transparent backgrounds.
    */
   imageStyle?: "cover" | "contain";
+  /** Whether to show the discount percentage badge. Defaults to true. */
+  showDiscountBadge?: boolean;
 }
 
 /** Strip specs that are empty JSON artifacts like "[]" or blank strings */
@@ -36,6 +38,7 @@ export default function UnifiedProductCard({
   className = "w-full",
   badge,
   imageStyle = "cover",
+  showDiscountBadge = true,
 }: UnifiedProductCardProps) {
   const [imgErr, setImgErr] = useState(false);
   const [storeStatus, setStoreStatus] = useState<{
@@ -104,7 +107,7 @@ export default function UnifiedProductCard({
         )}
 
         {/* Discount badge — top: 12px; left: 12px; z-index: 10 */}
-        {product.discount > 0 && (
+        {showDiscountBadge && product.discount > 0 && (
           <span className="absolute top-3 left-3 bg-[#B91C1C] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-lg z-10 shadow-sm">
             -{product.discount}%
           </span>

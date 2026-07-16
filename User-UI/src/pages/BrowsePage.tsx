@@ -1,11 +1,12 @@
 import { useEffect, useState, useMemo } from "react";
-import { useRoute, Link } from "wouter";
+import { useRoute, Link, useLocation } from "wouter";
 import { ArrowLeft, ChevronRight, Package } from "lucide-react";
 import {
   API_BASE,
   fetchPageSections,
   normalizeProduct,
 } from "@/lib/api";
+import { inferPageContext, getPageContextBasePath, getPageContextDisplayPath, normalizePageContext } from "@/lib/pageContext";
 import type { ApiCMSSection, Product } from "@/lib/api";
 import DynamicSectionRendererV2 from "@/components/home/DynamicSectionRendererV2";
 import RecentlyViewedSection from "@/components/home/RecentlyViewedSection";
@@ -50,7 +51,12 @@ function CardSkeleton() {
 
 // ── BrowsePage Component ─────────────────────────────────────────────────────
 export default function BrowsePage() {
-  const [, params] = useRoute("/shop/:type/:slug");
+  const [location] = useLocation();
+  const pageContext = useMemo(() => inferPageContext(location), [location]);
+  const pageBasePath = useMemo(() => getPageContextBasePath(pageContext), [pageContext]);
+  const displayBasePath = useMemo(() => getPageContextDisplayPath(pageContext), [pageContext]);
+  
+  const [, params] = useRoute(`${pageBasePath}/:type/:slug`);
   const type = (params?.type || "category") as "category" | "brand";
   const rawSlug = params?.slug ? decodeURIComponent(params.slug) : "";
   const slug = rawSlug.toLowerCase();
@@ -239,9 +245,9 @@ export default function BrowsePage() {
         {/* Breadcrumb bar */}
         <div className="bg-white border-b border-border">
           <div className="max-w-7xl mx-auto px-4 md:px-6 py-3 flex items-center gap-2">
-            <Link href="/shop">
-              <span className="text-sm text-muted-foreground hover:text-foreground cursor-pointer transition-colors">
-                Shop
+            <Link href={displayBasePath}>
+              <span className="text-sm text-muted-foreground hover:text-foreground cursor-pointer transition-colors capitalize">
+                {pageContext}
               </span>
             </Link>
             <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/50" />
@@ -261,7 +267,7 @@ export default function BrowsePage() {
           {/* Page header */}
           <div className="px-4 md:px-6 py-6 border-b border-border">
             <div className="flex items-center gap-3">
-              <Link href="/shop">
+              <Link href={displayBasePath}>
                 <button className="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-muted transition-colors">
                   <ArrowLeft className="w-4 h-4 text-muted-foreground" />
                 </button>
@@ -352,10 +358,10 @@ export default function BrowsePage() {
                         ? "No products available in this category yet."
                         : "No products available from this brand yet."}
                     </p>
-                    <Link href="/shop">
+                    <Link href={displayBasePath}>
                       <button className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline">
                         <ArrowLeft className="w-3.5 h-3.5" />
-                        Back to Shop
+                        Back to {pageContext.charAt(0).toUpperCase() + pageContext.slice(1)}
                       </button>
                     </Link>
                   </div>

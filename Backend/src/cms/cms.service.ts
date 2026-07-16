@@ -353,7 +353,9 @@ export class CMSService {
     return this.prisma.cMSSection.findMany({ where, orderBy: { order: 'asc' } });
   }
 
-  async getSectionByIdOrSlug(identifier: string) {
+  async getSectionByIdOrSlug(identifier: string, pageSlug?: string) {
+    const normalizedPageSlug = pageSlug === 'homepage' ? 'home' : pageSlug;
+
     // 1. Try finding by ID
     let section = await this.prisma.cMSSection.findUnique({
       where: { id: identifier }
@@ -361,35 +363,66 @@ export class CMSService {
 
     // 2. If not found, try finding by config.sectionSlug or config.slug or slotKey
     if (!section) {
-      section = await this.prisma.cMSSection.findFirst({
-        where: {
-          OR: [
-            { slotKey: identifier },
-            { dedicatedPageSlug: identifier },
-            { name: identifier },
-            { dataSourceId: identifier },
-            {
-              config: {
-                path: ['sectionSlug'],
-                equals: identifier
+      // First try with pageSlug to avoid cross-page collisions
+      if (normalizedPageSlug) {
+        section = await this.prisma.cMSSection.findFirst({
+          where: {
+            pageSlug: normalizedPageSlug,
+            OR: [
+              { slotKey: identifier },
+              { dedicatedPageSlug: identifier },
+              { name: identifier },
+              { dataSourceId: identifier },
+              {
+                config: {
+                  path: ['sectionSlug'],
+                  equals: identifier
+                }
+              },
+              {
+                config: {
+                  path: ['slug'],
+                  equals: identifier
+                }
               }
-            },
-            {
-              config: {
-                path: ['slug'],
-                equals: identifier
+            ],
+            isActive: true
+          }
+        });
+      }
+
+      // Fallback to page-agnostic search if not found or no pageSlug provided
+      if (!section) {
+        section = await this.prisma.cMSSection.findFirst({
+          where: {
+            OR: [
+              { slotKey: identifier },
+              { dedicatedPageSlug: identifier },
+              { name: identifier },
+              { dataSourceId: identifier },
+              {
+                config: {
+                  path: ['sectionSlug'],
+                  equals: identifier
+                }
+              },
+              {
+                config: {
+                  path: ['slug'],
+                  equals: identifier
+                }
+              },
+              {
+                config: {
+                  path: ['pageSlug'],
+                  equals: identifier
+                }
               }
-            },
-            {
-              config: {
-                path: ['pageSlug'],
-                equals: identifier
-              }
-            }
-          ],
-          isActive: true
-        }
-      });
+            ],
+            isActive: true
+          }
+        });
+      }
     }
 
     // 3. Special case for system-defined sections if still not found

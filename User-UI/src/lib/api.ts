@@ -492,9 +492,10 @@ export async function fetchHomepageSections(type?: string): Promise<ApiHomepageS
   return result.filter((s) => s.isActive !== false);
 }
 
-export async function fetchSectionByIdOrSlug(idOrSlug: string): Promise<ApiCMSSection | null> {
+export async function fetchSectionByIdOrSlug(idOrSlug: string, pageSlug?: string): Promise<ApiCMSSection | null> {
   try {
-    return await apiFetch<ApiCMSSection>(`/api/cms/sections/${idOrSlug}`);
+    const qs = pageSlug ? `?pageSlug=${encodeURIComponent(pageSlug)}` : "";
+    return await apiFetch<ApiCMSSection>(`/api/cms/sections/${idOrSlug}${qs}`);
   } catch {
     return null;
   }

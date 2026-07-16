@@ -324,16 +324,32 @@ function AppRoutes() {
       <Suspense fallback={<PageLoader />}>
         <Switch>
           <Route path="/" component={HomePage} />
-          <Route path="/shop/section/:slug" component={ShopSectionPage} />
           <Route path="/shop" component={ShopPage} />
+          <Route path="/wholesale" component={WholesalePage} />
+          <Route path="/get-now" component={GetNowPage} />
+          
+          {/* Context-aware Category/Brand routes */}
+          <Route path="/homepage/category/:slug" component={BrowsePage} />
+          <Route path="/homepage/brand/:slug" component={BrowsePage} />
+          <Route path="/shop/category/:slug" component={BrowsePage} />
+          <Route path="/shop/brand/:slug" component={BrowsePage} />
+          <Route path="/wholesale/category/:slug" component={BrowsePage} />
+          <Route path="/wholesale/brand/:slug" component={BrowsePage} />
+          <Route path="/get-now/category/:slug" component={BrowsePage} />
+          <Route path="/get-now/brand/:slug" component={BrowsePage} />
+
+          {/* Context-aware Section routes */}
+          <Route path="/homepage/section/:slug" component={ShopSectionPage} />
+          <Route path="/shop/section/:slug" component={ShopSectionPage} />
+          <Route path="/wholesale/section/:slug" component={ShopSectionPage} />
+          <Route path="/get-now/section/:slug" component={ShopSectionPage} />
+
           <Route path="/product/:slug" component={ProductPage} />
           <Route path="/cart" component={CartPage} />
           <Route path="/checkout" component={CheckoutPage} />
-          <Route path="/get-now" component={GetNowPage} />
           <Route path="/track-order" component={TrackOrderPage} />
           <Route path="/track" component={TrackOrderPage} />
           <Route path="/pickup-stations" component={PickupStationsPage} />
-          <Route path="/wholesale" component={WholesalePage} />
           <Route path="/dashboard" component={DashboardPage} />
           <Route
             path="/login"
@@ -364,8 +380,6 @@ function AppRoutes() {
           <Route path="/apply-credit" component={ApplyCreditPage} />
           <Route path="/wholesale-checkout" component={WholesaleCheckoutPage} />
           <Route path="/categories" component={AllCategoriesPage} />
-          <Route path="/shop/category/:slug" component={BrowsePage} />
-          <Route path="/shop/brand/:slug" component={BrowsePage} />
           <Route component={NotFound} />
         </Switch>
       </Suspense>

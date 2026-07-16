@@ -263,6 +263,7 @@ export default function ProductShelf({
                   product={product}
                   className="w-full"
                   imageStyle={cardStyle === 'compact' ? 'cover' : 'contain'}
+                  showDiscountBadge={showPercent}
                 />
               </div>
             ))}

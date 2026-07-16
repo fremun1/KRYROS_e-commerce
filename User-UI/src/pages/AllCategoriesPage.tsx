@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
-import { Link } from "wouter";
+  import { Link, useLocation } from "wouter";
 import { ChevronLeft } from "lucide-react";
 import { fetchCategories } from "@/lib/api";
 import type { ApiCategory } from "@/lib/api";
+import { inferPageContext, getScopedBrowsePath, getPageContextDisplayPath } from "@/lib/pageContext";
 
-function CategoryCard({ cat }: { cat: ApiCategory }) {
-  const href = `/shop/category/${encodeURIComponent(cat.slug || cat.id)}`;
+function CategoryCard({ cat, pageContext }: { cat: ApiCategory; pageContext: any }) {
+  const href = getScopedBrowsePath(pageContext, 'category', cat.slug || cat.id);
   return (
     <Link href={href}>
       <a className="flex flex-col items-center gap-2 group cursor-pointer select-none">
@@ -50,6 +51,9 @@ function CategoryCard({ cat }: { cat: ApiCategory }) {
  * Linked from: HomepageCategoryGrid "See All Categories" button.
  */
 export default function AllCategoriesPage() {
+  const [location] = useLocation();
+  const pageContext = inferPageContext(location);
+  const displayBasePath = getPageContextDisplayPath(pageContext);
   const [categories, setCategories] = useState<ApiCategory[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -73,7 +77,7 @@ export default function AllCategoriesPage() {
     <div className="min-h-screen bg-background pb-20">
       {/* Sticky header */}
       <div className="sticky top-0 z-20 bg-background/95 backdrop-blur border-b border-border px-4 py-3 flex items-center gap-3">
-        <Link href="/">
+        <Link href={displayBasePath}>
           <button
             type="button"
             className="p-1.5 rounded-full hover:bg-muted transition-colors"
@@ -106,7 +110,7 @@ export default function AllCategoriesPage() {
                 </div>
               ))
             : categories.map((cat) => (
-                <CategoryCard key={cat.id} cat={cat} />
+                <CategoryCard key={cat.id} cat={cat} pageContext={pageContext} />
               ))}
         </div>
 

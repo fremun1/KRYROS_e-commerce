@@ -1,6 +1,7 @@
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
+import { inferPageContext, getPageContextDisplayPath } from "@/lib/pageContext";
 import { Minus, Plus, Trash2, ShoppingBag, ArrowRight, ChevronLeft, Info, Truck } from "lucide-react";
 import { toast } from "sonner";
 import { useCartStore } from "@/store/cartStore";
@@ -14,6 +15,9 @@ const QUALIFYING_PRICE_USD = 100;
 
 export default function CartPage() {
   const { items, removeFromCart, updateQty, clearCart } = useCartStore();
+  const [location] = useLocation();
+  const pageContext = useMemo(() => inferPageContext(location), [location]);
+  const displayBasePath = useMemo(() => getPageContextDisplayPath(pageContext), [pageContext]);
   const format = useCurrencyStore((s) => s.format);
   const cartCount = items.reduce((t, i) => t + i.qty, 0);
   const subtotal = items.reduce((t, i) => t + i.price * i.qty, 0);
@@ -40,7 +44,7 @@ export default function CartPage() {
 
   const TopBar = () => (
     <div className="md:hidden sticky top-0 z-10 bg-background border-b border-border px-4 py-3 flex items-center gap-3">
-      <Link href="/shop">
+      <Link href={displayBasePath}>
         <button className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-muted transition-colors">
           <ChevronLeft className="w-5 h-5 text-foreground" />
         </button>
@@ -54,7 +58,7 @@ export default function CartPage() {
         <span className="text-base font-black text-foreground">KRY<span className="text-primary">ROS</span></span>
       </span>
       <div className="flex-1" />
-      <Link href="/shop">
+      <Link href={displayBasePath}>
         <span className="text-xs text-primary font-semibold hover:underline">Continue Shopping</span>
       </Link>
     </div>
@@ -70,7 +74,7 @@ export default function CartPage() {
         </div>
         <h2 className="text-2xl font-bold text-foreground mb-2">Your cart is empty</h2>
         <p className="text-muted-foreground mb-6">Add some products to get started.</p>
-        <Link href="/shop">
+        <Link href={displayBasePath}>
           <button className="px-8 py-3 bg-primary text-white rounded-xl font-semibold hover:bg-primary/90 transition-all">
             Continue Shopping
           </button>
@@ -219,7 +223,7 @@ export default function CartPage() {
               </button>
             </Link>
 
-            <Link href="/shop">
+            <Link href={displayBasePath}>
               <button className="w-full mt-3 py-3 border border-border text-foreground rounded-xl font-semibold text-sm hover:bg-muted transition-all">
                 Continue Shopping
               </button>

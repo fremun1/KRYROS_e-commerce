@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "wouter";
+import { inferPageContext, getScopedBrowsePath, getPageContextDisplayPath } from "@/lib/pageContext";
 import {
   ShoppingBag, Heart, User, Sun, Moon, Globe, Menu, Mic, ChevronDown, LogOut, LayoutDashboard, X, Grid2x2,
 } from "lucide-react";
@@ -39,6 +40,8 @@ type HeaderConfig = {
 };
 
 export default function Header() {
+  const [location] = useLocation();
+  const pageContext = inferPageContext(location);
   const [headerCfg, setHeaderCfg] = useState<HeaderConfig | null>(null);
   const [announceHidden, setAnnounceHidden] = useState(false);
   const [headerHeight, setHeaderHeight] = useState(52);
@@ -76,7 +79,6 @@ export default function Header() {
     ...ensureLinks.filter(e => !rawNav.some((n: any) => n.href === e.href)),
   ];
   const { open: sidebarOpen, setOpen: setSidebarOpen } = useSidebarStore();
-  const [location] = useLocation();
   const items = useCartStore((s) => s.items);
   const cartCount = items.reduce((t, i) => t + i.qty, 0);
   const wishlist = useWishlistStore((s) => s.items);
@@ -148,7 +150,7 @@ export default function Header() {
                   <div className="fixed inset-0 z-30" onClick={() => setCatMenuOpen(false)} />
                   <div className="absolute left-0 top-12 z-40 w-64 bg-card border border-border rounded-2xl shadow-2xl overflow-hidden">
                     <div className="p-2 max-h-80 overflow-y-auto">
-                      <Link href="/shop" onClick={() => setCatMenuOpen(false)}>
+                      <Link href={getPageContextDisplayPath(pageContext)} onClick={() => setCatMenuOpen(false)}>
                         <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-muted transition-colors text-left">
                           <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
                             <Grid2x2 className="w-4 h-4 text-primary" />
@@ -157,7 +159,7 @@ export default function Header() {
                         </button>
                       </Link>
                       {headerCategories.map(cat => (
-                        <Link key={cat.id} href={`/shop/category/${encodeURIComponent(cat.slug || String(cat.id))}`} onClick={() => setCatMenuOpen(false)}>
+                        <Link key={cat.id} href={getScopedBrowsePath(pageContext, 'category', cat.slug || String(cat.id))} onClick={() => setCatMenuOpen(false)}>
                           <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-muted transition-colors text-left">
                             {cat.image ? (
                               <img src={cat.image} alt={cat.name} className="w-8 h-8 rounded-lg object-cover flex-shrink-0" />
