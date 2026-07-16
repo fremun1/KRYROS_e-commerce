@@ -105,9 +105,17 @@ export default function BrowsePage() {
         url.searchParams.set("skip", "0");
 
         if (type === "category") {
-          url.searchParams.set("categorySlug", slug);
+          if (/^\d+$/.test(slug)) {
+            url.searchParams.set("categoryId", slug);
+          } else {
+            url.searchParams.set("categorySlug", slug);
+          }
         } else if (type === "brand") {
-          url.searchParams.set("brandSlug", slug);
+          if (/^\d+$/.test(slug)) {
+            url.searchParams.set("brandId", slug);
+          } else {
+            url.searchParams.set("brandSlug", slug);
+          }
         }
 
         // Get the actual brand/category name from the first product if possible
@@ -131,7 +139,7 @@ export default function BrowsePage() {
               if (!res.ok) return null;
               const data = await res.json();
               const brands = Array.isArray(data) ? data : data.data || [];
-              const match = brands.find((b: any) => (b.slug || "").toLowerCase() === slug);
+              const match = brands.find((b: any) => (b.slug || "").toLowerCase() === slug || String(b.id) === slug);
               return match?.name || null;
             } catch {
               return null;
@@ -148,7 +156,7 @@ export default function BrowsePage() {
               if (!res.ok) return null;
               const data = await res.json();
               const cats = Array.isArray(data) ? data : data.data || [];
-              const match = cats.find((c: any) => (c.slug || "").toLowerCase() === slug);
+              const match = cats.find((c: any) => (c.slug || "").toLowerCase() === slug || String(c.id) === slug);
               return match?.name || null;
             } catch {
               return null;
@@ -195,9 +203,17 @@ export default function BrowsePage() {
       url.searchParams.set("skip", String(totalLoaded));
 
       if (type === "category") {
-        url.searchParams.set("categorySlug", slug);
+        if (/^\d+$/.test(slug)) {
+          url.searchParams.set("categoryId", slug);
+        } else {
+          url.searchParams.set("categorySlug", slug);
+        }
       } else if (type === "brand") {
-        url.searchParams.set("brandSlug", slug);
+        if (/^\d+$/.test(slug)) {
+          url.searchParams.set("brandId", slug);
+        } else {
+          url.searchParams.set("brandSlug", slug);
+        }
       }
 
       const res = await fetch(url.toString());

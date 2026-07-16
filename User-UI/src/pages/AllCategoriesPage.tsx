@@ -5,7 +5,7 @@ import { fetchCategories } from "@/lib/api";
 import type { ApiCategory } from "@/lib/api";
 
 function CategoryCard({ cat }: { cat: ApiCategory }) {
-  const href = `/shop/section/${encodeURIComponent(cat.slug || cat.id)}`;
+  const href = `/shop/category/${encodeURIComponent(cat.slug || cat.id)}`;
   return (
     <Link href={href}>
       <a className="flex flex-col items-center gap-2 group cursor-pointer select-none">

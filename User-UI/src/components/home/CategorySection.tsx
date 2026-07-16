@@ -47,9 +47,7 @@ export default function CategorySection({
   if (categories.length === 0) return null;
 
   const CategoryCard = ({ cat }: { cat: ApiCategory }) => {
-    const href = cat.slug
-      ? `/shop/category/${cat.slug}`
-      : `/shop?categoryId=${cat.id}`;
+    const href = `/shop/category/${encodeURIComponent(cat.slug || String(cat.id))}`;
 
     return (
       <a href={href} className="group flex flex-col items-center text-center">

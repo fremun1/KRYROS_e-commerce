@@ -319,8 +319,11 @@ export interface ProductQueryParams {
   skip?: number;
   categoryId?: string;
   categorySlug?: string;
+  brandId?: number;
+  brandSlug?: string;
   search?: string;
   featured?: boolean;
+  isFeatured?: boolean; // alias for featured
   isFlashSale?: boolean;
   popularity?: "trending" | "bestseller" | "new" | "hot" | "sale";
   allowCredit?: boolean;
@@ -336,8 +339,11 @@ export async function fetchProductsPage(
   if (params.skip !== undefined) qs.set("skip", String(params.skip));
   if (params.categoryId) qs.set("categoryId", params.categoryId);
   if (params.categorySlug) qs.set("categorySlug", params.categorySlug);
+  if (params.brandId) qs.set("brandId", String(params.brandId));
+  if (params.brandSlug) qs.set("brandSlug", params.brandSlug);
   if (params.search) qs.set("search", params.search);
-  if (params.featured !== undefined) qs.set("featured", String(params.featured));
+  const isFeatured = params.isFeatured !== undefined ? params.isFeatured : params.featured;
+  if (isFeatured !== undefined) qs.set("featured", String(isFeatured));
   if (params.isFlashSale !== undefined) qs.set("isFlashSale", String(params.isFlashSale));
   if (params.popularity) qs.set("popularity", params.popularity);
   if (params.allowCredit !== undefined) qs.set("allowCredit", String(params.allowCredit));

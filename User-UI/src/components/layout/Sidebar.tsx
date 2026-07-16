@@ -305,7 +305,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                                   {isCatExpanded && catBrands.length > 0 && (
                                     <div className="pl-6 space-y-1 mt-1 mb-2 border-l-2 border-primary/20 ml-4">
                                       {catBrands.map((brand) => (
-                                        <Link key={brand.id} href={`/shop?brand=${encodeURIComponent(brand.slug)}`} onClick={onClose}>
+                                        <Link key={brand.id} href={`/shop/brand/${encodeURIComponent(brand.slug || String(brand.id))}`} onClick={onClose}>
                                           <div className="px-3 py-1.5 rounded-lg hover:bg-muted transition-colors text-foreground text-xs cursor-pointer">
                                             {brand.name}
                                           </div>

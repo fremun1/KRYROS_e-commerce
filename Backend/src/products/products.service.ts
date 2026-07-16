@@ -83,11 +83,11 @@ export class ProductsService {
       });
     }
 
-    if (isFeatured !== undefined) andFilters.push({ isFeatured: String(isFeatured) === 'true' });
-    if (isFlashSale !== undefined) andFilters.push({ isFlashSale: String(isFlashSale) === 'true' });
-    if (allowCredit !== undefined) andFilters.push({ allowCredit: String(allowCredit) === 'true' });
-    if (isWholesaleOnly !== undefined) andFilters.push({ isWholesaleOnly: String(isWholesaleOnly) === 'true' });
-    if (isNew !== undefined) andFilters.push({ isNew: String(isNew) === 'true' });
+    if (isFeatured !== undefined) andFilters.push({ isFeatured: typeof isFeatured === 'boolean' ? isFeatured : String(isFeatured) === 'true' });
+    if (isFlashSale !== undefined) andFilters.push({ isFlashSale: typeof isFlashSale === 'boolean' ? isFlashSale : String(isFlashSale) === 'true' });
+    if (allowCredit !== undefined) andFilters.push({ allowCredit: typeof allowCredit === 'boolean' ? allowCredit : String(allowCredit) === 'true' });
+    if (isWholesaleOnly !== undefined) andFilters.push({ isWholesaleOnly: typeof isWholesaleOnly === 'boolean' ? isWholesaleOnly : String(isWholesaleOnly) === 'true' });
+    if (isNew !== undefined) andFilters.push({ isNew: typeof isNew === 'boolean' ? isNew : String(isNew) === 'true' });
     
     if (minPrice !== undefined) andFilters.push({ price: { gte: Number(minPrice) } });
     if (maxPrice !== undefined) andFilters.push({ price: { lte: Number(maxPrice) } });

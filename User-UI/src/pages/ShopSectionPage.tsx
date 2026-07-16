@@ -123,7 +123,7 @@ export default function ShopSectionPage() {
 
       // 3. Merge everything: Rule Defaults < CMS Config < URL Query Params
       // This makes the system fully flexible for any new dataSourceId or custom config
-      return {
+      const params = {
         ...ruleParams,
         ...cfg,
         // Ensure UI-specific config doesn't break API
@@ -132,6 +132,14 @@ export default function ShopSectionPage() {
         title: undefined,
         subtitle: undefined,
       };
+
+      // Map isFeatured to featured for backend consistency
+      if (params.isFeatured !== undefined) {
+        params.featured = params.isFeatured;
+        delete params.isFeatured;
+      }
+
+      return params;
     }
     if (resolved.kind === "category") {
       return { categorySlug: resolved.category.slug || resolved.category.id };
@@ -206,6 +214,36 @@ export default function ShopSectionPage() {
   const fmt = (v: number) => String(v).padStart(2, "0");
 
   const load = async (nextSkip: number, append: boolean) => {
+    if (resolved.kind === "cms") {
+      const section = resolved.section;
+      const apiPath = `${API_BASE}/api/cms/sections/products-by-source`;
+      const url = new URL(apiPath, window.location.origin);
+      
+      const effectiveSourceId = section.dataSourceId || 'dynamic-query';
+      url.searchParams.set('dataSourceId', effectiveSourceId);
+      url.searchParams.set('limit', String(take));
+      url.searchParams.set('skip', String(nextSkip));
+      
+      const cfg = (section.config ?? {}) as Record<string, any>;
+      Object.entries(cfg).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '' && 
+            !['dataSourceId', 'sectionSlug', 'title', 'subtitle'].includes(key)) {
+          url.searchParams.set(key, String(value));
+        }
+      });
+
+      const response = await fetch(url.toString());
+      if (response.ok) {
+        const data = await response.json();
+        const productList = Array.isArray(data) ? data : (data.data || []);
+        const normalized = productList.map(normalizeProduct);
+        setTotalLoaded(normalized.length);
+        setProducts((prev) => (append ? prev.concat(normalized) : normalized));
+        return;
+      }
+    }
+
+    // Fallback for categories or if CMS fetch fails
     const result = await fetchProducts({ ...buildQuery, take, skip: nextSkip });
     setTotalLoaded(result.length);
     setProducts((prev) => (append ? prev.concat(result) : result));
