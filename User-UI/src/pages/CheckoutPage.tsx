@@ -449,7 +449,9 @@ export default function CheckoutPage() {
         if (d.status?.toLowerCase() === "paid") {
           clearInterval(pollRef.current!); setPlacedOrderNumber(orderNum); clearCart(); setOrdered(true); setMmPhase("idle");
         } else if (d.status?.toLowerCase() === "failed") {
-          clearInterval(pollRef.current!); setMmPhase("failed_init");
+          clearInterval(pollRef.current!);
+          setOrderError(d.message || "Payment failed or was cancelled.");
+          setMmPhase("failed_init");
         }
       } catch {}
     }, 5000);

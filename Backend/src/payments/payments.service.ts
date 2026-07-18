@@ -67,6 +67,36 @@ export class PaymentsService {
     return `/track-payment/${encodeURIComponent(paymentNumber)}`;
   }
 
+  private generateGatewayReference(prefix: string, identifier?: string) {
+    const timestamp = Date.now();
+    const randomSuffix = Math.random().toString(36).substring(2, 8).toUpperCase();
+    const identifierSuffix = String(identifier || '')
+      .replace(/[^a-zA-Z0-9]/g, '')
+      .slice(-8)
+      .toUpperCase();
+
+    return [prefix, timestamp, randomSuffix, identifierSuffix].filter(Boolean).join('_');
+  }
+
+  private buildGatewayMessage(responseCode: unknown, responseMessage: unknown) {
+    const code = String(responseCode ?? '').trim();
+    const message = String(responseMessage ?? 'No message provided').trim();
+
+    if (!code) {
+      return message;
+    }
+
+    return `[${code}] ${message}`;
+  }
+
+  private toGatewayHttpException(error: unknown, fallbackMessage: string) {
+    if (error instanceof HttpException) {
+      return error;
+    }
+
+    return new HttpException({ message: fallbackMessage }, HttpStatus.BAD_GATEWAY);
+  }
+
   /**
    * Normalize phone number for a specific country
    * Supports multiple African countries with their respective phone formats
@@ -179,13 +209,15 @@ export class PaymentsService {
       customerName: payment.customerName,
       customerEmail: payment.customerEmail,
       paymentPhone: payment.paymentPhone,
+      note: payment.note,
+      message: payment.note,
     };
   }
 
   async process543Payment(orderId: string, phone: string, amountZMW: number, countryCode?: string) {
     const username = this.configService.get('CGRATE_USERNAME');
     const password = this.configService.get('CGRATE_PASSWORD');
-    const transactionId = `KRYROS_${Date.now()}`;
+    const transactionId = this.generateGatewayReference('KRYROS', orderId);
     const paymentNumber = `ORD-${Date.now().toString(36).toUpperCase()}`;
 
     this.logger.log('=== Starting 543 Payment Process ===');
@@ -236,17 +268,18 @@ export class PaymentsService {
         throw new Error('Invalid SOAP response structure');
       }
 
-      const isSuccess = txReturn.responseCode === 0 || txReturn.responseCode === '0';
+      const responseCode = String(txReturn.responseCode ?? '');
+      const isSuccess = responseCode === '0';
       const status = isSuccess ? 'PENDING' : 'FAILED';
       const reference = txReturn.paymentID || transactionId;
-      const message = txReturn.responseMessage || 'No message provided';
+      const message = this.buildGatewayMessage(txReturn.responseCode, txReturn.responseMessage);
 
       // Update order status in DB
       await this.prisma.order.update({
         where: { id: orderId },
         data: {
           paymentReference: reference,
-          paymentPhone: phone,
+          paymentPhone: formattedPhone,
           paymentStatus: status as PaymentStatus,
           status: OrderStatus.PENDING,
         },
@@ -267,10 +300,12 @@ export class PaymentsService {
           amount: amountZMW,
           currency: 'ZMW',
           paymentMethod: 'MOBILE_MONEY',
-          paymentPhone: phone,
+          paymentPhone: formattedPhone,
           paymentReference: reference,
           status: status as PaymentStatus,
-          note: `Payment for order ${orderId}`,
+          note: isSuccess
+            ? `Payment for order ${orderId}`
+            : `Payment prompt failed: ${message}`,
           providerName: '543/cGrate',
           networkName: 'Mobile Money',
           trackingLink: this.buildDirectPaymentTrackingLink(paymentNumber),
@@ -287,14 +322,14 @@ export class PaymentsService {
         },
       });
 
-      return { success: isSuccess, status: status, reference: reference, message: message };
+      return { success: isSuccess, status: status, reference: reference, message: message, code: responseCode };
     } catch (error) {
       this.log543Error('543 payment init failed', error);
       await this.prisma.order.update({
         where: { id: orderId },
         data: { paymentStatus: 'FAILED' },
       }).catch(() => {});
-      throw error;
+      throw this.toGatewayHttpException(error, 'Payment initialization failed. Please try again.');
     }
   }
 
@@ -358,7 +393,7 @@ export class PaymentsService {
   private async initiate543Direct(paymentId: string, phone: string, amountZMW: number, countryCode?: string) {
     const username = this.configService.get('CGRATE_USERNAME');
     const password = this.configService.get('CGRATE_PASSWORD');
-    const transactionId = `KRYROS_DP_${Date.now()}`;
+    const transactionId = this.generateGatewayReference('KRYROS_DP', paymentId);
 
     if (!username || !password) {
       throw new HttpException('Payment service not configured', HttpStatus.SERVICE_UNAVAILABLE);
@@ -388,15 +423,17 @@ export class PaymentsService {
 
       if (!txReturn) throw new Error('Invalid SOAP response');
 
-      const isSuccess = txReturn.responseCode === 0 || txReturn.responseCode === '0';
+      const responseCode = String(txReturn.responseCode ?? '');
+      const isSuccess = responseCode === '0';
       const status = isSuccess ? 'PENDING' : 'FAILED';
       const reference = txReturn.paymentID || transactionId;
-      const message = txReturn.responseMessage || 'No message provided';
+      const message = this.buildGatewayMessage(txReturn.responseCode, txReturn.responseMessage);
 
       await this.prisma.directPayment.update({
         where: { id: paymentId },
         data: {
           paymentReference: reference,
+          paymentPhone: formattedPhone,
           status: status as PaymentStatus,
           note: isSuccess
             ? 'Mobile money prompt sent. Waiting for customer approval on phone.'
@@ -404,7 +441,7 @@ export class PaymentsService {
         },
       });
 
-      return { success: isSuccess, status: status, reference: reference, message };
+      return { success: isSuccess, status: status, reference: reference, message, code: responseCode };
     } catch (error) {
       this.log543Error('543 direct payment init failed', error);
       const failureMessage = error instanceof Error ? error.message : 'Payment initialization failed';
@@ -415,7 +452,7 @@ export class PaymentsService {
           note: `Payment initialization failed: ${failureMessage}`,
         },
       }).catch(() => {});
-      throw error;
+      throw this.toGatewayHttpException(error, 'Payment initialization failed. Please try again.');
     }
   }
 
@@ -551,7 +588,7 @@ export class PaymentsService {
             status: newStatus as PaymentStatus,
           };
           if (newStatus === 'FAILED' && txReturn.responseMessage) {
-            updateData.note = `Payment failed: ${String(txReturn.responseMessage)}`;
+            updateData.note = `Payment failed: ${this.buildGatewayMessage(txReturn.responseCode, txReturn.responseMessage)}`;
           }
           if (newStatus === 'PAID' && !payment.paidAt) {
             updateData.paidAt = new Date();
@@ -623,7 +660,12 @@ export class PaymentsService {
             },
           });
         }
-        return { status: newStatus.toLowerCase() };
+        return {
+          status: newStatus.toLowerCase(),
+          message: newStatus === 'FAILED'
+            ? this.buildGatewayMessage(txReturn.responseCode, txReturn.responseMessage)
+            : undefined,
+        };
       }
     } catch (error) {
       this.log543Error('Order Status Check Error', error);
