@@ -5,8 +5,8 @@ import DataTable, { Column } from '@/components/admin/data-table';
 import PageHeader from '@/components/admin/page-header';
 import { Modal, ConfirmDialog, FormField, ModalFooter } from '@/components/admin/modal';
 import { useTheme } from '@/contexts/theme-context';
-import { Package } from 'lucide-react';
-import { createProduct, updateProduct, deleteProduct, getProducts, getCategories, getBrands } from '@/lib/api';
+import { Package, Settings2 } from 'lucide-react';
+import { createProduct, updateProduct, deleteProduct, getProducts, getCategories, getBrands, getSettings, updateSettings } from '@/lib/api';
 import toast from 'react-hot-toast';
 import CloudinaryUpload from '@/components/ui/file-upload';
 
@@ -44,7 +44,27 @@ const STATUSES = ['Active', 'Inactive', 'Low Stock', 'Out of Stock'];
 const BOOL_OPTS = ['No', 'Yes'];
 const toSlug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 
-const CONDITION_OPTIONS = ['New', 'Used', 'Refurbished'];
+const DEFAULT_CONDITION_OPTIONS = ['New', 'Used', 'Refurbished'];
+
+const parseConditionOptions = (raw?: string | null): string[] => {
+  if (!raw || !raw.trim()) return DEFAULT_CONDITION_OPTIONS;
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) {
+      const cleaned = parsed
+        .map((item) => String(item || '').trim())
+        .filter(Boolean);
+      return cleaned.length > 0 ? Array.from(new Set(cleaned)) : DEFAULT_CONDITION_OPTIONS;
+    }
+  } catch {}
+
+  const cleaned = raw
+    .split(/\r?\n|,|\|/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+
+  return cleaned.length > 0 ? Array.from(new Set(cleaned)) : DEFAULT_CONDITION_OPTIONS;
+};
 
 const EMPTY_FORM = {
   name: '', slug: '', sku: '', description: '', category: 'Electronics', brand: 'Apple',
@@ -144,6 +164,10 @@ function ProductsContent() {
 
   useEffect(() => {
     loadProducts(currentPage);
+  }, [currentPage]);
+
+  useEffect(() => {
+    loadConditionSettings();
     getCategories().then(r => {
       const data = r?.data ?? r ?? [];
       const names = data.map((c: any) => c.name || c).filter(Boolean);
@@ -154,7 +178,7 @@ function ProductsContent() {
       const names = data.map((b: any) => b.name || b).filter(Boolean);
       if (names.length > 0) setBrands(names);
     }).catch(() => {});
-  }, [currentPage]);
+  }, []);
   const [addOpen, setAddOpen] = useState(false);
   const [editRow, setEditRow] = useState<Product | null>(null);
   const [deleteRow, setDeleteRow] = useState<Product | null>(null);
@@ -164,6 +188,35 @@ function ProductsContent() {
   const [productImages, setProductImages] = useState<string[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [brands, setBrands] = useState<string[]>([]);
+  const [conditionOptions, setConditionOptions] = useState<string[]>(DEFAULT_CONDITION_OPTIONS);
+  const [conditionSettingsOpen, setConditionSettingsOpen] = useState(false);
+  const [conditionDraft, setConditionDraft] = useState(DEFAULT_CONDITION_OPTIONS.join('\n'));
+  const [conditionSaving, setConditionSaving] = useState(false);
+
+  const productConditionOptions = Array.from(new Set([
+    ...(form.condition ? [form.condition] : []),
+    ...conditionOptions,
+  ]));
+
+  const loadConditionSettings = async () => {
+    try {
+      const r: any = await getSettings();
+      const settings = Array.isArray(r.data) ? r.data : [];
+      const conditionSetting = settings.find((s: any) => s?.key === 'product_condition_options');
+      const nextOptions = parseConditionOptions(conditionSetting?.value);
+      setConditionOptions(nextOptions);
+      setConditionDraft(nextOptions.join('\n'));
+      setForm((current) => {
+        if (!current.condition || !nextOptions.includes(current.condition)) {
+          return { ...current, condition: nextOptions[0] };
+        }
+        return current;
+      });
+    } catch {
+      setConditionOptions(DEFAULT_CONDITION_OPTIONS);
+      setConditionDraft(DEFAULT_CONDITION_OPTIONS.join('\n'));
+    }
+  };
 
   const fp = (k: string) => (v: string) => setForm(f => {
     const updated = { ...f, [k]: v };
@@ -173,7 +226,11 @@ function ProductsContent() {
 
   const boolToStr = (v: boolean) => v ? 'Yes' : 'No';
 
-  const openAdd = () => { setForm({ ...EMPTY_FORM }); setProductImages([]); setAddOpen(true); };
+  const openAdd = () => {
+    setForm({ ...EMPTY_FORM, condition: conditionOptions[0] || DEFAULT_CONDITION_OPTIONS[0] });
+    setProductImages([]);
+    setAddOpen(true);
+  };
   const openEdit = (row: Record<string, unknown>) => {
     const r = row as unknown as Product;
     setForm({
@@ -192,7 +249,7 @@ function ProductsContent() {
       showReturnsBadge: boolToStr(r.showReturnsBadge),
       tags: r.tags || '', metaTitle: r.metaTitle || '', metaDescription: r.metaDescription || '',
       imageUrl: r.imageUrl || '', specifications: r.specifications || '',
-      condition: r.condition || 'New',
+      condition: r.condition || conditionOptions[0] || DEFAULT_CONDITION_OPTIONS[0],
       shippingFee: r.shippingFee || '',
       estimatedDeliveryDays: r.estimatedDeliveryDays || '3',
       estimatedDeliveryMinDays: r.estimatedDeliveryMinDays || '2',
@@ -368,6 +425,32 @@ function ProductsContent() {
     setLoading(false);
   };
 
+  const handleSaveConditionOptions = async () => {
+    const nextOptions = parseConditionOptions(conditionDraft);
+    if (nextOptions.length === 0) {
+      toast.error('Add at least one product condition option');
+      return;
+    }
+
+    setConditionSaving(true);
+    try {
+      await updateSettings({
+        product_condition_options: JSON.stringify(nextOptions),
+      });
+      setConditionOptions(nextOptions);
+      setConditionDraft(nextOptions.join('\n'));
+      setForm((current) => ({
+        ...current,
+        condition: nextOptions.includes(current.condition) ? current.condition : nextOptions[0],
+      }));
+      toast.success('Product condition options updated');
+      setConditionSettingsOpen(false);
+    } catch {
+      toast.error('Failed to save condition options');
+    }
+    setConditionSaving(false);
+  };
+
   const statusBadge = (status: string) => {
     const map: Record<string, { bg: string; color: string }> = {
       Active: { bg: 'rgba(31,168,154,0.12)', color: '#1FA89A' },
@@ -500,7 +583,33 @@ function ProductsContent() {
       <FormField label="Show Free Returns Badge" value={form.showReturnsBadge} onChange={fp('showReturnsBadge')} options={BOOL_OPTS} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
 
       {sectionLabel('Product Condition & Shipping')}
-      <FormField label="Product Condition" value={form.condition} onChange={fp('condition')} options={CONDITION_OPTIONS} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:'12px', marginBottom:'8px' }}>
+        <div style={{ fontSize:'12px', color:textMuted }}>
+          Change the available product conditions from the same place the upload form uses.
+        </div>
+        <button
+          type="button"
+          onClick={() => setConditionSettingsOpen(true)}
+          style={{
+            display:'inline-flex',
+            alignItems:'center',
+            gap:'6px',
+            padding:'8px 12px',
+            borderRadius:'8px',
+            border:`1px solid ${border}`,
+            background:surface,
+            color:textMain,
+            cursor:'pointer',
+            fontSize:'12px',
+            fontWeight:600,
+            whiteSpace:'nowrap',
+          }}
+        >
+          <Settings2 size={14} />
+          Edit Conditions
+        </button>
+      </div>
+      <FormField label="Product Condition" value={form.condition} onChange={fp('condition')} options={productConditionOptions} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
       <FormField label="Shipping Fee (USD, optional)" value={form.shippingFee} onChange={fp('shippingFee')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Leave blank for free shipping" />
       <FormField label="Estimated Delivery Days (Min)" value={form.estimatedDeliveryMinDays} onChange={fp('estimatedDeliveryMinDays')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="2" />
       <FormField label="Estimated Delivery Days (Max)" value={form.estimatedDeliveryMaxDays} onChange={fp('estimatedDeliveryMaxDays')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="7" />
@@ -596,6 +705,33 @@ function ProductsContent() {
       )}
 
       <ConfirmDialog open={!!deleteRow} onClose={() => setDeleteRow(null)} onConfirm={handleDelete} loading={loading} title="Delete Product" message={`Delete "${deleteRow?.name}" permanently?`} />
+
+      <Modal open={conditionSettingsOpen} onClose={() => setConditionSettingsOpen(false)} title="Edit Product Conditions" maxWidth="560px">
+        <div style={{ fontSize:'13px', color:textMuted, lineHeight:1.6, marginBottom:'14px' }}>
+          Add one condition per line. These options will appear in the product upload form, and whatever you choose for a product will be saved and shown on the frontend.
+        </div>
+        <FormField
+          label="Condition Options"
+          value={conditionDraft}
+          onChange={setConditionDraft}
+          type="textarea"
+          isDark={isDark}
+          border={border}
+          textMain={textMain}
+          textMuted={textMuted}
+          surface={surface}
+          placeholder={'New\nUsed\nRefurbished\nOpen Box'}
+        />
+        <ModalFooter
+          onClose={() => setConditionSettingsOpen(false)}
+          onSubmit={handleSaveConditionOptions}
+          loading={conditionSaving}
+          submitLabel="Save Conditions"
+          isDark={isDark}
+          border={border}
+          textMain={textMain}
+        />
+      </Modal>
     </div>
   );
 }
