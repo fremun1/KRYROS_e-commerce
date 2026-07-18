@@ -53,8 +53,15 @@ interface SidebarProps {
 
 export default function Sidebar({ open, onClose }: SidebarProps) {
   const [catSearch, setCatSearch] = useState("");
-  const [expandedSection, setExpandedSection] = useState<string | null>("account");
-  const [expandedCat, setExpandedCat] = useState<string | number | null>(null);
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
+    account: true,
+    browse: true,
+    categories: true,
+    preferences: true,
+    info: true,
+  });
+  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
+  const [currencyOpen, setCurrencyOpen] = useState(false);
   const [location, setLocation] = useLocation();
   const pageContext = inferPageContext(location);
   const { theme, toggleTheme } = useThemeStore();
@@ -121,13 +128,43 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
     c.name.toLowerCase().includes(catSearch.toLowerCase())
   );
 
+  useEffect(() => {
+    if (categories.length === 0) return;
+
+    setExpandedCategories((prev) => {
+      const next = { ...prev };
+      let changed = false;
+
+      categories.forEach((cat) => {
+        const key = String(cat.id);
+        if (next[key] === undefined) {
+          next[key] = true;
+          changed = true;
+        }
+      });
+
+      return changed ? next : prev;
+    });
+  }, [categories]);
+
   const handleLogout = async () => {
     onClose();
     await logout();
   };
 
   const toggleSection = (section: string) => {
-    setExpandedSection(expandedSection === section ? null : section);
+    setExpandedSections((prev) => ({
+      ...prev,
+      [section]: !(prev[section] ?? true),
+    }));
+  };
+
+  const toggleCategory = (categoryId: string | number) => {
+    const key = String(categoryId);
+    setExpandedCategories((prev) => ({
+      ...prev,
+      [key]: !(prev[key] ?? true),
+    }));
   };
 
   const navigateTo = (path: string) => {
@@ -191,10 +228,10 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                       <User className="w-5 h-5 text-primary" />
                       <span>My Account</span>
                     </div>
-                    <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${expandedSection === "account" ? "rotate-180" : ""}`} />
+                    <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${expandedSections.account ? "rotate-180" : ""}`} />
                   </button>
                   <AnimatePresence>
-                    {expandedSection === "account" && (
+                    {expandedSections.account && (
                       <motion.div 
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: "auto", opacity: 1 }}
@@ -236,10 +273,10 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                       <ShoppingBag className="w-5 h-5 text-primary" />
                       <span>Browse Store</span>
                     </div>
-                    <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${expandedSection === "browse" ? "rotate-180" : ""}`} />
+                    <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${expandedSections.browse ? "rotate-180" : ""}`} />
                   </button>
                   <AnimatePresence>
-                    {expandedSection === "browse" && (
+                    {expandedSections.browse && (
                       <motion.div 
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: "auto", opacity: 1 }}
@@ -271,10 +308,10 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                       <Grid2x2 className="w-5 h-5 text-primary" />
                       <span>Our Categories</span>
                     </div>
-                    <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${expandedSection === "categories" ? "rotate-180" : ""}`} />
+                    <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${expandedSections.categories ? "rotate-180" : ""}`} />
                   </button>
                   <AnimatePresence>
-                    {expandedSection === "categories" && (
+                    {expandedSections.categories && (
                       <motion.div 
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: "auto", opacity: 1 }}
@@ -295,7 +332,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                           <div className="space-y-0.5">
                             {filteredCats.map((cat) => {
                               const catBrands = brandsByCategory[cat.id] || [];
-                              const isCatExpanded = expandedCat === cat.id;
+                              const isCatExpanded = expandedCategories[String(cat.id)] ?? true;
                               const categoryPath = getScopedBrowsePath(pageContext, 'category', cat.slug || String(cat.id));
                               return (
                                 <div key={cat.id}>
@@ -310,7 +347,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                                     {catBrands.length > 0 && (
                                       <button
                                         type="button"
-                                        onClick={() => setExpandedCat(isCatExpanded ? null : cat.id)}
+                                        onClick={() => toggleCategory(cat.id)}
                                         className="px-3 py-2.5 rounded-r-lg hover:bg-muted transition-colors border-l border-border/10"
                                       >
                                         <ChevronRight
@@ -356,10 +393,10 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                       <Globe className="w-5 h-5 text-primary" />
                       <span>Preferences</span>
                     </div>
-                    <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${expandedSection === "preferences" ? "rotate-180" : ""}`} />
+                    <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${expandedSections.preferences ? "rotate-180" : ""}`} />
                   </button>
                   <AnimatePresence>
-                    {expandedSection === "preferences" && (
+                    {expandedSections.preferences && (
                       <motion.div 
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: "auto", opacity: 1 }}
@@ -370,7 +407,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                           {/* Currency */}
                           <div className="relative">
                             <button
-                              onClick={() => setExpandedCat(expandedCat === "currency" ? null : "currency")}
+                              onClick={() => setCurrencyOpen((prev) => !prev)}
                               className="w-full flex items-center justify-between px-10 py-3 hover:bg-muted transition-colors cursor-pointer"
                             >
                               <div className="flex items-center gap-3 text-foreground">
@@ -379,15 +416,15 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                               </div>
                               <div className="flex items-center gap-1 text-muted-foreground text-xs">
                                 <span>{selected.code}</span>
-                                <ChevronRight className={`w-3 h-3 transition-transform ${expandedCat === "currency" ? "rotate-90" : ""}`} />
+                                <ChevronRight className={`w-3 h-3 transition-transform ${currencyOpen ? "rotate-90" : ""}`} />
                               </div>
                             </button>
-                            {expandedCat === "currency" && (
+                            {currencyOpen && (
                               <div className="mx-10 my-2 bg-background border border-border rounded-xl shadow-lg overflow-hidden max-h-44 overflow-y-auto z-10">
                                 {currencies.map((c) => (
                                   <button
                                     key={c.code}
-                                    onClick={() => { setCurrency(c.code); setExpandedCat(null); }}
+                                    onClick={() => { setCurrency(c.code); setCurrencyOpen(false); }}
                                     className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors text-left ${c.code === selected.code ? "bg-primary/10 text-primary font-semibold" : "text-foreground"}`}
                                   >
                                     <span className="font-medium">{c.code}</span>
@@ -423,10 +460,10 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                       <Info className="w-5 h-5 text-primary" />
                       <span>Need Help?</span>
                     </div>
-                    <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${expandedSection === "info" ? "rotate-180" : ""}`} />
+                    <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${expandedSections.info ? "rotate-180" : ""}`} />
                   </button>
                   <AnimatePresence>
-                    {expandedSection === "info" && (
+                    {expandedSections.info && (
                       <motion.div 
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: "auto", opacity: 1 }}

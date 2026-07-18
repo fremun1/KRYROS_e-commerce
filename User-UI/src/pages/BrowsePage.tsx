@@ -35,6 +35,94 @@ function toBool(v: unknown, fallback = false) {
   return fallback;
 }
 
+function matchesBrandProduct(product: Product, brandName: string, brandSlug: string) {
+  const normalizedBrandName = brandName.trim().toLowerCase();
+  const normalizedBrandSlug = brandSlug.trim().toLowerCase();
+  const searchableText = [
+    product.brand,
+    product.brandSlug,
+    product.name,
+    product.description,
+    product.specs,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+
+  return (
+    (product.brand || "").trim().toLowerCase() === normalizedBrandName ||
+    (product.brandSlug || "").trim().toLowerCase() === normalizedBrandSlug ||
+    searchableText.includes(normalizedBrandName) ||
+    searchableText.includes(normalizedBrandSlug.replace(/-/g, " "))
+  );
+}
+
+async function fetchBrowseProducts(params: {
+  type: "category" | "brand";
+  slug: string;
+  take: number;
+  skip: number;
+  brandName?: string | null;
+}) {
+  const apiPath = `${API_BASE}/api/products`;
+  let url: URL;
+  try {
+    url = new URL(apiPath);
+  } catch {
+    url = new URL(apiPath, window.location.origin);
+  }
+
+  url.searchParams.set("take", String(params.take));
+  url.searchParams.set("skip", String(params.skip));
+
+  if (params.type === "category") {
+    if (/^\d+$/.test(params.slug)) {
+      url.searchParams.set("categoryId", params.slug);
+    } else {
+      url.searchParams.set("categorySlug", params.slug);
+    }
+  } else if (/^\d+$/.test(params.slug)) {
+    url.searchParams.set("brandId", params.slug);
+  } else {
+    url.searchParams.set("brandSlug", params.slug);
+  }
+
+  const res = await fetch(url.toString());
+  if (!res.ok) throw new Error("Failed to fetch products");
+  const data = await res.json();
+  const list = Array.isArray(data) ? data : data.data || [];
+  const normalizedProducts = list.map(normalizeProduct);
+
+  if (
+    params.type !== "brand" ||
+    normalizedProducts.length > 0 ||
+    !params.brandName ||
+    /^\d+$/.test(params.slug)
+  ) {
+    return normalizedProducts;
+  }
+
+  let fallbackUrl: URL;
+  try {
+    fallbackUrl = new URL(apiPath);
+  } catch {
+    fallbackUrl = new URL(apiPath, window.location.origin);
+  }
+
+  fallbackUrl.searchParams.set("take", String(params.take));
+  fallbackUrl.searchParams.set("skip", String(params.skip));
+  fallbackUrl.searchParams.set("search", params.brandName);
+
+  const fallbackRes = await fetch(fallbackUrl.toString());
+  if (!fallbackRes.ok) return normalizedProducts;
+  const fallbackData = await fallbackRes.json();
+  const fallbackList = Array.isArray(fallbackData) ? fallbackData : fallbackData.data || [];
+
+  return fallbackList
+    .map(normalizeProduct)
+    .filter((product: Product) => matchesBrandProduct(product, params.brandName || "", params.slug));
+}
+
 // ── Skeleton ─────────────────────────────────────────────────────────────────
 function CardSkeleton() {
   return (
@@ -96,46 +184,6 @@ export default function BrowsePage() {
       .then((secs) => (secs || []).filter((s) => s.isActive !== false))
       .catch(() => [] as ApiCMSSection[]);
 
-    // Fetch filtered products
-    const productsPromise = (async () => {
-      try {
-        const apiPath = `${API_BASE}/api/products`;
-        let url: URL;
-        try {
-          url = new URL(apiPath);
-        } catch {
-          url = new URL(apiPath, window.location.origin);
-        }
-
-        url.searchParams.set("take", String(take));
-        url.searchParams.set("skip", "0");
-
-        if (type === "category") {
-          if (/^\d+$/.test(slug)) {
-            url.searchParams.set("categoryId", slug);
-          } else {
-            url.searchParams.set("categorySlug", slug);
-          }
-        } else if (type === "brand") {
-          if (/^\d+$/.test(slug)) {
-            url.searchParams.set("brandId", slug);
-          } else {
-            url.searchParams.set("brandSlug", slug);
-          }
-        }
-
-        // Get the actual brand/category name from the first product if possible
-        const res = await fetch(url.toString());
-        if (!res.ok) throw new Error("Failed to fetch products");
-        const data = await res.json();
-        const list = Array.isArray(data) ? data : data.data || [];
-        return list.map(normalizeProduct);
-      } catch (err) {
-        console.error("Error fetching products:", err);
-        return [];
-      }
-    })();
-
     // Try to get brand details for name
     const brandNamePromise =
       type === "brand"
@@ -170,13 +218,19 @@ export default function BrowsePage() {
           })()
         : Promise.resolve(null);
 
-    Promise.all([
-      sectionsPromise,
-      productsPromise,
-      brandNamePromise,
-      catNamePromise,
-    ])
-      .then(([secs, prods, brandName, catName]) => {
+    Promise.all([sectionsPromise, brandNamePromise, catNamePromise])
+      .then(async ([secs, brandName, catName]) => {
+        const prods = await fetchBrowseProducts({
+          type,
+          slug,
+          take,
+          skip: 0,
+          brandName,
+        }).catch((err) => {
+          console.error("Error fetching products:", err);
+          return [];
+        });
+
         setSections(secs);
         setProducts(prods);
         setTotalLoaded(prods.length);
@@ -197,36 +251,28 @@ export default function BrowsePage() {
     setLoadingMore(true);
 
     try {
-      const apiPath = `${API_BASE}/api/products`;
-      let url: URL;
-      try {
-        url = new URL(apiPath);
-      } catch {
-        url = new URL(apiPath, window.location.origin);
-      }
-
-      url.searchParams.set("take", String(take));
-      url.searchParams.set("skip", String(totalLoaded));
-
-      if (type === "category") {
-        if (/^\d+$/.test(slug)) {
-          url.searchParams.set("categoryId", slug);
-        } else {
-          url.searchParams.set("categorySlug", slug);
-        }
-      } else if (type === "brand") {
-        if (/^\d+$/.test(slug)) {
-          url.searchParams.set("brandId", slug);
-        } else {
-          url.searchParams.set("brandSlug", slug);
+      let resolvedBrandName: string | null = null;
+      if (type === "brand" && !/^\d+$/.test(slug)) {
+        try {
+          const res = await fetch(`${API_BASE}/api/brands`);
+          if (res.ok) {
+            const data = await res.json();
+            const brands = Array.isArray(data) ? data : data.data || [];
+            const match = brands.find((b: any) => (b.slug || "").toLowerCase() === slug || String(b.id) === slug);
+            resolvedBrandName = match?.name || null;
+          }
+        } catch {
+          resolvedBrandName = null;
         }
       }
 
-      const res = await fetch(url.toString());
-      if (!res.ok) throw new Error("Failed to load more products");
-      const data = await res.json();
-      const list = Array.isArray(data) ? data : data.data || [];
-      const normalized = list.map(normalizeProduct);
+      const normalized = await fetchBrowseProducts({
+        type,
+        slug,
+        take,
+        skip: totalLoaded,
+        brandName: resolvedBrandName,
+      });
 
       setProducts((prev) => [...prev, ...normalized]);
       setTotalLoaded((prev) => prev + normalized.length);

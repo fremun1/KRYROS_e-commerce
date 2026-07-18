@@ -73,13 +73,42 @@ export class ProductsService {
     if (brandId) andFilters.push({ brandId: Number(brandId) });
     if (brandSlug) andFilters.push({ brand: { slug: brandSlug } });
     
-    if (search) {
+    const normalizedSearch = search?.trim();
+    const normalizedSearchSlug = normalizedSearch
+      ? normalizedSearch.toLowerCase().replace(/\s+/g, '-')
+      : undefined;
+
+    if (normalizedSearch) {
       andFilters.push({
         OR: [
-          { name: { contains: search, mode: 'insensitive' } },
-          { description: { contains: search, mode: 'insensitive' } },
-          { sku: { contains: search, mode: 'insensitive' } }
-        ]
+          { name: { contains: normalizedSearch, mode: 'insensitive' } },
+          { description: { contains: normalizedSearch, mode: 'insensitive' } },
+          { sku: { contains: normalizedSearch, mode: 'insensitive' } },
+          {
+            brand: {
+              is: {
+                OR: [
+                  { name: { contains: normalizedSearch, mode: 'insensitive' } },
+                  ...(normalizedSearchSlug
+                    ? [{ slug: { contains: normalizedSearchSlug, mode: 'insensitive' as const } }]
+                    : []),
+                ],
+              },
+            },
+          },
+          {
+            category: {
+              is: {
+                OR: [
+                  { name: { contains: normalizedSearch, mode: 'insensitive' } },
+                  ...(normalizedSearchSlug
+                    ? [{ slug: { contains: normalizedSearchSlug, mode: 'insensitive' as const } }]
+                    : []),
+                ],
+              },
+            },
+          },
+        ],
       });
     }
 

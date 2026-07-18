@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Mail, Lock, User, Eye, EyeOff } from "lucide-react";
 import { useLocation } from "wouter";
 import { useAuthStore } from "@/store/authStore";
@@ -26,7 +26,8 @@ export default function AuthPage({ initialTab = "login" }: AuthPageProps) {
   const [loginIdentifier, setLoginIdentifier] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
 
-  const [registerFullName, setRegisterFullName] = useState("");
+  const [registerFirstName, setRegisterFirstName] = useState("");
+  const [registerLastName, setRegisterLastName] = useState("");
   const [registerIdentifier, setRegisterIdentifier] = useState("");
   const [registerPassword, setRegisterPassword] = useState("");
 
@@ -38,10 +39,8 @@ export default function AuthPage({ initialTab = "login" }: AuthPageProps) {
     setShowPassword(false);
     setShowRegisterPassword(false);
     setNotice("");
-    if (error) {
-      clearError();
-    }
-  }, [activeTab, error, clearError]);
+    clearError();
+  }, [activeTab, clearError]);
 
   useEffect(() => {
     setActiveTab((prev) => (prev === initialTab ? prev : initialTab));
@@ -65,12 +64,6 @@ export default function AuthPage({ initialTab = "login" }: AuthPageProps) {
     setForgotStep((prev) => (prev === 1 ? prev : 1));
   }, [initialTab, location]);
 
-  const parsedRegisterName = useMemo(() => {
-    const parts = registerFullName.trim().split(/\s+/).filter(Boolean);
-    if (parts.length < 2) return null;
-    return { firstName: parts[0], lastName: parts.slice(1).join(" ") };
-  }, [registerFullName]);
-
   const normalizeIdentifier = (value: string) => {
     const trimmed = value.trim();
     if (!trimmed || trimmed.includes("@")) return trimmed.toLowerCase();
@@ -93,15 +86,15 @@ export default function AuthPage({ initialTab = "login" }: AuthPageProps) {
   const submitRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setNotice("");
-    if (!parsedRegisterName) {
-      setNotice("Please enter your first name and last name.");
+    if (!registerFirstName.trim() || !registerLastName.trim()) {
+      setNotice("Please enter both your first name and last name.");
       return;
     }
     const res = await register({
       identifier: normalizeIdentifier(registerIdentifier),
       password: registerPassword,
-      firstName: parsedRegisterName.firstName,
-      lastName: parsedRegisterName.lastName,
+      firstName: registerFirstName.trim(),
+      lastName: registerLastName.trim(),
     });
     if (res.success) setLocation("/dashboard");
   };
@@ -234,19 +227,36 @@ export default function AuthPage({ initialTab = "login" }: AuthPageProps) {
 
   const renderRegisterForm = () => (
     <form onSubmit={submitRegister} className="flex flex-col gap-3">
-      <div>
-        <FieldLabel text="Full Name" />
-        <div className="relative">
-          <User className="absolute left-[14px] top-1/2 -translate-y-1/2 w-5 h-5 text-primary opacity-70" />
-          <input
-            type="text"
-            placeholder="Enter your full name"
-            required
-            value={registerFullName}
-            onChange={(e) => setRegisterFullName(e.target.value)}
-            className={inputClass}
-            style={{ paddingLeft: "44px", paddingRight: "14px" }}
-          />
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <FieldLabel text="First Name" />
+          <div className="relative">
+            <User className="absolute left-[14px] top-1/2 -translate-y-1/2 w-5 h-5 text-primary opacity-70" />
+            <input
+              type="text"
+              placeholder="Enter your first name"
+              required
+              value={registerFirstName}
+              onChange={(e) => setRegisterFirstName(e.target.value)}
+              className={inputClass}
+              style={{ paddingLeft: "44px", paddingRight: "14px" }}
+            />
+          </div>
+        </div>
+        <div>
+          <FieldLabel text="Last Name" />
+          <div className="relative">
+            <User className="absolute left-[14px] top-1/2 -translate-y-1/2 w-5 h-5 text-primary opacity-70" />
+            <input
+              type="text"
+              placeholder="Enter your last name"
+              required
+              value={registerLastName}
+              onChange={(e) => setRegisterLastName(e.target.value)}
+              className={inputClass}
+              style={{ paddingLeft: "44px", paddingRight: "14px" }}
+            />
+          </div>
         </div>
       </div>
       <div>
