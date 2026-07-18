@@ -68,6 +68,19 @@ interface MobileOption {
   networkName: string;
 }
 
+const SUPPORTED_PAYMENT_COUNTRIES = new Set(["ZM", "NG", "GH", "KE", "TZ", "UG"]);
+
+function resolvePaymentCountryCode(...candidates: Array<string | undefined | null>) {
+  for (const candidate of candidates) {
+    const normalized = String(candidate || "").trim().toUpperCase();
+    if (SUPPORTED_PAYMENT_COUNTRIES.has(normalized)) {
+      return normalized;
+    }
+  }
+
+  return undefined;
+}
+
 function isWhatsAppMethod(method: Pick<PaymentConfigMethod, "type" | "name" | "icon" | "providers">) {
   const searchable = [
     method.type,
@@ -214,6 +227,7 @@ export default function CheckoutPage() {
   const [pickupStationId, setPickupStationId] = useState("");
   const [loadingStations, setLoadingStations] = useState(false);
   const [showStationDrop, setShowStationDrop] = useState(false);
+  const [shippingCountries, setShippingCountries] = useState<any[]>([]);
 
   // Payment Methods (Dynamic)
   const [activeMethods, setActiveMethods] = useState<PaymentConfigMethod[]>([]);
@@ -236,6 +250,14 @@ export default function CheckoutPage() {
     : "—";
   const shippingDisplayText = shippingPrice <= 0 ? "Free shipping" : `${format(shippingPrice)} shipping`;
   const shippingSummaryText = shippingPrice <= 0 ? "Free shipping" : format(shippingPrice);
+  const selectedShippingCountryCode = useMemo(
+    () => shippingCountries.find((item) => item.name === country)?.code,
+    [shippingCountries, country]
+  );
+  const effectivePaymentCountryCode = useMemo(
+    () => resolvePaymentCountryCode(selectedShippingCountryCode, detectedCountryCode, selectedCurrency.countryCode),
+    [selectedShippingCountryCode, detectedCountryCode, selectedCurrency.countryCode]
+  );
   const placedOrderDisplay = placedOrderNumber
     ? looksLikeInternalOrderId(placedOrderNumber)
       ? `#${buildShortOrderReference(placedOrderNumber)}`
@@ -268,8 +290,7 @@ export default function CheckoutPage() {
   // Fetch enabled payment methods once we know the effective country.
   // We prioritize the country associated with the selected currency, falling back to detected country.
   useEffect(() => {
-    const effectiveCountryCode = selectedCurrency.countryCode || detectedCountryCode;
-    const countryParam = effectiveCountryCode ? `?countryCode=${effectiveCountryCode}` : '';
+    const countryParam = effectivePaymentCountryCode ? `?countryCode=${effectivePaymentCountryCode}` : '';
     fetch(`${API_BASE}/api/payment-config/public${countryParam}`).then(r => r.json()).then(data => {
       const arr = (Array.isArray(data) ? data : data?.data ?? []) as PaymentConfigMethod[];
       const methods = arr.filter((method) => method?.isEnabled !== false);
@@ -301,7 +322,7 @@ export default function CheckoutPage() {
       setMobileOptions([]);
       setOpenMethod(null);
     });
-  }, [detectedCountryCode, selectedCurrency.countryCode]);
+  }, [effectivePaymentCountryCode]);
 
   useEffect(() => {
     setOrderError(null);
@@ -310,13 +331,10 @@ export default function CheckoutPage() {
   }, [openMethod]);
 
   useEffect(() => {
-    const effectiveCountryCode = selectedCurrency.countryCode || detectedCountryCode;
-    if (effectiveCountryCode && dialCodeMap[effectiveCountryCode]) {
-      setDialCode(dialCodeMap[effectiveCountryCode]);
+    if (effectivePaymentCountryCode && dialCodeMap[effectivePaymentCountryCode]) {
+      setDialCode(dialCodeMap[effectivePaymentCountryCode]);
     }
-  }, [detectedCountryCode, selectedCurrency.countryCode]);
-
-  const [shippingCountries, setShippingCountries] = useState<any[]>([]);
+  }, [effectivePaymentCountryCode]);
 
   const buildTrackingPath = (orderNumber: string) => {
     const params = new URLSearchParams({ orderNumber });
@@ -407,8 +425,7 @@ export default function CheckoutPage() {
       setMmPhase("initializing");
       
       const phoneWithDialCode = `${dialCode}${mmPhone}`;
-      const effectiveCountryCode = selectedCurrency.countryCode || detectedCountryCode;
-      const initRes = await fetch(`${API_BASE}/api/payments/initialize`, { method: "POST", headers, body: JSON.stringify({ orderId, phone: phoneWithDialCode, countryCode: effectiveCountryCode, amount: Math.round(calculateGatewayTotal() * 100) / 100 }) });
+      const initRes = await fetch(`${API_BASE}/api/payments/initialize`, { method: "POST", headers, body: JSON.stringify({ orderId, phone: phoneWithDialCode, countryCode: effectivePaymentCountryCode, amount: Math.round(calculateGatewayTotal() * 100) / 100 }) });
       const initData = await initRes.json().catch(() => null);
       if (!initRes.ok) throw new Error(initData?.message || "Payment init failed");
       if (initData?.success === false || String(initData?.status || "").toLowerCase() === "failed") {

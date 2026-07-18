@@ -75,7 +75,14 @@ export class PaymentsService {
     let digits = String(phone || '').replace(/\D/g, '');
 
     // Try to detect country from phone number if not provided
-    let detectedCountry = countryCode;
+    let detectedCountry = countryCode?.trim().toUpperCase();
+
+    if (detectedCountry && !this.countryPhonePatterns[detectedCountry]) {
+      this.logger.warn(
+        `Unsupported payment country code "${detectedCountry}" received. Falling back to phone auto-detect/default country.`,
+      );
+      detectedCountry = undefined;
+    }
 
     if (!detectedCountry) {
       // Try to match against known country codes
@@ -94,14 +101,6 @@ export class PaymentsService {
     }
 
     const pattern = this.countryPhonePatterns[detectedCountry];
-    if (!pattern) {
-      throw new HttpException(
-        {
-          message: `Unsupported country code: ${detectedCountry}. Supported countries: ${Object.keys(this.countryPhonePatterns).join(', ')}`,
-        },
-        HttpStatus.BAD_REQUEST,
-      );
-    }
 
     // Normalize the phone number
     if (digits.startsWith(`${pattern.countryCode}0`)) {

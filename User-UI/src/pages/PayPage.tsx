@@ -54,6 +54,18 @@ interface MobileOption {
 }
 
 const roundMoney = (value: number) => Math.round(value * 100) / 100;
+const SUPPORTED_PAYMENT_COUNTRIES = new Set(["ZM", "NG", "GH", "KE", "TZ", "UG"]);
+
+function resolvePaymentCountryCode(...candidates: Array<string | undefined | null>) {
+  for (const candidate of candidates) {
+    const normalized = String(candidate || "").trim().toUpperCase();
+    if (SUPPORTED_PAYMENT_COUNTRIES.has(normalized)) {
+      return normalized;
+    }
+  }
+
+  return undefined;
+}
 
 function isWhatsAppMethod(method: Pick<PaymentConfigMethod, "type" | "name" | "icon" | "providers">) {
   const searchable = [
@@ -309,6 +321,10 @@ export default function PayPage() {
 
   const [bankProviders, setBankProviders] = useState<PaymentConfigProvider[]>([]);
   const [mobileOptions, setMobileOptions] = useState<MobileOption[]>([]);
+  const effectivePaymentCountryCode = useMemo(
+    () => resolvePaymentCountryCode(detectedCountryCode, selectedCurrency.countryCode),
+    [detectedCountryCode, selectedCurrency.countryCode]
+  );
 
   // User Details
   const [firstName, setFirstName] = useState("");
@@ -325,8 +341,7 @@ export default function PayPage() {
   const [showDialDrop, setShowDialDrop] = useState(false);
 
   useEffect(() => {
-    const effectiveCountryCode = selectedCurrency.countryCode || detectedCountryCode;
-    const countryParam = effectiveCountryCode ? `?countryCode=${effectiveCountryCode}` : '';
+    const countryParam = effectivePaymentCountryCode ? `?countryCode=${effectivePaymentCountryCode}` : '';
     fetch(`${API_BASE}/api/payment-config/public${countryParam}`)
       .then(r => r.json())
       .then((data: any) => {
@@ -363,7 +378,7 @@ export default function PayPage() {
         setBankProviders([]);
         setMobileOptions([]);
       });
-  }, [detectedCountryCode, selectedCurrency.countryCode]);
+  }, [effectivePaymentCountryCode]);
 
   useEffect(() => {
     fetchSettings().then((settings) => {
@@ -377,11 +392,10 @@ export default function PayPage() {
 
   // Update dial code when country is detected
   useEffect(() => {
-    const effectiveCountryCode = selectedCurrency.countryCode || detectedCountryCode;
-    if (effectiveCountryCode && dialCodeMap[effectiveCountryCode]) {
-      setDialCode(dialCodeMap[effectiveCountryCode]);
+    if (effectivePaymentCountryCode && dialCodeMap[effectivePaymentCountryCode]) {
+      setDialCode(dialCodeMap[effectivePaymentCountryCode]);
     }
-  }, [detectedCountryCode, selectedCurrency.countryCode]);
+  }, [effectivePaymentCountryCode]);
 
   useEffect(() => {
     if (!showCurrencyDrop) return;
@@ -494,7 +508,7 @@ export default function PayPage() {
           amount: gatewayTotal,
           currency: "ZMW",
           phone: `${dialCode}${mmPhone}`,
-          countryCode: selectedCurrency.countryCode || detectedCountryCode,
+          countryCode: effectivePaymentCountryCode,
           note: note || linkedPaymentName || `Payment ${payRef}`,
           paymentLinkId,
           customerName: `${firstName} ${lastName}`.trim(),
@@ -539,7 +553,7 @@ export default function PayPage() {
           amount: gatewayTotal,
           currency: "ZMW",
           phone: `${dialCode}${phone}`,
-          countryCode: detectedCountryCode,
+          countryCode: effectivePaymentCountryCode,
           note: note || linkedPaymentName || `Payment ${payRef}`,
           reference: payRef,
           paymentLinkId,
