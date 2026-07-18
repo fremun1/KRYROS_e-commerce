@@ -164,6 +164,8 @@ export default function BannerCarousel({
     }
   };
 
+  const trackTranslate = total > 0 ? (current * 100) / total : 0;
+
   return (
     <div
       className="relative w-full overflow-hidden group"
@@ -175,17 +177,31 @@ export default function BannerCarousel({
       {/* Track */}
       <div
         className="flex transition-transform duration-500 ease-out will-change-transform"
-        style={{ transform: `translateX(-${current * 100}%)` }}
+        style={{
+          width: `${total * 100}%`,
+          transform: `translate3d(-${trackTranslate}%, 0, 0)`,
+          touchAction: 'pan-y',
+        }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
         {slides.map((slide, idx) => (
-          <div key={idx} className="min-w-full relative flex-shrink-0 select-none">
+          <div
+            key={idx}
+            className="relative flex-shrink-0 select-none"
+            style={{ width: `${100 / total}%` }}
+          >
             <a
               href={slide.linkUrl || '#'}
               className="block w-full"
               draggable={false}
+              onClick={(e) => {
+                if (touchMoved.current) {
+                  e.preventDefault();
+                  touchMoved.current = false;
+                }
+              }}
             >
               {renderMedia(slide, idx)}
               {renderOverlay(slide)}

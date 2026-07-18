@@ -469,12 +469,10 @@ export default function ProductPage() {
         </div>
 
         {/* Condition row */}
-        <div className="flex items-center gap-3 py-1 border-t border-border">
-          <span className="text-sm text-muted-foreground">Condition</span>
-          <div className="flex items-center gap-1">
-            <span className="text-sm font-bold text-foreground">{product.condition || "New"}</span>
-            <Info className="w-3.5 h-3.5 text-muted-foreground" />
-          </div>
+        <div className="py-3 border-t border-border">
+          <span className="inline-flex items-center rounded-full bg-muted px-3 py-1 text-sm font-bold text-foreground">
+            {product.condition || "New"}
+          </span>
         </div>
 
         {/* Store Closed Status */}
