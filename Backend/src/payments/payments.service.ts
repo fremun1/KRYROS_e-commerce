@@ -14,6 +14,8 @@ export class PaymentsService {
   private readonly testUrl = 'https://test.543.cgrate.co.zm:8443/Konik/KonikWs';
   private readonly prodUrl = 'https://543.cgrate.co.zm/Konik/KonikWs';
   private readonly valid543PhoneRegex = /^(260)(97|77|57|76|96|95|75)\d{7}$/;
+  private readonly defaultGatewayTimeoutMs = this.getTimeoutConfig('CGRATE_TIMEOUT_MS', 120000);
+  private readonly statusQueryTimeoutMs = this.getTimeoutConfig('CGRATE_STATUS_TIMEOUT_MS', 30000);
 
   // Country-specific phone validation patterns
   private readonly countryPhonePatterns: Record<string, { regex: RegExp; countryCode: string; description: string }> = {
@@ -89,9 +91,33 @@ export class PaymentsService {
     return `[${code}] ${message}`;
   }
 
+  private getTimeoutConfig(key: string, fallback: number) {
+    const rawValue = this.configService.get<string | number>(key);
+    const parsedValue = Number(rawValue);
+
+    if (Number.isFinite(parsedValue) && parsedValue > 0) {
+      return parsedValue;
+    }
+
+    if (rawValue !== undefined && rawValue !== null && rawValue !== '') {
+      this.logger.warn(`Invalid ${key} value "${rawValue}". Falling back to ${fallback}ms.`);
+    }
+
+    return fallback;
+  }
+
+  private getGatewayTimeoutMessage(operation: string, timeoutMs: number) {
+    const timeoutSeconds = Math.round(timeoutMs / 1000);
+    return `The 543 payment service did not respond within ${timeoutSeconds} seconds while ${operation}. Please try again.`;
+  }
+
   private toGatewayHttpException(error: unknown, fallbackMessage: string) {
     if (error instanceof HttpException) {
       return error;
+    }
+
+    if (axios.isAxiosError(error) && (error.code === 'ECONNABORTED' || /timeout/i.test(error.message))) {
+      return new HttpException({ message: fallbackMessage }, HttpStatus.GATEWAY_TIMEOUT);
     }
 
     return new HttpException({ message: fallbackMessage }, HttpStatus.BAD_GATEWAY);
@@ -174,7 +200,8 @@ export class PaymentsService {
 
   private log543Error(context: string, error: unknown) {
     if (axios.isAxiosError(error)) {
-      this.logger.error(`${context}: ${error.message}`);
+      const errorCode = error.code ? ` [${error.code}]` : '';
+      this.logger.error(`${context}${errorCode}: ${error.message}`);
       if (error.response?.status) {
         this.logger.error(`${context} status: ${error.response.status}`);
       }
@@ -214,6 +241,19 @@ export class PaymentsService {
     };
   }
 
+  private async postGatewaySoapRequest(soapAction: string, soapRequest: string, timeoutMs = this.defaultGatewayTimeoutMs) {
+    this.logger.log(`Calling 543 SOAP action "${soapAction}" with timeout ${timeoutMs}ms`);
+
+    return axios.post(this.apiUrl, soapRequest, {
+      headers: {
+        'Content-Type': 'text/xml;charset=UTF-8',
+        'SOAPAction': soapAction,
+        'Accept': 'text/xml',
+      },
+      timeout: timeoutMs,
+    });
+  }
+
   async process543Payment(orderId: string, phone: string, amountZMW: number, countryCode?: string) {
     const username = this.configService.get('CGRATE_USERNAME');
     const password = this.configService.get('CGRATE_PASSWORD');
@@ -248,14 +288,7 @@ export class PaymentsService {
     const soapRequest = `<?xml version="1.0" encoding="UTF-8"?><soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:kon="http://konik.cgrate.com"><soapenv:Header><wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd" soapenv:mustUnderstand="1"><wsse:UsernameToken xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" wsu:Id="${username}"><wsse:Username>${username}</wsse:Username><wsse:Password Type="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText">${password}</wsse:Password></wsse:UsernameToken></wsse:Security></soapenv:Header><soapenv:Body><kon:processCustomerPayment><transactionAmount>${formattedAmount}</transactionAmount><customerMobile>${formattedPhone}</customerMobile><paymentReference>${transactionId}</paymentReference></kon:processCustomerPayment></soapenv:Body></soapenv:Envelope>`;
 
     try {
-      const response = await axios.post(this.apiUrl, soapRequest, {
-        headers: {
-          'Content-Type': 'text/xml;charset=UTF-8',
-          'SOAPAction': 'processCustomerPayment',
-          'Accept': 'text/xml',
-        },
-        timeout: 60000,
-      });
+      const response = await this.postGatewaySoapRequest('processCustomerPayment', soapRequest);
 
       const parser = new XMLParser({
         ignoreAttributes: true,
@@ -329,7 +362,10 @@ export class PaymentsService {
         where: { id: orderId },
         data: { paymentStatus: 'FAILED' },
       }).catch(() => {});
-      throw this.toGatewayHttpException(error, 'Payment initialization failed. Please try again.');
+      throw this.toGatewayHttpException(
+        error,
+        this.getGatewayTimeoutMessage('starting the payment prompt', this.defaultGatewayTimeoutMs),
+      );
     }
   }
 
@@ -412,14 +448,7 @@ export class PaymentsService {
     const soapRequest = `<?xml version="1.0" encoding="UTF-8"?><soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:kon="http://konik.cgrate.com"><soapenv:Header><wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd" soapenv:mustUnderstand="1"><wsse:UsernameToken xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" wsu:Id="${username}"><wsse:Username>${username}</wsse:Username><wsse:Password Type="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText">${password}</wsse:Password></wsse:UsernameToken></wsse:Security></soapenv:Header><soapenv:Body><kon:processCustomerPayment><transactionAmount>${Number(amountZMW).toFixed(2)}</transactionAmount><customerMobile>${formattedPhone}</customerMobile><paymentReference>${transactionId}</paymentReference></kon:processCustomerPayment></soapenv:Body></soapenv:Envelope>`;
 
     try {
-      const response = await axios.post(this.apiUrl, soapRequest, {
-        headers: {
-          'Content-Type': 'text/xml;charset=UTF-8',
-          'SOAPAction': 'processCustomerPayment',
-          'Accept': 'text/xml',
-        },
-        timeout: 60000,
-      });
+      const response = await this.postGatewaySoapRequest('processCustomerPayment', soapRequest);
 
       const parser = new XMLParser({ ignoreAttributes: true, removeNSPrefix: true });
       const result = parser.parse(response.data);
@@ -448,7 +477,12 @@ export class PaymentsService {
       return { success: isSuccess, status: status, reference: reference, message, code: responseCode };
     } catch (error) {
       this.log543Error('543 direct payment init failed', error);
-      const failureMessage = error instanceof Error ? error.message : 'Payment initialization failed';
+      const failureMessage =
+        axios.isAxiosError(error) && (error.code === 'ECONNABORTED' || /timeout/i.test(error.message))
+          ? this.getGatewayTimeoutMessage('starting the payment prompt', this.defaultGatewayTimeoutMs)
+          : error instanceof Error
+            ? error.message
+            : 'Payment initialization failed';
       await this.prisma.directPayment.update({
         where: { id: paymentId },
         data: {
@@ -456,7 +490,10 @@ export class PaymentsService {
           note: `Payment initialization failed: ${failureMessage}`,
         },
       }).catch(() => {});
-      throw this.toGatewayHttpException(error, 'Payment initialization failed. Please try again.');
+      throw this.toGatewayHttpException(
+        error,
+        this.getGatewayTimeoutMessage('starting the payment prompt', this.defaultGatewayTimeoutMs),
+      );
     }
   }
 
@@ -565,13 +602,11 @@ export class PaymentsService {
     const soapRequest = `<?xml version="1.0" encoding="UTF-8"?><soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:kon="http://konik.cgrate.com"><soapenv:Header><wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd" soapenv:mustUnderstand="1"><wsse:UsernameToken xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" wsu:Id="${username}"><wsse:Username>${username}</wsse:Username><wsse:Password Type="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText">${password}</wsse:Password></wsse:UsernameToken></wsse:Security></soapenv:Header><soapenv:Body><kon:queryCustomerPayment><paymentReference>${payment.paymentReference}</paymentReference></kon:queryCustomerPayment></soapenv:Body></soapenv:Envelope>`;
 
     try {
-      const response = await axios.post(this.apiUrl, soapRequest, {
-        headers: {
-          'Content-Type': 'text/xml;charset=UTF-8',
-          'SOAPAction': 'queryCustomerPayment',
-          'Accept': 'text/xml',
-        },
-      });
+      const response = await this.postGatewaySoapRequest(
+        'queryCustomerPayment',
+        soapRequest,
+        this.statusQueryTimeoutMs,
+      );
 
       const parser = new XMLParser({ ignoreAttributes: true, removeNSPrefix: true });
       const result = parser.parse(response.data);
@@ -637,13 +672,11 @@ export class PaymentsService {
     const soapRequest = `<?xml version="1.0" encoding="UTF-8"?><soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:kon="http://konik.cgrate.com"><soapenv:Header><wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd" soapenv:mustUnderstand="1"><wsse:UsernameToken xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" wsu:Id="${username}"><wsse:Username>${username}</wsse:Username><wsse:Password Type="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText">${password}</wsse:Password></wsse:UsernameToken></wsse:Security></soapenv:Header><soapenv:Body><kon:queryCustomerPayment><paymentReference>${order.paymentReference}</paymentReference></kon:queryCustomerPayment></soapenv:Body></soapenv:Envelope>`;
 
     try {
-      const response = await axios.post(this.apiUrl, soapRequest, {
-        headers: {
-          'Content-Type': 'text/xml;charset=UTF-8',
-          'SOAPAction': 'queryCustomerPayment',
-          'Accept': 'text/xml',
-        },
-      });
+      const response = await this.postGatewaySoapRequest(
+        'queryCustomerPayment',
+        soapRequest,
+        this.statusQueryTimeoutMs,
+      );
 
       const parser = new XMLParser({ ignoreAttributes: true, removeNSPrefix: true });
       const result = parser.parse(response.data);
