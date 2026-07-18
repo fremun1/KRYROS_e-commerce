@@ -31,6 +31,38 @@ const TEMPLATE_ICONS: Record<string, any> = {
   Custom: Info
 };
 
+const VIDEO_URL_REGEX = /\.(mp4|mov|webm|ogg|m4v)(\?.*)?$/i;
+
+const isVideoMedia = (value?: string) =>
+  Boolean(value) && (VIDEO_URL_REGEX.test(value || '') || value?.includes('/video/upload/'));
+
+const getSlideMediaUrl = (slide: any) => slide?.videoUrl || slide?.image || '';
+
+const updateSlideMedia = (slide: any, url: string, filename?: string) => {
+  if (!url) {
+    return {
+      ...slide,
+      image: '',
+      videoUrl: '',
+    };
+  }
+
+  const source = filename || url;
+  if (isVideoMedia(source)) {
+    return {
+      ...slide,
+      image: '',
+      videoUrl: url,
+    };
+  }
+
+  return {
+    ...slide,
+    image: url,
+    videoUrl: '',
+  };
+};
+
 
 
 export default function CMSPagesPage() {
@@ -738,7 +770,16 @@ export default function CMSPagesPage() {
                       type="button"
                       onClick={() => {
                         const slides = [...(formData.config?.slides || [])];
-                        slides.push({ image: '', title: '', subtitle: '', ctaText: 'Shop Now', linkUrl: '' });
+                        slides.push({
+                          image: '',
+                          videoUrl: '',
+                          title: '',
+                          subtitle: '',
+                          ctaText: 'Shop Now',
+                          linkUrl: '',
+                          buttonColor: '#ffffff',
+                          buttonTextColor: '#000000',
+                        });
                         setFormData({...formData, config: {...formData.config, slides}});
                       }}
                       className="text-xs font-bold text-primary hover:underline"
@@ -759,23 +800,36 @@ export default function CMSPagesPage() {
                         >Remove</button>
                       </div>
                       <div className="space-y-2">
-                        <label className="text-xs font-bold text-muted-foreground uppercase">Banner Image</label>
-                        {/* Preview of current image */}
-                        {slide.image && (
+                        <label className="text-xs font-bold text-muted-foreground uppercase">Banner Media</label>
+                        {getSlideMediaUrl(slide) && (
                           <div className="relative w-full h-32 rounded-lg overflow-hidden bg-muted border">
-                            <img src={slide.image} alt={slide.title || 'Preview'} className="w-full h-full object-cover" />
+                            {slide.videoUrl ? (
+                              <video
+                                src={slide.videoUrl}
+                                className="w-full h-full object-cover"
+                                muted
+                                controls
+                                playsInline
+                              />
+                            ) : (
+                              <img src={slide.image} alt={slide.title || 'Preview'} className="w-full h-full object-cover" />
+                            )}
                           </div>
                         )}
                         <CloudinaryUpload
-                          value={slide.image || ''}
-                          onChange={(url) => {
+                          value={getSlideMediaUrl(slide)}
+                          onChange={(url, filename) => {
                             const slides = [...(formData.config?.slides || [])];
-                            slides[idx] = {...slides[idx], image: url};
+                            slides[idx] = updateSlideMedia(slides[idx], url, filename);
                             setFormData({...formData, config: {...formData.config, slides}});
                           }}
+                          accept="image/*,video/*"
                           folder="kryros/banners"
                           isDark={isDark} border={border} surface={surface} textMuted={textMuted} textMain={textMain}
                         />
+                        <p className="text-[10px] text-muted-foreground">
+                          Upload an image or video banner. Uploading a new file replaces the current banner media for this slide.
+                        </p>
                       </div>
                       <div className="grid grid-cols-2 gap-2">
                         <FormField
@@ -824,6 +878,60 @@ export default function CMSPagesPage() {
                           placeholder="/shop/sale"
                           isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
                         />
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-bold text-muted-foreground uppercase">Button Background</label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="color"
+                              value={slide.buttonColor || '#ffffff'}
+                              onChange={(e) => {
+                                const slides = [...(formData.config?.slides || [])];
+                                slides[idx] = {...slides[idx], buttonColor: e.target.value};
+                                setFormData({...formData, config: {...formData.config, slides}});
+                              }}
+                              className="h-10 w-12 rounded border bg-background cursor-pointer"
+                            />
+                            <input
+                              type="text"
+                              value={slide.buttonColor || '#ffffff'}
+                              onChange={(e) => {
+                                const slides = [...(formData.config?.slides || [])];
+                                slides[idx] = {...slides[idx], buttonColor: e.target.value};
+                                setFormData({...formData, config: {...formData.config, slides}});
+                              }}
+                              placeholder="#ffffff"
+                              className="flex-1 px-3 py-2 bg-background border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-bold text-muted-foreground uppercase">Button Text</label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="color"
+                              value={slide.buttonTextColor || '#000000'}
+                              onChange={(e) => {
+                                const slides = [...(formData.config?.slides || [])];
+                                slides[idx] = {...slides[idx], buttonTextColor: e.target.value};
+                                setFormData({...formData, config: {...formData.config, slides}});
+                              }}
+                              className="h-10 w-12 rounded border bg-background cursor-pointer"
+                            />
+                            <input
+                              type="text"
+                              value={slide.buttonTextColor || '#000000'}
+                              onChange={(e) => {
+                                const slides = [...(formData.config?.slides || [])];
+                                slides[idx] = {...slides[idx], buttonTextColor: e.target.value};
+                                setFormData({...formData, config: {...formData.config, slides}});
+                              }}
+                              placeholder="#000000"
+                              className="flex-1 px-3 py-2 bg-background border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+                            />
+                          </div>
+                        </div>
                       </div>
                     </div>
                   ))}

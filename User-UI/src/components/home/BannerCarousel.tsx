@@ -2,10 +2,13 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 
 interface BannerSlide {
   image: string;
+  videoUrl?: string;
   title?: string;
   subtitle?: string;
   ctaText?: string;
   linkUrl?: string;
+  buttonColor?: string;
+  buttonTextColor?: string;
 }
 
 interface BannerCarouselProps {
@@ -66,17 +69,72 @@ export default function BannerCarousel({
   // Empty state
   if (!slides || total === 0) return null;
 
+  const renderMedia = (slide: BannerSlide, idx: number) => {
+    if (slide.videoUrl) {
+      return (
+        <video
+          src={slide.videoUrl}
+          className="w-full h-[200px] sm:h-[280px] md:h-[340px] object-cover pointer-events-none"
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload={idx === 0 ? 'auto' : 'metadata'}
+        />
+      );
+    }
+
+    return (
+      <img
+        src={slide.image}
+        alt={slide.title || `Banner ${idx + 1}`}
+        className="w-full h-[200px] sm:h-[280px] md:h-[340px] object-cover pointer-events-none"
+        loading={idx === 0 ? 'eager' : 'lazy'}
+        draggable={false}
+      />
+    );
+  };
+
+  const renderOverlay = (slide: BannerSlide) => {
+    if (!(slide.title || slide.subtitle || slide.ctaText)) return null;
+
+    return (
+      <div className="absolute inset-0 bg-gradient-to-r from-black/50 via-transparent to-transparent flex flex-col justify-end p-6 sm:p-8 md:p-12 pointer-events-none">
+        {slide.title && (
+          <h2 className="text-white text-xl sm:text-2xl md:text-3xl font-bold mb-1 drop-shadow-lg">
+            {slide.title}
+          </h2>
+        )}
+        {slide.subtitle && (
+          <p className="text-white/90 text-sm sm:text-base mb-3 drop-shadow">
+            {slide.subtitle}
+          </p>
+        )}
+        {slide.ctaText && (
+          <span
+            className="inline-block px-5 py-2 rounded-lg text-sm font-semibold pointer-events-auto"
+            style={{
+              backgroundColor: slide.buttonColor || '#ffffff',
+              color: slide.buttonTextColor || '#000000',
+            }}
+          >
+            {slide.ctaText}
+          </span>
+        )}
+      </div>
+    );
+  };
+
   // Single slide — no carousel
   if (total === 1) {
     const slide = slides[0];
     return (
       <div className="w-full">
         <a href={slide.linkUrl || '#'} className="block w-full">
-          <img
-            src={slide.image}
-            alt={slide.title || 'Banner'}
-            className="w-full h-[200px] sm:h-[280px] md:h-[340px] object-cover"
-          />
+          <div className="relative">
+            {renderMedia(slide, 0)}
+            {renderOverlay(slide)}
+          </div>
         </a>
       </div>
     );
@@ -129,32 +187,8 @@ export default function BannerCarousel({
               className="block w-full"
               draggable={false}
             >
-              <img
-                src={slide.image}
-                alt={slide.title || `Banner ${idx + 1}`}
-                className="w-full h-[200px] sm:h-[280px] md:h-[340px] object-cover pointer-events-none"
-                loading={idx === 0 ? 'eager' : 'lazy'}
-                draggable={false}
-              />
-              {(slide.title || slide.subtitle || slide.ctaText) && (
-                <div className="absolute inset-0 bg-gradient-to-r from-black/50 via-transparent to-transparent flex flex-col justify-end p-6 sm:p-8 md:p-12 pointer-events-none">
-                  {slide.title && (
-                    <h2 className="text-white text-xl sm:text-2xl md:text-3xl font-bold mb-1 drop-shadow-lg">
-                      {slide.title}
-                    </h2>
-                  )}
-                  {slide.subtitle && (
-                    <p className="text-white/90 text-sm sm:text-base mb-3 drop-shadow">
-                      {slide.subtitle}
-                    </p>
-                  )}
-                  {slide.ctaText && (
-                    <span className="inline-block bg-white text-black px-5 py-2 rounded-lg text-sm font-semibold pointer-events-auto">
-                      {slide.ctaText}
-                    </span>
-                  )}
-                </div>
-              )}
+              {renderMedia(slide, idx)}
+              {renderOverlay(slide)}
             </a>
           </div>
         ))}
