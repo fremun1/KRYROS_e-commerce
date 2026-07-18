@@ -159,7 +159,7 @@ export default function UnifiedProductCard({
           )}
         </div>
 
-        {/* Product card labels, stock, condition, then stars/reviews */}
+        {/* Product card labels, condition, then stars/reviews */}
         <div className="flex items-center flex-wrap gap-x-1.5 gap-y-0.5 mb-1">
           {/* 1. Custom promo text from product form */}
           {!!product.popularItemText && !product.isWholesaleOnly && (
@@ -168,27 +168,14 @@ export default function UnifiedProductCard({
             </span>
           )}
 
-          {/* 2. Stock badge */}
-          {!product.isWholesaleOnly && (
-            inStock ? (
-              <span className="text-[9px] md:text-[10px] font-semibold tracking-[0.01em] text-primary bg-primary/10 px-2 md:px-2.5 py-1 rounded-full whitespace-nowrap flex-shrink-0 border border-primary/15">
-                In Stock
-              </span>
-            ) : (
-              <span className="text-[9px] md:text-[10px] font-semibold tracking-[0.01em] text-destructive bg-destructive/10 px-2 md:px-2.5 py-1 rounded-full whitespace-nowrap flex-shrink-0 border border-destructive/15">
-                Out of Stock
-              </span>
-            )
-          )}
-
-          {/* 3. Condition badge */}
+          {/* 2. Condition badge */}
           {!!product.condition && !product.isWholesaleOnly && (
             <span className="text-[9px] md:text-[10px] font-semibold tracking-[0.01em] text-foreground/90 bg-secondary/75 px-2 md:px-2.5 py-1 rounded-full whitespace-nowrap flex-shrink-0 border border-border/80">
               {product.condition}
             </span>
           )}
 
-          {/* 4. Stars + review count */}
+          {/* 3. Stars + review count */}
           {product.rating > 0 && !product.isWholesaleOnly && (
             <div className="flex items-center gap-0.5 flex-shrink-0">
               {[1, 2, 3, 4, 5].map((star) => (
@@ -208,7 +195,7 @@ export default function UnifiedProductCard({
             </div>
           )}
 
-          {/* 5. Credit details — Total, Deposit, and Monthly */}
+          {/* 4. Credit details — Total, Deposit, and Monthly */}
           {product.allowCredit && !isStoreClosed && (
             <div className="flex flex-col gap-0.5 mt-1 bg-primary/5 p-1.5 rounded-lg border border-primary/10">
               <div className="flex items-center justify-between gap-2">
@@ -222,7 +209,7 @@ export default function UnifiedProductCard({
             </div>
           )}
 
-          {/* 6. Wholesale details */}
+          {/* 5. Wholesale details */}
           {product.isWholesaleOnly && (
             <>
               {product.wholesalePrice && (
