@@ -281,7 +281,7 @@ export const getShipping = (params?: Record<string, unknown>) =>
 export const getCountries = () =>
   api.get("/api/countries");
 export const updateCountry = (id: string, data: Record<string, unknown>) =>
-  api.put(`/api/countries/${id}`, data);
+  api.patch(`/api/countries/${id}`, data);
 export const createCountry = (data: Record<string, unknown>) =>
   api.post("/api/countries", data);
 

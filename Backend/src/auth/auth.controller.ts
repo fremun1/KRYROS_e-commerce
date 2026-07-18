@@ -28,7 +28,7 @@ import { UserRole } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 
 interface AuthenticatedRequest {
-  user: Pick<JwtPayload, 'sub' | 'email' | 'role'> & { id: string };
+  user: Pick<JwtPayload, 'email' | 'role'> & { id: string };
   headers: Record<string, string | string[] | undefined>;
 }
 
@@ -142,7 +142,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Get current 2FA status for the logged-in user' })
   async get2faStatus(@Request() req: AuthenticatedRequest) {
     const user = await this.prisma.user.findUnique({
-      where: { id: req.user.sub },
+      where: { id: req.user.id },
       select: { twoFactorEnabled: true },
     });
     return { enabled: user?.twoFactorEnabled ?? false };
@@ -156,10 +156,10 @@ export class AuthController {
   @Throttle({ default: { ttl: 60000, limit: 5 } })
   @ApiOperation({ summary: 'Generate a 2FA secret and QR code for the current admin user' })
   async setup2fa(@Request() req: AuthenticatedRequest) {
-    const user = await this.prisma.user.findUnique({ where: { id: req.user.sub } });
+    const user = await this.prisma.user.findUnique({ where: { id: req.user.id } });
     if (!user) throw new UnauthorizedException('User not found');
-    const email = user.email ?? req.user.sub;
-    return this.twoFactorService.generateSecret(req.user.sub, email);
+    const email = user.email ?? req.user.id;
+    return this.twoFactorService.generateSecret(req.user.id, email);
   }
 
   @Post('2fa/enable')
@@ -172,7 +172,7 @@ export class AuthController {
     @Request() req: AuthenticatedRequest,
     @Body() body: TwoFactorEnableDto,
   ) {
-    await this.twoFactorService.enableTwoFactor(req.user.sub, body.code);
+    await this.twoFactorService.enableTwoFactor(req.user.id, body.code);
   }
 
   @Post('2fa/disable')
@@ -185,7 +185,7 @@ export class AuthController {
     @Request() req: AuthenticatedRequest,
     @Body() body: TwoFactorEnableDto,
   ) {
-    await this.twoFactorService.disableTwoFactor(req.user.sub, body.code);
+    await this.twoFactorService.disableTwoFactor(req.user.id, body.code);
   }
 
   @Post('2fa/validate')
