@@ -478,6 +478,17 @@ export class PaymentsService {
     });
   }
 
+  private async findDirectPaymentByIdentifier(identifier: string) {
+    return (
+      (await this.prisma.directPayment.findUnique({
+        where: { id: identifier },
+      })) ||
+      (await this.prisma.directPayment.findUnique({
+        where: { paymentNumber: identifier },
+      }))
+    );
+  }
+
   async updateDirectPaymentStatus(id: string, status: PaymentStatus, adminNotes?: string) {
     return this.prisma.directPayment.update({
       where: { id },
@@ -490,9 +501,7 @@ export class PaymentsService {
   }
 
   async checkDirectStatus(paymentId: string) {
-    const payment = await this.prisma.directPayment.findUnique({
-      where: { id: paymentId },
-    });
+    const payment = await this.findDirectPaymentByIdentifier(paymentId);
     if (!payment) return null;
 
     if (!payment.paymentReference || payment.status === 'PAID' || payment.status === 'FAILED') {

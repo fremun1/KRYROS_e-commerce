@@ -26,14 +26,36 @@ export default function TrackPaymentPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const fetchPaymentStatus = async (identifier: string) => {
+    const res = await fetch(`${API_BASE}/api/payments/direct-status/${identifier}`);
+    const raw = await res.text();
+    let data: any = null;
+
+    if (raw) {
+      try {
+        data = JSON.parse(raw);
+      } catch {
+        throw new Error(res.ok ? "Unable to read payment status." : "Payment not found");
+      }
+    }
+
+    if (!res.ok) {
+      throw new Error(data?.message || "Payment not found");
+    }
+
+    if (!data) {
+      throw new Error("Payment not found");
+    }
+
+    return data;
+  };
+
   useEffect(() => {
     if (!paymentNumber) return;
 
     const fetchStatus = async () => {
       try {
-        const res = await fetch(`${API_BASE}/api/payments/direct-status/${paymentNumber}`);
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.message || "Payment not found");
+        const data = await fetchPaymentStatus(paymentNumber);
         setPayment(data);
       } catch (err: any) {
         setError(err.message);
@@ -50,11 +72,8 @@ export default function TrackPaymentPage() {
         return;
       }
       try {
-        const res = await fetch(`${API_BASE}/api/payments/direct-status/${paymentNumber}`);
-        if (res.ok) {
-          const data = await res.json();
-          setPayment(data);
-        }
+        const data = await fetchPaymentStatus(paymentNumber);
+        setPayment(data);
       } catch (e) {}
     }, 5000);
 
