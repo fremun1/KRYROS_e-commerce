@@ -163,7 +163,7 @@ export default function UnifiedProductCard({
         <div className="flex items-center flex-wrap gap-x-1.5 gap-y-0.5 mb-1">
           {/* 1. Custom promo text from product form */}
           {!!product.popularItemText && !product.isWholesaleOnly && (
-            <span className="text-[10px] md:text-xs font-medium text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-500/10 px-1.5 md:px-2 py-0.5 rounded-full whitespace-nowrap flex-shrink-0">
+            <span className="text-[9px] md:text-[10px] font-semibold tracking-[0.01em] text-[#0F766E] dark:text-[#5EEAD4] bg-[#CCFBF1] dark:bg-[#134E4A]/70 px-2 md:px-2.5 py-1 rounded-full whitespace-nowrap flex-shrink-0 border border-[#99F6E4] dark:border-[#115E59] shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
               {product.popularItemText}
             </span>
           )}
@@ -171,11 +171,11 @@ export default function UnifiedProductCard({
           {/* 2. Stock badge */}
           {!product.isWholesaleOnly && (
             inStock ? (
-              <span className="text-[10px] md:text-xs font-medium text-primary bg-primary/10 px-1.5 md:px-2 py-0.5 rounded-full whitespace-nowrap flex-shrink-0">
+              <span className="text-[9px] md:text-[10px] font-semibold tracking-[0.01em] text-primary bg-primary/10 px-2 md:px-2.5 py-1 rounded-full whitespace-nowrap flex-shrink-0 border border-primary/15">
                 In Stock
               </span>
             ) : (
-              <span className="text-[10px] md:text-xs font-medium text-destructive bg-destructive/10 px-1.5 md:px-2 py-0.5 rounded-full whitespace-nowrap flex-shrink-0">
+              <span className="text-[9px] md:text-[10px] font-semibold tracking-[0.01em] text-destructive bg-destructive/10 px-2 md:px-2.5 py-1 rounded-full whitespace-nowrap flex-shrink-0 border border-destructive/15">
                 Out of Stock
               </span>
             )
@@ -183,7 +183,7 @@ export default function UnifiedProductCard({
 
           {/* 3. Condition badge */}
           {!!product.condition && !product.isWholesaleOnly && (
-            <span className="text-[10px] md:text-xs font-medium text-foreground bg-secondary px-1.5 md:px-2 py-0.5 rounded-full whitespace-nowrap flex-shrink-0 border border-border">
+            <span className="text-[9px] md:text-[10px] font-semibold tracking-[0.01em] text-foreground/90 bg-secondary/75 px-2 md:px-2.5 py-1 rounded-full whitespace-nowrap flex-shrink-0 border border-border/80">
               {product.condition}
             </span>
           )}
