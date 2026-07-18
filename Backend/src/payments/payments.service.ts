@@ -104,7 +104,11 @@ export class PaymentsService {
     }
 
     // Normalize the phone number
-    if (digits.startsWith(pattern.countryCode)) {
+    if (digits.startsWith(`${pattern.countryCode}0`)) {
+      // Handles numbers entered as +260097xxxxxxx where the local leading 0
+      // was kept after adding the country code in the UI.
+      digits = `${pattern.countryCode}${digits.substring(pattern.countryCode.length + 1)}`;
+    } else if (digits.startsWith(pattern.countryCode)) {
       // Already in international format
     } else if (digits.startsWith('0')) {
       // Local format starting with 0
@@ -388,21 +392,29 @@ export class PaymentsService {
       const isSuccess = txReturn.responseCode === 0 || txReturn.responseCode === '0';
       const status = isSuccess ? 'PENDING' : 'FAILED';
       const reference = txReturn.paymentID || transactionId;
+      const message = txReturn.responseMessage || 'No message provided';
 
       await this.prisma.directPayment.update({
         where: { id: paymentId },
         data: {
           paymentReference: reference,
           status: status as PaymentStatus,
+          note: isSuccess
+            ? 'Mobile money prompt sent. Waiting for customer approval on phone.'
+            : `Payment prompt failed: ${message}`,
         },
       });
 
-      return { success: isSuccess, status: status, reference: reference };
+      return { success: isSuccess, status: status, reference: reference, message };
     } catch (error) {
       this.log543Error('543 direct payment init failed', error);
+      const failureMessage = error instanceof Error ? error.message : 'Payment initialization failed';
       await this.prisma.directPayment.update({
         where: { id: paymentId },
-        data: { status: 'FAILED' },
+        data: {
+          status: 'FAILED',
+          note: `Payment initialization failed: ${failureMessage}`,
+        },
       }).catch(() => {});
       throw error;
     }
@@ -536,10 +548,16 @@ export class PaymentsService {
         }
         
         if (newStatus !== payment.status) {
-          const updateData: Prisma.DirectPaymentUpdateInput = { status: newStatus as PaymentStatus };
+          const updateData: Prisma.DirectPaymentUpdateInput = {
+            status: newStatus as PaymentStatus,
+          };
+          if (newStatus === 'FAILED' && txReturn.responseMessage) {
+            updateData.note = `Payment failed: ${String(txReturn.responseMessage)}`;
+          }
           if (newStatus === 'PAID' && !payment.paidAt) {
             updateData.paidAt = new Date();
             updateData.receiptNumber = `REC-${Date.now().toString(36).toUpperCase()}`;
+            updateData.note = 'Payment approved successfully.';
           }
           const updatedPayment = await this.prisma.directPayment.update({
             where: { id: payment.id },

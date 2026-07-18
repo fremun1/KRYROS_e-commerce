@@ -409,7 +409,11 @@ export default function CheckoutPage() {
       const phoneWithDialCode = `${dialCode}${mmPhone}`;
       const effectiveCountryCode = selectedCurrency.countryCode || detectedCountryCode;
       const initRes = await fetch(`${API_BASE}/api/payments/initialize`, { method: "POST", headers, body: JSON.stringify({ orderId, phone: phoneWithDialCode, countryCode: effectiveCountryCode, amount: Math.round(calculateGatewayTotal() * 100) / 100 }) });
-      if (!initRes.ok) throw new Error("Payment init failed");
+      const initData = await initRes.json().catch(() => null);
+      if (!initRes.ok) throw new Error(initData?.message || "Payment init failed");
+      if (initData?.success === false || String(initData?.status || "").toLowerCase() === "failed") {
+        throw new Error(initData?.message || "The payment prompt could not be sent to the customer's phone.");
+      }
       
       setMmPhase("waiting");
       startPolling(orderId, data.orderNumber || orderId);

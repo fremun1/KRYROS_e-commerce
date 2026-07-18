@@ -508,6 +508,9 @@ export default function PayPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Payment failed");
+      if (data.success === false || String(data.status || "").toLowerCase() === "failed") {
+        throw new Error(data.message || "The payment prompt could not be sent to the customer's phone.");
+      }
       setPayStatus("waiting");
       if (data.trackingLink) navigate(data.trackingLink);
       else if (data.paymentId) startPolling(data.paymentId, data.trackingLink);
