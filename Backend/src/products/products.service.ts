@@ -489,6 +489,15 @@ export class ProductsService {
             dto.creditMinimum !== undefined && dto.creditMinimum !== null
               ? (isNaN(Number(dto.creditMinimum)) ? null : Number(dto.creditMinimum))
               : null,
+          wholesalePrice:
+            dto.wholesalePrice !== undefined && dto.wholesalePrice !== null
+              ? (isNaN(Number(dto.wholesalePrice)) ? null : Number(dto.wholesalePrice))
+              : null,
+          wholesaleMoq:
+            dto.wholesaleMoq !== undefined && dto.wholesaleMoq !== null
+              ? (isNaN(Number(dto.wholesaleMoq)) ? 1 : Math.max(1, Number(dto.wholesaleMoq)))
+              : 1,
+          isWholesaleOnly: dto.isWholesaleOnly === true,
           stockTotal: isNaN(Number(dto.stockTotal)) ? 0 : Number(dto.stockTotal),
           stockCurrent: isNaN(Number(dto.stockCurrent)) ? 0 : Number(dto.stockCurrent),
           hasFiveYearGuarantee: dto.hasFiveYearGuarantee === true,
@@ -642,6 +651,15 @@ export class ProductsService {
             dto.creditMinimum !== undefined && dto.creditMinimum !== null
               ? (isNaN(Number(dto.creditMinimum)) ? null : Number(dto.creditMinimum))
               : null,
+          wholesalePrice:
+            dto.wholesalePrice !== undefined && dto.wholesalePrice !== null
+              ? (isNaN(Number(dto.wholesalePrice)) ? null : Number(dto.wholesalePrice))
+              : null,
+          wholesaleMoq:
+            dto.wholesaleMoq !== undefined && dto.wholesaleMoq !== null
+              ? (isNaN(Number(dto.wholesaleMoq)) ? 1 : Math.max(1, Number(dto.wholesaleMoq)))
+              : 1,
+          isWholesaleOnly: dto.isWholesaleOnly === true,
           flashSalePrice: dto.flashSalePrice ? Number(dto.flashSalePrice) : null,
           flashSaleEnd: (dto.flashSaleEnd && dto.flashSaleEnd.trim() && !isNaN(new Date(dto.flashSaleEnd).getTime())) ? new Date(dto.flashSaleEnd) : null,
           stockTotal: isNaN(Number(dto.stockTotal)) ? 0 : Number(dto.stockTotal),
@@ -807,6 +825,15 @@ export class ProductsService {
           dto.creditMinimum !== undefined
             ? (isNaN(Number(dto.creditMinimum)) ? null : Number(dto.creditMinimum))
             : undefined,
+        wholesalePrice:
+          dto.wholesalePrice !== undefined
+            ? (isNaN(Number(dto.wholesalePrice)) ? null : Number(dto.wholesalePrice))
+            : undefined,
+        wholesaleMoq:
+          dto.wholesaleMoq !== undefined
+            ? (isNaN(Number(dto.wholesaleMoq)) ? 1 : Math.max(1, Number(dto.wholesaleMoq)))
+            : undefined,
+        isWholesaleOnly: typeof dto.isWholesaleOnly === 'boolean' ? dto.isWholesaleOnly : undefined,
         flashSalePrice: dto.flashSalePrice !== undefined ? (isNaN(Number(dto.flashSalePrice)) ? null : Number(dto.flashSalePrice)) : undefined,
         flashSaleEnd: (dto.flashSaleEnd && dto.flashSaleEnd.trim() && !isNaN(new Date(dto.flashSaleEnd).getTime())) ? new Date(dto.flashSaleEnd) : (dto.flashSaleEnd === null || dto.flashSaleEnd === "" ? null : undefined),
         stockTotal: dto.stockTotal !== undefined ? (isNaN(Number(dto.stockTotal)) ? 0 : Number(dto.stockTotal)) : undefined,

@@ -5,7 +5,7 @@ import { useTheme } from '@/contexts/theme-context';
 import { Settings, Store, Bell, Shield, Globe, CreditCard, Palette, Save, Mail, MessageSquare, Smartphone, Send, CheckCircle, AlertCircle, Clock, KeyRound, Lock, Unlock, RefreshCw, Copy } from 'lucide-react';
 import api from '@/lib/api';
 import { useState, useEffect } from 'react';
-import { getSettings, updateSettings } from '@/lib/api';
+import { getCountries, getSettings, updateSettings } from '@/lib/api';
 import toast from 'react-hot-toast';
 
 type Tab = 'general'|'store'|'notifications'|'security'|'payments'|'appearance';
@@ -38,6 +38,7 @@ function SettingsContent() {
   const [orderNotif, setOrderNotif] = useState(true);
   const [processingFeeRate, setProcessingFeeRate] = useState('10');
   const [whatsappNumber, setWhatsappNumber] = useState('');
+  const [currencyOptions, setCurrencyOptions] = useState<string[]>(['USD']);
   
   // ── 2FA state ──────────────────────────────────────────────────────────────
   type TwoFAStep = 'loading' | 'disabled' | 'setup' | 'enabled' | 'disabling';
@@ -91,6 +92,25 @@ function SettingsContent() {
         nextOpeningDay: sMap.next_opening_day || 'Thursday',
       });
     }).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    getCountries()
+      .then((r: any) => {
+        const raw: any[] = Array.isArray(r.data?.data) ? r.data.data : Array.isArray(r.data) ? r.data : [];
+        const uniqueCodes = Array.from(
+          new Set(
+            raw
+              .map((country: any) => country.currencyCode || country.currency)
+              .filter(Boolean)
+          )
+        );
+        if (uniqueCodes.length > 0) {
+          setCurrencyOptions(uniqueCodes);
+          setCurrency((current) => (uniqueCodes.includes(current) ? current : uniqueCodes[0]));
+        }
+      })
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -242,8 +262,11 @@ function SettingsContent() {
             <Field label="WhatsApp Number (Payment)"><input style={inputStyle} value={whatsappNumber} onChange={e=>setWhatsappNumber(e.target.value)} placeholder="e.g. 260969597029" /></Field>
             <Field label="Default Currency">
               <select style={inputStyle} value={currency} onChange={e=>setCurrency(e.target.value)}>
-                {['USD'].map(c=><option key={c}>{c}</option>)}
+                {currencyOptions.map(c=><option key={c}>{c}</option>)}
               </select>
+              <div style={{ fontSize:'12px', color:textMuted, marginTop:'6px' }}>
+                Currency code, symbol, and symbol position are managed from the `Currencies` and `Countries & Currencies` pages.
+              </div>
             </Field>
             <Field label="Timezone">
               <select style={inputStyle} value={timezone} onChange={e=>setTimezone(e.target.value)}>

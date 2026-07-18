@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, BadRequestException, Logger } from '@nestjs/common';
 import * as QRCode from 'qrcode';
 import * as crypto from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
@@ -23,10 +23,10 @@ const CIPHER_ALGORITHM = 'aes-256-gcm';
 const SALT = 'kryros-totp-v1';
 
 function getDerivedKey(): Buffer {
-  const raw = process.env.TOTP_ENCRYPTION_KEY;
+  const raw = process.env.TOTP_ENCRYPTION_KEY || process.env.JWT_SECRET;
   if (!raw) {
     throw new Error(
-      'TOTP_ENCRYPTION_KEY environment variable is not set. ' +
+      'TOTP_ENCRYPTION_KEY or JWT_SECRET environment variable is not set. ' +
       '2FA secret encryption is required in production. ' +
       'Generate with: node -e "console.log(require(\'crypto\').randomBytes(32).toString(\'hex\'))"',
     );
@@ -74,9 +74,23 @@ function buildOtpauthUrl(email: string, secret: string): string {
 
 @Injectable()
 export class TwoFactorService {
+  private readonly logger = new Logger(TwoFactorService.name);
+  private hasWarnedAboutFallbackKey = false;
+
   constructor(private prisma: PrismaService) {}
 
+  private warnIfUsingFallbackKey() {
+    if (!this.hasWarnedAboutFallbackKey && !process.env.TOTP_ENCRYPTION_KEY && process.env.JWT_SECRET) {
+      this.hasWarnedAboutFallbackKey = true;
+      this.logger.warn(
+        'TOTP_ENCRYPTION_KEY is not set. Falling back to JWT_SECRET for 2FA secret encryption. ' +
+        'Set a dedicated TOTP_ENCRYPTION_KEY in production.',
+      );
+    }
+  }
+
   async generateSecret(userId: string, email: string): Promise<{ qrCodeUrl: string; secret: string }> {
+    this.warnIfUsingFallbackKey();
     const secret = generateSecret();
     const otpauthUrl = buildOtpauthUrl(email, secret);
 
@@ -93,6 +107,7 @@ export class TwoFactorService {
   }
 
   async enableTwoFactor(userId: string, code: string): Promise<void> {
+    this.warnIfUsingFallbackKey();
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user?.twoFactorSecret) {
       throw new BadRequestException('2FA setup not initiated. Call /auth/2fa/setup first.');
@@ -109,6 +124,7 @@ export class TwoFactorService {
   }
 
   async disableTwoFactor(userId: string, code: string): Promise<void> {
+    this.warnIfUsingFallbackKey();
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user?.twoFactorEnabled || !user?.twoFactorSecret) {
       throw new BadRequestException('2FA is not enabled on this account');
@@ -125,6 +141,7 @@ export class TwoFactorService {
   }
 
   async verifyCode(encryptedOrPlainSecret: string, code: string): Promise<boolean> {
+    this.warnIfUsingFallbackKey();
     const secret = decryptSecret(encryptedOrPlainSecret);
     return verify({ secret, token: code });
   }

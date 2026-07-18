@@ -7,7 +7,7 @@ import { Modal, FormField, ModalFooter } from '@/components/admin/modal';
 import { useTheme } from '@/contexts/theme-context';
 import { DollarSign } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { getCountries, updateCountry } from '@/lib/api';
+import { createCountry, getCountries, updateCountry } from '@/lib/api';
 
 type CurrencyRow = {
   code: string;
@@ -18,6 +18,19 @@ type CurrencyRow = {
   autoRate: boolean;
   countries: string;
   status: string;
+};
+
+const EMPTY_ADD_FORM = {
+  countryName: '',
+  countryCode: '',
+  code: '',
+  symbol: '',
+  rate: '1',
+  symbolPosition: 'BEFORE',
+  autoRate: 'true',
+  shippingEnabled: 'true',
+  isDefault: 'false',
+  flag: '',
 };
 
 function CurrenciesContent() {
@@ -34,7 +47,9 @@ function CurrenciesContent() {
   // For edit modal — we need the raw countries to patch the right one
   const [rawCountries, setRawCountries] = useState<any[]>([]);
   const [editCurrency, setEditCurrency] = useState<CurrencyRow | null>(null);
-  const [curForm, setCurForm] = useState({ rate: '', autoRate: 'true', symbolPosition: 'BEFORE' });
+  const [addCurrencyOpen, setAddCurrencyOpen] = useState(false);
+  const [curForm, setCurForm] = useState({ code: '', symbol: '', rate: '', autoRate: 'true', symbolPosition: 'BEFORE' });
+  const [addForm, setAddForm] = useState(EMPTY_ADD_FORM);
 
   const fetchData = () => {
     getCountries().then((r: any) => {
@@ -73,7 +88,13 @@ function CurrenciesContent() {
 
   const openEdit = (row: Record<string, unknown>) => {
     const r = row as unknown as CurrencyRow;
-    setCurForm({ rate: String(r.rate), autoRate: String(r.autoRate), symbolPosition: r.symbolPosition || 'BEFORE' });
+    setCurForm({
+      code: r.code,
+      symbol: r.symbol || '',
+      rate: String(r.rate),
+      autoRate: String(r.autoRate),
+      symbolPosition: r.symbolPosition || 'BEFORE',
+    });
     setEditCurrency(r);
   };
 
@@ -91,16 +112,49 @@ function CurrenciesContent() {
       await Promise.all(
         matching.map((c: any) =>
           updateCountry(c.id, {
+            currencyCode: curForm.code.trim().toUpperCase(),
+            currencySymbol: curForm.symbol.trim(),
             exchangeRate: Number(curForm.rate),
             autoRate: curForm.autoRate === 'true',
             symbolPosition: curForm.symbolPosition,
           })
         )
       );
-      toast.success(`${editCurrency.code} updated for ${matching.length} country(ies)`);
+      toast.success(`${curForm.code.trim().toUpperCase()} updated for ${matching.length} country(ies)`);
       setEditCurrency(null);
       fetchData();
     } catch { toast.error('Failed to update currency'); }
+    setLoading(false);
+  };
+
+  const handleAddCurrency = async () => {
+    if (!addForm.countryName.trim() || !addForm.countryCode.trim() || !addForm.code.trim() || !addForm.symbol.trim()) {
+      toast.error('Country name, country code, currency code and symbol are required');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await createCountry({
+        name: addForm.countryName.trim(),
+        code: addForm.countryCode.trim().toUpperCase(),
+        currencyCode: addForm.code.trim().toUpperCase(),
+        currencySymbol: addForm.symbol.trim(),
+        exchangeRate: Number(addForm.rate) || 1,
+        symbolPosition: addForm.symbolPosition,
+        autoRate: addForm.autoRate === 'true',
+        shippingEnabled: addForm.shippingEnabled === 'true',
+        isDefault: addForm.isDefault === 'true',
+        flag: addForm.flag.trim() || undefined,
+        status: true,
+      });
+      toast.success('Currency added');
+      setAddCurrencyOpen(false);
+      setAddForm(EMPTY_ADD_FORM);
+      fetchData();
+    } catch (e: any) {
+      toast.error(e?.response?.data?.message || 'Failed to add currency');
+    }
     setLoading(false);
   };
 
@@ -147,13 +201,18 @@ function CurrenciesContent() {
         title="Currencies"
         subtitle="Manage exchange rates and currency display settings"
         icon={DollarSign}
+        onAdd={() => {
+          setAddForm(EMPTY_ADD_FORM);
+          setAddCurrencyOpen(true);
+        }}
+        addLabel="Add Currency"
       />
 
       {/* Info banner */}
       <div style={{ marginBottom: '16px', padding: '12px 16px', background: 'rgba(31,168,154,0.06)', border: '1px solid rgba(31,168,154,0.2)', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
         <div style={{ color: textMuted, fontSize: '13px', lineHeight: 1.5 }}>
           <span style={{ fontWeight: 600, color: textMain }}>How currencies work: </span>
-          Each currency is linked to a country. To add a new currency, go to <b>Locations → Countries</b> and add a country with that currency code. Exchange rates here update all countries sharing that currency.
+          Each currency is linked to at least one country. You can add a currency here by creating its first country mapping, and edits here update all countries sharing that currency code.
         </div>
         <button
           onClick={handleRefreshAll}
@@ -176,6 +235,20 @@ function CurrenciesContent() {
         <div style={{ marginBottom: '12px', padding: '10px 14px', background: surface, borderRadius: '8px', border: `1px solid ${border}`, fontSize: '12px', color: textMuted }}>
           Used by: <b style={{ color: textMain }}>{editCurrency?.countries}</b>
         </div>
+        <FormField
+          label="Currency Code"
+          value={curForm.code}
+          onChange={(v) => setCurForm(f => ({ ...f, code: v.toUpperCase() }))}
+          isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
+          placeholder="e.g. USD"
+        />
+        <FormField
+          label="Currency Symbol"
+          value={curForm.symbol}
+          onChange={(v) => setCurForm(f => ({ ...f, symbol: v }))}
+          isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
+          placeholder="e.g. $ or USD"
+        />
         <FormField
           label="Exchange Rate (vs USD)"
           value={curForm.rate}
@@ -202,6 +275,91 @@ function CurrenciesContent() {
           onSubmit={handleSave}
           loading={loading}
           submitLabel="Save Rate"
+          isDark={isDark} border={border} textMain={textMain}
+        />
+      </Modal>
+
+      <Modal open={addCurrencyOpen} onClose={() => setAddCurrencyOpen(false)} title="Add Currency" maxWidth="620px">
+        <div style={{ marginBottom: '12px', padding: '10px 14px', background: surface, borderRadius: '8px', border: `1px solid ${border}`, fontSize: '12px', color: textMuted, lineHeight: 1.5 }}>
+          A currency must belong to a country record. This form creates the first country entry for the new currency so it becomes available everywhere else in admin and storefront.
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '0 12px' }}>
+          <FormField
+            label="Country Name"
+            value={addForm.countryName}
+            onChange={(v) => setAddForm(f => ({ ...f, countryName: v }))}
+            isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
+            placeholder="e.g. United States"
+          />
+          <FormField
+            label="Country Code"
+            value={addForm.countryCode}
+            onChange={(v) => setAddForm(f => ({ ...f, countryCode: v.toUpperCase() }))}
+            isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
+            placeholder="e.g. US"
+          />
+          <FormField
+            label="Currency Code"
+            value={addForm.code}
+            onChange={(v) => setAddForm(f => ({ ...f, code: v.toUpperCase() }))}
+            isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
+            placeholder="e.g. USD"
+          />
+          <FormField
+            label="Currency Symbol"
+            value={addForm.symbol}
+            onChange={(v) => setAddForm(f => ({ ...f, symbol: v }))}
+            isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
+            placeholder="e.g. $ or USD"
+          />
+          <FormField
+            label="Exchange Rate (vs USD)"
+            value={addForm.rate}
+            onChange={(v) => setAddForm(f => ({ ...f, rate: v }))}
+            isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
+            placeholder="e.g. 1"
+          />
+          <FormField
+            label="Symbol Position"
+            value={addForm.symbolPosition}
+            onChange={(v) => setAddForm(f => ({ ...f, symbolPosition: v }))}
+            options={['BEFORE', 'AFTER']}
+            isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
+          />
+          <FormField
+            label="Auto Update Rate"
+            value={addForm.autoRate}
+            onChange={(v) => setAddForm(f => ({ ...f, autoRate: v }))}
+            options={['true', 'false']}
+            isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
+          />
+          <FormField
+            label="Shipping Enabled"
+            value={addForm.shippingEnabled}
+            onChange={(v) => setAddForm(f => ({ ...f, shippingEnabled: v }))}
+            options={['true', 'false']}
+            isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
+          />
+          <FormField
+            label="Set As Default"
+            value={addForm.isDefault}
+            onChange={(v) => setAddForm(f => ({ ...f, isDefault: v }))}
+            options={['false', 'true']}
+            isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
+          />
+          <FormField
+            label="Flag Emoji"
+            value={addForm.flag}
+            onChange={(v) => setAddForm(f => ({ ...f, flag: v }))}
+            isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
+            placeholder="e.g. 🇺🇸"
+          />
+        </div>
+        <ModalFooter
+          onClose={() => setAddCurrencyOpen(false)}
+          onSubmit={handleAddCurrency}
+          loading={loading}
+          submitLabel="Add Currency"
           isDark={isDark} border={border} textMain={textMain}
         />
       </Modal>

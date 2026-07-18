@@ -11,6 +11,7 @@ export interface Currency {
   exchangeRate: number;
   flag: string;
   countryCode?: string;
+  isDefault?: boolean;
 }
 
 const FLAG_MAP: Record<string, string> = {
@@ -43,6 +44,43 @@ interface CurrencyState {
   format: (amountUsd: number) => string;
 }
 
+function buildCurrencies(list: any[]): Currency[] {
+  const deduped = new Map<string, Currency>();
+
+  list
+    .filter((country) => country.currencyCode && Number(country.exchangeRate) > 0)
+    .forEach((country) => {
+      const code = String(country.currencyCode).toUpperCase();
+      const existing = deduped.get(code);
+      const candidate: Currency = {
+        id: String(country.id ?? code),
+        name: country.currencyName || country.currencyCode,
+        code,
+        symbol: country.currencySymbol ?? country.currencyCode,
+        symbolPosition: (country.symbolPosition as 'BEFORE' | 'AFTER') ?? 'BEFORE',
+        exchangeRate: Number(country.exchangeRate),
+        flag: country.flag || FLAG_MAP[code] || '',
+        countryCode: country.code,
+        isDefault: country.isDefault === true,
+      };
+
+      if (!existing || candidate.isDefault) {
+        deduped.set(code, candidate);
+      }
+    });
+
+  return Array.from(deduped.values());
+}
+
+function pickDefaultCurrency(currencies: Currency[], currentCode?: string): Currency {
+  return (
+    currencies.find((currency) => currency.code === currentCode) ??
+    currencies.find((currency) => currency.isDefault) ??
+    currencies[0] ??
+    DEFAULT
+  );
+}
+
 export const useCurrencyStore = create<CurrencyState>()(
   persist(
     (set, get) => ({
@@ -58,24 +96,11 @@ export const useCurrencyStore = create<CurrencyState>()(
           if (!res.ok) throw new Error('fetch failed');
           const raw = await res.json();
           const list: any[] = Array.isArray(raw) ? raw : (raw.data ?? []);
-
-          const currencies: Currency[] = list
-            .filter((c) => c.currencyCode && Number(c.exchangeRate) > 0)
-            .map((c) => ({
-              id: String(c.id ?? c.currencyCode),
-              name: c.currencyName || c.name || c.currencyCode,
-              code: c.currencyCode,
-              symbol: c.currencySymbol ?? c.currencyCode,
-              symbolPosition: (c.symbolPosition as 'BEFORE' | 'AFTER') ?? 'BEFORE',
-              exchangeRate: Number(c.exchangeRate),
-              flag: FLAG_MAP[c.currencyCode] ?? '',
-              countryCode: c.code,
-            }));
+          const currencies = buildCurrencies(list);
 
           if (currencies.length > 0) {
             const currentCode = get().selected.code;
-            const newSelected =
-              currencies.find((c) => c.code === currentCode) ?? currencies[0];
+            const newSelected = pickDefaultCurrency(currencies, currentCode);
             set({ currencies, selected: newSelected, isLoading: false });
           } else {
             set({ isLoading: false });
@@ -97,26 +122,14 @@ export const useCurrencyStore = create<CurrencyState>()(
           if (!currenciesRes.ok) throw new Error('Failed to fetch currencies');
           const raw = await currenciesRes.json();
           const list: any[] = Array.isArray(raw) ? raw : (raw.data ?? []);
-
-          const currencies: Currency[] = list
-            .filter((c) => c.currencyCode && Number(c.exchangeRate) > 0)
-            .map((c) => ({
-              id: String(c.id ?? c.currencyCode),
-              name: c.currencyName || c.name || c.currencyCode,
-              code: c.currencyCode,
-              symbol: c.currencySymbol ?? c.currencyCode,
-              symbolPosition: (c.symbolPosition as 'BEFORE' | 'AFTER') ?? 'BEFORE',
-              exchangeRate: Number(c.exchangeRate),
-              flag: FLAG_MAP[c.currencyCode] ?? '',
-              countryCode: c.code,
-            }));
+          const currencies = buildCurrencies(list);
 
           // Then, detect user's location and get the appropriate currency
           const geoRes = await fetch(`${API_BASE}/api/countries/detect/by-ip`);
           if (!geoRes.ok) throw new Error('Failed to detect location');
           const geoData = await geoRes.json();
 
-          let selectedCurrency = DEFAULT;
+          let selectedCurrency = pickDefaultCurrency(currencies, get().selected.code);
 
           if (geoData.success && geoData.country && geoData.country.currencyCode) {
             // Find the currency that matches the detected country
@@ -150,24 +163,11 @@ export const useCurrencyStore = create<CurrencyState>()(
             if (!res.ok) throw new Error('fetch failed');
             const raw = await res.json();
             const list: any[] = Array.isArray(raw) ? raw : (raw.data ?? []);
-
-            const currencies: Currency[] = list
-              .filter((c) => c.currencyCode && Number(c.exchangeRate) > 0)
-              .map((c) => ({
-                id: String(c.id ?? c.currencyCode),
-                name: c.currencyName || c.name || c.currencyCode,
-                code: c.currencyCode,
-                symbol: c.currencySymbol ?? c.currencyCode,
-                symbolPosition: (c.symbolPosition as 'BEFORE' | 'AFTER') ?? 'BEFORE',
-                exchangeRate: Number(c.exchangeRate),
-                flag: FLAG_MAP[c.currencyCode] ?? '',
-                countryCode: c.code,
-              }));
+            const currencies = buildCurrencies(list);
 
             if (currencies.length > 0) {
               const currentCode = get().selected.code;
-              const newSelected =
-                currencies.find((c) => c.code === currentCode) ?? currencies[0];
+              const newSelected = pickDefaultCurrency(currencies, currentCode);
               set({ currencies, selected: newSelected, isLoading: false });
             } else {
               set({ isLoading: false });

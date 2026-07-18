@@ -190,10 +190,28 @@ export class CreateProductDto {
   @IsOptional()
   upsellProductId?: string;
 
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Type(() => Number)
+  wholesalePrice?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Type(() => Number)
+  wholesaleMoq?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  @Transform(({ value }) => value === 'true' || value === true)
+  isWholesaleOnly?: boolean;
+
   @IsBoolean()
   @IsOptional()
   @Transform(({ value }) => value === 'true' || value === true)
   replaceImages?: boolean;
+
 
   @IsArray()
   @ValidateIf((o) => Array.isArray(o.imageDataUrls))
