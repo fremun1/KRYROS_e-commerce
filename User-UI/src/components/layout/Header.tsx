@@ -40,7 +40,7 @@ type HeaderConfig = {
 };
 
 export default function Header() {
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
   const pageContext = inferPageContext(location);
   const [headerCfg, setHeaderCfg] = useState<HeaderConfig | null>(null);
   const [announceHidden, setAnnounceHidden] = useState(false);
@@ -96,6 +96,12 @@ export default function Header() {
   const handleLogout = async () => {
     setUserMenuOpen(false);
     await logout();
+  };
+
+  const navigateTo = (path: string) => {
+    setCatMenuOpen(false);
+    setSidebarOpen(false);
+    setLocation(path);
   };
 
   return (
@@ -158,9 +164,15 @@ export default function Header() {
                           <span className="text-sm font-semibold text-foreground">All Products</span>
                         </button>
                       </Link>
-                      {headerCategories.map(cat => (
-                        <Link key={cat.id} href={getScopedBrowsePath(pageContext, 'category', cat.slug || String(cat.id))} onClick={() => setCatMenuOpen(false)}>
-                          <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-muted transition-colors text-left">
+                      {headerCategories.map(cat => {
+                        const categoryPath = getScopedBrowsePath(pageContext, 'category', cat.slug || String(cat.id));
+                        return (
+                          <button
+                            key={cat.id}
+                            type="button"
+                            onClick={() => navigateTo(categoryPath)}
+                            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-muted transition-colors text-left"
+                          >
                             {cat.image ? (
                               <img src={cat.image} alt={cat.name} className="w-8 h-8 rounded-lg object-cover flex-shrink-0" />
                             ) : (
@@ -170,8 +182,8 @@ export default function Header() {
                             )}
                             <span className="text-sm font-medium text-foreground">{cat.name}</span>
                           </button>
-                        </Link>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 </>

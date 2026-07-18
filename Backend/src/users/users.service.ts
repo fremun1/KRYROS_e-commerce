@@ -33,7 +33,12 @@ export class UsersService {
     // SECURITY: explicitly destructure fields to prevent mass-assignment of privileged
     // columns (role, isVerified, isActive). Role defaults to CUSTOMER — callers that need
     // a different role (e.g. auth.service after SUPER_ADMIN validation) pass it explicitly.
-    const { avatar, role = UserRole.CUSTOMER, ...coreFields } = createUserDto;
+    const {
+      avatar,
+      role = UserRole.CUSTOMER,
+      captchaToken: _captchaToken,
+      ...coreFields
+    } = createUserDto;
     const normalizedEmail =
       typeof coreFields.email === 'string' ? normalizeIdentifier(coreFields.email) : undefined;
     const normalizedPhone =

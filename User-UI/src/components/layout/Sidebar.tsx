@@ -130,6 +130,11 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
     setExpandedSection(expandedSection === section ? null : section);
   };
 
+  const navigateTo = (path: string) => {
+    onClose();
+    setLocation(path);
+  };
+
   return (
     <AnimatePresence>
       {open && (
@@ -291,18 +296,20 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                             {filteredCats.map((cat) => {
                               const catBrands = brandsByCategory[cat.id] || [];
                               const isCatExpanded = expandedCat === cat.id;
+                              const categoryPath = getScopedBrowsePath(pageContext, 'category', cat.slug || String(cat.id));
                               return (
                                 <div key={cat.id}>
                                   <div className="flex items-center">
-                                    <Link 
-                                      href={getScopedBrowsePath(pageContext, 'category', cat.slug || String(cat.id))}
-                                      onClick={onClose}
-                                      className="flex-grow flex items-center px-4 py-2.5 rounded-l-lg hover:bg-muted transition-colors text-foreground text-sm font-medium"
+                                    <button
+                                      type="button"
+                                      onClick={() => navigateTo(categoryPath)}
+                                      className="flex-grow flex items-center px-4 py-2.5 rounded-l-lg hover:bg-muted transition-colors text-foreground text-sm font-medium text-left"
                                     >
                                       {cat.name}
-                                    </Link>
+                                    </button>
                                     {catBrands.length > 0 && (
                                       <button
+                                        type="button"
                                         onClick={() => setExpandedCat(isCatExpanded ? null : cat.id)}
                                         className="px-3 py-2.5 rounded-r-lg hover:bg-muted transition-colors border-l border-border/10"
                                       >
@@ -314,13 +321,19 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                                   </div>
                                   {isCatExpanded && catBrands.length > 0 && (
                                     <div className="pl-6 space-y-1 mt-1 mb-2 border-l-2 border-primary/20 ml-4">
-                                      {catBrands.map((brand) => (
-                                        <Link key={brand.id} href={getScopedBrowsePath(pageContext, 'brand', brand.slug || String(brand.id))} onClick={onClose}>
-                                          <div className="px-3 py-1.5 rounded-lg hover:bg-muted transition-colors text-foreground text-xs cursor-pointer">
+                                      {catBrands.map((brand) => {
+                                        const brandPath = getScopedBrowsePath(pageContext, 'brand', brand.slug || String(brand.id));
+                                        return (
+                                          <button
+                                            key={brand.id}
+                                            type="button"
+                                            onClick={() => navigateTo(brandPath)}
+                                            className="w-full px-3 py-1.5 rounded-lg hover:bg-muted transition-colors text-foreground text-xs cursor-pointer text-left"
+                                          >
                                             {brand.name}
-                                          </div>
-                                        </Link>
-                                      ))}
+                                          </button>
+                                        );
+                                      })}
                                     </div>
                                   )}
                                 </div>
