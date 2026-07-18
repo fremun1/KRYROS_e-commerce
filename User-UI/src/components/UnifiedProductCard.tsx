@@ -159,9 +159,16 @@ export default function UnifiedProductCard({
           )}
         </div>
 
-        {/* Stock badge FIRST, then stars/reviews */}
+        {/* Product card labels, stock, condition, then stars/reviews */}
         <div className="flex items-center flex-wrap gap-x-1.5 gap-y-0.5 mb-1">
-          {/* 1. Stock badge — always first for non-wholesale */}
+          {/* 1. Custom promo text from product form */}
+          {!!product.popularItemText && !product.isWholesaleOnly && (
+            <span className="text-[10px] md:text-xs font-medium text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-500/10 px-1.5 md:px-2 py-0.5 rounded-full whitespace-nowrap flex-shrink-0">
+              {product.popularItemText}
+            </span>
+          )}
+
+          {/* 2. Stock badge */}
           {!product.isWholesaleOnly && (
             inStock ? (
               <span className="text-[10px] md:text-xs font-medium text-primary bg-primary/10 px-1.5 md:px-2 py-0.5 rounded-full whitespace-nowrap flex-shrink-0">
@@ -174,7 +181,14 @@ export default function UnifiedProductCard({
             )
           )}
 
-          {/* 2. Stars + review count — after stock badge */}
+          {/* 3. Condition badge */}
+          {!!product.condition && !product.isWholesaleOnly && (
+            <span className="text-[10px] md:text-xs font-medium text-foreground bg-secondary px-1.5 md:px-2 py-0.5 rounded-full whitespace-nowrap flex-shrink-0 border border-border">
+              {product.condition}
+            </span>
+          )}
+
+          {/* 4. Stars + review count */}
           {product.rating > 0 && !product.isWholesaleOnly && (
             <div className="flex items-center gap-0.5 flex-shrink-0">
               {[1, 2, 3, 4, 5].map((star) => (
@@ -194,7 +208,7 @@ export default function UnifiedProductCard({
             </div>
           )}
 
-          {/* 3. Credit details — Total, Deposit, and Monthly */}
+          {/* 5. Credit details — Total, Deposit, and Monthly */}
           {product.allowCredit && !isStoreClosed && (
             <div className="flex flex-col gap-0.5 mt-1 bg-primary/5 p-1.5 rounded-lg border border-primary/10">
               <div className="flex items-center justify-between gap-2">
@@ -208,7 +222,7 @@ export default function UnifiedProductCard({
             </div>
           )}
 
-          {/* 4. Wholesale details */}
+          {/* 6. Wholesale details */}
           {product.isWholesaleOnly && (
             <>
               {product.wholesalePrice && (
