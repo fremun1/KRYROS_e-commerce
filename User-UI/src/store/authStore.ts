@@ -149,19 +149,8 @@ export const useAuthStore = create<AuthState>()(
             set({ isLoading: false, error: msg });
             return { success: false, error: msg };
           }
-          if (json.accessToken && json.user) {
-            set({
-              token: json.accessToken,
-              refreshToken: json.refreshToken ?? null,
-              user: json.user,
-              isLoading: false,
-              error: null,
-            });
-            void hydrateNotifications(json.accessToken);
-            return { success: true };
-          }
           set({ isLoading: false, error: null });
-          return get().login(identifier, data.password, captchaToken);
+          return { success: true };
         } catch {
           const msg = 'Network error. Please check your connection.';
           set({ isLoading: false, error: msg });

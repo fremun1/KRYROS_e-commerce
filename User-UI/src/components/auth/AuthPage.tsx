@@ -8,6 +8,8 @@ interface AuthPageProps {
   initialTab?: "login" | "register" | "forgot";
 }
 
+const PENDING_LOGIN_STORAGE_KEY = "kryros-pending-login";
+
 export default function AuthPage({ initialTab = "login" }: AuthPageProps) {
   const [location, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState<"login" | "register" | "forgot">(initialTab);
@@ -64,6 +66,35 @@ export default function AuthPage({ initialTab = "login" }: AuthPageProps) {
     setForgotStep((prev) => (prev === 1 ? prev : 1));
   }, [initialTab, location]);
 
+  useEffect(() => {
+    if (activeTab !== "login" || typeof window === "undefined") return;
+
+    const pendingLogin = window.sessionStorage.getItem(PENDING_LOGIN_STORAGE_KEY);
+    if (!pendingLogin) return;
+
+    try {
+      const parsed = JSON.parse(pendingLogin) as {
+        identifier?: string;
+        password?: string;
+        message?: string;
+      };
+
+      if (parsed.identifier) {
+        setLoginIdentifier(parsed.identifier);
+      }
+
+      if (parsed.password) {
+        setLoginPassword(parsed.password);
+      }
+
+      if (parsed.message) {
+        setNotice(parsed.message);
+      }
+    } catch {
+      window.sessionStorage.removeItem(PENDING_LOGIN_STORAGE_KEY);
+    }
+  }, [activeTab]);
+
   const normalizeIdentifier = (value: string) => {
     const trimmed = value.trim();
     if (!trimmed || trimmed.includes("@")) return trimmed.toLowerCase();
@@ -80,7 +111,12 @@ export default function AuthPage({ initialTab = "login" }: AuthPageProps) {
     e.preventDefault();
     setNotice("");
     const res = await login(normalizeIdentifier(loginIdentifier), loginPassword);
-    if (res.success) setLocation("/dashboard");
+    if (res.success) {
+      if (typeof window !== "undefined") {
+        window.sessionStorage.removeItem(PENDING_LOGIN_STORAGE_KEY);
+      }
+      setLocation("/dashboard");
+    }
   };
 
   const submitRegister = async (e: React.FormEvent) => {
@@ -96,7 +132,27 @@ export default function AuthPage({ initialTab = "login" }: AuthPageProps) {
       firstName: registerFirstName.trim(),
       lastName: registerLastName.trim(),
     });
-    if (res.success) setLocation("/dashboard");
+    if (res.success) {
+      const normalizedIdentifier = normalizeIdentifier(registerIdentifier);
+
+      if (typeof window !== "undefined") {
+        window.sessionStorage.setItem(
+          PENDING_LOGIN_STORAGE_KEY,
+          JSON.stringify({
+            identifier: normalizedIdentifier,
+            password: registerPassword,
+            message: "Account created successfully. Review your details and tap Login.",
+          }),
+        );
+      }
+
+      setRegisterFirstName("");
+      setRegisterLastName("");
+      setRegisterIdentifier("");
+      setRegisterPassword("");
+      setLocation("/login");
+      setActiveTab("login");
+    }
   };
 
   const submitForgot = async (e: React.FormEvent) => {
