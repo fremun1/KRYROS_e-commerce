@@ -251,7 +251,7 @@ export class PaymentsService {
       const response = await axios.post(this.apiUrl, soapRequest, {
         headers: {
           'Content-Type': 'text/xml;charset=UTF-8',
-          'SOAPAction': '',
+          'SOAPAction': 'processCustomerPayment',
           'Accept': 'text/xml',
         },
         timeout: 60000,
@@ -413,7 +413,11 @@ export class PaymentsService {
 
     try {
       const response = await axios.post(this.apiUrl, soapRequest, {
-        headers: { 'Content-Type': 'text/xml;charset=UTF-8', 'SOAPAction': '', 'Accept': 'text/xml' },
+        headers: {
+          'Content-Type': 'text/xml;charset=UTF-8',
+          'SOAPAction': 'processCustomerPayment',
+          'Accept': 'text/xml',
+        },
         timeout: 60000,
       });
 
@@ -562,7 +566,11 @@ export class PaymentsService {
 
     try {
       const response = await axios.post(this.apiUrl, soapRequest, {
-        headers: { 'Content-Type': 'text/xml;charset=UTF-8', 'SOAPAction': '', 'Accept': 'text/xml' },
+        headers: {
+          'Content-Type': 'text/xml;charset=UTF-8',
+          'SOAPAction': 'queryCustomerPayment',
+          'Accept': 'text/xml',
+        },
       });
 
       const parser = new XMLParser({ ignoreAttributes: true, removeNSPrefix: true });
@@ -630,7 +638,11 @@ export class PaymentsService {
 
     try {
       const response = await axios.post(this.apiUrl, soapRequest, {
-        headers: { 'Content-Type': 'text/xml;charset=UTF-8', 'SOAPAction': '', 'Accept': 'text/xml' },
+        headers: {
+          'Content-Type': 'text/xml;charset=UTF-8',
+          'SOAPAction': 'queryCustomerPayment',
+          'Accept': 'text/xml',
+        },
       });
 
       const parser = new XMLParser({ ignoreAttributes: true, removeNSPrefix: true });
