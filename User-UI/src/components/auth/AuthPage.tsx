@@ -39,8 +39,8 @@ export default function AuthPage({ initialTab = "login" }: AuthPageProps) {
     setShowPassword(false);
     setShowRegisterPassword(false);
     setNotice("");
-    clearError();
-  }, [activeTab, clearError]);
+    useAuthStore.getState().clearError();
+  }, [activeTab]);
 
   useEffect(() => {
     setActiveTab((prev) => (prev === initialTab ? prev : initialTab));

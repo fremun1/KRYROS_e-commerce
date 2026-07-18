@@ -256,6 +256,18 @@ function PageLoader() {
   );
 }
 
+function LoginRoute() {
+  return <AuthPage initialTab="login" />;
+}
+
+function RegisterRoute() {
+  return <AuthPage initialTab="register" />;
+}
+
+function ForgotPasswordRoute() {
+  return <AuthPage initialTab="forgot" />;
+}
+
 // ── AppRoutes — handles both splash and page transitions ──────────────────────
 function AppRoutes() {
   const { getMe } = useAuthStore();
@@ -351,18 +363,9 @@ function AppRoutes() {
           <Route path="/track" component={TrackOrderPage} />
           <Route path="/pickup-stations" component={PickupStationsPage} />
           <Route path="/dashboard" component={DashboardPage} />
-          <Route
-            path="/login"
-            component={() => <AuthPage initialTab="login" />}
-          />
-          <Route
-            path="/register"
-            component={() => <AuthPage initialTab="register" />}
-          />
-          <Route
-            path="/forgot-password"
-            component={() => <AuthPage initialTab="forgot" />}
-          />
+          <Route path="/login" component={LoginRoute} />
+          <Route path="/register" component={RegisterRoute} />
+          <Route path="/forgot-password" component={ForgotPasswordRoute} />
           <Route path="/about" component={() => <GenericCMSPage slug="about" title="About Us" />} />
           <Route path="/contact" component={() => <GenericCMSPage slug="contact" title="Contact Us" />} />
           <Route path="/privacy" component={() => <GenericCMSPage slug="privacy" title="Privacy Policy" />} />
