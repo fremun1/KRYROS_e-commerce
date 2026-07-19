@@ -77,6 +77,68 @@ function SupportFloatingButtons() {
     location === "/pay" ||
     location.startsWith("/pay/") ||
     location.startsWith("/track-payment/");
+
+  useEffect(() => {
+    if (hide) return;
+
+    const zohoSelector = [
+      '[id*="zsiq"]',
+      '[class*="zsiq"]',
+      '[id*="zoho"]',
+      '[class*="zoho"]',
+      'iframe[src*="salesiq"]',
+      'iframe[src*="zoho"]',
+    ].join(", ");
+
+    const positionZohoLauncher = () => {
+      const isDesktop = window.innerWidth >= 768;
+      const bottomOffset = isDesktop ? 96 : 168;
+      const rightOffset = 16;
+
+      document.querySelectorAll<HTMLElement>(zohoSelector).forEach((element) => {
+        const rect = element.getBoundingClientRect();
+        const computed = window.getComputedStyle(element);
+        const signature = `${element.id} ${element.className} ${element.tagName}`.toLowerCase();
+        const isZohoElement =
+          signature.includes("zsiq") ||
+          signature.includes("zoho") ||
+          signature.includes("salesiq") ||
+          element.tagName.toLowerCase() === "iframe";
+
+        const isLauncherLike =
+          computed.position === "fixed" &&
+          rect.width >= 24 &&
+          rect.width <= 120 &&
+          rect.height >= 24 &&
+          rect.height <= 120;
+
+        if (!isZohoElement || !isLauncherLike) return;
+
+        element.style.setProperty("right", `${rightOffset}px`, "important");
+        element.style.setProperty("left", "auto", "important");
+        element.style.setProperty("bottom", `${bottomOffset}px`, "important");
+        element.style.setProperty("top", "auto", "important");
+        element.style.setProperty("z-index", "49", "important");
+      });
+    };
+
+    const observer = new MutationObserver(() => {
+      positionZohoLauncher();
+    });
+
+    positionZohoLauncher();
+    observer.observe(document.body, { childList: true, subtree: true, attributes: true });
+
+    const intervalId = window.setInterval(positionZohoLauncher, 1500);
+    window.addEventListener("resize", positionZohoLauncher);
+
+    return () => {
+      observer.disconnect();
+      window.clearInterval(intervalId);
+      window.removeEventListener("resize", positionZohoLauncher);
+    };
+  }, [hide]);
+
   if (hide) return null;
 
   const message = encodeURIComponent("Hi KRYROS! I need some help 👋");
