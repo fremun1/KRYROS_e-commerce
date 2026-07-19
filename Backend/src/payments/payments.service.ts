@@ -696,7 +696,7 @@ export class PaymentsService {
               email: updatedPayment.customerEmail,
               phone: updatedPayment.paymentPhone,
               status: newStatus,
-              amount: updatedPayment.amount,
+              amount: Number(updatedPayment.amount),
               currency: updatedPayment.currency,
               paymentNumber: updatedPayment.paymentNumber,
               paymentMethod: updatedPayment.paymentMethod,
