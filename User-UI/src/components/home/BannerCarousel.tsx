@@ -19,6 +19,17 @@ interface BannerCarouselProps {
   showArrows?: boolean;
 }
 
+function getBannerCtaText(ctaText?: string) {
+  if (!ctaText) return "";
+
+  const normalized = ctaText.trim().toLowerCase();
+  if (normalized === "add to cart" || normalized === "add-to-cart") {
+    return "Shop Now";
+  }
+
+  return ctaText;
+}
+
 const bannerFrameClassName =
   "mx-auto w-full max-w-[1440px] px-1.5 pt-2 sm:px-4 sm:pt-3 md:px-6";
 
@@ -106,6 +117,7 @@ export default function BannerCarousel({
 
   const renderOverlay = (slide: BannerSlide) => {
     if (!(slide.title || slide.subtitle || slide.ctaText)) return null;
+    const ctaText = getBannerCtaText(slide.ctaText);
 
     return (
       <div className="absolute inset-0 bg-gradient-to-r from-black/50 via-transparent to-transparent flex flex-col justify-end p-6 sm:p-8 md:p-12 pointer-events-none">
@@ -119,7 +131,7 @@ export default function BannerCarousel({
             {slide.subtitle}
           </p>
         )}
-        {slide.ctaText && (
+        {ctaText && (
           <div className="flex w-full justify-center">
             <span
               className="inline-flex min-w-[140px] max-w-full items-center justify-center rounded-lg px-5 py-2 text-center text-sm font-semibold pointer-events-auto"
@@ -128,7 +140,7 @@ export default function BannerCarousel({
                 color: slide.buttonTextColor || '#000000',
               }}
             >
-              {slide.ctaText}
+              {ctaText}
             </span>
           </div>
         )}
