@@ -26,7 +26,7 @@ const bannerShellClassName =
   "relative overflow-hidden rounded-[8px] border border-slate-200/70 bg-white shadow-[0_18px_45px_-30px_rgba(15,23,42,0.5)] ring-1 ring-black/5 sm:rounded-[10px]";
 
 const bannerMediaClassName =
-  "w-full h-[180px] object-cover pointer-events-none sm:h-[240px] md:h-[320px] lg:h-[360px]";
+  "w-full h-[180px] object-cover pointer-events-none sm:h-[240px] md:h-[360px] lg:h-[420px] xl:h-[460px]";
 
 export default function BannerCarousel({
   slides = [],
