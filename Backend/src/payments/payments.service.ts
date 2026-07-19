@@ -689,6 +689,23 @@ export class PaymentsService {
             where: { id: payment.id },
             data: updateData,
           });
+
+          // Send notifications (non-blocking)
+          if (newStatus === 'PAID' || newStatus === 'FAILED') {
+            this.notificationsService.sendPaymentStatusNotification({
+              email: updatedPayment.customerEmail,
+              phone: updatedPayment.paymentPhone,
+              status: newStatus,
+              amount: updatedPayment.amount,
+              currency: updatedPayment.currency,
+              paymentNumber: updatedPayment.paymentNumber,
+              paymentMethod: updatedPayment.paymentMethod,
+              customerName: updatedPayment.customerName,
+              receiptNumber: updatedPayment.receiptNumber,
+              trackingLink: updatedPayment.trackingLink,
+            }).catch(e => this.logger.warn(`sendPaymentStatusNotification failed for ${updatedPayment.paymentNumber}: ${e.message}`));
+          }
+
           return this.formatDirectPaymentResponse(updatedPayment, newStatus);
         }
         return this.formatDirectPaymentResponse(payment, newStatus);
@@ -744,13 +761,19 @@ export class PaymentsService {
         }
         
         if (newStatus !== order.paymentStatus) {
-          await this.prisma.order.update({
+          const updatedOrder = await this.prisma.order.update({
             where: { id: orderId },
             data: {
               paymentStatus: newStatus as PaymentStatus,
               status: newStatus === 'PAID' ? OrderStatus.CONFIRMED : OrderStatus.PENDING,
             },
           });
+
+          // Send order status notification if payment status changed to PAID/FAILED
+          if (newStatus === 'PAID' || newStatus === 'FAILED') {
+            this.notificationsService.sendOrderStatusNotification(orderId, newStatus === 'PAID' ? 'CONFIRMED' : 'PENDING')
+              .catch(e => this.logger.warn(`sendOrderStatusNotification failed for ${orderId}: ${e.message}`));
+          }
         }
         return {
           status: newStatus.toLowerCase(),
