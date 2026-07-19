@@ -93,8 +93,7 @@ function SupportFloatingButtons() {
         className={buttonBaseClass}
         aria-label="Chat on WhatsApp"
         style={{
-          background:
-            "linear-gradient(135deg, var(--kryros-primary-hover) 0%, var(--kryros-primary) 100%)",
+          background: "hsl(var(--primary))",
         }}
       >
         <svg viewBox="0 0 24 24" width="18" height="18" fill="white">

@@ -310,7 +310,7 @@ export default function ProductPage() {
       <div>
         <div
           ref={slideRef}
-          className="bg-[#F1F1F1] dark:bg-[#101826] aspect-square relative overflow-hidden select-none lg:rounded-2xl"
+          className="bg-muted aspect-square relative overflow-hidden select-none lg:rounded-2xl"
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
@@ -322,7 +322,7 @@ export default function ProductPage() {
             draggable={false}
           />
           {product.discount > 0 && (
-            <div className="absolute top-4 left-4 bg-[#B91C1C] text-white font-black px-3 py-1 rounded-xl text-sm shadow-lg z-10">
+            <div className="absolute top-4 left-4 bg-destructive text-destructive-foreground font-black px-3 py-1 rounded-xl text-sm shadow-lg z-10">
               -{product.discount}% OFF
             </div>
           )}
@@ -333,7 +333,7 @@ export default function ProductPage() {
                   key={i}
                   onClick={() => goToSlide(i)}
                   className={`rounded-full transition-all ${
-                    activeIndex === i ? "w-5 h-1.5 bg-white shadow" : "w-1.5 h-1.5 bg-white/50"
+                    activeIndex === i ? "w-5 h-1.5 bg-foreground shadow" : "w-1.5 h-1.5 bg-foreground/50"
                   }`}
                 />
               ))}
@@ -345,7 +345,7 @@ export default function ProductPage() {
           <div className="flex gap-2 overflow-x-auto no-scrollbar px-4 mt-4">
             {images.map((img, i) => (
               <button key={i} onClick={() => goToSlide(i)}
-                className={`flex-shrink-0 w-20 h-20 rounded-2xl border-2 overflow-hidden transition-all bg-[#F1F1F1] dark:bg-[#101826] ${activeIndex === i ? "border-primary shadow-md scale-95" : "border-transparent"}`}>
+                className={`flex-shrink-0 w-20 h-20 rounded-2xl border-2 overflow-hidden transition-all bg-muted ${activeIndex === i ? "border-primary shadow-md scale-95" : "border-transparent"}`}>
                 <img src={img} alt="" className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal" />
               </button>
             ))}
@@ -359,7 +359,7 @@ export default function ProductPage() {
         {/* Title + stock */}
         <div className="flex items-start justify-between gap-2">
           <h1 className="text-xl lg:text-2xl font-black text-foreground leading-snug flex-1">{product.name}</h1>
-          <span className={`flex-shrink-0 text-[11px] font-bold px-3 py-1 rounded-full border ${product.stock > 0 ? "border-green-500 text-green-600 dark:text-green-400" : "border-red-500 text-red-600 dark:text-red-400"}`}>
+          <span className={`flex-shrink-0 text-[11px] font-bold px-3 py-1 rounded-full border ${product.stock > 0 ? "border-green-600 text-green-600" : "border-destructive text-destructive"}`}>
             {product.stock > 0 ? "In Stock" : "Out of Stock"}
           </span>
         </div>
@@ -373,27 +373,27 @@ export default function ProductPage() {
 
         {/* Price row */}
         <div className="flex items-center gap-2.5 flex-wrap">
-          <span className="text-3xl lg:text-4xl font-black text-foreground dark:text-white">
+          <span className="text-3xl lg:text-4xl font-black text-foreground">
             {product.isWholesaleOnly && product.wholesalePrice ? format(product.wholesalePrice) : format(product.price)}
           </span>
           {product.oldPrice > product.price && (
-            <span className="text-base text-muted-foreground dark:text-[#A9B4C7] line-through">
+            <span className="text-base text-muted-foreground line-through">
               {format(product.oldPrice)}
             </span>
           )}
           {product.discount > 0 && (
-            <span className="text-xs font-bold text-[#B91C1C] bg-[#B91C1C]/10 px-2.5 py-1 rounded-lg">Save {product.discount}%</span>
+            <span className="text-xs font-bold text-destructive bg-destructive/10 px-2.5 py-1 rounded-lg">Save {product.discount}%</span>
           )}
         </div>
 
         {/* Wholesale Details */}
         {product.isWholesaleOnly && (
-          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 p-3 rounded-2xl flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center flex-shrink-0 shadow-sm">
-              <Package className="w-5 h-5 text-white" />
+          <div className="bg-primary/5 border border-primary/10 p-3 rounded-2xl flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center flex-shrink-0 shadow-sm">
+              <Package className="w-5 h-5 text-primary-foreground" />
             </div>
             <div>
-              <p className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-wider">Wholesale Exclusive</p>
+              <p className="text-[10px] font-black text-primary uppercase tracking-wider">Wholesale Exclusive</p>
               <p className="text-xs font-bold text-foreground">Minimum Order: {product.wholesaleMoq || 1} units</p>
             </div>
           </div>

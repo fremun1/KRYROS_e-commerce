@@ -77,7 +77,7 @@ export default function UnifiedProductCard({
        * rounded-xl (12px) applies border-radius directly to this container.
        * The `group` class enables the child img's group-hover zoom target.
        */}
-      <div className="relative group aspect-square rounded-xl overflow-hidden bg-[#F1F1F1] dark:bg-[#2B2F39]">
+      <div className="relative group aspect-square rounded-xl overflow-hidden bg-muted">
         {!imgErr && product.image ? (
           <img
             src={product.image}
@@ -108,12 +108,12 @@ export default function UnifiedProductCard({
 
         {/* Discount badge — top: 12px; left: 12px; z-index: 10 */}
         {showDiscountBadge && product.discount > 0 && (
-          <span className="absolute top-3 left-3 bg-[#B91C1C] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-lg z-10 shadow-sm">
+          <span className="absolute top-3 left-3 bg-destructive text-destructive-foreground text-[10px] font-bold px-1.5 py-0.5 rounded-lg z-10 shadow-sm">
             -{product.discount}%
           </span>
         )}
         {product.isWholesaleOnly && (
-          <span className="absolute top-3 left-3 bg-blue-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-lg z-10">
+          <span className="absolute top-3 left-3 bg-primary text-primary-foreground text-[9px] font-bold px-1.5 py-0.5 rounded-lg z-10">
             Wholesale
           </span>
         )}
@@ -130,9 +130,9 @@ export default function UnifiedProductCard({
             toggleWishlist(product.id);
             toast.success(wishlisted ? "Removed from wishlist" : "Added to wishlist", { description: product.name });
           }}
-          className="absolute top-3 right-3 w-7 h-7 md:w-8 md:h-8 rounded-full bg-white/90 dark:bg-[#2B2F39]/80 backdrop-blur-sm flex items-center justify-center z-10 shadow-sm border border-transparent dark:border-white/10"
+          className="absolute top-3 right-3 w-7 h-7 md:w-8 md:h-8 rounded-full bg-card/90 backdrop-blur-sm flex items-center justify-center z-10 shadow-sm border border-border"
         >
-          <Heart className={`w-3.5 h-3.5 md:w-4 md:h-4 transition-colors ${wishlisted ? "fill-red-500 text-red-500" : "text-muted-foreground dark:text-[#A9B4C7]"}`} />
+          <Heart className={`w-3.5 h-3.5 md:w-4 md:h-4 transition-colors ${wishlisted ? "fill-destructive text-destructive" : "text-muted-foreground"}`} />
         </button>
       </div>
 
@@ -151,11 +151,11 @@ export default function UnifiedProductCard({
 
         {/* Price + old price */}
         <div className="flex items-center flex-wrap gap-x-1 mb-0.5">
-          <span className="text-[13px] md:text-[15px] font-bold text-foreground dark:text-white">
+          <span className="text-[13px] md:text-[15px] font-bold text-foreground">
             {product.isWholesaleOnly && product.wholesalePrice ? format(product.wholesalePrice) : format(product.price)}
           </span>
           {product.oldPrice > product.price && (
-            <span className="text-[9px] md:text-xs text-muted-foreground dark:text-[#A9B4C7] line-through">{format(product.oldPrice)}</span>
+            <span className="text-[9px] md:text-xs text-muted-foreground line-through">{format(product.oldPrice)}</span>
           )}
         </div>
 
@@ -163,7 +163,7 @@ export default function UnifiedProductCard({
         <div className="flex items-center flex-wrap gap-x-1.5 gap-y-0.5 mb-1">
           {/* 1. Custom promo text from product form */}
           {!!product.popularItemText && !product.isWholesaleOnly && (
-            <span className="text-[9px] md:text-[10px] font-semibold tracking-[0.01em] text-[#0F766E] dark:text-[#5EEAD4] bg-[#CCFBF1] dark:bg-[#134E4A]/70 px-2 md:px-2.5 py-1 rounded-full whitespace-nowrap flex-shrink-0 border border-[#99F6E4] dark:border-[#115E59] shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+            <span className="text-[9px] md:text-[10px] font-semibold tracking-[0.01em] text-primary bg-primary/10 px-2 md:px-2.5 py-1 rounded-full whitespace-nowrap flex-shrink-0 border border-primary/20 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
               {product.popularItemText}
             </span>
           )}
@@ -183,15 +183,15 @@ export default function UnifiedProductCard({
                   key={star}
                   className={`w-3 h-3 flex-shrink-0 ${
                     star <= Math.round(product.rating)
-                      ? "fill-[#FFC107] text-[#FFC107]"
-                      : "fill-gray-300 dark:fill-[#2B2F39] text-gray-300 dark:text-[#2B2F39]"
+                      ? "fill-[#F6B01E] text-[#F6B01E]"
+                      : "fill-muted text-muted-foreground"
                   }`}
                   viewBox="0 0 20 20"
                 >
                   <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                 </svg>
               ))}
-              <span className="text-[11px] font-medium text-muted-foreground dark:text-[#94A3B8] ml-0.5">({product.reviewCount})</span>
+              <span className="text-[11px] font-medium text-muted-foreground ml-0.5">({product.reviewCount})</span>
             </div>
           )}
 
@@ -213,7 +213,7 @@ export default function UnifiedProductCard({
           {product.isWholesaleOnly && (
             <>
               {product.wholesalePrice && (
-                <span className="text-[10px] text-blue-600 dark:text-blue-400 font-semibold whitespace-nowrap">
+                <span className="text-[10px] text-primary font-semibold whitespace-nowrap">
                   W: {format(product.wholesalePrice)}
                 </span>
               )}
