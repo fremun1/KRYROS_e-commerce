@@ -46,7 +46,7 @@ export class MailerService {
         secure: parseInt(port, 10) === 465,
         auth: { user, pass },
         // Prefer IPv4 to avoid ENETUNREACH errors with IPv6
-        dnsPriority: 'ipv4',
+        ...({ dnsPriority: 'ipv4' } as any),
       });
       this.logger.log('Mailer Service initialized with SMTP (IPv4 preferred)');
     } else {
