@@ -287,11 +287,16 @@ export class PaymentsService {
           // Disable IPv6 if needed - some environments have issues with IPv6 connectivity
           family: 4,
         });
-        this.logger.log(`Received response from gateway: ${JSON.stringify(response.data)}`);
+        this.logger.log(`Received response from gateway (status ${response.status}):`);
+        this.logger.log(`Response headers: ${JSON.stringify(response.headers)}`);
+        this.logger.log(`Response data: ${typeof response.data === 'string' ? response.data : JSON.stringify(response.data)}`);
         return response;
       } catch (error) {
         if (axios.isAxiosError(error)) {
-          this.logger.error(`Gateway error - Status: ${error.response?.status}, Data: ${JSON.stringify(error.response?.data)}, Message: ${error.message}`);
+          this.logger.error(`Gateway error - Status: ${error.response?.status}`);
+          this.logger.error(`Response headers: ${JSON.stringify(error.response?.headers)}`);
+          this.logger.error(`Response data: ${typeof error.response?.data === 'string' ? error.response.data : JSON.stringify(error.response?.data)}`);
+          this.logger.error(`Error message: ${error.message}`);
         }
         throw error;
       }
@@ -493,6 +498,7 @@ export class PaymentsService {
     const formattedAmount = Number(amountZMW).toFixed(2);
     const soapRequest = `<?xml version="1.0" encoding="UTF-8"?><soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:kon="http://konik.cgrate.com"><soapenv:Header><wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.x" soapenv:mustUnderstand="1"><wsse:UsernameToken xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.x" wsu:Id="${username}"><wsse:Username>${username}</wsse:Username><wsse:Password Type="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText">${password}</wsse:Password></wsse:UsernameToken></wsse:Security></soapenv:Header><soapenv:Body><kon:processCustomerPayment><transactionAmount>${formattedAmount}</transactionAmount><customerMobile>${formattedPhone}</customerMobile><paymentReference>${transactionId}</paymentReference></kon:processCustomerPayment></soapenv:Body></soapenv:Envelope>`;
     this.logger.log(`Generated SOAP request for direct payment (amount=${formattedAmount}, phone=${formattedPhone}, ref=${transactionId})`);
+    this.logger.log(`Full SOAP Request XML: ${soapRequest}`);
 
     try {
       const response = await this.postGatewaySoapRequest('processCustomerPayment', soapRequest);
