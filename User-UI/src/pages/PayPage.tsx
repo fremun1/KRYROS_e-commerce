@@ -484,11 +484,19 @@ export default function PayPage() {
 
   const gatewayTotal = useMemo(() => {
     const selectedRate = selectedCurrency.exchangeRate || 1;
-    const zmwRate = allCurrencies.find((item) => item.code === "ZMW")?.exchangeRate;
-    if (!zmwRate) return roundMoney(total);
+    const zmwCurrency = allCurrencies.find((item) => item.code === "ZMW");
+    const zmwRate = zmwCurrency?.exchangeRate || 1;
+    
     const usdAmount = total / selectedRate;
-    return roundMoney(usdAmount * zmwRate);
-  }, [allCurrencies, selectedCurrency.exchangeRate, total]);
+    let converted = usdAmount * zmwRate;
+
+    // Match backend Zambia Special Rule: Round to nearest 10 for ZMW payments
+    if (selectedCurrency.code === "ZMW" || (zmwCurrency && effectivePaymentCountryCode === "ZM")) {
+      return Math.ceil(converted / 10) * 10;
+    }
+
+    return roundMoney(converted);
+  }, [allCurrencies, selectedCurrency.exchangeRate, total, effectivePaymentCountryCode]);
 
   const handleMobilePay = async () => {
     if (payLoading || !mmPhone.trim()) return;

@@ -128,6 +128,7 @@ export class PaymentsService {
    * Supports multiple African countries with their respective phone formats
    */
   private normalizePhoneForCountry(phone: string, countryCode?: string): { formatted: string; country: string } {
+    // Strip all non-digits, including the '+' sign which the gateway doesn't like
     let digits = String(phone || '').replace(/\D/g, '');
 
     // Try to detect country from phone number if not provided

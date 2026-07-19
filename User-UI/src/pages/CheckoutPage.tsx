@@ -377,7 +377,14 @@ export default function CheckoutPage() {
     }
     // Convert: USD amount = total / selectedRate, then USD to ZMW = * zmwRate
     const usdAmount = total / selectedRate;
-    return Math.round(usdAmount * zmwRate * 100) / 100;
+    let converted = usdAmount * zmwRate;
+
+    // Match backend Zambia Special Rule: Round to nearest 10
+    if (selectedCurrency.code === "ZMW" || (zmwCurrency && effectivePaymentCountryCode === "ZM")) {
+      return Math.ceil(converted / 10) * 10;
+    }
+
+    return Math.round(converted * 100) / 100;
   };
 
   const buildOrderPayload = (backendPaymentMethod: string) => ({
