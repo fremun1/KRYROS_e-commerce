@@ -19,6 +19,15 @@ interface BannerCarouselProps {
   showArrows?: boolean;
 }
 
+const bannerFrameClassName =
+  "mx-auto w-full max-w-[1440px] px-3 pt-2 sm:px-4 sm:pt-3 md:px-6";
+
+const bannerShellClassName =
+  "relative overflow-hidden rounded-[22px] border border-slate-200/70 bg-white shadow-[0_18px_45px_-30px_rgba(15,23,42,0.5)] ring-1 ring-black/5 sm:rounded-[26px]";
+
+const bannerMediaClassName =
+  "w-full h-[180px] object-cover pointer-events-none sm:h-[240px] md:h-[320px] lg:h-[360px]";
+
 export default function BannerCarousel({
   slides = [],
   autoplay = true,
@@ -74,7 +83,7 @@ export default function BannerCarousel({
       return (
         <video
           src={slide.videoUrl}
-          className="w-full h-[200px] sm:h-[280px] md:h-[340px] object-cover pointer-events-none"
+          className={bannerMediaClassName}
           autoPlay
           muted
           loop
@@ -88,7 +97,7 @@ export default function BannerCarousel({
       <img
         src={slide.image}
         alt={slide.title || `Banner ${idx + 1}`}
-        className="w-full h-[200px] sm:h-[280px] md:h-[340px] object-cover pointer-events-none"
+        className={bannerMediaClassName}
         loading={idx === 0 ? 'eager' : 'lazy'}
         draggable={false}
       />
@@ -129,9 +138,10 @@ export default function BannerCarousel({
   if (total === 1) {
     const slide = slides[0];
     return (
-      <div className="w-full">
+      <div className={bannerFrameClassName}>
         <a href={slide.linkUrl || '#'} className="block w-full">
-          <div className="relative">
+          <div className={bannerShellClassName}>
+            <div className="pointer-events-none absolute inset-x-0 top-0 z-[1] h-px bg-white/70" />
             {renderMedia(slide, 0)}
             {renderOverlay(slide)}
           </div>
@@ -167,86 +177,90 @@ export default function BannerCarousel({
   const trackTranslate = total > 0 ? (current * 100) / total : 0;
 
   return (
-    <div
-      className="relative w-full overflow-hidden group"
-      onMouseEnter={() => setIsPaused(true)}
-      onMouseLeave={() => setIsPaused(false)}
-      onTouchStart={() => setIsPaused(true)}
-      onTouchEnd={() => setTimeout(() => setIsPaused(false), 3000)}
-    >
-      {/* Track */}
+    <div className={bannerFrameClassName}>
       <div
-        className="flex transition-transform duration-500 ease-out will-change-transform"
-        style={{
-          width: `${total * 100}%`,
-          transform: `translate3d(-${trackTranslate}%, 0, 0)`,
-          touchAction: 'pan-y',
-        }}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
+        className={`${bannerShellClassName} group`}
+        onMouseEnter={() => setIsPaused(true)}
+        onMouseLeave={() => setIsPaused(false)}
+        onTouchStart={() => setIsPaused(true)}
+        onTouchEnd={() => setTimeout(() => setIsPaused(false), 3000)}
       >
-        {slides.map((slide, idx) => (
-          <div
-            key={idx}
-            className="relative flex-shrink-0 select-none"
-            style={{ width: `${100 / total}%` }}
-          >
-            <a
-              href={slide.linkUrl || '#'}
-              className="block w-full"
-              draggable={false}
-              onClick={(e) => {
-                if (touchMoved.current) {
-                  e.preventDefault();
-                  touchMoved.current = false;
-                }
-              }}
-            >
-              {renderMedia(slide, idx)}
-              {renderOverlay(slide)}
-            </a>
-          </div>
-        ))}
-      </div>
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-[1] h-px bg-white/70" />
 
-      {/* Arrows — always visible on mobile, hover on desktop */}
-      {showArrows && total > 1 && (
-        <>
-          <button
-            onClick={goPrev}
-            className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/40 hover:bg-black/70 text-white flex items-center justify-center transition-all z-10 active:scale-90"
-            aria-label="Previous slide"
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M15 18l-6-6 6-6"/></svg>
-          </button>
-          <button
-            onClick={goNext}
-            className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/40 hover:bg-black/70 text-white flex items-center justify-center transition-all z-10 active:scale-90"
-            aria-label="Next slide"
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M9 18l6-6-6-6"/></svg>
-          </button>
-        </>
-      )}
-
-      {/* Dots */}
-      {showDots && total > 1 && (
-        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2 z-10">
-          {slides.map((_, idx) => (
-            <button
+        {/* Track */}
+        <div
+          className="flex transition-transform duration-500 ease-out will-change-transform"
+          style={{
+            width: `${total * 100}%`,
+            transform: `translate3d(-${trackTranslate}%, 0, 0)`,
+            touchAction: 'pan-y',
+          }}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
+          {slides.map((slide, idx) => (
+            <div
               key={idx}
-              onClick={() => goTo(idx)}
-              className={`h-2 rounded-full transition-all ${
-                idx === current
-                  ? 'w-6 bg-white'
-                  : 'w-2 bg-white/50 hover:bg-white/80'
-              }`}
-              aria-label={`Go to slide ${idx + 1}`}
-            />
+              className="relative flex-shrink-0 select-none"
+              style={{ width: `${100 / total}%` }}
+            >
+              <a
+                href={slide.linkUrl || '#'}
+                className="block w-full"
+                draggable={false}
+                onClick={(e) => {
+                  if (touchMoved.current) {
+                    e.preventDefault();
+                    touchMoved.current = false;
+                  }
+                }}
+              >
+                {renderMedia(slide, idx)}
+                {renderOverlay(slide)}
+              </a>
+            </div>
           ))}
         </div>
-      )}
+
+        {/* Arrows — always visible on mobile, hover on desktop */}
+        {showArrows && total > 1 && (
+          <>
+            <button
+              onClick={goPrev}
+              className="absolute left-3 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/35 bg-slate-950/40 text-white shadow-lg shadow-slate-950/20 transition-all active:scale-90 hover:bg-slate-950/72 sm:left-4"
+              aria-label="Previous slide"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M15 18l-6-6 6-6"/></svg>
+            </button>
+            <button
+              onClick={goNext}
+              className="absolute right-3 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/35 bg-slate-950/40 text-white shadow-lg shadow-slate-950/20 transition-all active:scale-90 hover:bg-slate-950/72 sm:right-4"
+              aria-label="Next slide"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M9 18l6-6-6-6"/></svg>
+            </button>
+          </>
+        )}
+
+        {/* Dots */}
+        {showDots && total > 1 && (
+          <div className="absolute bottom-3 left-1/2 z-10 flex -translate-x-1/2 gap-2 rounded-full bg-slate-950/18 px-3 py-2 backdrop-blur-sm">
+            {slides.map((_, idx) => (
+              <button
+                key={idx}
+                onClick={() => goTo(idx)}
+                className={`h-2 rounded-full transition-all ${
+                  idx === current
+                    ? 'w-6 bg-white'
+                    : 'w-2 bg-white/55 hover:bg-white/85'
+                }`}
+                aria-label={`Go to slide ${idx + 1}`}
+              />
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
