@@ -120,15 +120,17 @@ export default function BannerCarousel({
           </p>
         )}
         {slide.ctaText && (
-          <span
-            className="inline-block px-5 py-2 rounded-lg text-sm font-semibold pointer-events-auto"
-            style={{
-              backgroundColor: slide.buttonColor || '#ffffff',
-              color: slide.buttonTextColor || '#000000',
-            }}
-          >
-            {slide.ctaText}
-          </span>
+          <div className="flex w-full justify-center">
+            <span
+              className="inline-flex min-w-[140px] max-w-full items-center justify-center rounded-lg px-5 py-2 text-center text-sm font-semibold pointer-events-auto"
+              style={{
+                backgroundColor: slide.buttonColor || '#ffffff',
+                color: slide.buttonTextColor || '#000000',
+              }}
+            >
+              {slide.ctaText}
+            </span>
+          </div>
         )}
       </div>
     );
