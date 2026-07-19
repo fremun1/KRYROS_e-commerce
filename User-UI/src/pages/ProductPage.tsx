@@ -514,7 +514,7 @@ export default function ProductPage() {
                 ) : product.isWholesaleOnly ? (
                   <><Package className="w-4 h-4" /> Request Bulk Quote</>
                 ) : (
-                  "Buy It Now"
+                  "Shop Now"
                 )}
               </button>
 

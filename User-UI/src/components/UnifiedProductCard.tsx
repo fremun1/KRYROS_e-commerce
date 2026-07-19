@@ -299,7 +299,7 @@ export default function UnifiedProductCard({
               ) : product.isWholesaleOnly ? (
                 <><Package className="w-3 h-3 md:w-3.5 md:h-3.5" /> Bulk</>
               ) : (
-                <><Zap className="w-3 h-3 md:w-3.5 md:h-3.5" /> Buy</>
+                <><Zap className="w-3 h-3 md:w-3.5 md:h-3.5" /> Shop</>
               )}
             </button>
           </div>
