@@ -671,17 +671,18 @@ export default function PayPage() {
                 <div className="relative w-20 flex-shrink-0">
                   <input
                     value={dialCode}
+                    disabled={effectivePaymentCountryCode === 'ZM'}
                     onChange={(e) => {
                       let val = e.target.value;
                       if (val && !val.startsWith("+")) val = "+" + val.replace(/[^0-9]/g, "");
                       setDialCode(val);
                     }}
-                    onFocus={() => setShowDialDrop(true)}
+                    onFocus={() => !effectivePaymentCountryCode?.includes('ZM') && setShowDialDrop(true)}
                     onBlur={() => setTimeout(() => setShowDialDrop(false), 200)}
                     placeholder="+260"
-                    className="w-full h-[46px] rounded-xl border border-border px-2 bg-card text-sm font-bold outline-none text-center"
+                    className="w-full h-[46px] rounded-xl border border-border px-2 bg-card text-sm font-bold outline-none text-center disabled:opacity-60 disabled:cursor-not-allowed"
                   />
-                  {showDialDrop && (
+                  {showDialDrop && effectivePaymentCountryCode !== 'ZM' && (
                     <div className="absolute top-full left-0 w-full mt-1 bg-background border border-border rounded-xl shadow-xl z-30 max-h-48 overflow-y-auto">
                       {DIAL_CODES.map(code => (
                         <button key={code} onClick={() => { setDialCode(code); setShowDialDrop(false); }} className="w-full px-3 py-2.5 text-sm font-bold hover:bg-muted text-center border-b last:border-0">{code}</button>
