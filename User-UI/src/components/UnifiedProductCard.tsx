@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Heart, ShoppingCart, Zap, Package, Clock, CreditCard } from "lucide-react";
+import { Heart, Package, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { useCartStore } from "@/store/cartStore";
 import { useWishlistStore } from "@/store/wishlistStore";
@@ -50,7 +50,6 @@ export default function UnifiedProductCard({
     nextOpeningTime?: string;
     nextOpeningDay?: string;
   } | null>(null);
-  const addToCart = useCartStore((s) => s.addToCart);
   const { toggleWishlist, isWishlisted } = useWishlistStore();
   const format = useCurrencyStore((s) => s.format);
   const wishlisted = isWishlisted(product.id);
@@ -252,55 +251,22 @@ export default function UnifiedProductCard({
           </div>
         )}
 
-        {/* Buttons — only show if NOT store closed, or if we want a different UI */}
+        {/* Buttons — only show if NOT store closed */}
         {!isStoreClosed && (
-          <div className="flex items-center gap-1.5 mt-auto pt-1">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                if (!inStock) return;
-                addToCart({
-                  id: product.id,
-                  name: product.name,
-                  price: product.isWholesaleOnly ? (product.wholesalePrice || product.price) : product.price,
-                  qty: product.isWholesaleOnly ? (product.wholesaleMoq || 1) : 1,
-                  image: product.image,
-                  shippingFee: product.shippingFee,
-                  estimatedDeliveryDays: product.estimatedDeliveryDays,
-                  estimatedDeliveryMinDays: product.estimatedDeliveryMinDays,
-                  estimatedDeliveryMaxDays: product.estimatedDeliveryMaxDays,
-                  condition: product.condition,
-                });
-                toast.success(product.isWholesaleOnly ? "Added to wholesale request" : "Added to cart", { description: product.name });
-              }}
-              disabled={!inStock}
-              className={`w-8 h-7 md:w-9 md:h-8 flex items-center justify-center border rounded-lg flex-shrink-0 transition-colors ${
-                inStock
-                  ? "border-primary text-primary hover:bg-primary/10 cursor-pointer"
-                  : "border-border text-muted-foreground opacity-40 cursor-not-allowed"
-              }`}
-            >
-              <ShoppingCart className="w-3.5 h-3.5 md:w-4 md:h-4" />
-            </button>
+          <div className="mt-auto pt-1">
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 window.location.href = `/product/${product.id}`;
               }}
               disabled={!inStock}
-              className={`flex-1 h-7 md:h-8 rounded-lg text-[10px] md:text-xs font-bold flex items-center justify-center gap-1 transition-colors ${
+              className={`w-full h-7 md:h-8 rounded-lg text-[10px] md:text-xs font-bold flex items-center justify-center transition-colors ${
                 inStock
                   ? "bg-primary text-white hover:bg-primary/90 cursor-pointer"
                   : "bg-muted text-muted-foreground cursor-not-allowed"
               }`}
             >
-              {product.allowCredit ? (
-                <><CreditCard className="w-3 h-3 md:w-3.5 md:h-3.5" /> Apply</>
-              ) : product.isWholesaleOnly ? (
-                <><Package className="w-3 h-3 md:w-3.5 md:h-3.5" /> Bulk</>
-              ) : (
-                <><Zap className="w-3 h-3 md:w-3.5 md:h-3.5" /> Shop</>
-              )}
+              Shop Now
             </button>
           </div>
         )}
