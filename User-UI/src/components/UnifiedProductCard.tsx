@@ -77,7 +77,7 @@ export default function UnifiedProductCard({
        * rounded-xl (12px) applies border-radius directly to this container.
        * The `group` class enables the child img's group-hover zoom target.
        */}
-      <div className="relative group aspect-square rounded-xl overflow-hidden bg-[#F1F1F1] dark:bg-[#101826]">
+      <div className="relative group aspect-square rounded-xl overflow-hidden bg-[#F1F1F1] dark:bg-[#2B2F39]">
         {!imgErr && product.image ? (
           <img
             src={product.image}

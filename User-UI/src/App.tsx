@@ -87,17 +87,6 @@ function SupportFloatingButtons() {
   return (
     <div className="fixed right-4 bottom-[5.75rem] md:bottom-6 z-50 flex flex-col items-end gap-3">
       <a
-        href="/contact"
-        className={buttonBaseClass}
-        aria-label="Send us a message"
-        style={{
-          background: "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)",
-        }}
-      >
-        <MessageCircle className="w-5 h-5 text-white" />
-      </a>
-
-      <a
         href={whatsappUrl}
         target="_blank"
         rel="noopener noreferrer"
