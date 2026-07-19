@@ -322,7 +322,7 @@ export default function PayPage() {
   const [bankProviders, setBankProviders] = useState<PaymentConfigProvider[]>([]);
   const [mobileOptions, setMobileOptions] = useState<MobileOption[]>([]);
   const effectivePaymentCountryCode = useMemo(
-    () => resolvePaymentCountryCode(detectedCountryCode, selectedCurrency.countryCode),
+    () => resolvePaymentCountryCode(selectedCurrency.countryCode, detectedCountryCode),
     [detectedCountryCode, selectedCurrency.countryCode]
   );
 
@@ -487,16 +487,22 @@ export default function PayPage() {
     const zmwCurrency = allCurrencies.find((item) => item.code === "ZMW");
     const zmwRate = zmwCurrency?.exchangeRate || 1;
     
+    // If the user is already in ZMW, just use the total directly
+    if (selectedCurrency.code === "ZMW") {
+      return Math.ceil(total / 10) * 10;
+    }
+
+    // Convert: USD amount = total / selectedRate, then USD to ZMW = * zmwRate
     const usdAmount = total / selectedRate;
     let converted = usdAmount * zmwRate;
 
     // Match backend Zambia Special Rule: Round to nearest 10 for ZMW payments
-    if (selectedCurrency.code === "ZMW" || (zmwCurrency && effectivePaymentCountryCode === "ZM")) {
+    if (effectivePaymentCountryCode === "ZM") {
       return Math.ceil(converted / 10) * 10;
     }
 
     return roundMoney(converted);
-  }, [allCurrencies, selectedCurrency.exchangeRate, total, effectivePaymentCountryCode]);
+  }, [allCurrencies, selectedCurrency.exchangeRate, selectedCurrency.code, total, effectivePaymentCountryCode]);
 
   const handleMobilePay = async () => {
     if (payLoading || !mmPhone.trim()) return;
