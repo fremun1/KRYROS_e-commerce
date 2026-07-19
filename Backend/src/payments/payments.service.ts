@@ -242,16 +242,50 @@ export class PaymentsService {
     };
   }
 
-  private async postGatewaySoapRequest(soapAction: string, soapRequest: string, timeoutMs = this.defaultGatewayTimeoutMs) {
-    this.logger.log(`Calling 543 SOAP action "${soapAction}" with timeout ${timeoutMs}ms`);
+  private async retryRequest<T>(
+    fn: () => Promise<T>,
+    maxRetries = 3,
+    delayMs = 1000
+  ): Promise<T> {
+    let lastError: Error | null = null;
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        this.logger.debug(`Payment gateway request attempt ${attempt}/${maxRetries}`);
+        return await fn();
+      } catch (error) {
+        lastError = error as Error;
+        this.logger.warn(`Attempt ${attempt} failed: ${error instanceof Error ? error.message : String(error)}`);
+        
+        if (attempt < maxRetries) {
+          // Exponential backoff
+          const waitTime = delayMs * Math.pow(2, attempt - 1);
+          this.logger.debug(`Retrying in ${waitTime}ms...`);
+          await new Promise(resolve => setTimeout(resolve, waitTime));
+        }
+      }
+    }
+    
+    this.logger.error(`All ${maxRetries} attempts failed`);
+    throw lastError;
+  }
 
-    return axios.post(this.apiUrl, soapRequest, {
-      headers: {
-        'Content-Type': 'text/xml;charset=UTF-8',
-        'SOAPAction': soapAction,
-        'Accept': 'text/xml',
-      },
-      timeout: timeoutMs,
+  private async postGatewaySoapRequest(soapAction: string, soapRequest: string, timeoutMs = this.defaultGatewayTimeoutMs) {
+    this.logger.log(`Calling 543 SOAP action "${soapAction}" with timeout ${timeoutMs}ms to ${this.apiUrl}`);
+
+    return this.retryRequest(async () => {
+      return axios.post(this.apiUrl, soapRequest, {
+        headers: {
+          'Content-Type': 'text/xml;charset=UTF-8',
+          'SOAPAction': soapAction,
+          'Accept': 'text/xml',
+        },
+        timeout: timeoutMs,
+        // Add retry logic and better error handling
+        validateStatus: (status) => status >= 200 && status < 300,
+        // Disable IPv6 if needed - some environments have issues with IPv6 connectivity
+        family: 4,
+      });
     });
   }
 

@@ -45,8 +45,10 @@ export class MailerService {
         port: parseInt(port, 10),
         secure: parseInt(port, 10) === 465,
         auth: { user, pass },
+        // Prefer IPv4 to avoid ENETUNREACH errors with IPv6
+        dnsPriority: 'ipv4',
       });
-      this.logger.log('Mailer Service initialized with SMTP');
+      this.logger.log('Mailer Service initialized with SMTP (IPv4 preferred)');
     } else {
       this.logger.warn('SMTP configuration incomplete. Mailer Service disabled.');
     }
