@@ -188,7 +188,7 @@ export default function ProductShelf({
   const fmt = (v: number) => String(v).padStart(2, '0');
 
   return (
-    <section className="pb-4 md:pb-6 bg-white">
+    <section className="pb-4 md:pb-6 bg-background">
       <div className="max-w-7xl mx-auto">
         {/* Optional decorative banner above header */}
         {topBanner}
