@@ -274,18 +274,27 @@ export class PaymentsService {
     this.logger.log(`Calling 543 SOAP action "${soapAction}" with timeout ${timeoutMs}ms to ${this.apiUrl}`);
 
     return this.retryRequest(async () => {
-      return axios.post(this.apiUrl, soapRequest, {
-        headers: {
-          'Content-Type': 'text/xml;charset=UTF-8',
-          'SOAPAction': soapAction,
-          'Accept': 'text/xml',
-        },
-        timeout: timeoutMs,
-        // Add retry logic and better error handling
-        validateStatus: (status) => status >= 200 && status < 300,
-        // Disable IPv6 if needed - some environments have issues with IPv6 connectivity
-        family: 4,
-      });
+      try {
+        const response = await axios.post(this.apiUrl, soapRequest, {
+          headers: {
+            'Content-Type': 'text/xml;charset=UTF-8',
+            'SOAPAction': soapAction,
+            'Accept': 'text/xml',
+          },
+          timeout: timeoutMs,
+          // Add retry logic and better error handling
+          validateStatus: (status) => status >= 200 && status < 300,
+          // Disable IPv6 if needed - some environments have issues with IPv6 connectivity
+          family: 4,
+        });
+        this.logger.log(`Received response from gateway: ${JSON.stringify(response.data)}`);
+        return response;
+      } catch (error) {
+        if (axios.isAxiosError(error)) {
+          this.logger.error(`Gateway error - Status: ${error.response?.status}, Data: ${JSON.stringify(error.response?.data)}, Message: ${error.message}`);
+        }
+        throw error;
+      }
     });
   }
 
@@ -320,7 +329,8 @@ export class PaymentsService {
 
     const formattedAmount = Number(amountZMW).toFixed(2);
 
-    const soapRequest = `<?xml version="1.0" encoding="UTF-8"?><soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:kon="http://konik.cgrate.com"><soapenv:Header><wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd" soapenv:mustUnderstand="1"><wsse:UsernameToken xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" wsu:Id="${username}"><wsse:Username>${username}</wsse:Username><wsse:Password Type="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText">${password}</wsse:Password></wsse:UsernameToken></wsse:Security></soapenv:Header><soapenv:Body><kon:processCustomerPayment><transactionAmount>${formattedAmount}</transactionAmount><customerMobile>${formattedPhone}</customerMobile><paymentReference>${transactionId}</paymentReference></kon:processCustomerPayment></soapenv:Body></soapenv:Envelope>`;
+    const soapRequest = `<?xml version="1.0" encoding="UTF-8"?><soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:kon="http://konik.cgrate.com"><soapenv:Header><wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.x" soapenv:mustUnderstand="1"><wsse:UsernameToken xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.x" wsu:Id="${username}"><wsse:Username>${username}</wsse:Username><wsse:Password Type="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText">${password}</wsse:Password></wsse:UsernameToken></wsse:Security></soapenv:Header><soapenv:Body><kon:processCustomerPayment><transactionAmount>${formattedAmount}</transactionAmount><customerMobile>${formattedPhone}</customerMobile><paymentReference>${transactionId}</paymentReference></kon:processCustomerPayment></soapenv:Body></soapenv:Envelope>`;
+    this.logger.log(`Generated SOAP request for processCustomerPayment (amount=${formattedAmount}, phone=${formattedPhone}, ref=${transactionId})`);
 
     try {
       const response = await this.postGatewaySoapRequest('processCustomerPayment', soapRequest);
@@ -480,7 +490,9 @@ export class PaymentsService {
       throw error;
     }
 
-    const soapRequest = `<?xml version="1.0" encoding="UTF-8"?><soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:kon="http://konik.cgrate.com"><soapenv:Header><wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd" soapenv:mustUnderstand="1"><wsse:UsernameToken xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" wsu:Id="${username}"><wsse:Username>${username}</wsse:Username><wsse:Password Type="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText">${password}</wsse:Password></wsse:UsernameToken></wsse:Security></soapenv:Header><soapenv:Body><kon:processCustomerPayment><transactionAmount>${Number(amountZMW).toFixed(2)}</transactionAmount><customerMobile>${formattedPhone}</customerMobile><paymentReference>${transactionId}</paymentReference></kon:processCustomerPayment></soapenv:Body></soapenv:Envelope>`;
+    const formattedAmount = Number(amountZMW).toFixed(2);
+    const soapRequest = `<?xml version="1.0" encoding="UTF-8"?><soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:kon="http://konik.cgrate.com"><soapenv:Header><wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.x" soapenv:mustUnderstand="1"><wsse:UsernameToken xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.x" wsu:Id="${username}"><wsse:Username>${username}</wsse:Username><wsse:Password Type="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText">${password}</wsse:Password></wsse:UsernameToken></wsse:Security></soapenv:Header><soapenv:Body><kon:processCustomerPayment><transactionAmount>${formattedAmount}</transactionAmount><customerMobile>${formattedPhone}</customerMobile><paymentReference>${transactionId}</paymentReference></kon:processCustomerPayment></soapenv:Body></soapenv:Envelope>`;
+    this.logger.log(`Generated SOAP request for direct payment (amount=${formattedAmount}, phone=${formattedPhone}, ref=${transactionId})`);
 
     try {
       const response = await this.postGatewaySoapRequest('processCustomerPayment', soapRequest);
