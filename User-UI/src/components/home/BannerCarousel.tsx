@@ -20,7 +20,7 @@ interface BannerCarouselProps {
 }
 
 const bannerFrameClassName =
-  "mx-auto w-full max-w-[1440px] px-3 pt-2 sm:px-4 sm:pt-3 md:px-6";
+  "mx-auto w-full max-w-[1440px] px-2 pt-2 sm:px-4 sm:pt-3 md:px-6";
 
 const bannerShellClassName =
   "relative overflow-hidden rounded-[8px] border border-slate-200/70 bg-white shadow-[0_18px_45px_-30px_rgba(15,23,42,0.5)] ring-1 ring-black/5 sm:rounded-[10px]";
