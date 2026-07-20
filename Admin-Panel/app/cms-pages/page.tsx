@@ -597,6 +597,53 @@ export default function CMSPagesPage() {
                 )}
               </div>
 
+              {/* Color Options for ProductShelf */}
+              {formData.templateType === 'ProductShelf' && (
+                <div className="mt-4 space-y-3">
+                  <h5 className="text-[11px] font-black text-primary uppercase tracking-widest">Color Customization</h5>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-muted-foreground uppercase">Title & Button Color</label>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="color"
+                          value={formData.config?.accentColor || '#000000'}
+                          onChange={(e) => setFormData({...formData, config: {...formData.config, accentColor: e.target.value}})}
+                          className="h-10 w-12 rounded border bg-background cursor-pointer"
+                        />
+                        <input
+                          type="text"
+                          value={formData.config?.accentColor || ''}
+                          onChange={(e) => setFormData({...formData, config: {...formData.config, accentColor: e.target.value}})}
+                          placeholder="#000000"
+                          className="flex-1 px-3 py-2 bg-background border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+                        />
+                      </div>
+                      <p className="text-[10px] text-muted-foreground">Color for section title and "See All" button</p>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-muted-foreground uppercase">Header Background</label>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="color"
+                          value={formData.config?.headerBgColor || '#ffffff'}
+                          onChange={(e) => setFormData({...formData, config: {...formData.config, headerBgColor: e.target.value}})}
+                          className="h-10 w-12 rounded border bg-background cursor-pointer"
+                        />
+                        <input
+                          type="text"
+                          value={formData.config?.headerBgColor || ''}
+                          onChange={(e) => setFormData({...formData, config: {...formData.config, headerBgColor: e.target.value}})}
+                          placeholder="#ffffff"
+                          className="flex-1 px-3 py-2 bg-background border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+                        />
+                      </div>
+                      <p className="text-[10px] text-muted-foreground">Background color for section header</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Special Options for Products */}
               {formData.templateType === 'ProductShelf' && (
                 <div className="grid grid-cols-2 gap-4 mt-4">
