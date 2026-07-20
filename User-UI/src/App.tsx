@@ -73,6 +73,7 @@ const WHATSAPP_NUMBER = import.meta.env.VITE_WHATSAPP_NUMBER || "260969597029";
 function SupportFloatingButtons() {
   const [location] = useLocation();
   const hide =
+    location !== "/" ||
     ["/login", "/register", "/forgot-password"].includes(location) ||
     location === "/pay" ||
     location.startsWith("/pay/") ||
@@ -147,7 +148,7 @@ function SupportFloatingButtons() {
     "w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-transform duration-200 hover:scale-105 active:scale-95";
 
   return (
-    <div className="fixed right-4 bottom-[5.75rem] md:bottom-6 z-50 flex flex-col items-end gap-3">
+    <div className="fixed right-4 bottom-[6.5rem] md:bottom-24 z-50 flex flex-col items-end gap-1">
       <a
         href={whatsappUrl}
         target="_blank"
