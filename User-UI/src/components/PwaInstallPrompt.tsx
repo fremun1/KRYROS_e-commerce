@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { Download, Smartphone, X } from "lucide-react";
+import { useEffect, useState } from "react";
 
 interface BeforeInstallPromptEvent extends Event {
   readonly platforms: string[];
@@ -10,21 +9,55 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 const STORAGE_KEY = "kryros_pwa_prompt_dismissed";
+const MANUAL_DISMISS_MS = 1000 * 60 * 60 * 24 * 3;
+const INSTALL_DISMISS_MS = 1000 * 60 * 60 * 24 * 30;
 
 function isStandaloneMode() {
   if (typeof window === "undefined") return false;
   return window.matchMedia("(display-mode: standalone)").matches || (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
 }
 
+function isDismissed() {
+  if (typeof window === "undefined") return true;
+  const storedValue = Number(localStorage.getItem(STORAGE_KEY) || "0");
+  return Number.isFinite(storedValue) && storedValue > Date.now();
+}
+
+function rememberDismissal(durationMs: number) {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(STORAGE_KEY, String(Date.now() + durationMs));
+}
+
 export default function PwaInstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [visible, setVisible] = useState(false);
   const [installing, setInstalling] = useState(false);
+  const [dismissed, setDismissed] = useState(true);
+  const [engaged, setEngaged] = useState(false);
+  const [shownOnce, setShownOnce] = useState(false);
+  const [siteHost, setSiteHost] = useState("kryros.com");
 
-  const dismissed = useMemo(() => {
-    if (typeof window === "undefined") return true;
-    return localStorage.getItem(STORAGE_KEY) === "1";
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    setDismissed(isDismissed());
+    setSiteHost(window.location.host.replace(/^www\./, ""));
   }, []);
+
+  useEffect(() => {
+    if (dismissed || isStandaloneMode()) return;
+
+    const markEngaged = () => setEngaged(true);
+
+    window.addEventListener("pointerdown", markEngaged, { once: true });
+    window.addEventListener("keydown", markEngaged, { once: true });
+    window.addEventListener("scroll", markEngaged, { once: true, passive: true });
+
+    return () => {
+      window.removeEventListener("pointerdown", markEngaged);
+      window.removeEventListener("keydown", markEngaged);
+      window.removeEventListener("scroll", markEngaged);
+    };
+  }, [dismissed]);
 
   useEffect(() => {
     if (dismissed || isStandaloneMode()) return;
@@ -32,13 +65,13 @@ export default function PwaInstallPrompt() {
     const onBeforeInstallPrompt = (event: Event) => {
       event.preventDefault();
       setDeferredPrompt(event as BeforeInstallPromptEvent);
-      window.setTimeout(() => setVisible(true), 1800);
     };
 
     const onAppInstalled = () => {
       setVisible(false);
       setDeferredPrompt(null);
-      localStorage.setItem(STORAGE_KEY, "1");
+      rememberDismissal(INSTALL_DISMISS_MS);
+      setDismissed(true);
     };
 
     window.addEventListener("beforeinstallprompt", onBeforeInstallPrompt);
@@ -49,9 +82,32 @@ export default function PwaInstallPrompt() {
     };
   }, [dismissed]);
 
-  const hidePrompt = () => {
+  useEffect(() => {
+    if (!deferredPrompt || !engaged || dismissed || shownOnce || isStandaloneMode()) return;
+
+    const revealTimer = window.setTimeout(() => {
+      setVisible(true);
+      setShownOnce(true);
+    }, 900);
+
+    return () => window.clearTimeout(revealTimer);
+  }, [deferredPrompt, dismissed, engaged, shownOnce]);
+
+  useEffect(() => {
+    if (!visible) return;
+
+    const autoHideTimer = window.setTimeout(() => {
+      setVisible(false);
+    }, 12000);
+
+    return () => window.clearTimeout(autoHideTimer);
+  }, [visible]);
+
+  const hidePrompt = (persistForMs = MANUAL_DISMISS_MS) => {
     setVisible(false);
-    localStorage.setItem(STORAGE_KEY, "1");
+    setDeferredPrompt(null);
+    rememberDismissal(persistForMs);
+    setDismissed(true);
   };
 
   const handleInstall = async () => {
@@ -62,6 +118,10 @@ export default function PwaInstallPrompt() {
       const choice = await deferredPrompt.userChoice;
       if (choice.outcome === "accepted") {
         setVisible(false);
+        rememberDismissal(INSTALL_DISMISS_MS);
+        setDismissed(true);
+      } else {
+        hidePrompt(MANUAL_DISMISS_MS);
       }
     } finally {
       setInstalling(false);
@@ -72,52 +132,29 @@ export default function PwaInstallPrompt() {
   if (!visible || !deferredPrompt || isStandaloneMode()) return null;
 
   return (
-    <div className="fixed inset-x-4 bottom-24 sm:bottom-6 sm:right-6 sm:left-auto z-[9997]">
-      <div className="w-full sm:w-[360px] rounded-3xl border border-border bg-card/95 backdrop-blur-xl shadow-2xl p-4">
-        <button
-          type="button"
-          onClick={hidePrompt}
-          className="absolute top-3 right-3 p-1.5 rounded-full hover:bg-muted transition-colors"
-          aria-label="Close install prompt"
-        >
-          <X className="w-4 h-4 text-muted-foreground" />
-        </button>
-
-        <div className="flex items-start gap-3 pr-8">
+    <div className="fixed inset-x-3 top-3 z-[9997] sm:left-1/2 sm:right-auto sm:w-[min(32rem,calc(100vw-1.5rem))] sm:-translate-x-1/2">
+      <div className="overflow-hidden rounded-[1.75rem] border border-black/5 bg-white/95 shadow-[0_10px_30px_rgba(15,23,42,0.14)] backdrop-blur-md">
+        <div className="flex items-center gap-3 px-4 py-3.5">
           <img
-            src="/pwa-icon-192.png"
+            src="/apple-touch-icon.png"
             alt="KRYROS app icon"
-            className="w-14 h-14 rounded-2xl object-cover shadow-md flex-shrink-0"
+            className="h-14 w-14 flex-shrink-0 rounded-[1.15rem] border border-black/5 bg-white object-cover shadow-sm"
           />
-          <div className="min-w-0">
-            <p className="text-sm font-black text-foreground">Install KRYROS</p>
-            <p className="text-xs text-muted-foreground leading-5 mt-1">
-              Add KRYROS to your phone for faster access, a cleaner full-screen experience, and app-style launch from your home screen.
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-[1.35rem] leading-none font-medium tracking-[-0.03em] text-slate-900">
+              Install KRYROS
+            </p>
+            <p className="mt-1 truncate text-[1rem] leading-none text-slate-500">
+              {siteHost}
             </p>
           </div>
-        </div>
-
-        <div className="mt-4 flex items-center gap-2 text-[11px] text-muted-foreground">
-          <Smartphone className="w-3.5 h-3.5 text-primary" />
-          Works best when opened from Chrome or another supported browser.
-        </div>
-
-        <div className="mt-4 flex gap-2">
-          <button
-            type="button"
-            onClick={hidePrompt}
-            className="flex-1 h-11 rounded-2xl border border-border bg-background text-sm font-semibold text-foreground hover:bg-muted/50 transition-colors"
-          >
-            Not now
-          </button>
           <button
             type="button"
             onClick={handleInstall}
             disabled={installing}
-            className="flex-1 h-11 rounded-2xl bg-[var(--kryros-primary)] text-white text-sm font-bold flex items-center justify-center gap-2 hover:bg-[var(--kryros-primary-hover)] transition-colors disabled:opacity-70"
+            className="shrink-0 rounded-full px-3 py-2 text-sm font-semibold text-[#2a6ca8] transition-colors hover:bg-[#2a6ca8]/10 hover:text-[#1f598c] disabled:opacity-70"
           >
-            <Download className="w-4 h-4" />
-            {installing ? "Opening..." : "Install app"}
+            {installing ? "Opening..." : "Install"}
           </button>
         </div>
       </div>
