@@ -195,7 +195,7 @@ export default function ProductShelf({
 
         {/* Section header */}
         <div 
-          className={`flex items-center justify-between px-4 md:px-6 py-3 ${headerBgColor ? 'text-white' : ''}`}
+          className={`flex items-center justify-between px-4 md:px-6 py-3 ${headerBgColor ? 'text-white mb-4' : ''}`}
           style={headerBgColor ? { backgroundColor: headerBgColor } : undefined}
         >
           <div className="min-w-0">
