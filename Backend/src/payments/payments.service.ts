@@ -435,6 +435,15 @@ export class PaymentsService {
   ) {
     this.logger.log(`=== Direct Payment (no order) for user: ${userId} ===`);
 
+    // Validate minimum payment amount
+    const MINIMUM_ZMW = 10;
+    if (amountZMW < MINIMUM_ZMW) {
+      throw new HttpException(
+        { message: `Minimum payment amount is ZMW ${MINIMUM_ZMW}.00` },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
     if (paymentLinkId) {
       await this.paymentLinksService.validatePaymentLink(paymentLinkId);
     }
@@ -564,6 +573,15 @@ export class PaymentsService {
     countryCode?: string,
   ) {
     this.logger.log(`=== WhatsApp Direct Payment for user: ${userId}, ref: ${reference}`);
+
+    // Validate minimum payment amount
+    const MINIMUM_ZMW = 10;
+    if (amountZMW < MINIMUM_ZMW) {
+      throw new HttpException(
+        { message: `Minimum payment amount is ZMW ${MINIMUM_ZMW}.00` },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
 
     if (paymentLinkId) {
       await this.paymentLinksService.validatePaymentLink(paymentLinkId);

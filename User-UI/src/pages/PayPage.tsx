@@ -483,13 +483,15 @@ export default function PayPage() {
   );
 
   const gatewayTotal = useMemo(() => {
+    const MINIMUM_ZMW = 10; // Gateway minimum payment amount
     const selectedRate = selectedCurrency.exchangeRate || 1;
     const zmwCurrency = allCurrencies.find((item) => item.code === "ZMW");
     const zmwRate = zmwCurrency?.exchangeRate || 1;
     
     // If the user is already in ZMW, just use the total directly
     if (selectedCurrency.code === "ZMW") {
-      return Math.ceil(total / 10) * 10;
+      const rounded = Math.ceil(total / 10) * 10;
+      return Math.max(rounded, MINIMUM_ZMW);
     }
 
     // Convert: USD amount = total / selectedRate, then USD to ZMW = * zmwRate
@@ -498,16 +500,22 @@ export default function PayPage() {
 
     // Match backend Zambia Special Rule: Round to nearest 10 for ZMW payments
     if (effectivePaymentCountryCode === "ZM") {
-      return Math.ceil(converted / 10) * 10;
+      const rounded = Math.ceil(converted / 10) * 10;
+      return Math.max(rounded, MINIMUM_ZMW);
     }
 
-    return roundMoney(converted);
+    const final = roundMoney(converted);
+    return Math.max(final, MINIMUM_ZMW);
   }, [allCurrencies, selectedCurrency.exchangeRate, selectedCurrency.code, total, effectivePaymentCountryCode]);
 
   const handleMobilePay = async () => {
     if (payLoading || !mmPhone.trim()) return;
     if (!firstName || !lastName || !email || !phone) {
       setPayError("Please fill in contact details for notifications.");
+      return;
+    }
+    if (gatewayTotal < 10) {
+      setPayError("Minimum payment amount is ZMW 10.00");
       return;
     }
     setPayLoading(true);
@@ -554,6 +562,10 @@ export default function PayPage() {
     if (payLoading) return;
     if (!firstName || !lastName || !email || !phone) {
       setPayError("Please fill in contact details for notifications.");
+      return;
+    }
+    if (gatewayTotal < 10) {
+      setPayError("Minimum payment amount is ZMW 10.00");
       return;
     }
     setPayLoading(true);
@@ -700,7 +712,7 @@ export default function PayPage() {
               <div className="h-px bg-border my-2" />
               <div className="flex justify-between font-black text-foreground"><span>Total Payable</span><span className="text-lg text-primary">{currency} {total.toFixed(2)}</span></div>
             </div>
-            <button onClick={() => amount > 0 && setStep(2)} disabled={amount <= 0} className="w-full h-[52px] rounded-xl bg-primary text-white font-extrabold text-base transition-all active:scale-95 disabled:opacity-50">Continue to Payment</button>
+            <button onClick={() => amount > 0 && setStep(2)} disabled={amount <= 0 || gatewayTotal < 10} className="w-full h-[52px] rounded-xl bg-primary text-white font-extrabold text-base transition-all active:scale-95 disabled:opacity-50">{gatewayTotal < 10 ? `Minimum ZMW 10 required` : 'Continue to Payment'}</button>
           </div>
         )}
 
