@@ -654,7 +654,8 @@ export default function PayPage() {
                           }}
                           className={`w-full px-4 py-3 text-left text-sm font-semibold transition-colors hover:bg-muted ${currency === c.code ? "text-kryros-primary" : "text-foreground"}`}
                         >
-                          {c.code}
+                          <span className="text-lg mr-2">{c.symbol}</span>
+                          <span className="text-xs text-muted-foreground">{c.code}</span>
                         </button>
                       ))}
                     </div>

@@ -171,9 +171,10 @@ export class CountriesService implements OnModuleInit {
     const { paymentMethods, ...countryData } = createCountryDto;
 
     try {
-      // Check if country already exists by name or code
+      // Check if country already exists by name or code AND is active
       const existing = await this.prisma.country.findFirst({
         where: {
+          status: true, // Only check active countries
           OR: [
             { name: countryData.name },
             { code: countryData.code },
@@ -183,6 +184,30 @@ export class CountriesService implements OnModuleInit {
 
       if (existing) {
         throw new BadRequestException(`Country with name "${countryData.name}" or code "${countryData.code}" already exists`);
+      }
+
+      // If a soft-deleted country with the same code exists, restore it
+      const softDeleted = await this.prisma.country.findFirst({
+        where: {
+          status: false,
+          code: countryData.code,
+        },
+      });
+
+      if (softDeleted) {
+        this.logger.log(`Restoring soft-deleted country: ${countryData.code}`);
+        return await this.prisma.country.update({
+          where: { id: softDeleted.id },
+          data: {
+            ...countryData,
+            status: true,
+          },
+          include: {
+            paymentMethods: {
+              where: { isActive: true },
+            },
+          },
+        });
       }
 
       // If autoRate is enabled, or rate is 1.0, fetch the initial rate from the API immediately
