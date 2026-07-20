@@ -73,6 +73,13 @@ export default function ProductShelf({
   const [saleEnded, setSaleEnded] = useState(false);
   const endDateRef = useRef<Date | null>(null);
 
+  const activeCategory = typeof params?.categorySlug === 'string' ? params.categorySlug.trim() : '';
+  const activeBrand = typeof params?.brandSlug === 'string' ? params.brandSlug.trim() : '';
+  const hasScopedFilter = Boolean(activeCategory || activeBrand);
+  const emptyStateMessage = hasScopedFilter
+    ? `No products matched${activeBrand ? ` brand "${activeBrand}"` : ''}${activeBrand && activeCategory ? ' in' : ''}${activeCategory ? ` category "${activeCategory}"` : ''}.`
+    : 'No products are available in this section yet.';
+
   // Fetch products
   useEffect(() => {
     const fetchProducts = async () => {
@@ -89,10 +96,25 @@ export default function ProductShelf({
         const effectiveSourceId = dataSourceId || 'dynamic-query';
         url.searchParams.set('dataSourceId', effectiveSourceId);
         url.searchParams.set('limit', String(limit));
+
+        const normalizedParams = { ...params };
+        if (normalizedParams.sortBy === 'price-asc') {
+          normalizedParams.sortBy = 'price';
+          normalizedParams.order = 'asc';
+        } else if (normalizedParams.sortBy === 'price-desc') {
+          normalizedParams.sortBy = 'price';
+          normalizedParams.order = 'desc';
+        } else if (normalizedParams.sortBy === 'popularity') {
+          normalizedParams.sortBy = 'sales';
+          normalizedParams.order = 'desc';
+        } else if (normalizedParams.sortBy === 'newest') {
+          normalizedParams.sortBy = 'createdAt';
+          normalizedParams.order = 'desc';
+        }
         
         // Add all params from the config object
-        if (params) {
-          Object.entries(params).forEach(([key, value]) => {
+        if (normalizedParams) {
+          Object.entries(normalizedParams).forEach(([key, value]) => {
             if (value !== undefined && value !== null && value !== '') {
               url.searchParams.set(key, String(value));
             }
@@ -106,8 +128,8 @@ export default function ProductShelf({
           const fallbackPath = `${API_BASE}/api/products`;
           try { url = new URL(fallbackPath); } catch { url = new URL(fallbackPath, window.location.origin); }
           url.searchParams.set('take', String(limit));
-          if (params) {
-            Object.entries(params).forEach(([key, value]) => {
+          if (normalizedParams) {
+            Object.entries(normalizedParams).forEach(([key, value]) => {
               if (value !== undefined && value !== null && value !== '') {
                 url.searchParams.set(key, String(value));
               }
@@ -169,12 +191,6 @@ export default function ProductShelf({
 
     return () => clearInterval(tick);
   }, [showTimer, products]);
-
-  // ─── Early return AFTER all hooks ───
-  // Don't render if no products and not loading (and no error to show)
-  if (!loading && products.length === 0 && !error) {
-    return null;
-  }
 
   // Determine CSS classes based on layout
   const containerClasses = layout === 'grid'
@@ -253,6 +269,17 @@ export default function ProductShelf({
             <p className="text-sm text-muted-foreground">
               {error}
             </p>
+          </div>
+        ) : products.length === 0 ? (
+          <div className="px-4 md:px-6">
+            <div className="rounded-2xl border border-dashed border-border bg-muted/20 px-4 py-8 text-center">
+              <p className="text-sm font-semibold text-foreground">
+                {title}
+              </p>
+              <p className="mt-2 text-sm text-muted-foreground">
+                {emptyStateMessage}
+              </p>
+            </div>
           </div>
         ) : (
           /* Product cards */

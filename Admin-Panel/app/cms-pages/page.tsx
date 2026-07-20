@@ -65,6 +65,50 @@ const updateSlideMedia = (slide: any, url: string, filename?: string) => {
   };
 };
 
+type ProductSourceMode = 'all' | 'category' | 'brand' | 'brand-category';
+
+const getProductSourceMode = (config?: any): ProductSourceMode => {
+  const hasBrand = Boolean(config?.brandSlug);
+  const hasCategory = Boolean(config?.categorySlug || config?.categoryId);
+
+  if (hasBrand && hasCategory) return 'brand-category';
+  if (hasCategory) return 'category';
+  if (hasBrand) return 'brand';
+  return 'all';
+};
+
+const applyProductSourceMode = (config: any, mode: ProductSourceMode) => {
+  const nextConfig = { ...(config || {}) };
+
+  if (mode === 'all') {
+    delete nextConfig.brandSlug;
+    delete nextConfig.categorySlug;
+    delete nextConfig.categoryId;
+    return nextConfig;
+  }
+
+  if (mode === 'category') {
+    delete nextConfig.brandSlug;
+    return nextConfig;
+  }
+
+  if (mode === 'brand') {
+    delete nextConfig.categorySlug;
+    delete nextConfig.categoryId;
+    return nextConfig;
+  }
+
+  return nextConfig;
+};
+
+const resolveOptionLabel = (
+  options: Array<{ value: string; label: string }>,
+  value?: string,
+) => {
+  if (!value) return '';
+  return options.find((option) => option.value === value)?.label || value;
+};
+
 
 
 export default function CMSPagesPage() {
@@ -343,6 +387,20 @@ export default function CMSPagesPage() {
               ) : (
                 sections.map((section, index) => {
                   const Icon = TEMPLATE_ICONS[section.templateType || section.type] || Info;
+                  const productSourceSummary =
+                    (section.templateType || section.type) === 'ProductShelf'
+                      ? [
+                          section.dataSourceId ? `Preset: ${section.dataSourceId}` : '',
+                          section.config?.categorySlug
+                            ? `Category: ${resolveOptionLabel(categories, section.config.categorySlug)}`
+                            : '',
+                          section.config?.brandSlug
+                            ? `Brand: ${resolveOptionLabel(brands, section.config.brandSlug)}`
+                            : '',
+                        ]
+                          .filter(Boolean)
+                          .join(' • ')
+                      : '';
                   return (
                     <div key={section.id} className="group flex items-center gap-4 p-4 bg-card border rounded-2xl hover:border-primary/50 hover:shadow-md transition-all">
                       {/* Always-visible reorder controls */}
@@ -374,9 +432,10 @@ export default function CMSPagesPage() {
                           <span className="bg-muted px-2 py-0.5 rounded">
                             {({'BrandGrid':'Brand Section','BannerCarousel':'Banner Carousel','CategorySection':'Category Section','ProductShelf':'Product Shelf'} as Record<string,string>)[section.templateType||section.type||'']||(section.templateType||section.type)}
                           </span>
-                          {section.templateType !== 'BrandGrid' && section.templateType !== 'CategorySection' && (
+                          {section.templateType !== 'BrandGrid' && section.templateType !== 'CategorySection' && !productSourceSummary && (
                             <span>Source: <span className="text-foreground">{section.dataSourceId || section.slotKey || 'Custom'}</span></span>
                           )}
+                          {productSourceSummary && <span>{productSourceSummary}</span>}
                         </div>
                       </div>
 
@@ -521,34 +580,101 @@ export default function CMSPagesPage() {
                     )}
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-muted-foreground uppercase">Brand</label>
-                      <select 
-                        value={formData.config?.brandSlug || ''} 
-                        onChange={(e) => setFormData({...formData, config: {...formData.config, brandSlug: e.target.value}})}
+                      <label className="text-xs font-bold text-muted-foreground uppercase">Fetch Products By</label>
+                      <select
+                        value={getProductSourceMode(formData.config)}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            config: applyProductSourceMode(formData.config, e.target.value as ProductSourceMode),
+                          })
+                        }
                         className="w-full p-2.5 bg-background border rounded-lg text-sm outline-none focus:ring-2 focus:ring-primary/20"
                       >
-                        <option value="">All Brands</option>
-                        {brands.map((brand) => (
-                          <option key={brand.value} value={brand.value}>{brand.label}</option>
-                        ))}
+                        <option value="all">All Products</option>
+                        <option value="category">Specific Category</option>
+                        <option value="brand">Specific Brand</option>
+                        <option value="brand-category">Brand + Category</option>
                       </select>
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-muted-foreground uppercase">Category</label>
-                      <select 
-                        value={formData.config?.categorySlug || ''} 
-                        onChange={(e) => setFormData({...formData, config: {...formData.config, categorySlug: e.target.value}})}
-                        className="w-full p-2.5 bg-background border rounded-lg text-sm outline-none focus:ring-2 focus:ring-primary/20"
-                      >
-                        <option value="">All Categories</option>
-                        {categories.map((category) => (
-                          <option key={category.value} value={category.value}>{category.label}</option>
-                        ))}
-                      </select>
+                      <label className="text-xs font-bold text-muted-foreground uppercase">Current Filter</label>
+                      <div className="min-h-[42px] rounded-lg border bg-background px-3 py-2.5 text-sm text-muted-foreground">
+                        {(() => {
+                          const sourceMode = getProductSourceMode(formData.config);
+                          const selectedBrand = resolveOptionLabel(brands, formData.config?.brandSlug);
+                          const selectedCategory = resolveOptionLabel(categories, formData.config?.categorySlug);
+
+                          if (sourceMode === 'brand-category') {
+                            return `${selectedBrand || 'Select a brand'} in ${selectedCategory || 'select a category'}`;
+                          }
+
+                          if (sourceMode === 'brand') {
+                            return selectedBrand || 'Select a brand';
+                          }
+
+                          if (sourceMode === 'category') {
+                            return selectedCategory || 'Select a category';
+                          }
+
+                          return 'Showing products from all brands and categories';
+                        })()}
+                      </div>
                     </div>
                   </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {(getProductSourceMode(formData.config) === 'brand' || getProductSourceMode(formData.config) === 'brand-category') && (
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-muted-foreground uppercase">Brand</label>
+                        <select 
+                          value={formData.config?.brandSlug || ''} 
+                          onChange={(e) => setFormData({...formData, config: {...formData.config, brandSlug: e.target.value}})}
+                          className="w-full p-2.5 bg-background border rounded-lg text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                        >
+                          <option value="">Select Brand</option>
+                          {brands.map((brand) => (
+                            <option key={brand.value} value={brand.value}>{brand.label}</option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+                    {(getProductSourceMode(formData.config) === 'category' || getProductSourceMode(formData.config) === 'brand-category') && (
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-muted-foreground uppercase">Category</label>
+                        <select 
+                          value={formData.config?.categorySlug || ''} 
+                          onChange={(e) => setFormData({
+                            ...formData,
+                            config: {
+                              ...formData.config,
+                              categorySlug: e.target.value,
+                              categoryId: undefined,
+                            },
+                          })}
+                          className="w-full p-2.5 bg-background border rounded-lg text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                        >
+                          <option value="">Select Category</option>
+                          {categories.map((category) => (
+                            <option key={category.value} value={category.value}>{category.label}</option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+                    {getProductSourceMode(formData.config) === 'all' && (
+                      <div className="rounded-lg border border-dashed px-3 py-3 text-xs text-muted-foreground">
+                        No brand or category filter is applied. This section will use the selected preset only.
+                      </div>
+                    )}
+                  </div>
+
+                  {getProductSourceMode(formData.config) !== 'all' && (
+                    <p className="text-[11px] text-muted-foreground">
+                      The storefront will keep this section visible even when the chosen filter has no matching products, so empty feeds are easier to spot and fix.
+                    </p>
+                  )}
 
                   {formData.dataSourceId === 'dynamic-query' && (
                     <div className="grid grid-cols-3 gap-3 pt-2">
@@ -741,31 +867,21 @@ export default function CMSPagesPage() {
                 </div>
               )}
 
-              {/* Category Selection for Products */}
+              {/* Product Target Summary */}
               {formData.templateType === 'ProductShelf' && (
-                <div className="grid grid-cols-2 gap-4 mt-4">
-                  <FormField 
-                    label="Category ID" 
-                    value={formData.config?.categoryId || ''} 
-                    onChange={(v) => setFormData({...formData, config: {...formData.config, categoryId: v}})}
-                    placeholder="Filter by category ID"
-                    isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
-                  />
-                  <FormField 
-                    label="Category Slug" 
-                    value={formData.config?.categorySlug || ''} 
-                    onChange={(v) => setFormData({...formData, config: {...formData.config, categorySlug: v}})}
-                    placeholder="electronics"
-                    isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
-                  />
-                  <div className="flex items-center gap-2">
-                    <input 
-                      type="checkbox" 
-                      id="filter-featured"
-                      checked={formData.config?.filter_by === 'Featured' || formData.config?.filterType === 'Featured'} 
-                      onChange={(e) => setFormData({...formData, config: {...formData.config, filter_by: e.target.checked ? 'Featured' : '', filterType: e.target.checked ? 'Featured' : ''}})}
-                    />
-                    <label htmlFor="filter-featured" className="text-xs font-bold text-muted-foreground uppercase">Featured Products Only</label>
+                <div className="mt-4 rounded-xl border bg-muted/20 px-4 py-3 text-sm text-muted-foreground">
+                  <div className="font-semibold text-foreground">Section feed preview</div>
+                  <div className="mt-1">
+                    {[
+                      formData.dataSourceId ? `Preset: ${formData.dataSourceId}` : 'Preset: dynamic-query',
+                      formData.config?.categorySlug ? `Category: ${resolveOptionLabel(categories, formData.config.categorySlug)}` : '',
+                      formData.config?.brandSlug ? `Brand: ${resolveOptionLabel(brands, formData.config.brandSlug)}` : '',
+                      formData.config?.isFeatured ? 'Featured only' : '',
+                      formData.config?.allowCredit ? 'Credit enabled' : '',
+                      formData.config?.isWholesaleOnly ? 'Wholesale only' : '',
+                    ]
+                      .filter(Boolean)
+                      .join(' • ')}
                   </div>
                 </div>
               )}
