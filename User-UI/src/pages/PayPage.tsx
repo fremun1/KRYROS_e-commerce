@@ -488,20 +488,23 @@ export default function PayPage() {
     const zmwCurrency = allCurrencies.find((item) => item.code === "ZMW");
     const zmwRate = zmwCurrency?.exchangeRate || 1;
     
-    // If the user is already in ZMW, just use the total directly
+    // If the user is already in ZMW, ensure minimum is met but don't overcharge
     if (selectedCurrency.code === "ZMW") {
-      const rounded = Math.ceil(total / 10) * 10;
-      return Math.max(rounded, MINIMUM_ZMW);
+      return Math.max(total, MINIMUM_ZMW);
     }
 
     // Convert: USD amount = total / selectedRate, then USD to ZMW = * zmwRate
     const usdAmount = total / selectedRate;
     let converted = usdAmount * zmwRate;
 
-    // Match backend Zambia Special Rule: Round to nearest 10 for ZMW payments
+    // For Zambia: Only round up if below minimum, otherwise keep exact amount
     if (effectivePaymentCountryCode === "ZM") {
-      const rounded = Math.ceil(converted / 10) * 10;
-      return Math.max(rounded, MINIMUM_ZMW);
+      // If amount is below minimum, round up to nearest 10
+      if (converted < MINIMUM_ZMW) {
+        return Math.ceil(converted / 10) * 10;
+      }
+      // Otherwise, keep the exact amount (don't overcharge)
+      return roundMoney(converted);
     }
 
     const final = roundMoney(converted);

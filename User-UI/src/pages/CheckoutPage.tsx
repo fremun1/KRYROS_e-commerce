@@ -369,22 +369,30 @@ export default function CheckoutPage() {
 
   // Calculate proper ZMW amount for payment gateway
   const calculateGatewayTotal = () => {
+    const MINIMUM_ZMW = 10;
     const selectedRate = selectedCurrency.exchangeRate || 1;
     const zmwCurrency = allCurrencies.find((item) => item.code === "ZMW");
     const zmwRate = zmwCurrency?.exchangeRate || 1;
     if (selectedCurrency.code === "ZMW") {
-      return total; // Already in ZMW
+      // If already in ZMW, ensure minimum is met but don't overcharge
+      return Math.max(total, MINIMUM_ZMW);
     }
     // Convert: USD amount = total / selectedRate, then USD to ZMW = * zmwRate
     const usdAmount = total / selectedRate;
     let converted = usdAmount * zmwRate;
 
-    // Match backend Zambia Special Rule: Round to nearest 10
-    if (selectedCurrency.code === "ZMW" || (zmwCurrency && effectivePaymentCountryCode === "ZM")) {
-      return Math.ceil(converted / 10) * 10;
+    // For Zambia: Only round up if below minimum, otherwise keep exact amount
+    if (effectivePaymentCountryCode === "ZM") {
+      // If amount is below minimum, round up to nearest 10
+      if (converted < MINIMUM_ZMW) {
+        return Math.ceil(converted / 10) * 10;
+      }
+      // Otherwise, keep the exact amount (don't overcharge)
+      return Math.round(converted * 100) / 100;
     }
 
-    return Math.round(converted * 100) / 100;
+    const final = Math.round(converted * 100) / 100;
+    return Math.max(final, MINIMUM_ZMW);
   };
 
   const buildOrderPayload = (backendPaymentMethod: string) => ({
