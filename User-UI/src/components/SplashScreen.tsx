@@ -81,23 +81,8 @@ export default function SplashScreen({ onDone }: SplashScreenProps) {
         />
       </div>
 
-      {/* Brand name */}
-      <p
-        style={{
-          marginTop: 28,
-          color: "var(--kryros-light-card)",
-          fontSize: 22,
-          fontWeight: 900,
-          letterSpacing: "0.12em",
-          fontFamily: "system-ui, -apple-system, sans-serif",
-          animation: "kryros-blink 1.6s ease-in-out 0.2s infinite",
-        }}
-      >
-        KRYROS
-      </p>
-
       {/* Bouncing loading dots */}
-      <div style={{ display: "flex", gap: 7, marginTop: 20 }}>
+      <div style={{ display: "flex", gap: 7, marginTop: 28 }}>
         {[0, 1, 2].map((i) => (
           <div
             key={i}

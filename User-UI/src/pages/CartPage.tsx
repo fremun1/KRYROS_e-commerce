@@ -49,13 +49,12 @@ export default function CartPage() {
           <ChevronLeft className="w-5 h-5 text-foreground" />
         </button>
       </Link>
-      <span className="flex items-center gap-2">
+      <span className="flex items-center">
         <img
           src="/kryros-logo.png"
           alt="KRYROS"
-          className="w-7 h-7 object-contain"
+          className="w-9 h-9 object-contain"
         />
-        <span className="text-base font-black text-foreground">KRY<span className="text-primary">ROS</span></span>
       </span>
       <div className="flex-1" />
       <Link href={displayBasePath}>
