@@ -18,7 +18,9 @@ import {
   reorderCmsSections,
   getSectionRulesMetadataGrouped,
   moveCmsSection,
-  getCmsPages
+  getCmsPages,
+  getBrands,
+  getCategories
 } from '@/lib/api';
 
 // Reusable template icons mapping
@@ -76,6 +78,8 @@ export default function CMSPagesPage() {
   const [sections, setSections] = useState<any[]>([]);
   const [rulesGrouped, setRulesGrouped] = useState<Record<string, any[]>>({});
   const [pages, setPages] = useState<{ value: string; label: string }[]>([]);
+  const [brands, setBrands] = useState<{ value: string; label: string }[]>([]);
+  const [categories, setCategories] = useState<{ value: string; label: string }[]>([]);
   const [selectedPage, setSelectedPage] = useState<string>('');
   const [view, setView] = useState<'page-list' | 'page-sections'>('page-list');
   const [loading, setLoading] = useState(false);
@@ -87,6 +91,8 @@ export default function CMSPagesPage() {
 
   useEffect(() => {
     fetchPages();
+    fetchBrands();
+    fetchCategories();
   }, []);
 
   useEffect(() => {
@@ -104,6 +110,28 @@ export default function CMSPagesPage() {
       setPages(mapped);
     } catch {
       toast.error('Failed to load pages');
+    }
+  };
+
+  const fetchBrands = async () => {
+    try {
+      const response = await getBrands();
+      const list = Array.isArray(response.data) ? response.data : (response.data as any)?.data || [];
+      const mapped = list.map((b: any) => ({ value: b.slug, label: b.name || b.slug }));
+      setBrands(mapped);
+    } catch {
+      toast.error('Failed to load brands');
+    }
+  };
+
+  const fetchCategories = async () => {
+    try {
+      const response = await getCategories();
+      const list = Array.isArray(response.data) ? response.data : (response.data as any)?.data || [];
+      const mapped = list.map((c: any) => ({ value: c.slug, label: c.name || c.slug }));
+      setCategories(mapped);
+    } catch {
+      toast.error('Failed to load categories');
     }
   };
 
@@ -495,20 +523,32 @@ export default function CMSPagesPage() {
 
                   {formData.dataSourceId === 'dynamic-query' && (
                     <div className="grid grid-cols-2 gap-4">
-                      <FormField 
-                        label="Brand Slug" 
-                        value={formData.config?.brandSlug || ''} 
-                        onChange={(v) => setFormData({...formData, config: {...formData.config, brandSlug: v}})}
-                        placeholder="e.g. apple"
-                        isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
-                      />
-                      <FormField 
-                        label="Category Slug" 
-                        value={formData.config?.categorySlug || ''} 
-                        onChange={(v) => setFormData({...formData, config: {...formData.config, categorySlug: v}})}
-                        placeholder="e.g. electronics"
-                        isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
-                      />
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-muted-foreground uppercase">Brand</label>
+                        <select 
+                          value={formData.config?.brandSlug || ''} 
+                          onChange={(e) => setFormData({...formData, config: {...formData.config, brandSlug: e.target.value}})}
+                          className="w-full p-2.5 bg-background border rounded-lg text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                        >
+                          <option value="">All Brands</option>
+                          {brands.map((brand) => (
+                            <option key={brand.value} value={brand.value}>{brand.label}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-muted-foreground uppercase">Category</label>
+                        <select 
+                          value={formData.config?.categorySlug || ''} 
+                          onChange={(e) => setFormData({...formData, config: {...formData.config, categorySlug: e.target.value}})}
+                          className="w-full p-2.5 bg-background border rounded-lg text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                        >
+                          <option value="">All Categories</option>
+                          {categories.map((category) => (
+                            <option key={category.value} value={category.value}>{category.label}</option>
+                          ))}
+                        </select>
+                      </div>
                     </div>
                   )}
 
