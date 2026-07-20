@@ -260,13 +260,13 @@ export default function UnifiedProductCard({
                 window.location.href = `/product/${product.id}`;
               }}
               disabled={!inStock}
-              className={`w-full h-7 md:h-8 rounded-lg text-[10px] md:text-xs font-bold flex items-center justify-center transition-colors ${
+              className={`w-full h-9 md:h-10 rounded-lg text-xs md:text-sm font-bold flex items-center justify-center transition-colors ${
                 inStock
                   ? "bg-primary text-white hover:bg-primary/90 cursor-pointer"
                   : "bg-muted text-muted-foreground cursor-not-allowed"
               }`}
             >
-              Shop Now
+              SHOP NOW
             </button>
           </div>
         )}

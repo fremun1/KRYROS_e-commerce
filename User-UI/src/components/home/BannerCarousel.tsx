@@ -120,9 +120,9 @@ export default function BannerCarousel({
           </p>
         )}
         {slide.ctaText && (
-          <div className="flex w-full justify-center pt-1 sm:pt-2">
+          <div className="flex w-full justify-center pt-2 sm:pt-4">
             <span
-              className="inline-flex min-w-[136px] max-w-full translate-y-1 items-center justify-center rounded-md px-4 py-2 text-center text-xs font-bold uppercase tracking-wide pointer-events-auto sm:min-w-[148px] sm:px-5 sm:py-2.5 sm:text-sm"
+              className="inline-flex min-w-[120px] max-w-full translate-y-3 items-center justify-center rounded-md px-3 py-1.5 text-center text-[11px] font-bold uppercase tracking-wide pointer-events-auto sm:min-w-[130px] sm:px-4 sm:py-2 sm:text-xs"
               style={{
                 backgroundColor: slide.buttonColor || '#ffffff',
                 color: slide.buttonTextColor || '#000000',
