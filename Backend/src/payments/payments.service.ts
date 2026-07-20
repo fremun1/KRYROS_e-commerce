@@ -1,4 +1,4 @@
-import { Injectable, Logger, HttpException, HttpStatus } from '@nestjs/common';
+import { Injectable, Logger, HttpException, HttpStatus, BadRequestException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { ConfigService } from '@nestjs/config';
@@ -67,6 +67,12 @@ export class PaymentsService {
 
   private buildDirectPaymentTrackingLink(paymentNumber: string) {
     return `/track-payment/${encodeURIComponent(paymentNumber)}`;
+  }
+
+  private assertValidPaymentAmount(amountZMW: number) {
+    if (!Number.isFinite(amountZMW) || amountZMW <= 0) {
+      throw new BadRequestException('Payment amount must be greater than 0');
+    }
   }
 
   private generateGatewayReference(prefix: string, identifier?: string) {
@@ -435,14 +441,7 @@ export class PaymentsService {
   ) {
     this.logger.log(`=== Direct Payment (no order) for user: ${userId} ===`);
 
-    // Validate minimum payment amount
-    const MINIMUM_ZMW = 10;
-    if (amountZMW < MINIMUM_ZMW) {
-      throw new HttpException(
-        { message: `Minimum payment amount is ZMW ${MINIMUM_ZMW}.00` },
-        HttpStatus.BAD_REQUEST,
-      );
-    }
+    this.assertValidPaymentAmount(amountZMW);
 
     if (paymentLinkId) {
       await this.paymentLinksService.validatePaymentLink(paymentLinkId);
@@ -574,14 +573,7 @@ export class PaymentsService {
   ) {
     this.logger.log(`=== WhatsApp Direct Payment for user: ${userId}, ref: ${reference}`);
 
-    // Validate minimum payment amount
-    const MINIMUM_ZMW = 10;
-    if (amountZMW < MINIMUM_ZMW) {
-      throw new HttpException(
-        { message: `Minimum payment amount is ZMW ${MINIMUM_ZMW}.00` },
-        HttpStatus.BAD_REQUEST,
-      );
-    }
+    this.assertValidPaymentAmount(amountZMW);
 
     if (paymentLinkId) {
       await this.paymentLinksService.validatePaymentLink(paymentLinkId);

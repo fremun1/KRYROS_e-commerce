@@ -1,4 +1,4 @@
-import { IsString, IsNumber, IsOptional } from 'class-validator';
+import { IsString, IsNumber, IsOptional, IsPositive } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -69,6 +69,7 @@ export class WhatsAppPaymentDto {
 
   @ApiProperty({ description: 'Payment amount', example: 500 })
   @IsNumber()
+  @IsPositive()
   @Type(() => Number)
   amount: number;
 
