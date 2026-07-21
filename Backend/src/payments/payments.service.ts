@@ -7,6 +7,7 @@ import axios from 'axios';
 import { XMLParser } from 'fast-xml-parser';
 import { PaymentLinksService } from '../payment-links/payment-links.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { Cron, CronExpression } from '@nestjs/schedule';
 
 @Injectable()
 export class PaymentsService {
@@ -749,8 +750,9 @@ export class PaymentsService {
 
   /**
    * Automatically check and update status for all pending automated payments
-   * This should be called periodically by a cron job
+   * Runs every 5 minutes via cron job
    */
+  @Cron(CronExpression.EVERY_5_MINUTES)
   async autoUpdatePendingPayments() {
     this.logger.log('=== Auto-updating pending automated payments ===');
     
