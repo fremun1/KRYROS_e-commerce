@@ -747,6 +747,42 @@ export class PaymentsService {
     return this.formatDirectPaymentResponse(payment);
   }
 
+  /**
+   * Automatically check and update status for all pending automated payments
+   * This should be called periodically by a cron job
+   */
+  async autoUpdatePendingPayments() {
+    this.logger.log('=== Auto-updating pending automated payments ===');
+    
+    // Find all pending payments that have a paymentReference (automated payments)
+    const pendingPayments = await this.prisma.directPayment.findMany({
+      where: {
+        status: 'PENDING',
+        paymentReference: { not: null },
+        paymentMethod: { in: ['MOBILE_MONEY'] } // Only automated payments
+      },
+      take: 50, // Limit to avoid overwhelming the gateway
+    });
+
+    this.logger.log(`Found ${pendingPayments.length} pending automated payments to check`);
+
+    let updatedCount = 0;
+    for (const payment of pendingPayments) {
+      try {
+        const result = await this.checkDirectStatus(payment.id);
+        if (result && (result.status === 'PAID' || result.status === 'FAILED')) {
+          updatedCount++;
+          this.logger.log(`Updated payment ${payment.paymentNumber} to ${result.status}`);
+        }
+      } catch (error) {
+        this.logger.error(`Failed to check payment ${payment.paymentNumber}:`, error);
+      }
+    }
+
+    this.logger.log(`Auto-update complete: ${updatedCount} payments updated`);
+    return { checked: pendingPayments.length, updated: updatedCount };
+  }
+
   async checkStatus(orderId: string) {
     const order = await this.prisma.order.findUnique({ where: { id: orderId } });
     if (!order) return null;

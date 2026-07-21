@@ -97,4 +97,12 @@ export class PaymentsController {
   findAllDirect() {
     return this.paymentsService.findAllDirect();
   }
+
+  @Post('auto-update-pending')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER)
+  @ApiOperation({ summary: 'Auto-update status of pending automated payments (Admin only)' })
+  autoUpdatePendingPayments() {
+    return this.paymentsService.autoUpdatePendingPayments();
+  }
 }
