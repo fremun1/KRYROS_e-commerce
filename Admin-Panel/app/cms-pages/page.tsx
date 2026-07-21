@@ -266,6 +266,8 @@ export default function CMSPagesPage() {
         pageSlug: normalizePageSlug(selectedPage)
       };
       console.log('[CMS] Saving section with payload:', payload);
+      console.log('[CMS] Config brandSlug:', formData.config?.brandSlug);
+      console.log('[CMS] Config categorySlug:', formData.config?.categorySlug);
       console.log('[CMS] Selected page:', selectedPage, 'Normalized:', normalizePageSlug(selectedPage));
       
       if (editingSection) {
