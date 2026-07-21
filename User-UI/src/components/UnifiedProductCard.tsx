@@ -280,7 +280,7 @@ export default function UnifiedProductCard({
               }}
               className="w-full h-7 rounded-lg text-[10px] font-bold flex items-center justify-center bg-muted text-muted-foreground hover:bg-muted/80 transition-colors"
             >
-              View Details
+              Shop Now
             </button>
           </div>
         )}

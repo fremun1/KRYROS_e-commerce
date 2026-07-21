@@ -368,14 +368,33 @@ export default function CheckoutPage() {
   };
 
   // Convert the checkout total into the gateway currency without forcing a minimum.
+  // For credit products, only charge the initial payment amount.
   const calculateGatewayTotal = () => {
     const selectedRate = selectedCurrency.exchangeRate || 1;
     const zmwCurrency = allCurrencies.find((item) => item.code === "ZMW");
     const zmwRate = zmwCurrency?.exchangeRate || 1;
-    if (selectedCurrency.code === "ZMW") {
-      return Math.round(total * 100) / 100;
+    
+    // Check if any items are credit products and calculate initial payment total
+    const hasCreditProducts = cartItems.some(item => item.allowCredit);
+    let calculatedTotal = total;
+    
+    if (hasCreditProducts) {
+      // For credit products, use the initial payment amount instead of full price
+      calculatedTotal = cartItems.reduce((sum, item) => {
+        if (item.allowCredit && item.creditMinimum) {
+          return sum + (item.creditMinimum * item.qty);
+        }
+        return sum + (item.price * item.qty);
+      }, 0);
+      
+      // Add processing fee and shipping to the credit initial payment
+      calculatedTotal = calculatedTotal + PROCESSING_FEE + shippingPrice;
     }
-    const usdAmount = total / selectedRate;
+    
+    if (selectedCurrency.code === "ZMW") {
+      return Math.round(calculatedTotal * 100) / 100;
+    }
+    const usdAmount = calculatedTotal / selectedRate;
     const converted = usdAmount * zmwRate;
     return Math.round(converted * 100) / 100;
   };

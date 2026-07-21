@@ -682,12 +682,26 @@ export class PaymentsService {
         const msg = String(txReturn.responseMessage || '').toLowerCase();
         const rawStatus = String(txReturn.status || '').toUpperCase();
         
+        this.logger.log(`Direct payment status check - Code: ${code}, RawStatus: ${rawStatus}, Message: ${msg}, CurrentStatus: ${payment.status}`);
+        
         if (code === '0') {
            if (rawStatus === 'FAILED' || msg.includes('fail') || msg.includes('cancel')) newStatus = 'FAILED';
            else if (rawStatus === 'PENDING' || msg.includes('pending')) newStatus = 'PENDING';
            else newStatus = 'PAID';
-        } else if (code !== '114') {
-           newStatus = 'FAILED';
+        } else if (code === '114') {
+           // Code 114 means transaction not found - keep current status
+           newStatus = payment.status;
+        } else {
+           // For other error codes, check if the message indicates success
+           if (rawStatus === 'PAID' || rawStatus === 'SUCCESS' || msg.includes('success') || msg.includes('complete') || msg.includes('approved')) {
+             newStatus = 'PAID';
+           } else if (rawStatus === 'FAILED' || msg.includes('fail') || msg.includes('cancel') || msg.includes('error')) {
+             newStatus = 'FAILED';
+           } else {
+             // For ambiguous codes, keep current status to avoid false failures
+             this.logger.warn(`Ambiguous payment response code ${code}: ${msg}. Keeping current status: ${payment.status}`);
+             newStatus = payment.status;
+           }
         }
         
         if (newStatus !== payment.status) {
@@ -769,12 +783,26 @@ export class PaymentsService {
         const msg = String(txReturn.responseMessage || '').toLowerCase();
         const rawStatus = String(txReturn.status || '').toUpperCase();
         
+        this.logger.log(`Order payment status check - Code: ${code}, RawStatus: ${rawStatus}, Message: ${msg}, CurrentStatus: ${order.paymentStatus}`);
+        
         if (code === '0') {
            if (rawStatus === 'FAILED' || msg.includes('fail') || msg.includes('cancel')) newStatus = 'FAILED';
            else if (rawStatus === 'PENDING' || msg.includes('pending')) newStatus = 'PENDING';
            else newStatus = 'PAID';
-        } else if (code !== '114') {
-           newStatus = 'FAILED';
+        } else if (code === '114') {
+           // Code 114 means transaction not found - keep current status
+           newStatus = order.paymentStatus;
+        } else {
+           // For other error codes, check if the message indicates success
+           if (rawStatus === 'PAID' || rawStatus === 'SUCCESS' || msg.includes('success') || msg.includes('complete') || msg.includes('approved')) {
+             newStatus = 'PAID';
+           } else if (rawStatus === 'FAILED' || msg.includes('fail') || msg.includes('cancel') || msg.includes('error')) {
+             newStatus = 'FAILED';
+           } else {
+             // For ambiguous codes, keep current status to avoid false failures
+             this.logger.warn(`Ambiguous payment response code ${code}: ${msg}. Keeping current status: ${order.paymentStatus}`);
+             newStatus = order.paymentStatus;
+           }
         }
         
         if (newStatus !== order.paymentStatus) {

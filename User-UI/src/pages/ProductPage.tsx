@@ -243,7 +243,12 @@ export default function ProductPage() {
       estimatedDeliveryDays: product.estimatedDeliveryDays,
       estimatedDeliveryMinDays: product.estimatedDeliveryMinDays,
       estimatedDeliveryMaxDays: product.estimatedDeliveryMaxDays,
-      condition: product.condition
+      condition: product.condition,
+      allowCredit: product.allowCredit,
+      creditMinimum: product.creditMinimum,
+      isWholesaleOnly: product.isWholesaleOnly,
+      wholesalePrice: product.wholesalePrice,
+      wholesaleMoq: product.wholesaleMoq
     });
     toast.success(product.isWholesaleOnly ? "Added to wholesale request" : "Added to cart", { description: product.name });
   };
@@ -263,15 +268,15 @@ export default function ProductPage() {
       estimatedDeliveryDays: product.estimatedDeliveryDays,
       estimatedDeliveryMinDays: product.estimatedDeliveryMinDays,
       estimatedDeliveryMaxDays: product.estimatedDeliveryMaxDays,
-      condition: product.condition
+      condition: product.condition,
+      allowCredit: product.allowCredit,
+      creditMinimum: product.creditMinimum,
+      isWholesaleOnly: product.isWholesaleOnly,
+      wholesalePrice: product.wholesalePrice,
+      wholesaleMoq: product.wholesaleMoq
     });
-    if (product.allowCredit) {
-      window.location.href = `/apply-credit?productId=${product.id}`;
-    } else if (product.isWholesaleOnly) {
-      window.location.href = "/wholesale-checkout";
-    } else {
-      window.location.href = "/checkout";
-    }
+    // All products (credit, wholesale, normal) go to regular checkout
+    window.location.href = "/checkout";
   };
 
   const deliveryWindow = resolveDeliveryWindow({
@@ -507,7 +512,7 @@ export default function ProductPage() {
           ) : (
             <>
               {/* Buy It Now — solid primary */}
-              <button onClick={handleAction} disabled={product.stock === 0}
+              <button onClick={handleAction} disabled={product.stock === 0 || (product.isWholesaleOnly && qty < (product.wholesaleMoq || 1))}
                 className="w-full py-3.5 bg-primary text-white rounded-full font-bold text-sm hover:bg-primary/90 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2">
                 {product.allowCredit ? (
                   <><CreditCard className="w-4 h-4" /> Apply for Credit</>
@@ -520,7 +525,7 @@ export default function ProductPage() {
 
               {/* Add to Cart — outlined */}
               {!product.allowCredit && (
-                <button onClick={handleAddToCart} disabled={product.stock === 0}
+                <button onClick={handleAddToCart} disabled={product.stock === 0 || (product.isWholesaleOnly && qty < (product.wholesaleMoq || 1))}
                   className="w-full py-3.5 border border-primary text-primary rounded-full font-bold text-sm hover:bg-primary/5 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2">
                   {product.isWholesaleOnly ? "Add to Bulk Request" : "Add to cart"}
                 </button>

@@ -12,6 +12,11 @@ export interface CartItem {
   estimatedDeliveryMinDays?: number;
   estimatedDeliveryMaxDays?: number;
   condition?: string;
+  allowCredit?: boolean;
+  creditMinimum?: number;
+  isWholesaleOnly?: boolean;
+  wholesalePrice?: number;
+  wholesaleMoq?: number;
 }
 
 interface CartState {
