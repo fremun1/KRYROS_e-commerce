@@ -120,12 +120,15 @@ export default function DynamicSectionRendererV2({
                 headerBgColor={section.config?.headerBgColor}
                 textColor={section.config?.textColor}
                 params={{
-                  ...(section.config || {}),
                   isFeatured: section.config?.filter_by === 'Featured' || section.config?.filterType === 'Featured' || section.config?.isFeatured,
+                  allowCredit: section.config?.allowCredit,
+                  isWholesaleOnly: section.config?.isWholesaleOnly,
                   categoryId: section.config?.categoryId,
                   categorySlug: section.config?.categorySlug,
                   brandSlug: section.config?.brandSlug,
                   popularity: section.config?.popularity,
+                  sortBy: section.config?.sortBy,
+                  order: section.config?.order,
                 }}
               />
             );
