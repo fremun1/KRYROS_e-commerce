@@ -415,8 +415,8 @@ function AppRoutes() {
           <Route path="/login" component={LoginRoute} />
           <Route path="/register" component={RegisterRoute} />
           <Route path="/forgot-password" component={ForgotPasswordRoute} />
-          <Route path="/about" component={() => <GenericCMSPage slug="about" title="About Us" />} />
-          <Route path="/contact" component={() => <GenericCMSPage slug="contact" title="Contact Us" />} />
+          <Route path="/about" component={AboutPage} />
+          <Route path="/contact" component={ContactPage} />
           <Route path="/privacy" component={() => <GenericCMSPage slug="privacy" title="Privacy Policy" />} />
           <Route path="/terms" component={() => <GenericCMSPage slug="terms" title="Terms & Conditions" />} />
           <Route path="/refund" component={() => <GenericCMSPage slug="refund" title="Refund Policy" />} />

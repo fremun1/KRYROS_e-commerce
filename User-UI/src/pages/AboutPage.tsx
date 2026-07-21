@@ -1,6 +1,26 @@
 import { Target, Eye, Heart } from "lucide-react";
+import { useState, useEffect } from "react";
+import { API_BASE } from "@/lib/api";
+
+interface SiteSettings {
+  contactEmail?: string;
+  contactPhone?: string;
+  address?: string;
+  companyName?: string;
+}
 
 export default function AboutPage() {
+  const [settings, setSettings] = useState<SiteSettings>({});
+
+  useEffect(() => {
+    fetch(`${API_BASE}/api/cms/site-config/contact`)
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data?.value) setSettings(data.value);
+      })
+      .catch(() => {});
+  }, []);
+
   return (
     <div className="max-w-2xl mx-auto px-4 py-5 pb-28">
       {/* Header */}
@@ -53,10 +73,10 @@ export default function AboutPage() {
         <h3 className="text-sm font-bold text-foreground mb-3">Company Information</h3>
         <div className="space-y-2">
           {[
-            { label: "Registered", value: "KRYROS MOBILE TECH LIMITED" },
-            { label: "Address", value: "West Sussex, Burgess Hill, United Kingdom" },
-            { label: "Email", value: import.meta.env.VITE_CONTACT_EMAIL || "info@kryros.com" },
-            { label: "Phone", value: import.meta.env.VITE_CONTACT_PHONE || "+260 97X XXX XXX" },
+            { label: "Registered", value: settings.companyName || "KRYROS MOBILE TECH LIMITED" },
+            { label: "Address", value: settings.address || "West Sussex, Burgess Hill, United Kingdom" },
+            { label: "Email", value: settings.contactEmail || import.meta.env.VITE_CONTACT_EMAIL || "info@kryros.com" },
+            { label: "Phone", value: settings.contactPhone || import.meta.env.VITE_CONTACT_PHONE || "+260 97X XXX XXX" },
           ].map(({ label, value }) => (
             <div key={label} className="flex gap-3 text-xs">
               <span className="font-semibold text-foreground w-20 flex-shrink-0">{label}</span>

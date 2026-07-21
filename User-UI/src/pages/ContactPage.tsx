@@ -1,6 +1,31 @@
 import { Mail, Phone, MessageCircle, MapPin, Facebook, Instagram, Twitter, Youtube } from "lucide-react";
+import { useState, useEffect } from "react";
+import { API_BASE } from "@/lib/api";
+
+interface SiteSettings {
+  contactEmail?: string;
+  contactPhone?: string;
+  address?: string;
+  whatsappNumber?: string;
+}
 
 export default function ContactPage() {
+  const [settings, setSettings] = useState<SiteSettings>({});
+
+  useEffect(() => {
+    fetch(`${API_BASE}/api/cms/site-config/contact`)
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data?.value) setSettings(data.value);
+      })
+      .catch(() => {});
+  }, []);
+
+  const contactEmail = settings.contactEmail || import.meta.env.VITE_CONTACT_EMAIL || "info@kryros.com";
+  const contactPhone = settings.contactPhone || import.meta.env.VITE_CONTACT_PHONE || "+260 97X XXX XXX";
+  const whatsappNumber = settings.whatsappNumber || import.meta.env.VITE_WHATSAPP_NUMBER || "26097XXXXXXX";
+  const address = settings.address || "Victoria Way, Burgess Hill, UK";
+
   return (
     <div className="max-w-2xl mx-auto px-4 py-5 pb-28">
       <h1 className="text-2xl font-black text-foreground mb-0.5">Contact Us</h1>
@@ -16,7 +41,7 @@ export default function ContactPage() {
           </div>
           <div className="flex-1">
             <p className="text-sm font-bold text-foreground">Customer Support</p>
-            <p className="text-xs text-primary font-medium">{import.meta.env.VITE_CONTACT_EMAIL || "info@kryros.com"}</p>
+            <p className="text-xs text-primary font-medium">{contactEmail}</p>
           </div>
         </div>
 
@@ -26,19 +51,19 @@ export default function ContactPage() {
             <Phone className="w-5 h-5 text-primary" />
           </div>
           <div className="flex-1">
-            <p className="text-sm font-bold text-foreground">{import.meta.env.VITE_CONTACT_PHONE || "+260 97X XXX XXX"}</p>
+            <p className="text-sm font-bold text-foreground">{contactPhone}</p>
             <p className="text-xs text-muted-foreground">Support Hours: 08:00–18:00 CAT</p>
           </div>
         </div>
 
         {/* Live Chat - WhatsApp */}
-        <a href={`https://wa.me/${import.meta.env.VITE_WHATSAPP_NUMBER || "26097XXXXXXX"}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 p-4 bg-card border border-border rounded-2xl cursor-pointer hover:border-primary/30 transition-all">
+        <a href={`https://wa.me/${whatsappNumber}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 p-4 bg-card border border-border rounded-2xl cursor-pointer hover:border-primary/30 transition-all">
           <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
             <MessageCircle className="w-5 h-5 text-primary" />
           </div>
           <div className="flex-1">
             <p className="text-sm font-bold text-foreground">Live Chat</p>
-            <p className="text-xs text-muted-foreground">{import.meta.env.VITE_CONTACT_PHONE || "+260 97X XXX XXX"} · WhatsApp</p>
+            <p className="text-xs text-muted-foreground">{contactPhone} · WhatsApp</p>
           </div>
           <button className="px-3 py-1.5 bg-primary text-white rounded-xl text-xs font-bold hover:opacity-90 transition-all flex-shrink-0">
             Chat Now
@@ -52,8 +77,7 @@ export default function ContactPage() {
           </div>
           <div className="flex-1">
             <p className="text-sm font-bold text-foreground">Head Office</p>
-            <p className="text-xs text-muted-foreground">Victoria Way,</p>
-            <p className="text-xs text-muted-foreground">Burgess Hill, UK</p>
+            <p className="text-xs text-muted-foreground">{address}</p>
           </div>
         </div>
       </div>
