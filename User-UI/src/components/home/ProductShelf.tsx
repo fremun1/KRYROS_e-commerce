@@ -124,7 +124,9 @@ export default function ProductShelf({
           });
         }
 
+        console.log('[ProductShelf] Full URL:', url.toString());
         let response = await fetch(url.toString());
+        console.log('[ProductShelf] Response status:', response.status);
 
         // Fallback logic for legacy or empty responses
         if (!response.ok) {
@@ -146,9 +148,11 @@ export default function ProductShelf({
         }
 
         const data = await response.json();
+        console.log('[ProductShelf] Response data:', data);
         
         // Handle both direct array and { data: [] } response formats
         const productList = Array.isArray(data) ? data : (data.data || []);
+        console.log('[ProductShelf] Product list length:', productList.length);
         setProducts(productList.map(normalizeProduct).slice(0, limit));
       } catch (err) {
         console.error(`Error fetching products for data source '${dataSourceId}':`, err);
