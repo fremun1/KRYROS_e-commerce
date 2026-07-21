@@ -127,8 +127,8 @@ export class SectionDataSourceService {
     this.logger.debug(`Fetching products for rule: ${ruleId}, limit: ${limit}, skip: ${skip}`);
 
     try {
-      // Merge rule parameters with extra params, but let extraParams override for filtering
-      // This allows brand/category filters to work with preset data sources
+      // Merge rule parameters with extra params, but only override if extraParams has a defined value
+      // This prevents extraParams from overriding valid rule params with undefined/null
       const params = {
         ...baseParams,
         ...extraParams,
@@ -143,6 +143,13 @@ export class SectionDataSourceService {
       for (const [key, value] of Object.entries(params)) {
         const isEmptyString = typeof value === 'string' && value === '';
         if (value !== undefined && value !== null && !isEmptyString) {
+          cleanedParams[key] = value;
+        }
+      }
+
+      // Ensure rule params are preserved even if extraParams had undefined values
+      for (const [key, value] of Object.entries(baseParams)) {
+        if (value !== undefined && value !== null && cleanedParams[key] === undefined) {
           cleanedParams[key] = value;
         }
       }
