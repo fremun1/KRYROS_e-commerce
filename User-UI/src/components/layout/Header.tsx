@@ -134,7 +134,7 @@ export default function Header() {
                 loading="eager"
                 decoding="async"
               />
-              <span className="text-xl md:text-2xl font-black text-foreground tracking-tight">KRYROS</span>
+              <span className="text-xl md:text-2xl font-black text-foreground tracking-tight uppercase">KRYROS</span>
             </span>
           </Link>
 

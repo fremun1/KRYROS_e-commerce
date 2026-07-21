@@ -201,7 +201,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                     loading="eager"
                     decoding="async"
                   />
-                  <span className="text-xl font-black text-foreground tracking-tight">KRYROS</span>
+                  <span className="text-xl font-black text-foreground tracking-tight uppercase">KRYROS</span>
                 </span>
               </Link>
               <button
