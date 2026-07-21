@@ -116,6 +116,7 @@ export default function ProductShelf({
         
         // Add all params from the config object
         if (normalizedParams) {
+          console.log('[ProductShelf] Sending params:', normalizedParams);
           Object.entries(normalizedParams).forEach(([key, value]) => {
             if (value !== undefined && value !== null && value !== '') {
               url.searchParams.set(key, String(value));

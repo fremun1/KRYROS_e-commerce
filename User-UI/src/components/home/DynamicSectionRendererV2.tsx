@@ -124,6 +124,7 @@ export default function DynamicSectionRendererV2({
                   isFeatured: section.config?.filter_by === 'Featured' || section.config?.filterType === 'Featured' || section.config?.isFeatured,
                   categoryId: section.config?.categoryId,
                   categorySlug: section.config?.categorySlug,
+                  brandSlug: section.config?.brandSlug,
                   popularity: section.config?.popularity,
                 }}
               />
