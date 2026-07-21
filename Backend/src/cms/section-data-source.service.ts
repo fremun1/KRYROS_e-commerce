@@ -127,7 +127,8 @@ export class SectionDataSourceService {
     this.logger.debug(`Fetching products for rule: ${ruleId}, limit: ${limit}, skip: ${skip}`);
 
     try {
-      // Merge rule parameters with extra params, limit, and skip
+      // Merge rule parameters with extra params, but let extraParams override for filtering
+      // This allows brand/category filters to work with preset data sources
       const params = {
         ...baseParams,
         ...extraParams,
@@ -135,8 +136,16 @@ export class SectionDataSourceService {
         skip: skip
       };
 
-      // Call the ProductsService with the merged parameters
-      const result = await this.productsService.findAll(params);
+      // Remove empty string/null/undefined filter params to avoid breaking queries
+      const cleanedParams: any = {};
+      for (const [key, value] of Object.entries(params)) {
+        if (value !== undefined && value !== null && value !== '') {
+          cleanedParams[key] = value;
+        }
+      }
+
+      // Call the ProductsService with the cleaned parameters
+      const result = await this.productsService.findAll(cleanedParams);
 
       this.logger.debug(`Successfully fetched ${result.data?.length || 0} products for rule: ${ruleId}`);
 
