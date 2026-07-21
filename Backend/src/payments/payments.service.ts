@@ -750,9 +750,9 @@ export class PaymentsService {
 
   /**
    * Automatically check and update status for all pending automated payments
-   * Runs every 1 minute via cron job
+   * Runs every 30 seconds via cron job
    */
-  @Cron(CronExpression.EVERY_MINUTE)
+  @Cron('*/30 * * * * *')
   async autoUpdatePendingPayments() {
     this.logger.log('=== Auto-updating pending automated payments ===');
     
