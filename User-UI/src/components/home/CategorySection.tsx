@@ -18,6 +18,7 @@ export default function CategorySection({
   const [categories, setCategories] = useState<ApiCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [isPaused, setIsPaused] = useState(false);
 
   useEffect(() => {
     fetchCategories()
@@ -30,6 +31,26 @@ export default function CategorySection({
       .catch(() => setCategories([]))
       .finally(() => setLoading(false));
   }, [limit]);
+
+  // Auto-scroll effect for horizontal-scroll layout
+  useEffect(() => {
+    if (layout !== 'horizontal-scroll' || !scrollRef.current || categories.length === 0 || isPaused) return;
+
+    const scrollContainer = scrollRef.current;
+    const scrollAmount = 100; // Width of one category card + gap
+    const scrollInterval = 3000; // 3 seconds
+
+    const intervalId = setInterval(() => {
+      if (scrollContainer.scrollLeft >= scrollContainer.scrollWidth - scrollContainer.clientWidth) {
+        // Reset to start when reaching the end
+        scrollContainer.scrollTo({ left: 0, behavior: 'smooth' });
+      } else {
+        scrollContainer.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+      }
+    }, scrollInterval);
+
+    return () => clearInterval(intervalId);
+  }, [categories, layout, isPaused]);
 
   if (loading) {
     return (
@@ -88,6 +109,8 @@ export default function CategorySection({
           ref={scrollRef}
           className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory"
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          onMouseEnter={() => setIsPaused(true)}
+          onMouseLeave={() => setIsPaused(false)}
         >
           {categories.map((cat) => (
             <div key={cat.id} className="flex-shrink-0 w-[100px] snap-start">

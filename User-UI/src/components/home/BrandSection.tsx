@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { fetchBrands, ApiBrand } from '../../lib/api';
 import { normalizePageContext, getScopedBrowsePath } from '@/lib/pageContext';
 
@@ -16,6 +16,8 @@ export default function BrandSection({
   const [brands, setBrands] = useState<ApiBrand[]>([]);
   const [loading, setLoading] = useState(true);
   const [failedLogos, setFailedLogos] = useState<Record<number, boolean>>({});
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [isPaused, setIsPaused] = useState(false);
 
   useEffect(() => {
     fetchBrands()
@@ -46,6 +48,26 @@ export default function BrandSection({
       .finally(() => setLoading(false));
   }, [limit]);
 
+  // Auto-scroll effect
+  useEffect(() => {
+    if (!scrollRef.current || brands.length === 0 || isPaused) return;
+
+    const scrollContainer = scrollRef.current;
+    const scrollAmount = 100; // Width of one brand card + gap
+    const scrollInterval = 3000; // 3 seconds
+
+    const intervalId = setInterval(() => {
+      if (scrollContainer.scrollLeft >= scrollContainer.scrollWidth - scrollContainer.clientWidth) {
+        // Reset to start when reaching the end
+        scrollContainer.scrollTo({ left: 0, behavior: 'smooth' });
+      } else {
+        scrollContainer.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+      }
+    }, scrollInterval);
+
+    return () => clearInterval(intervalId);
+  }, [brands, isPaused]);
+
   if (loading) {
     return (
       <div className="w-full max-w-7xl mx-auto px-4 py-6">
@@ -71,8 +93,11 @@ export default function BrandSection({
     <section className="w-full max-w-7xl mx-auto px-4 py-6">
       {title && <h2 className="text-xl font-bold mb-4 text-foreground">{title}</h2>}
       <div
+        ref={scrollRef}
         className="flex flex-nowrap gap-3 overflow-x-auto pb-2 snap-x snap-mandatory"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+        onMouseEnter={() => setIsPaused(true)}
+        onMouseLeave={() => setIsPaused(false)}
       >
         {brands.map((brand) => (
           <a
