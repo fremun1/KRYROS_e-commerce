@@ -136,6 +136,8 @@ export class SectionDataSourceService {
         skip: skip
       };
 
+      this.logger.debug(`Merged params before cleaning:`, JSON.stringify(params));
+
       // Remove empty string/null/undefined filter params to avoid breaking queries
       const cleanedParams: any = {};
       for (const [key, value] of Object.entries(params)) {
@@ -144,6 +146,8 @@ export class SectionDataSourceService {
           cleanedParams[key] = value;
         }
       }
+
+      this.logger.debug(`Cleaned params sent to products service:`, JSON.stringify(cleanedParams));
 
       // Call the ProductsService with the cleaned parameters
       const result = await this.productsService.findAll(cleanedParams);
