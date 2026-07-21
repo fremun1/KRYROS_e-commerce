@@ -126,7 +126,7 @@ export default function Header() {
 
           {/* Logo */}
           <Link href="/">
-            <span className="flex items-center cursor-pointer flex-shrink-0">
+            <span className="flex items-center gap-2 cursor-pointer flex-shrink-0">
               <img
                 src="/kryros-logo.png"
                 alt="KRYROS"
@@ -134,6 +134,7 @@ export default function Header() {
                 loading="eager"
                 decoding="async"
               />
+              <span className="text-xl md:text-2xl font-black text-foreground tracking-tight">KRYROS</span>
             </span>
           </Link>
 

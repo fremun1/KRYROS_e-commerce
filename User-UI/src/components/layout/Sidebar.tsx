@@ -193,7 +193,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
             {/* Header */}
             <div className="flex items-center justify-between p-5 border-b border-border">
               <Link href="/" onClick={onClose}>
-                <span className="flex items-center">
+                <span className="flex items-center gap-2">
                   <img
                     src="/kryros-logo.png"
                     alt="KRYROS"
@@ -201,6 +201,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                     loading="eager"
                     decoding="async"
                   />
+                  <span className="text-xl font-black text-foreground tracking-tight">KRYROS</span>
                 </span>
               </Link>
               <button
