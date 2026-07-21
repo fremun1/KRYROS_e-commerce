@@ -69,9 +69,15 @@ export class ProductsService {
     
     if (!showInactive) andFilters.push({ isActive: true });
     if (categoryId) andFilters.push({ categoryId });
-    if (categorySlug) andFilters.push({ category: { slug: categorySlug } });
+    if (categorySlug) {
+      console.log('[ProductsService] Filtering by categorySlug:', categorySlug);
+      andFilters.push({ category: { slug: categorySlug } });
+    }
     if (brandId) andFilters.push({ brandId: Number(brandId) });
-    if (brandSlug) andFilters.push({ brand: { slug: brandSlug } });
+    if (brandSlug) {
+      console.log('[ProductsService] Filtering by brandSlug:', brandSlug);
+      andFilters.push({ brand: { slug: brandSlug } });
+    }
     
     const normalizedSearch = search?.trim();
     const normalizedSearchSlug = normalizedSearch
