@@ -213,14 +213,14 @@ export default function ProductShelf({
 
         {/* Section header */}
         <div 
-          className={`flex items-center justify-between px-4 md:px-6 py-3 ${headerBgColor ? 'text-white mb-4' : ''}`}
+          className={`flex items-center justify-between px-4 md:px-6 py-3 ${headerBgColor ? 'mb-4' : ''}`}
           style={headerBgColor ? { backgroundColor: headerBgColor } : undefined}
         >
           <div className="min-w-0">
             <div className="flex items-center gap-3">
               <h2 
                 className="text-[20px] leading-[28px] font-bold tracking-tight"
-                style={(textColor || accentColor) && !headerBgColor ? { color: textColor || accentColor } : (textColor ? { color: textColor } : undefined)}
+                style={textColor || accentColor ? { color: textColor || accentColor } : undefined}
               >
                 {title}
               </h2>
@@ -247,8 +247,8 @@ export default function ProductShelf({
 
           <a
             href={viewAllHref}
-            className={`flex items-center gap-0.5 text-[14px] font-semibold hover:opacity-80 transition-colors shrink-0 whitespace-nowrap ml-4 ${headerBgColor ? 'text-white' : 'text-primary'}`}
-            style={(textColor || accentColor) && !headerBgColor ? { color: textColor || accentColor } : (textColor ? { color: textColor } : undefined)}
+            className={`flex items-center gap-0.5 text-[14px] font-semibold hover:opacity-80 transition-colors shrink-0 whitespace-nowrap ml-4`}
+            style={textColor || accentColor ? { color: textColor || accentColor } : undefined}
           >
             {viewAllText}
             <ChevronRight className="w-4 h-4" strokeWidth={2.5} />
