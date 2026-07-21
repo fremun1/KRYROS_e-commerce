@@ -143,7 +143,7 @@ function SupportFloatingButtons() {
     "w-11 h-11 rounded-full flex items-center justify-center shadow-lg transition-transform duration-200 hover:scale-110 active:scale-95";
 
   return (
-    <div className="fixed right-4 bottom-16 md:bottom-20 z-50 flex flex-col items-end gap-4">
+    <div className="fixed right-4 bottom-16 md:bottom-20 z-50 flex flex-col items-end gap-4" style={{ right: '16px' }}>
       <a
         href={whatsappUrl}
         target="_blank"
