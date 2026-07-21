@@ -118,6 +118,7 @@ export default function DynamicSectionRendererV2({
                 viewAllText={section.config?.viewAllText || section.config?.ctaText || section.config?.button_text || 'See All'}
                 accentColor={section.config?.accentColor}
                 headerBgColor={section.config?.headerBgColor}
+                textColor={section.config?.textColor}
                 params={{
                   ...(section.config || {}),
                   isFeatured: section.config?.filter_by === 'Featured' || section.config?.filterType === 'Featured' || section.config?.isFeatured,

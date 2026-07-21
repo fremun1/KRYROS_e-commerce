@@ -35,6 +35,7 @@ interface ProductShelfProps {
   // Styling
   accentColor?: string;
   headerBgColor?: string;
+  textColor?: string;  // Separate text color for heading (independent of background)
   
   // Optional decorative banner above the section
   topBanner?: ReactNode;
@@ -59,6 +60,7 @@ export default function ProductShelf({
   viewAllText = 'See All',
   accentColor,
   headerBgColor,
+  textColor,
   topBanner,
   loadingCount = 8,
   params = {}
@@ -218,7 +220,7 @@ export default function ProductShelf({
             <div className="flex items-center gap-3">
               <h2 
                 className="text-[20px] leading-[28px] font-bold tracking-tight"
-                style={accentColor && !headerBgColor ? { color: accentColor } : undefined}
+                style={(textColor || accentColor) && !headerBgColor ? { color: textColor || accentColor } : (textColor ? { color: textColor } : undefined)}
               >
                 {title}
               </h2>
@@ -246,7 +248,7 @@ export default function ProductShelf({
           <a
             href={viewAllHref}
             className={`flex items-center gap-0.5 text-[14px] font-semibold hover:opacity-80 transition-colors shrink-0 whitespace-nowrap ml-4 ${headerBgColor ? 'text-white' : 'text-primary'}`}
-            style={accentColor && !headerBgColor ? { color: accentColor } : undefined}
+            style={(textColor || accentColor) && !headerBgColor ? { color: textColor || accentColor } : (textColor ? { color: textColor } : undefined)}
           >
             {viewAllText}
             <ChevronRight className="w-4 h-4" strokeWidth={2.5} />
