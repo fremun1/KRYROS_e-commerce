@@ -582,99 +582,39 @@ export default function CMSPagesPage() {
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-muted-foreground uppercase">Fetch Products By</label>
-                      <select
-                        value={getProductSourceMode(formData.config)}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            config: applyProductSourceMode(formData.config, e.target.value as ProductSourceMode),
-                          })
-                        }
+                      <label className="text-xs font-bold text-muted-foreground uppercase">Brand (Optional)</label>
+                      <select 
+                        value={formData.config?.brandSlug || ''} 
+                        onChange={(e) => setFormData({...formData, config: {...formData.config, brandSlug: e.target.value}})}
                         className="w-full p-2.5 bg-background border rounded-lg text-sm outline-none focus:ring-2 focus:ring-primary/20"
                       >
-                        <option value="all">All Products</option>
-                        <option value="category">Specific Category</option>
-                        <option value="brand">Specific Brand</option>
-                        <option value="brand-category">Brand + Category</option>
+                        <option value="">All Brands</option>
+                        {brands.map((brand) => (
+                          <option key={brand.value} value={brand.value}>{brand.label}</option>
+                        ))}
                       </select>
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-muted-foreground uppercase">Current Filter</label>
-                      <div className="min-h-[42px] rounded-lg border bg-background px-3 py-2.5 text-sm text-muted-foreground">
-                        {(() => {
-                          const sourceMode = getProductSourceMode(formData.config);
-                          const selectedBrand = resolveOptionLabel(brands, formData.config?.brandSlug);
-                          const selectedCategory = resolveOptionLabel(categories, formData.config?.categorySlug);
-
-                          if (sourceMode === 'brand-category') {
-                            return `${selectedBrand || 'Select a brand'} in ${selectedCategory || 'select a category'}`;
-                          }
-
-                          if (sourceMode === 'brand') {
-                            return selectedBrand || 'Select a brand';
-                          }
-
-                          if (sourceMode === 'category') {
-                            return selectedCategory || 'Select a category';
-                          }
-
-                          return 'Showing products from all brands and categories';
-                        })()}
-                      </div>
+                      <label className="text-xs font-bold text-muted-foreground uppercase">Category (Optional)</label>
+                      <select 
+                        value={formData.config?.categorySlug || ''} 
+                        onChange={(e) => setFormData({
+                          ...formData,
+                          config: {
+                            ...formData.config,
+                            categorySlug: e.target.value,
+                            categoryId: undefined,
+                          },
+                        })}
+                        className="w-full p-2.5 bg-background border rounded-lg text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                      >
+                        <option value="">All Categories</option>
+                        {categories.map((category) => (
+                          <option key={category.value} value={category.value}>{category.label}</option>
+                        ))}
+                      </select>
                     </div>
                   </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {(getProductSourceMode(formData.config) === 'brand' || getProductSourceMode(formData.config) === 'brand-category') && (
-                      <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-muted-foreground uppercase">Brand</label>
-                        <select 
-                          value={formData.config?.brandSlug || ''} 
-                          onChange={(e) => setFormData({...formData, config: {...formData.config, brandSlug: e.target.value}})}
-                          className="w-full p-2.5 bg-background border rounded-lg text-sm outline-none focus:ring-2 focus:ring-primary/20"
-                        >
-                          <option value="">Select Brand</option>
-                          {brands.map((brand) => (
-                            <option key={brand.value} value={brand.value}>{brand.label}</option>
-                          ))}
-                        </select>
-                      </div>
-                    )}
-                    {(getProductSourceMode(formData.config) === 'category' || getProductSourceMode(formData.config) === 'brand-category') && (
-                      <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-muted-foreground uppercase">Category</label>
-                        <select 
-                          value={formData.config?.categorySlug || ''} 
-                          onChange={(e) => setFormData({
-                            ...formData,
-                            config: {
-                              ...formData.config,
-                              categorySlug: e.target.value,
-                              categoryId: undefined,
-                            },
-                          })}
-                          className="w-full p-2.5 bg-background border rounded-lg text-sm outline-none focus:ring-2 focus:ring-primary/20"
-                        >
-                          <option value="">Select Category</option>
-                          {categories.map((category) => (
-                            <option key={category.value} value={category.value}>{category.label}</option>
-                          ))}
-                        </select>
-                      </div>
-                    )}
-                    {getProductSourceMode(formData.config) === 'all' && (
-                      <div className="rounded-lg border border-dashed px-3 py-3 text-xs text-muted-foreground">
-                        No brand or category filter is applied. This section will use the selected preset only.
-                      </div>
-                    )}
-                  </div>
-
-                  {getProductSourceMode(formData.config) !== 'all' && (
-                    <p className="text-[11px] text-muted-foreground">
-                      The storefront will keep this section visible even when the chosen filter has no matching products, so empty feeds are easier to spot and fix.
-                    </p>
-                  )}
 
                   {formData.dataSourceId === 'dynamic-query' && (
                     <div className="grid grid-cols-3 gap-3 pt-2">

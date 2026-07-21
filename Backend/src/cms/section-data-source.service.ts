@@ -139,7 +139,8 @@ export class SectionDataSourceService {
       // Remove empty string/null/undefined filter params to avoid breaking queries
       const cleanedParams: any = {};
       for (const [key, value] of Object.entries(params)) {
-        if (value !== undefined && value !== null && value !== '') {
+        const isEmptyString = typeof value === 'string' && value === '';
+        if (value !== undefined && value !== null && !isEmptyString) {
           cleanedParams[key] = value;
         }
       }
