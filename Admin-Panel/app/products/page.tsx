@@ -6,13 +6,13 @@ import PageHeader from '@/components/admin/page-header';
 import { Modal, ConfirmDialog, FormField, ModalFooter } from '@/components/admin/modal';
 import { useTheme } from '@/contexts/theme-context';
 import { Package, Settings2 } from 'lucide-react';
-import { createProduct, updateProduct, deleteProduct, getProducts, getCategories, getBrands, getSettings, updateSettings } from '@/lib/api';
+import { createProduct, updateProduct, deleteProduct, getProducts, getBrands, getSettings, updateSettings } from '@/lib/api';
 import toast from 'react-hot-toast';
 import CloudinaryUpload from '@/components/ui/file-upload';
 
 type Product = {
   id: string; name: string; slug: string; sku: string; description: string;
-  category: string; brand: string; price: string; salePrice: string;
+  brand: string; price: string; salePrice: string;
   stock: number; weight: string; sold: number; status: string;
   featured: boolean;
   isNew: boolean;
@@ -38,7 +38,6 @@ type Product = {
 
 // Products loaded from API
 
-const CATEGORIES = ['Electronics', 'Audio', 'Wearables', 'Clothing', 'Food & Beverages', 'Sports'];
 const BRANDS = ['Apple', 'Samsung', 'Sony', 'Beats', 'Bose', 'Dell', 'LG', 'Huawei', 'Other'];
 const STATUSES = ['Active', 'Inactive', 'Low Stock', 'Out of Stock'];
 const BOOL_OPTS = ['No', 'Yes'];
@@ -67,7 +66,7 @@ const parseConditionOptions = (raw?: string | null): string[] => {
 };
 
 const EMPTY_FORM = {
-  name: '', slug: '', sku: '', description: '', category: 'Electronics', brand: 'Apple',
+  name: '', slug: '', sku: '', description: '', brand: 'Apple',
   price: '', salePrice: '', stock: '0', weight: '', status: 'Active',
   featured: 'No',
   isNew: 'No',
@@ -112,7 +111,6 @@ function ProductsContent() {
         slug: p.slug || '',
         sku: p.sku || '',
         description: p.description || '',
-        category: p.category?.name || '',
         brand: p.brand?.name || '',
         price: p.price != null ? String(Number(p.price)) : '',
         salePrice: p.salePrice != null && p.salePrice !== 0 ? String(Number(p.salePrice)) : '',
@@ -168,11 +166,6 @@ function ProductsContent() {
 
   useEffect(() => {
     loadConditionSettings();
-    getCategories().then(r => {
-      const data = r?.data ?? r ?? [];
-      const names = data.map((c: any) => c.name || c).filter(Boolean);
-      if (names.length > 0) setCategories(names);
-    }).catch(() => {});
     getBrands().then(r => {
       const data = r?.data ?? r ?? [];
       const names = data.map((b: any) => b.name || b).filter(Boolean);
@@ -186,7 +179,6 @@ function ProductsContent() {
   const [form, setForm] = useState({ ...EMPTY_FORM });
   const [loading, setLoading] = useState(false);
   const [productImages, setProductImages] = useState<string[]>([]);
-  const [categories, setCategories] = useState<string[]>([]);
   const [brands, setBrands] = useState<string[]>([]);
   const [conditionOptions, setConditionOptions] = useState<string[]>(DEFAULT_CONDITION_OPTIONS);
   const [conditionSettingsOpen, setConditionSettingsOpen] = useState(false);
@@ -235,7 +227,7 @@ function ProductsContent() {
     const r = row as unknown as Product;
     setForm({
       name: r.name, slug: r.slug || toSlug(r.name), sku: r.sku, description: r.description || '',
-      category: r.category, brand: r.brand || 'Apple', price: r.price, salePrice: r.salePrice || '',
+      brand: r.brand || 'Apple', price: r.price, salePrice: r.salePrice || '',
       stock: String(r.stock), weight: r.weight || '',       status: r.status,
       featured: boolToStr(r.featured),
       isNew: boolToStr(r.isNew),
@@ -332,7 +324,6 @@ function ProductsContent() {
       flashSaleEnd: strToBool(form.isFlashSale) && form.flashSaleEnd ? form.flashSaleEnd : null,
       hasFiveYearGuarantee: strToBool(form.showGuaranteeBadge),
       hasFreeReturns: strToBool(form.showReturnsBadge),
-      categorySlug: toSlug(form.category),
       brandSlug: toSlug(form.brand),
       metaTitle: form.metaTitle || undefined,
       metaDescription: form.metaDescription || undefined,
@@ -480,7 +471,6 @@ function ProductsContent() {
         <div style={{ fontSize: '11px', color: textMuted, marginTop: '2px' }}>{String((row as unknown as Product).sku)} · {String((row as unknown as Product).brand)}</div>
       </div>
     )},
-    { key: 'category', label: 'Category' },
     { key: 'price', label: 'Price', render: (v, row) => {
       const r = row as unknown as Product;
       return (
@@ -514,7 +504,6 @@ function ProductsContent() {
       <FormField label="Weight (KG)" value={form.weight} onChange={fp('weight')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 0.5" />
 
       {sectionLabel('Categorization')}
-      <FormField label="Category" value={form.category} onChange={fp('category')} options={categories.length > 0 ? categories : ['Electronics', 'Audio', 'Wearables', 'Clothing', 'Food & Beverages', 'Sports']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
       <FormField label="Brand" value={form.brand} onChange={fp('brand')} options={brands.length > 0 ? brands : ['Apple', 'Samsung', 'Sony', 'Beats', 'Bose', 'Dell', 'LG', 'Huawei', 'Other']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
 
       {sectionLabel('Product Images')}
