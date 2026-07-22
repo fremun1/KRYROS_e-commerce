@@ -76,7 +76,7 @@ export class ProductsService {
     if (brandId) andFilters.push({ brandId: Number(brandId) });
     if (brandSlug) {
       console.log('[ProductsService] Filtering by brandSlug:', brandSlug);
-      andFilters.push({ brand: { slug: brandSlug } });
+      andFilters.push({ brand: { slug: { equals: brandSlug, mode: 'insensitive' } } });
     }
     
     const normalizedSearch = search?.trim();
