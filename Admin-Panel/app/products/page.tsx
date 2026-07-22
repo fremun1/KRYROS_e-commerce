@@ -23,6 +23,10 @@ type Product = {
   allowCredit: boolean;
   creditMessage: string;
   creditMinimum: string;
+  isWholesaleOnly: boolean;
+  wholesalePrice: string;
+  wholesaleMoq: string;
+  unitsPerPack: string;
   condition: string;
   shippingFee: string;
   estimatedDeliveryDays: string;
@@ -134,6 +138,10 @@ function ProductsContent() {
         allowCredit: !!p.allowCredit,
         creditMessage: p.creditMessage || '',
         creditMinimum: p.creditMinimum != null ? String(Number(p.creditMinimum)) : '',
+        isWholesaleOnly: !!p.isWholesaleOnly,
+        wholesalePrice: p.wholesalePrice != null ? String(Number(p.wholesalePrice)) : '',
+        wholesaleMoq: p.wholesaleMoq != null ? String(Number(p.wholesaleMoq)) : '',
+        unitsPerPack: p.unitsPerPack != null ? String(Number(p.unitsPerPack)) : '1',
         specifications: p.specifications || '',
         condition: p.condition || 'New',
         shippingFee: p.shippingFee != null ? String(Number(p.shippingFee)) : '',
@@ -238,6 +246,10 @@ function ProductsContent() {
       allowCredit: boolToStr(r.allowCredit),
       creditMessage: r.creditMessage || '',
       creditMinimum: r.creditMinimum || '',
+      isWholesaleOnly: boolToStr(r.isWholesaleOnly),
+      wholesalePrice: r.wholesalePrice || '',
+      wholesaleMoq: r.wholesaleMoq || '',
+      unitsPerPack: r.unitsPerPack || '1',
       showGuaranteeBadge: boolToStr(r.showGuaranteeBadge),
       showReturnsBadge: boolToStr(r.showReturnsBadge),
       tags: r.tags || '', metaTitle: r.metaTitle || '', metaDescription: r.metaDescription || '',
