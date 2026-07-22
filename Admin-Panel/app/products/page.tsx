@@ -381,6 +381,10 @@ function ProductsContent() {
         allowCredit: strToBool(form.allowCredit),
         creditMessage: form.creditMessage,
         creditMinimum: form.creditMinimum,
+        isWholesaleOnly: strToBool(form.isWholesaleOnly),
+        wholesalePrice: form.wholesalePrice,
+        wholesaleMoq: form.wholesaleMoq,
+        unitsPerPack: form.unitsPerPack,
         showGuaranteeBadge: strToBool(form.showGuaranteeBadge),
         showReturnsBadge: strToBool(form.showReturnsBadge),
       };
@@ -410,6 +414,10 @@ function ProductsContent() {
         allowCredit: strToBool(form.allowCredit),
         creditMessage: form.creditMessage,
         creditMinimum: form.creditMinimum,
+        isWholesaleOnly: strToBool(form.isWholesaleOnly),
+        wholesalePrice: form.wholesalePrice,
+        wholesaleMoq: form.wholesaleMoq,
+        unitsPerPack: form.unitsPerPack,
         showGuaranteeBadge: strToBool(form.showGuaranteeBadge),
         showReturnsBadge: strToBool(form.showReturnsBadge),
       } : p));
