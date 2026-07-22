@@ -251,7 +251,7 @@ model Product {
   tags                   ProductTag[]
   variants               ProductVariant[]
   brand                  Brand?              @relation(fields: [brandId], references: [id])
-  category               Category            @relation(fields: [categoryId], references: [id])
+  category               Category?           @relation(fields: [categoryId], references: [id])
   reviews                Review[]
   wholesalePrices        WholesalePrice[]
   wishlists              WishlistItem[]
