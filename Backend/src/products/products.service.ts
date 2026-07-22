@@ -32,6 +32,8 @@ export class ProductsService {
     isFlashSale?: boolean;
     isNew?: boolean;
     showInactive?: boolean;
+    includeCredit?: boolean;
+    includeWholesale?: boolean;
     popularity?: string;
     lowStock?: boolean;
     minPrice?: number;
@@ -53,6 +55,8 @@ export class ProductsService {
       isFlashSale, 
       isNew,
       showInactive, 
+      includeCredit,
+      includeWholesale,
       popularity, 
       lowStock,
       minPrice,
@@ -78,6 +82,10 @@ export class ProductsService {
       console.log('[ProductsService] Filtering by brandSlug:', brandSlug);
       andFilters.push({ brand: { slug: { equals: brandSlug, mode: 'insensitive' } } });
     }
+    
+    // Exclude credit and wholesale products from general queries unless explicitly requested
+    if (!includeCredit) andFilters.push({ allowCredit: false });
+    if (!includeWholesale) andFilters.push({ isWholesaleOnly: false });
     
     const normalizedSearch = search?.trim();
     const normalizedSearchSlug = normalizedSearch

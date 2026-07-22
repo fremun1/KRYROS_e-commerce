@@ -74,7 +74,7 @@ export default function AboutPage() {
         <div className="space-y-2">
           {[
             { label: "Registered", value: settings.companyName || "KRYROS" },
-            { label: "Address", value: settings.address || "West Sussex, Burgess Hill, United Kingdom" },
+            { label: "Address", value: settings.address || "Saving customer worldwide" },
             { label: "Email", value: settings.contactEmail || import.meta.env.VITE_CONTACT_EMAIL || "info@kryros.com" },
             { label: "Phone", value: settings.contactPhone || import.meta.env.VITE_CONTACT_PHONE || "+260 97X XXX XXX" },
           ].map(({ label, value }) => (
