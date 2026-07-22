@@ -383,9 +383,18 @@ export async function fetchFeaturedProducts(take?: number): Promise<Product[]> {
 }
 
 export async function fetchProductById(id: string): Promise<Product | null> {
-  const result = await apiFetch<any>(`/api/products/${id}`);
-  if (!result || !result.id) return null;
-  return normalizeProduct(result);
+  try {
+    const res = await fetch(`${API_BASE}/api/products/${id}`, {
+      headers: { "Content-Type": "application/json" },
+      cache: "no-store",
+    });
+    if (!res.ok) return null;
+    const result = await res.json();
+    if (!result || !result.id) return null;
+    return normalizeProduct(result);
+  } catch {
+    return null;
+  }
 }
 
 export async function fetchRelatedProducts(id: string | number): Promise<Product[]> {
