@@ -1,4 +1,27 @@
+import { useState, useEffect } from "react";
+import { API_BASE } from "@/lib/api";
+
+interface SiteSettings {
+  contactEmail?: string;
+  contactPhone?: string;
+  address?: string;
+  companyName?: string;
+}
+
 export default function RefundPage() {
+  const [settings, setSettings] = useState<SiteSettings>({});
+
+  useEffect(() => {
+    fetch(`${API_BASE}/api/cms/site-config/contact`)
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data?.value) setSettings(data.value);
+      })
+      .catch(() => {});
+  }, []);
+
+  const contactEmail = settings.contactEmail || import.meta.env.VITE_CONTACT_EMAIL || "info@kryros.com";
+
   const sections = [
     {
       title: "Eligibility",
@@ -50,7 +73,7 @@ export default function RefundPage() {
 
       <div className="bg-primary/5 border border-primary/20 rounded-2xl p-4 text-center">
         <p className="text-xs font-bold text-foreground mb-0.5">Need Help?</p>
-        <p className="text-xs text-muted-foreground">Contact our support team within your 7-day window at {import.meta.env.VITE_CONTACT_EMAIL || "info@kryros.com"}</p>
+        <p className="text-xs text-muted-foreground">Contact our support team within your 7-day window at {contactEmail}</p>
       </div>
     </div>
   );

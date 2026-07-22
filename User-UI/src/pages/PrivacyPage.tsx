@@ -1,4 +1,27 @@
+import { useState, useEffect } from "react";
+import { API_BASE } from "@/lib/api";
+
+interface SiteSettings {
+  contactEmail?: string;
+  contactPhone?: string;
+  address?: string;
+  companyName?: string;
+}
+
 export default function PrivacyPage() {
+  const [settings, setSettings] = useState<SiteSettings>({});
+
+  useEffect(() => {
+    fetch(`${API_BASE}/api/cms/site-config/contact`)
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data?.value) setSettings(data.value);
+      })
+      .catch(() => {});
+  }, []);
+
+  const contactEmail = settings.contactEmail || import.meta.env.VITE_CONTACT_EMAIL || "info@kryros.com";
+
   const sections = [
     { title: "Information We Collect", content: "We collect information you provide directly to us, such as your name, email address, and payment details." },
     { title: "How We Use Your Information", content: "We use your information to process orders, improve our services, communicate with you, and ensure security." },
@@ -25,7 +48,10 @@ export default function PrivacyPage() {
         ))}
       </div>
 
-      <p className="text-xs text-muted-foreground text-center">For more details, please contact us.</p>
+      <div className="bg-primary/5 border border-primary/20 rounded-2xl p-4 text-center">
+        <p className="text-xs font-bold text-foreground mb-0.5">Contact Us</p>
+        <p className="text-xs text-muted-foreground">For privacy inquiries, email us at {contactEmail}</p>
+      </div>
     </div>
   );
 }

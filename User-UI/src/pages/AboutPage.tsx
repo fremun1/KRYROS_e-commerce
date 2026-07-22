@@ -73,7 +73,7 @@ export default function AboutPage() {
         <h3 className="text-sm font-bold text-foreground mb-3">Company Information</h3>
         <div className="space-y-2">
           {[
-            { label: "Registered", value: settings.companyName || "KRYROS MOBILE TECH LIMITED" },
+            { label: "Registered", value: settings.companyName || "KRYROS" },
             { label: "Address", value: settings.address || "West Sussex, Burgess Hill, United Kingdom" },
             { label: "Email", value: settings.contactEmail || import.meta.env.VITE_CONTACT_EMAIL || "info@kryros.com" },
             { label: "Phone", value: settings.contactPhone || import.meta.env.VITE_CONTACT_PHONE || "+260 97X XXX XXX" },

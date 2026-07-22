@@ -75,6 +75,15 @@ function SupportFloatingButtons() {
   const hide = location !== "/";
 
   useEffect(() => {
+    // Control Zoho SalesIQ visibility - show only on homepage
+    if (typeof (window as any).$zoho !== 'undefined' && (window as any).$zoho.salesiq) {
+      if (location === "/") {
+        (window as any).$zoho.salesiq.floatbutton.visible("show");
+      } else {
+        (window as any).$zoho.salesiq.floatbutton.visible("hide");
+      }
+    }
+
     if (hide) return;
 
     const zohoSelector = [

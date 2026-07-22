@@ -70,14 +70,14 @@ export default function ContactPage() {
           </button>
         </a>
 
-        {/* Head Office */}
+        {/* Address */}
         <div className="flex items-center gap-4 p-4 bg-card border border-border rounded-2xl cursor-pointer hover:border-primary/30 transition-all">
           <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
             <MapPin className="w-5 h-5 text-primary" />
           </div>
           <div className="flex-1">
-            <p className="text-sm font-bold text-foreground">Head Office</p>
-            <p className="text-xs text-muted-foreground">{address}</p>
+            <p className="text-sm font-bold text-foreground">Address</p>
+            <p className="text-xs text-muted-foreground">Saving customer worldwide</p>
           </div>
         </div>
       </div>

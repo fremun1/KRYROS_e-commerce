@@ -1,4 +1,27 @@
+import { useState, useEffect } from "react";
+import { API_BASE } from "@/lib/api";
+
+interface SiteSettings {
+  contactEmail?: string;
+  contactPhone?: string;
+  address?: string;
+  companyName?: string;
+}
+
 export default function TermsPage() {
+  const [settings, setSettings] = useState<SiteSettings>({});
+
+  useEffect(() => {
+    fetch(`${API_BASE}/api/cms/site-config/contact`)
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data?.value) setSettings(data.value);
+      })
+      .catch(() => {});
+  }, []);
+
+  const contactEmail = settings.contactEmail || import.meta.env.VITE_CONTACT_EMAIL || "info@kryros.com";
+
   const sections = [
     { title: "Acceptance of Terms", content: "By accessing or using our app, you agree to be bound by these terms." },
     { title: "Use of Our Services", content: "You agree to use our services only for lawful purposes and in accordance with our policies." },
@@ -25,7 +48,10 @@ export default function TermsPage() {
         ))}
       </div>
 
-      <p className="text-xs text-muted-foreground text-center">For any questions, please contact our support team.</p>
+      <div className="bg-primary/5 border border-primary/20 rounded-2xl p-4 text-center">
+        <p className="text-xs font-bold text-foreground mb-0.5">Questions?</p>
+        <p className="text-xs text-muted-foreground">Contact our support team at {contactEmail}</p>
+      </div>
     </div>
   );
 }
