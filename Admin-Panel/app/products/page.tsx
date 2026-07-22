@@ -72,6 +72,7 @@ const EMPTY_FORM = {
   isNew: 'No',
   isFlashSale: 'No', flashSalePrice: '', flashSaleEnd: '',
   allowCredit: 'No', creditMessage: '', creditMinimum: '',
+  isWholesaleOnly: 'No', wholesalePrice: '', wholesaleMoq: '', unitsPerPack: '1',
   showGuaranteeBadge: 'No', showReturnsBadge: 'No',
   tags: '', metaTitle: '', metaDescription: '', imageUrl: '', specifications: '',
   condition: 'New',
