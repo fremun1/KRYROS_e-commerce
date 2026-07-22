@@ -680,7 +680,6 @@ function ProductsContent() {
           <FormField label="Name" value={viewRow.name} readOnly isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
           <FormField label="SKU" value={viewRow.sku} readOnly isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
           <FormField label="Brand" value={viewRow.brand} readOnly isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-          <FormField label="Category" value={viewRow.category} readOnly isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
           <FormField label="Price" value={viewRow.price} readOnly isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
           <FormField label="Sale Price" value={viewRow.salePrice || '—'} readOnly isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
           <FormField label="Stock" value={String(viewRow.stock)} readOnly isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
