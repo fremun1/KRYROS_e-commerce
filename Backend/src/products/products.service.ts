@@ -514,7 +514,7 @@ export class ProductsService {
           installmentOptionsText: dto.installmentOptionsText ?? null,
           fullyTested: dto.fullyTested !== false,
           fullyTestedText: dto.fullyTestedText ?? null,
-          specifications: dto.specifications ? (typeof dto.specifications === 'string' ? dto.specifications : JSON.stringify(dto.specifications)) : null,
+          specifications: dto.specifications !== undefined ? (typeof dto.specifications === 'string' ? dto.specifications : JSON.stringify(dto.specifications)) : null,
           flashSalePrice: dto.flashSalePrice ? Number(dto.flashSalePrice) : null,
           flashSaleEnd: (dto.flashSaleEnd && dto.flashSaleEnd.trim() && !isNaN(new Date(dto.flashSaleEnd).getTime())) ? new Date(dto.flashSaleEnd) : null,
           // New fields
@@ -678,7 +678,7 @@ export class ProductsService {
           installmentOptionsText: dto.installmentOptionsText ?? null,
           fullyTested: dto.fullyTested !== false,
           fullyTestedText: dto.fullyTestedText ?? null,
-          specifications: dto.specifications ? (typeof dto.specifications === 'string' ? dto.specifications : JSON.stringify(dto.specifications)) : null,
+          specifications: dto.specifications !== undefined ? (typeof dto.specifications === 'string' ? dto.specifications : JSON.stringify(dto.specifications)) : null,
           // New fields
           condition: dto.condition ?? 'New',
           shippingFee: dto.shippingFee ? Number(dto.shippingFee) : null,
@@ -854,7 +854,7 @@ export class ProductsService {
         fullyTestedText: dto.fullyTestedText !== undefined ? dto.fullyTestedText : undefined,
         categoryId: categoryId ?? undefined,
         brandId: brandId,
-        specifications: dto.specifications ? (typeof dto.specifications === 'string' ? dto.specifications : JSON.stringify(dto.specifications)) : undefined,
+        specifications: dto.specifications !== undefined ? (typeof dto.specifications === 'string' ? dto.specifications : JSON.stringify(dto.specifications)) : null,
         // New fields
         condition: dto.condition !== undefined ? dto.condition : undefined,
         shippingFee: dto.shippingFee !== undefined ? (isNaN(Number(dto.shippingFee)) ? null : Number(dto.shippingFee)) : undefined,
