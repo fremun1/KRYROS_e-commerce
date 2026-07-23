@@ -226,53 +226,63 @@ export default function ShopSectionPage() {
   const fmt = (v: number) => String(v).padStart(2, "0");
 
   const load = async (nextSkip: number, append: boolean) => {
-    if (resolved.kind === "cms") {
-      const section = resolved.section;
-      const apiPath = `${API_BASE}/api/cms/sections/products-by-source`;
-      const url = new URL(apiPath, window.location.origin);
-      
-      // Get derived rule params from buildQuery
-      const derivedParams = buildQuery;
-      
-      const effectiveSourceId = section.dataSourceId || (derivedParams as any).dataSourceId || 'dynamic-query';
-      url.searchParams.set('dataSourceId', effectiveSourceId);
-      url.searchParams.set('limit', String(take));
-      url.searchParams.set('skip', String(nextSkip));
-      
-      // Add derived params
-      Object.entries(derivedParams).forEach(([key, value]) => {
-        if (key === 'dataSourceId') return;
-        if (value !== undefined && value !== null && value !== '') {
-          url.searchParams.set(key, String(value));
-        }
-      });
+    if (!append) setLoadingMore(true);
+    if (nextSkip === 0 && !append) setInitialLoad(true);
 
-      // Merge with any other params from the section config not covered by buildQuery
-      const cfg = (section.config ?? {}) as Record<string, any>;
-      Object.entries(cfg).forEach(([key, value]) => {
-        if (value !== undefined && value !== null && value !== '' && 
-            !['dataSourceId', 'sectionSlug', 'title', 'subtitle', 'layout', 'limit', 'showTimer', 'showPercent'].includes(key)) {
-          if (!url.searchParams.has(key)) {
+    try {
+      if (resolved.kind === "cms") {
+        const section = resolved.section;
+        const apiPath = `${API_BASE}/api/cms/sections/products-by-source`;
+        const url = new URL(apiPath, window.location.origin);
+
+        // Get derived rule params from buildQuery
+        const derivedParams = buildQuery;
+
+        const effectiveSourceId = section.dataSourceId || (derivedParams as any).dataSourceId || 'dynamic-query';
+        url.searchParams.set('dataSourceId', effectiveSourceId);
+        url.searchParams.set('limit', String(take));
+        url.searchParams.set('skip', String(nextSkip));
+
+        // Add derived params
+        Object.entries(derivedParams).forEach(([key, value]) => {
+          if (key === 'dataSourceId') return;
+          if (value !== undefined && value !== null && value !== '') {
             url.searchParams.set(key, String(value));
           }
+        });
+
+        // Merge with any other params from the section config not covered by buildQuery
+        const cfg = (section.config ?? {}) as Record<string, any>;
+        Object.entries(cfg).forEach(([key, value]) => {
+          if (value !== undefined && value !== null && value !== '' &&
+              !['dataSourceId', 'sectionSlug', 'title', 'subtitle', 'layout', 'limit', 'showTimer', 'showPercent'].includes(key)) {
+            if (!url.searchParams.has(key)) {
+              url.searchParams.set(key, String(value));
+            }
+          }
+        });
+
+        const response = await fetch(url.toString());
+        if (response.ok) {
+          const data = await response.json();
+          const productList = Array.isArray(data) ? data : (data.data || []);
+          const normalized = productList.map(normalizeProduct);
+          setTotalLoaded(normalized.length);
+          setProducts((prev) => (append ? prev.concat(normalized) : normalized));
+          return;
         }
-      });
-
-      const response = await fetch(url.toString());
-      if (response.ok) {
-        const data = await response.json();
-        const productList = Array.isArray(data) ? data : (data.data || []);
-        const normalized = productList.map(normalizeProduct);
-        setTotalLoaded(normalized.length);
-        setProducts((prev) => (append ? prev.concat(normalized) : normalized));
-        return;
       }
-    }
 
-    // Fallback for categories or if CMS fetch fails
-    const result = await fetchProducts({ ...buildQuery, take, skip: nextSkip });
-    setTotalLoaded(result.length);
-    setProducts((prev) => (append ? prev.concat(result) : result));
+      // Fallback for categories or if CMS fetch fails
+      const result = await fetchProducts({ ...buildQuery, take, skip: nextSkip });
+      setTotalLoaded(result.length);
+      setProducts((prev) => (append ? prev.concat(result) : result));
+    } catch (err) {
+      console.error('Error loading products:', err);
+    } finally {
+      setLoadingMore(false);
+      if (nextSkip === 0 && !append) setInitialLoad(false);
+    }
   };
 
   useEffect(() => {
@@ -301,6 +311,17 @@ export default function ShopSectionPage() {
 
   return (
     <div className="pb-24 md:pb-10 min-h-screen">
+      {/* Loading skeleton */}
+      {initialLoad && (
+        <div className="max-w-7xl mx-auto px-3 md:px-6 py-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+            {Array.from({ length: 12 }).map((_, i) => (
+              <CardSkeleton key={i} />
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* ── Sticky header ── */}
       <div 
         className={`sticky top-0 z-20 border-b border-border ${headerBgColor ? "text-white" : "bg-background/95 backdrop-blur-sm"}`}

@@ -81,12 +81,6 @@ export default function DynamicSectionRendererV2({
           case 'FeaturedProducts':
           case 'FlashSale':
           case 'RelatedProducts':
-            // Debug logging to see section config
-            console.log('[DynamicSectionRendererV2] Section config:', section.config);
-            console.log('[DynamicSectionRendererV2] brandSlug:', section.config?.brandSlug);
-            console.log('[DynamicSectionRendererV2] categorySlug:', section.config?.categorySlug);
-            console.log('[DynamicSectionRendererV2] dataSourceId:', section.dataSourceId);
-            
             // Map legacy types to dataSourceId defaults
             const dataSourceMap: Record<string, string> = {
               'TopSelling': 'top-selling',
