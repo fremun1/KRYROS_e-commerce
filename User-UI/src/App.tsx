@@ -394,7 +394,8 @@ function AppRoutes() {
 
   return (
     <>
-      <PageTransitionLoader visible={transitioning} />
+      {/* Page transition overlay disabled to prevent blank screens */}
+      {/* <PageTransitionLoader visible={transitioning} /> */}
       {!hideShell && <Header />}
       <Suspense fallback={<PageLoader />}>
         <Switch>
