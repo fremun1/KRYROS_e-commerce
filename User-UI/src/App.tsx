@@ -295,8 +295,10 @@ function PageLoader() {
       style={{
         minHeight: "60vh",
         display: "flex",
+        flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
+        gap: "16px",
       }}
     >
       <div
@@ -309,6 +311,9 @@ function PageLoader() {
           animation: "spin 0.7s linear infinite",
         }}
       />
+      <p style={{ fontSize: "14px", color: "var(--muted-foreground)" }}>
+        Loading page...
+      </p>
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
@@ -359,13 +364,13 @@ function AppRoutes() {
       // Clear any in-flight transition timer
       if (transitionTimerRef.current) clearTimeout(transitionTimerRef.current);
 
-      // Show the overlay immediately
+      // Show the overlay briefly for smooth transition
       setTransitioning(true);
 
-      // Auto-dismiss after PAGE_TRANSITION_MS — by then the page data is loading
+      // Auto-dismiss quickly - let individual pages handle their own loading states
       transitionTimerRef.current = setTimeout(() => {
         setTransitioning(false);
-      }, PAGE_TRANSITION_MS);
+      }, 300);
     }
     return () => {
       if (transitionTimerRef.current) clearTimeout(transitionTimerRef.current);
