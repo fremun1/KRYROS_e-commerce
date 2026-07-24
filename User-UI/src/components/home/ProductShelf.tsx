@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, type ReactNode } from "react";
 import { ChevronRight } from "lucide-react";
-import { API_BASE } from "@/lib/api";
+import { EFFECTIVE_API_BASE } from "@/lib/api";
 import { type Product, normalizeProduct } from "@/lib/api";
 import UnifiedProductCard from "@/components/UnifiedProductCard";
 
@@ -90,7 +90,7 @@ export default function ProductShelf({
 
       try {
         // Try products-by-source first
-        const apiPath = `${API_BASE}/api/cms/sections/products-by-source`;
+        const apiPath = `${EFFECTIVE_API_BASE}/api/cms/sections/products-by-source`;
         let url: URL;
         try { url = new URL(apiPath); } catch { url = new URL(apiPath, window.location.origin); }
         
@@ -127,7 +127,7 @@ export default function ProductShelf({
 
         // Fallback logic for legacy or empty responses
         if (!response.ok) {
-          const fallbackPath = `${API_BASE}/api/products`;
+          const fallbackPath = `${EFFECTIVE_API_BASE}/api/products`;
           try { url = new URL(fallbackPath); } catch { url = new URL(fallbackPath, window.location.origin); }
           url.searchParams.set('take', String(limit));
           if (normalizedParams) {

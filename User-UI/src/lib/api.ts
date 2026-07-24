@@ -2,8 +2,13 @@ import axios from "axios";
 
 export const API_BASE = (import.meta.env.VITE_API_URL || "").replace(/\/api$/, "");
 if (import.meta.env.PROD && !API_BASE) {
-  console.warn("VITE_API_URL is not set in production environment.");
+  console.error("CRITICAL: VITE_API_URL is not set in production environment. API calls will fail.");
+  // Fallback to relative path for same-origin requests
+  console.warn("Using relative path as fallback - this only works if frontend and backend are on same origin.");
 }
+
+// Ensure API_BASE is never empty
+export const EFFECTIVE_API_BASE = API_BASE || window.location.origin;
 
 export const api = axios.create({
   baseURL: API_BASE,
@@ -306,13 +311,17 @@ export function normalizeProduct(p: any): Product {
 
 async function apiFetch<T>(path: string, token?: string): Promise<T | null> {
   try {
-    const url = `${API_BASE}${path}`;
+    const url = `${EFFECTIVE_API_BASE}${path}`;
     const headers: Record<string, string> = { "Content-Type": "application/json" };
     if (token) headers["Authorization"] = `Bearer ${token}`;
     const res = await fetch(url, { headers });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      console.error(`API fetch failed: ${url} - Status: ${res.status} ${res.statusText}`);
+      return null;
+    }
     return (await res.json()) as T;
-  } catch {
+  } catch (err) {
+    console.error(`API fetch error: ${err instanceof Error ? err.message : err}`);
     return null;
   }
 }
@@ -384,15 +393,22 @@ export async function fetchFeaturedProducts(take?: number): Promise<Product[]> {
 
 export async function fetchProductById(id: string): Promise<Product | null> {
   try {
-    const res = await fetch(`${API_BASE}/api/products/${id}`, {
+    const res = await fetch(`${EFFECTIVE_API_BASE}/api/products/${id}`, {
       headers: { "Content-Type": "application/json" },
       cache: "no-store",
     });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      console.error(`fetchProductById failed for ID ${id}: ${res.status} ${res.statusText}`);
+      return null;
+    }
     const result = await res.json();
-    if (!result || !result.id) return null;
+    if (!result || !result.id) {
+      console.error(`fetchProductById: Invalid response for ID ${id}`);
+      return null;
+    }
     return normalizeProduct(result);
-  } catch {
+  } catch (err) {
+    console.error(`fetchProductById error for ID ${id}:`, err);
     return null;
   }
 }

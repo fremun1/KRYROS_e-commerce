@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo } from "react";
 import { useRoute, Link, useLocation } from "wouter";
 import { ArrowLeft, ChevronRight, Package } from "lucide-react";
 import {
-  API_BASE,
+  EFFECTIVE_API_BASE,
   fetchPageSections,
   normalizeProduct,
 } from "@/lib/api";
@@ -64,7 +64,7 @@ async function fetchBrowseProducts(params: {
   skip: number;
   brandName?: string | null;
 }) {
-  const apiPath = `${API_BASE}/api/products`;
+  const apiPath = `${EFFECTIVE_API_BASE}/api/products`;
   let url: URL;
   try {
     url = new URL(apiPath);
@@ -189,7 +189,7 @@ export default function BrowsePage() {
       type === "brand"
         ? (async () => {
             try {
-              const res = await fetch(`${API_BASE}/api/brands`);
+              const res = await fetch(`${EFFECTIVE_API_BASE}/api/brands`);
               if (!res.ok) return null;
               const data = await res.json();
               const brands = Array.isArray(data) ? data : data.data || [];
@@ -206,7 +206,7 @@ export default function BrowsePage() {
       type === "category"
         ? (async () => {
             try {
-              const res = await fetch(`${API_BASE}/api/categories`);
+              const res = await fetch(`${EFFECTIVE_API_BASE}/api/categories`);
               if (!res.ok) return null;
               const data = await res.json();
               const cats = Array.isArray(data) ? data : data.data || [];
@@ -254,7 +254,7 @@ export default function BrowsePage() {
       let resolvedBrandName: string | null = null;
       if (type === "brand" && !/^\d+$/.test(slug)) {
         try {
-          const res = await fetch(`${API_BASE}/api/brands`);
+          const res = await fetch(`${EFFECTIVE_API_BASE}/api/brands`);
           if (res.ok) {
             const data = await res.json();
             const brands = Array.isArray(data) ? data : data.data || [];

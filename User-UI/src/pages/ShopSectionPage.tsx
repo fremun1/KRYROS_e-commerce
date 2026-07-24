@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, useRef } from "react";
 import { Link, useRoute, useLocation } from "wouter";
 import { ArrowLeft, LayoutGrid, Filter } from "lucide-react";
-import { fetchCategories, fetchSectionByIdOrSlug, fetchProducts, API_BASE, normalizeProduct } from "@/lib/api";
+import { fetchCategories, fetchSectionByIdOrSlug, fetchProducts, EFFECTIVE_API_BASE, normalizeProduct } from "@/lib/api";
 import type { ApiCMSSection, ApiCategory, Product } from "@/lib/api";
 import UnifiedProductCard from "@/components/UnifiedProductCard";
 import { inferPageContext, getPageContextBasePath, getPageContextDisplayPath } from "@/lib/pageContext";
@@ -232,7 +232,7 @@ export default function ShopSectionPage() {
     try {
       if (resolved.kind === "cms") {
         const section = resolved.section;
-        const apiPath = `${API_BASE}/api/cms/sections/products-by-source`;
+        const apiPath = `${EFFECTIVE_API_BASE}/api/cms/sections/products-by-source`;
         const url = new URL(apiPath, window.location.origin);
 
         // Get derived rule params from buildQuery
