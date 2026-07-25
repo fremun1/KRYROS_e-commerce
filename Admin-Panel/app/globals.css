@@ -22,20 +22,6 @@
   --border-soft: rgba(49,49,51,0.06); /* KRYROS soft border */
 }
 
-.dark {
-  --bg: #050816;
-  --card: #0D1523;
-  --surface: #101826;
-  --border: #1E293B;
-  --option: #2B2F39;
-  --text-main: #FFFFFF;
-  --text-secondary: #94A3B8;
-  --text-muted: #8E9AAF;
-  --text-light: #A9B4C7;
-  --glow: rgba(192,21,27,0.15); /* KRYROS Primary Glow Dark */
-  --border-soft: rgba(255,255,255,0.06);
-}
-
 *, *::before, *::after { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
 

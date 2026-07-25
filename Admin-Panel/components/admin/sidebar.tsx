@@ -8,7 +8,6 @@ import {
   Layout, Bell, BarChart3, Settings, X,
   LogOut, User, ChevronUp,
 } from "lucide-react";
-import { useTheme } from "@/contexts/theme-context";
 import { useAuth } from "@/contexts/auth-context";
 
 const navItems = [
@@ -42,16 +41,14 @@ interface SidebarProps {
 export default function Sidebar({ collapsed, mobileOpen, onMobileClose }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const { theme } = useTheme();
   const { user, logout } = useAuth();
-  const isDark = theme === "dark";
   const [showUserPopup, setShowUserPopup] = useState(false);
 
-  const bg       = isDark ? "#0D1523" : "#FFFFFF";
-  const border   = isDark ? "#1E293B" : "#E2E8F0";
-  const textMain = isDark ? "#FFFFFF" : "#0F172A";
-  const textMuted = isDark ? "#8E9AAF" : "#64748B";
-  const surface  = isDark ? "#101826" : "#F8FAFC";
+  const bg       = "#FFFFFF";
+  const border   = "#E2E8F0";
+  const textMain = "#0F172A";
+  const textMuted = "#64748B";
+  const surface  = "#F8FAFC";
 
   const handleLogout = () => {
     setShowUserPopup(false);
@@ -132,11 +129,11 @@ export default function Sidebar({ collapsed, mobileOpen, onMobileClose }: Sideba
           {showUserPopup && !collapsed && (
             <div style={{
               position: "absolute", bottom: "100%", left: 0, right: 0,
-              background: isDark ? "#0a1220" : "#FFFFFF",
+              background: "#FFFFFF",
               border: `1px solid ${border}`,
               borderRadius: "10px 10px 0 0",
               overflow: "hidden",
-              boxShadow: isDark ? "0 -8px 24px rgba(0,0,0,0.4)" : "0 -8px 24px rgba(0,0,0,0.1)",
+              boxShadow: "0 -8px 24px rgba(0,0,0,0.1)",
             }}>
               <button onClick={handleProfile} style={{
                 width: "100%", display: "flex", alignItems: "center", gap: 10,
@@ -144,7 +141,7 @@ export default function Sidebar({ collapsed, mobileOpen, onMobileClose }: Sideba
                 cursor: "pointer", color: textMuted, fontSize: 13.5,
                 fontFamily: "var(--font-inter)",
               }}
-                onMouseEnter={e => e.currentTarget.style.background = isDark ? "#101826" : "#F8FAFC"}
+                onMouseEnter={e => e.currentTarget.style.background = "#F8FAFC"}
                 onMouseLeave={e => e.currentTarget.style.background = "none"}
               >
                 <User size={14} /> My Profile
@@ -173,10 +170,10 @@ export default function Sidebar({ collapsed, mobileOpen, onMobileClose }: Sideba
               display: "flex", alignItems: "center",
               justifyContent: collapsed ? "center" : "space-between",
               gap: 10,
-              background: showUserPopup ? (isDark ? "#101826" : "#F8FAFC") : "transparent",
+              background: showUserPopup ? "#F8FAFC" : "transparent",
               transition: "background 0.15s",
             }}
-            onMouseEnter={e => { if (!showUserPopup) e.currentTarget.style.background = isDark ? "#101826" : "#F8FAFC"; }}
+            onMouseEnter={e => { if (!showUserPopup) e.currentTarget.style.background = "#F8FAFC"; }}
             onMouseLeave={e => { if (!showUserPopup) e.currentTarget.style.background = "transparent"; }}
           >
             <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0, flex: 1 }}>

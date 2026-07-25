@@ -1,7 +1,6 @@
 'use client';
 import AdminShell from '@/components/admin/admin-shell';
 import PageHeader from '@/components/admin/page-header';
-import { useTheme } from '@/contexts/theme-context';
 import { Settings, Store, Bell, Shield, Globe, CreditCard, Palette, Save, Mail, MessageSquare, Smartphone, Send, CheckCircle, AlertCircle, Clock, KeyRound, Lock, Unlock, RefreshCw, Copy } from 'lucide-react';
 import api from '@/lib/api';
 import { useState, useEffect } from 'react';
@@ -20,13 +19,11 @@ const tabs: {id: Tab; label: string; icon: React.ComponentType<{size?: number; c
 ];
 
 function SettingsContent() {
-  const { theme, setTheme } = useTheme();
-  const isDark = theme === 'dark';
-  const card = isDark ? '#0D1523' : '#FFFFFF';
-  const border = isDark ? '#1E293B' : '#E2E8F0';
-  const textMain = isDark ? '#FFFFFF' : '#0F172A';
-  const textMuted = isDark ? '#8E9AAF' : '#64748B';
-  const surface = isDark ? '#101826' : '#F1F5F9';
+  const card = '#FFFFFF';
+  const border = '#E2E8F0';
+  const textMain = '#0F172A';
+  const textMuted = '#64748B';
+  const surface = '#F1F5F9';
   const [activeTab, setActiveTab] = useState<Tab>('general');
   const [storeName, setStoreName] = useState('Kryros Mobile');
   const [storeEmail, setStoreEmail] = useState(process.env.NEXT_PUBLIC_STORE_EMAIL || 'info@kryros.com');
@@ -448,7 +445,6 @@ function SettingsContent() {
       case 'appearance': return (
         <div>
           <SectionTitle title="Appearance" sub="Customize the look and feel of your store" />
-          <Row label="Dark Mode" sub="Use dark theme by default for all users"><ToggleSwitch value={isDark} onChange={()=>setTheme(isDark?'light':'dark')} /></Row>
           <Row label="Compact UI" sub="Reduce spacing and padding across the dashboard"><ToggleSwitch value={false} onChange={()=>{}} /></Row>
           
           <div style={{ marginTop:'24px' }}>

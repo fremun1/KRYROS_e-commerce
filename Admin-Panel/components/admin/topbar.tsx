@@ -1,7 +1,6 @@
 "use client";
 import React, { useState, useRef, useEffect } from "react";
-import { Menu, Search, Bell, Sun, Moon, ChevronDown, LogOut, User, Settings, Check } from "lucide-react";
-import { useTheme } from "@/contexts/theme-context";
+import { Menu, Search, Bell, ChevronDown, LogOut, User, Settings, Check } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { usePathname, useRouter } from "next/navigation";
 import { getNotifications, markNotificationRead } from "@/lib/api";
@@ -26,7 +25,6 @@ interface TopbarProps {
 type NotifItem = { id: string; title: string; message: string; isRead: boolean; createdAt: string; type?: string };
 
 export default function Topbar({ collapsed, sidebarW, onMenuToggle, onMobileMenuToggle }: TopbarProps) {
-  const { theme, toggleTheme } = useTheme();
   const { user, logout } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
@@ -38,14 +36,13 @@ export default function Topbar({ collapsed, sidebarW, onMenuToggle, onMobileMenu
   const menuRef = useRef<HTMLDivElement>(null);
   const bellRef = useRef<HTMLButtonElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
-  const isDark = theme === "dark";
 
-  const bg = isDark ? "#0D1523" : "#FFFFFF";
-  const border = isDark ? "#1E293B" : "#E2E8F0";
-  const textMain = isDark ? "#FFFFFF" : "#0F172A";
-  const textMuted = isDark ? "#8E9AAF" : "#64748B";
-  const surface = isDark ? "#101826" : "#F8FAFC";
-  const card = isDark ? "#0D1523" : "#FFFFFF";
+  const bg = "#FFFFFF";
+  const border = "#E2E8F0";
+  const textMain = "#0F172A";
+  const textMuted = "#64748B";
+  const surface = "#F8FAFC";
+  const card = "#FFFFFF";
   const currentPage = pageNames[pathname] || "Dashboard";
 
   const unread = notifs.filter(n => !n.isRead).length;
@@ -153,9 +150,6 @@ export default function Topbar({ collapsed, sidebarW, onMenuToggle, onMobileMenu
           <span style={{ fontSize: 13, color: textMuted }}>Search...</span>
         </div>
         <BellBtn size={34} />
-        <button onClick={toggleTheme} style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 34, height: 34, background: surface, border: `1px solid ${border}`, borderRadius: 8, cursor: "pointer", color: textMuted, flexShrink: 0 }}>
-          {isDark ? <Sun size={15} /> : <Moon size={15} />}
-        </button>
         <div style={{ display: "flex", alignItems: "center", gap: 8, background: surface, border: `1px solid ${border}`, borderRadius: 8, padding: "5px 10px", cursor: "pointer", flexShrink: 0 }}
           onClick={() => setShowUserMenu(v => !v)} ref={avatarRef}>
           <div style={{ width: 28, height: 28, borderRadius: "50%", background: "linear-gradient(135deg, #1FA89A, #27B9AF)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: "white", flexShrink: 0 }}>
@@ -187,9 +181,6 @@ export default function Topbar({ collapsed, sidebarW, onMenuToggle, onMobileMenu
           KR<span style={{ color: "#1FA89A" }}>YROS</span>
         </span>
         <span style={{ fontSize: 13, color: textMuted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>{currentPage}</span>
-        <button onClick={toggleTheme} style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 34, height: 34, background: surface, border: `1px solid ${border}`, borderRadius: 8, cursor: "pointer", color: textMuted, flexShrink: 0 }}>
-          {isDark ? <Sun size={15} /> : <Moon size={15} />}
-        </button>
         <BellBtn size={34} />
         <div onClick={() => setShowUserMenu(v => !v)} style={{ width: 34, height: 34, borderRadius: "50%", background: "linear-gradient(135deg, #1FA89A, #27B9AF)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: "white", flexShrink: 0, cursor: "pointer" }}>
           {user?.name?.[0]?.toUpperCase() || "A"}
@@ -201,7 +192,7 @@ export default function Topbar({ collapsed, sidebarW, onMenuToggle, onMobileMenu
         <div ref={notifRef} style={{
           position: "fixed", top: 60, right: 12, width: 340,
           background: card, border: `1px solid ${border}`, borderRadius: 14,
-          boxShadow: isDark ? "0 16px 48px rgba(0,0,0,0.6)" : "0 8px 32px rgba(0,0,0,0.15)",
+          boxShadow: "0 8px 32px rgba(0,0,0,0.15)",
           overflow: "hidden", zIndex: 9999,
         }}>
           {/* Header */}
@@ -236,7 +227,7 @@ export default function Topbar({ collapsed, sidebarW, onMenuToggle, onMobileMenu
             ) : notifs.slice(0, 8).map(n => (
               <div key={n.id} style={{
                 padding: "12px 16px", borderBottom: `1px solid ${border}`,
-                background: n.isRead ? "transparent" : (isDark ? "rgba(31,168,154,0.05)" : "rgba(31,168,154,0.04)"),
+                background: n.isRead ? "transparent" : "rgba(31,168,154,0.04)",
                 display: "flex", gap: 10, alignItems: "flex-start",
               }}>
                 <div style={{ width: 8, height: 8, borderRadius: "50%", background: n.isRead ? "transparent" : "#1FA89A", flexShrink: 0, marginTop: 5 }} />
@@ -268,9 +259,9 @@ export default function Topbar({ collapsed, sidebarW, onMenuToggle, onMobileMenu
       {showUserMenu && (
         <div ref={menuRef} style={{
           position: "fixed", top: 60, right: 12, width: 200,
-          background: isDark ? "#0D1523" : "#FFFFFF",
+          background: "#FFFFFF",
           border: `1px solid ${border}`, borderRadius: 12,
-          boxShadow: isDark ? "0 16px 48px rgba(0,0,0,0.6)" : "0 8px 32px rgba(0,0,0,0.15)",
+          boxShadow: "0 8px 32px rgba(0,0,0,0.15)",
           overflow: "hidden", zIndex: 9999,
         }}>
           <div style={{ padding: "14px 16px", borderBottom: `1px solid ${border}` }}>
@@ -286,7 +277,7 @@ export default function Topbar({ collapsed, sidebarW, onMenuToggle, onMobileMenu
           </div>
           {[{ icon: User, label: "My Profile", action: handleProfile }, { icon: Settings, label: "Settings", action: handleProfile }].map(({ icon: Icon, label, action }) => (
             <button key={label} onClick={action} style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "11px 16px", background: "none", border: "none", cursor: "pointer", color: textMuted, fontSize: 13.5, fontFamily: "var(--font-inter)", textAlign: "left" }}
-              onMouseEnter={e => e.currentTarget.style.background = isDark ? "#101826" : "#F8FAFC"}
+              onMouseEnter={e => e.currentTarget.style.background = "#F8FAFC"}
               onMouseLeave={e => e.currentTarget.style.background = "none"}>
               <Icon size={15} color={textMuted} /> {label}
             </button>

@@ -2,9 +2,8 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
-import { ThemeProvider } from "@/contexts/theme-context";
 import { AuthProvider } from "@/contexts/auth-context";
-import { Eye, EyeOff, ShieldCheck, ArrowLeft } from "lucide-react";
+import { Eye, EyeOff, ShieldCheck, ArrowBack } from "lucide-react";
 import Script from "next/script";
 
 // TypeScript declaration for Google reCAPTCHA v3 global
@@ -265,10 +264,8 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <LoginForm />
-      </AuthProvider>
-    </ThemeProvider>
+    <AuthProvider>
+      <LoginForm />
+    </AuthProvider>
   );
 }
