@@ -63,7 +63,7 @@ export default function NewsletterSection({
       {backgroundImage && <img src={backgroundImage} alt="" className="absolute inset-0 w-full h-full object-cover opacity-10" />}
       <div className="max-w-lg mx-auto px-4 text-center relative z-10">
         <h2 className="text-2xl font-black mb-2">{title}</h2>
-        {subtitle && <p className="text-sm text-muted-foreground mb-6">{subtitle}</p>
+        {subtitle && <p className="text-sm text-muted-foreground mb-6">{subtitle}</p>}
         <div className="flex gap-2">
           <input
             type="email"
@@ -76,7 +76,7 @@ export default function NewsletterSection({
           <button
             onClick={handleSubscribe}
             disabled={loading}
-            className="px-5 py-2.5 bg-primary text-white rounded-xl text-sm font-bold flex items-center gap-1.5 disabled:opacity-60"
+            className="px-5 py-2.5 bg-primary text-primary-foreground rounded-xl text-sm font-bold flex items-center gap-1.5 disabled:opacity-60"
           >
             {loading && <Loader2 size={14} className="animate-spin" />}
             {ctaText}
