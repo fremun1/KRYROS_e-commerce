@@ -3,163 +3,150 @@
 @import "tw-animate-css";
 @plugin "@tailwindcss/typography";
 
-@custom-variant dark (&:is(.dark *));
-
 :root {
   /* =================================================
-     GLOBAL BRAND COLORS (HEX for reference)
+     KRYROS UNIFIED COLOR SCHEME
   ================================================= */
+  
+  /* PRIMARY COLORS */
   --kryros-primary: #C0151B;
   --kryros-primary-hover: #A01015;
+  --kryros-secondary: #344a64;
+  --kryros-white: #FFFFFF;
+  --kryros-black-primary: #000000;
+
+  /* NEUTRALS */
+  --kryros-light-gray: #FFFFFF;
+  --kryros-border-gray: #E5E5E5;
+  --kryros-medium-gray: #75757A;
+  --kryros-dark-gray: #535357;
+
+  /* BACKGROUND COLORS */
+  --kryros-main-bg: #FFFFFF;
+  --kryros-card-bg: #FFFFFF;
+  --kryros-footer-bg: #000000;
+  --kryros-secondary-bg: #FAFAFA;
+
+  /* BORDER & DIVIDER */
+  --kryros-border: #E5E5E5;
+  --kryros-divider: #E5E5E5;
+
+  /* BUTTON COLORS */
+  --kryros-primary-btn: #344a64;
+  --kryros-secondary-btn: #C0151B;
+  --kryros-dark-btn: #313133;
+  --kryros-disabled-btn: #C7C7CD;
+
+  /* TEXT COLORS */
+  --kryros-primary-text: #313133;
+  --kryros-secondary-text: #75757A;
+  --kryros-disabled-text: #9E9E9E;
+  --kryros-white-text: #FFFFFF;
+  --kryros-link: #2563EB;
+
+  /* STATUS / FEEDBACK COLORS */
+  --kryros-success: #2DBE60;
+  --kryros-error: #D63031;
+  --kryros-warning: #F68B1E;
   --kryros-gold: #F6B01E;
-  --kryros-danger: #D63031;
+
+  /* SPECIAL EFFECTS / OVERLAYS */
+  --kryros-orange-glow: rgba(246,139,30,0.15);
+  --kryros-shadow: rgba(0,0,0,0.10);
+  --kryros-overlay: rgba(0,0,0,0.50);
+
+  /* QUANTITY BOX */
+  --kryros-quantity-bg: #313133;
+  --kryros-quantity-border: #E5E5E5;
+
+  /* ACCENT COLOR (Optional - for Events, Premium, Community) */
+  --kryros-accent-purple: #7C3AED;
 
   /* RGB versions for opacity use */
   --kryros-primary-rgb: 192, 21, 27;
-  --kryros-dark-bg-rgb: 15, 15, 15;
 }
 
 @theme inline {
-  --color-background: hsl(var(--background));
-  --color-foreground: hsl(var(--foreground));
-  --color-border: hsl(var(--border));
-  --color-input: hsl(var(--input));
-  --color-ring: hsl(var(--ring));
+  /* Background & Foreground */
+  --color-background: var(--kryros-main-bg);
+  --color-foreground: var(--kryros-primary-text);
+  --color-border: var(--kryros-border);
+  --color-input: var(--kryros-border);
+  --color-ring: var(--kryros-primary);
 
-  --color-card: hsl(var(--card));
-  --color-card-foreground: hsl(var(--card-foreground));
-  --color-card-border: hsl(var(--card-border));
+  /* Card */
+  --color-card: var(--kryros-card-bg);
+  --color-card-foreground: var(--kryros-primary-text);
+  --color-card-border: var(--kryros-border);
 
-  --color-popover: hsl(var(--popover));
-  --color-popover-foreground: hsl(var(--popover-foreground));
-  --color-popover-border: hsl(var(--popover-border));
+  /* Popover */
+  --color-popover: var(--kryros-white);
+  --color-popover-foreground: var(--kryros-primary-text);
+  --color-popover-border: var(--kryros-border);
 
-  --color-primary: hsl(var(--primary));
-  --color-primary-foreground: hsl(var(--primary-foreground));
-  --color-primary-border: var(--primary-border);
+  /* Primary */
+  --color-primary: var(--kryros-primary-btn);
+  --color-primary-foreground: var(--kryros-white-text);
+  --color-primary-border: var(--kryros-primary-btn);
 
-  --color-secondary: hsl(var(--secondary));
-  --color-secondary-foreground: hsl(var(--secondary-foreground));
-  --color-secondary-border: var(--secondary-border);
+  /* Secondary */
+  --color-secondary: var(--kryros-secondary-btn);
+  --color-secondary-foreground: var(--kryros-white-text);
+  --color-secondary-border: var(--kryros-secondary-btn);
 
-  --color-muted: hsl(var(--muted));
-  --color-muted-foreground: hsl(var(--muted-foreground));
-  --color-muted-border: var(--muted-border);
+  /* Muted */
+  --color-muted: var(--kryros-secondary-bg);
+  --color-muted-foreground: var(--kryros-secondary-text);
+  --color-muted-border: var(--kryros-border);
 
-  --color-accent: hsl(var(--accent));
-  --color-accent-foreground: hsl(var(--accent-foreground));
-  --color-accent-border: var(--accent-border);
+  /* Accent */
+  --color-accent: var(--kryros-secondary-bg);
+  --color-accent-foreground: var(--kryros-primary-text);
+  --color-accent-border: var(--kryros-border);
 
-  --color-destructive: hsl(var(--destructive));
-  --color-destructive-foreground: hsl(var(--destructive-foreground));
-  --color-destructive-border: var(--destructive-border);
+  /* Destructive */
+  --color-destructive: var(--kryros-error);
+  --color-destructive-foreground: var(--kryros-white-text);
+  --color-destructive-border: var(--kryros-error);
 
-  --color-chart-1: hsl(var(--chart-1));
-  --color-chart-2: hsl(var(--chart-2));
-  --color-chart-3: hsl(var(--chart-3));
-  --color-chart-4: hsl(var(--chart-4));
-  --color-chart-5: hsl(var(--chart-5));
+  /* Chart Colors */
+  --color-chart-1: var(--kryros-primary);
+  --color-chart-2: var(--kryros-success);
+  --color-chart-3: var(--kryros-warning);
+  --color-chart-4: var(--kryros-gold);
+  --color-chart-5: var(--kryros-link);
 
-  --color-sidebar: hsl(var(--sidebar));
-  --color-sidebar-foreground: hsl(var(--sidebar-foreground));
-  --color-sidebar-border: hsl(var(--sidebar-border));
-  --color-sidebar-primary: hsl(var(--sidebar-primary));
-  --color-sidebar-primary-foreground: hsl(var(--sidebar-primary-foreground));
-  --color-sidebar-primary-border: var(--sidebar-primary-border);
-  --color-sidebar-accent: hsl(var(--sidebar-accent));
-  --color-sidebar-accent-foreground: hsl(var(--sidebar-accent-foreground));
-  --color-sidebar-accent-border: var(--sidebar-accent-border);
-  --color-sidebar-ring: hsl(var(--sidebar-ring));
+  /* Sidebar */
+  --color-sidebar: var(--kryros-secondary-bg);
+  --color-sidebar-foreground: var(--kryros-primary-text);
+  --color-sidebar-border: var(--kryros-border);
+  --color-sidebar-primary: var(--kryros-primary);
+  --color-sidebar-primary-foreground: var(--kryros-white-text);
+  --color-sidebar-primary-border: var(--kryros-primary);
+  --color-sidebar-accent: var(--kryros-secondary-bg);
+  --color-sidebar-accent-foreground: var(--kryros-primary-text);
+  --color-sidebar-accent-border: var(--kryros-border);
+  --color-sidebar-ring: var(--kryros-primary);
 
-  /* KRYROS CUSTOM THEME TOKENS */
-  --color-kryros-primary: #C0151B;
-  --color-kryros-primary-hover: #A01015;
-  --color-kryros-gold: #F6B01E;
-  --color-kryros-danger: #D63031;
+  /* KRYROS Custom Colors */
+  --color-kryros-primary: var(--kryros-primary);
+  --color-kryros-primary-hover: var(--kryros-primary-hover);
+  --color-kryros-secondary: var(--kryros-secondary);
+  --color-kryros-gold: var(--kryros-gold);
+  --color-kryros-danger: var(--kryros-error);
+  --color-kryros-success: var(--kryros-success);
+  --color-kryros-warning: var(--kryros-warning);
+  --color-kryros-accent-purple: var(--kryros-accent-purple);
 
-  --font-sans: var(--app-font-sans);
-  --font-serif: var(--app-font-serif);
-  --font-mono: var(--app-font-mono);
+  --font-sans: 'Roboto', sans-serif;
+  --font-serif: Georgia, serif;
+  --font-mono: Menlo, monospace;
 
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
-}
-
-/* LIGHT MODE */
-:root {
-  --background: 0 0% 96%;          /* #F5F5F5 — Main Background */
-  --foreground: 240 2% 20%;        /* #313133 — Primary Text */
-  --card: 0 0% 100%;              /* #FFFFFF — Card Background */
-  --card-foreground: 240 2% 20%;  /* #313133 */
-  --card-border: 0 0% 90%;        /* #E5E5E5 — Border Gray */
-  --border: 0 0% 90%;             /* #E5E5E5 */
-  --input: 0 0% 90%;              /* #E5E5E5 */
-  --primary: 358 80% 42%;         /* #C0151B — KRYROS Primary Red */
-  --primary-foreground: 0 0% 100%;
-  --secondary: 0 0% 98%;          /* #FAFAFA — Secondary Background */
-  --secondary-foreground: 240 2% 20%; /* #313133 */
-  --muted: 0 0% 98%;              /* #FAFAFA */
-  --muted-foreground: 240 2% 47%; /* #75757A — Secondary Text */
-  --accent: 0 0% 96%;             /* #F5F5F5 */
-  --accent-foreground: 240 2% 20%; /* #313133 */
-  --destructive: 0 67% 51%;       /* #D63031 — Sale/Error Red */
-  --destructive-foreground: 0 0% 100%;
-  --ring: 358 80% 42%;            /* #C0151B */
-  --popover: 0 0% 100%;
-  --popover-foreground: 240 2% 20%;
-  --popover-border: 0 0% 90%;     /* #E5E5E5 */
-  --sidebar: 0 0% 96%;            /* #F5F5F5 */
-  --sidebar-foreground: 240 2% 20%;
-  --sidebar-border: 0 0% 90%;     /* #E5E5E5 */
-  --sidebar-primary: 358 80% 42%; /* #C0151B */
-  --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 0 0% 98%;     /* #FAFAFA */
-  --sidebar-accent-foreground: 240 2% 20%;
-  --sidebar-ring: 358 80% 42%;    /* #C0151B */
   --radius: 0.5rem;
-  --chart-1: 358 80% 42%;         /* #C0151B Primary Red */
-  --chart-2: 141 62% 46%;         /* #2DBE60 Success Green */
-  --chart-3: 30 92% 54%;          /* #F68B1E Warning Orange */
-  --chart-4: 41 92% 54%;          /* #F6B01E Rating Gold */
-  --chart-5: 221 83% 53%;         /* #2563EB Link Blue */
-
-  --app-font-sans: 'Roboto', sans-serif;
-  --app-font-serif: Georgia, serif;
-  --app-font-mono: Menlo, monospace;
-}
-
-.dark {
-  --background: 240 2% 19%;        /* #313133 — Black Primary */
-  --foreground: 0 0% 100%;        /* #FFFFFF — White Text */
-  --card: 240 2% 19%;             /* #313133 — Black Primary */
-  --card-foreground: 0 0% 100%;   /* #FFFFFF — White Text */
-  --card-border: 240 2% 33%;      /* #535357 — Dark Gray */
-  --border: 240 2% 33%;           /* #535357 — Dark Gray */
-  --input: 240 2% 33%;            /* #535357 — Dark Gray */
-  --primary: 358 80% 42%;         /* #C0151B — KRYROS Primary Red */
-  --primary-foreground: 0 0% 100%; /* #FFFFFF — White Text */
-  --secondary: 240 2% 33%;        /* #535357 — Dark Gray */
-  --secondary-foreground: 0 0% 100%; /* #FFFFFF — White Text */
-  --muted: 240 2% 33%;            /* #535357 — Dark Gray */
-  --muted-foreground: 240 2% 47%; /* #75757A — Medium Gray */
-  --accent: 240 2% 33%;           /* #535357 — Dark Gray */
-  --accent-foreground: 0 0% 100%; /* #FFFFFF — White Text */
-  --destructive: 0 67% 51%;       /* #D63031 — Sale/Error Red */
-  --destructive-foreground: 0 0% 100%; /* #FFFFFF — White Text */
-  --ring: 358 80% 42%;            /* #C0151B — KRYROS Primary Red */
-  --popover: 240 2% 19%;          /* #313133 — Black Primary */
-  --popover-foreground: 0 0% 100%; /* #FFFFFF — White Text */
-  --popover-border: 240 2% 33%;   /* #535357 — Dark Gray */
-  --sidebar: 240 2% 19%;          /* #313133 — Black Primary */
-  --sidebar-foreground: 0 0% 100%; /* #FFFFFF — White Text */
-  --sidebar-border: 240 2% 33%;   /* #535357 — Dark Gray */
-  --sidebar-primary: 358 80% 42%; /* #C0151B — KRYROS Primary Red */
-  --sidebar-primary-foreground: 0 0% 100%; /* #FFFFFF — White Text */
-  --sidebar-accent: 240 2% 33%;   /* #535357 — Dark Gray */
-  --sidebar-accent-foreground: 0 0% 100%; /* #FFFFFF — White Text */
-  --sidebar-ring: 358 80% 42%;    /* #C0151B — KRYROS Primary Red */
 }
 
 @layer base {
@@ -245,7 +232,7 @@ html {
 .nav-bar {
   position: relative;
   height: 56px;
-  background: #ffffff;
+  background: var(--kryros-white);
   border-radius: 22px;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06), 0 1px 4px rgba(0, 0, 0, 0.04);
   display: flex;
@@ -262,7 +249,7 @@ html {
   transform: translateX(-50%);
   width: 36px;
   height: 36px;
-  background: #F5F5F5;
+  background: var(--kryros-secondary-bg);
   border-radius: 50%;
   z-index: 1;
 }
@@ -274,7 +261,7 @@ html {
   transform: translateX(-50%);
   width: 44px;
   height: 44px;
-  background: #C0151B;
+  background: var(--kryros-primary);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -317,22 +304,22 @@ html {
 
 .nav-item.active .icon,
 .nav-item.active .label {
-  color: #C0151B;
-  stroke: #C0151B;
+  color: var(--kryros-primary);
+  stroke: var(--kryros-primary);
 }
 
 .nav-item:not(.active) .icon,
 .nav-item:not(.active) .label {
-  color: #8a96a3;
-  stroke: #8a96a3;
+  color: var(--kryros-secondary-text);
+  stroke: var(--kryros-secondary-text);
 }
 
 .nav-item.active svg {
-  stroke: #C0151B;
+  stroke: var(--kryros-primary);
 }
 
 .nav-item:not(.active) svg {
-  stroke: #8a96a3;
+  stroke: var(--kryros-secondary-text);
 }
 
 .icon-wrapper {
@@ -350,45 +337,16 @@ html {
   right: -4px;
   min-width: 12px;
   height: 12px;
-  background: #C0151B;
+  background: var(--kryros-primary);
   border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 7px;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--kryros-white-text);
   padding: 0 2px;
 }
 
-/* Dark mode support */
-.dark .nav-bar {
-  background: hsl(var(--card));
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2), 0 1px 4px rgba(0, 0, 0, 0.1);
-}
-
-.dark .nav-notch {
-  background: hsl(var(--muted));
-}
-
-.dark .nav-item.active .icon,
-.dark .nav-item.active .label {
-  color: #C0151B;
-  stroke: #C0151B;
-}
-
-.dark .nav-item:not(.active) .icon,
-.dark .nav-item:not(.active) .label {
-  color: hsl(var(--muted-foreground));
-  stroke: hsl(var(--muted-foreground));
-}
-
-.dark .nav-item.active svg {
-  stroke: #C0151B;
-}
-
-.dark .nav-item:not(.active) svg {
-  stroke: hsl(var(--muted-foreground));
-}
 
 

@@ -4,17 +4,17 @@ import {
   ChevronLeft, Lock, ChevronDown,
   Smartphone, CreditCard, Building2, Check, AlertCircle, Download, Info,
 } from "lucide-react";
-import { API_BASE, fetchSettings } from "@/lib/api";
+import { EFFECTIVE_API_BASE, fetchSettings } from "@/lib/api";
 import { useCurrencyStore } from "@/store/currencyStore";
 
 const DIAL_CODES = ["+260", "+263", "+27", "+254", "+234", "+233", "+255", "+256", "+265", "+258", "+267", "+264", "+250", "+251", "+243", "+237", "+221", "+225", "+244", "+44", "+1", "+49", "+33", "+86", "+91", "+61", "+971"];
 
 // Icon circle background per method type
 const ICON_BG: Record<string, string> = {
-  phone:    "rgba(39, 185, 175, 0.12)",
-  card:     "rgba(59, 130, 246, 0.10)",
-  whatsapp: "rgba(37, 211, 102, 0.12)",
-  bank:     "rgba(100, 116, 139, 0.10)",
+  phone:    "rgba(var(--kryros-primary-rgb), 0.12)",
+  card:     "rgba(var(--kryros-primary-rgb), 0.10)",
+  whatsapp: "rgba(var(--kryros-primary-rgb), 0.12)",
+  bank:     "rgba(var(--kryros-primary-rgb), 0.10)",
 };
 
 type MethodIconType = "phone" | "card" | "whatsapp" | "bank";
@@ -247,7 +247,7 @@ export default function PayPage() {
     setLinkLoading(true);
     setLinkError(null);
 
-    fetch(`${API_BASE}/api/pay-links/${paymentLinkId}`)
+    fetch(`${EFFECTIVE_API_BASE}/api/pay-links/${paymentLinkId}`)
       .then(async (res) => {
         const data = await res.json();
         if (!res.ok) {
@@ -342,7 +342,7 @@ export default function PayPage() {
 
   useEffect(() => {
     const countryParam = effectivePaymentCountryCode ? `?countryCode=${effectivePaymentCountryCode}` : '';
-    fetch(`${API_BASE}/api/payment-config/public${countryParam}`)
+    fetch(`${EFFECTIVE_API_BASE}/api/payment-config/public${countryParam}`)
       .then(r => r.json())
       .then((data: any) => {
         const arr = (Array.isArray(data) ? data : data?.data ?? []) as PaymentConfigMethod[];
@@ -450,7 +450,7 @@ export default function PayPage() {
         return;
       }
       try {
-        const r = await fetch(`${API_BASE}/api/payments/direct-status/${paymentId}`);
+        const r = await fetch(`${EFFECTIVE_API_BASE}/api/payments/direct-status/${paymentId}`);
         const d = await r.json();
         if (d.status?.toLowerCase() === "paid") {
           clearInterval(pollRef.current!);
@@ -507,7 +507,7 @@ export default function PayPage() {
     setPayStatus("initializing");
 
     try {
-      const res = await fetch(`${API_BASE}/api/payments/direct`, {
+      const res = await fetch(`${EFFECTIVE_API_BASE}/api/payments/direct`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -552,7 +552,7 @@ export default function PayPage() {
     setPayError(null);
 
     try {
-      const res = await fetch(`${API_BASE}/api/payments/whatsapp`, {
+      const res = await fetch(`${EFFECTIVE_API_BASE}/api/payments/whatsapp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

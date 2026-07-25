@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { X, CheckCircle, Loader2 } from "lucide-react";
-import { api, API_BASE } from "@/lib/api";
+import { api, EFFECTIVE_API_BASE } from "@/lib/api";
 
 const STORAGE_KEY = "kryros_nl_subscribed";
 
@@ -41,7 +41,7 @@ export default function NewsletterPopup() {
       } catch {
         // Fallback: try legacy endpoint
         try {
-          const res = await fetch(`${API_BASE}/api/cms/homepage-sections?type=Newsletter`);
+          const res = await fetch(`${EFFECTIVE_API_BASE}/api/cms/homepage-sections?type=Newsletter`);
           const sections = await res.json();
           const section = Array.isArray(sections) ? sections[0] : null;
           if (section?.config && typeof section.config === "object" && (section.config as any).heading) {
@@ -63,7 +63,7 @@ export default function NewsletterPopup() {
     setError("");
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/api/newsletter/subscribe`, {
+      const res = await fetch(`${EFFECTIVE_API_BASE}/api/newsletter/subscribe`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: email.toLowerCase().trim() }),

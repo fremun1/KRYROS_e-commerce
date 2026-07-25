@@ -1,6 +1,6 @@
 import { Mail, Phone, MessageCircle, MapPin, Facebook, Instagram, Twitter, Youtube } from "lucide-react";
 import { useState, useEffect } from "react";
-import { API_BASE } from "@/lib/api";
+import { EFFECTIVE_API_BASE } from "@/lib/api";
 
 interface SiteSettings {
   contactEmail?: string;
@@ -13,7 +13,7 @@ export default function ContactPage() {
   const [settings, setSettings] = useState<SiteSettings>({});
 
   useEffect(() => {
-    fetch(`${API_BASE}/api/cms/site-config/contact`)
+    fetch(`${EFFECTIVE_API_BASE}/api/cms/site-config/contact`)
       .then(r => r.ok ? r.json() : null)
       .then(data => {
         if (data?.value) setSettings(data.value);
@@ -65,7 +65,7 @@ export default function ContactPage() {
             <p className="text-sm font-bold text-foreground">Live Chat</p>
             <p className="text-xs text-muted-foreground">{contactPhone} · WhatsApp</p>
           </div>
-          <button className="px-3 py-1.5 bg-primary text-white rounded-xl text-xs font-bold hover:opacity-90 transition-all flex-shrink-0">
+          <button className="px-3 py-1.5 bg-primary text-primary-foreground rounded-xl text-xs font-bold hover:opacity-90 transition-all flex-shrink-0">
             Chat Now
           </button>
         </a>

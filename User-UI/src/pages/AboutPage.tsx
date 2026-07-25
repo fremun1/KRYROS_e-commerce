@@ -1,6 +1,6 @@
 import { Target, Eye, Heart } from "lucide-react";
 import { useState, useEffect } from "react";
-import { API_BASE } from "@/lib/api";
+import { EFFECTIVE_API_BASE } from "@/lib/api";
 
 interface SiteSettings {
   contactEmail?: string;
@@ -13,7 +13,7 @@ export default function AboutPage() {
   const [settings, setSettings] = useState<SiteSettings>({});
 
   useEffect(() => {
-    fetch(`${API_BASE}/api/cms/site-config/contact`)
+    fetch(`${EFFECTIVE_API_BASE}/api/cms/site-config/contact`)
       .then(r => r.ok ? r.json() : null)
       .then(data => {
         if (data?.value) setSettings(data.value);

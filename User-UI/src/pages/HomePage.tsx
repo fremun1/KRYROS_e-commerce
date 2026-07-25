@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { API_BASE } from "@/lib/api";
+import { EFFECTIVE_API_BASE } from "@/lib/api";
 import type { ApiCMSSection } from "@/lib/api";
 import DynamicSectionRendererV2 from "@/components/home/DynamicSectionRendererV2";
 import NewsletterPopup from "@/components/NewsletterPopup";
@@ -33,7 +33,7 @@ export default function HomePage() {
       try {
         // Fetch all sections for the homepage from the CMS API
         const response = await fetch(
-          `${API_BASE}/api/cms/sections?pageSlug=homepage`,
+          `${EFFECTIVE_API_BASE}/api/cms/sections?pageSlug=homepage`,
           { cache: "no-store" }
         );
 

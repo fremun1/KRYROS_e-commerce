@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Search, MapPin, Clock, Navigation, Package, ChevronRight, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
-import { API_BASE } from "@/lib/api";
+import { EFFECTIVE_API_BASE } from "@/lib/api";
 import AccountLayout from "@/components/layout/AccountLayout";
 
 interface Station {
@@ -51,7 +51,7 @@ export default function PickupStationsPage() {
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch(`${API_BASE}/api/pickup-stations?active=true`);
+        const res = await fetch(`${EFFECTIVE_API_BASE}/api/pickup-stations?active=true`);
         if (!res.ok) throw new Error("Failed to fetch");
         const data = await res.json();
         const list = Array.isArray(data) ? data : (data?.data ?? []);

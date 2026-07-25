@@ -93,7 +93,7 @@ export default function UnifiedProductCard({
             className={`w-full h-full transition-transform duration-[400ms] [transition-timing-function:cubic-bezier(0.25,1,0.5,1)] group-hover:scale-[1.04] ${
               imageStyle === "cover"
                 ? "object-cover object-center"
-                : "object-contain p-3 mix-blend-multiply dark:mix-blend-normal"
+                : "object-contain p-3 mix-blend-multiply"
             }`}
             loading="lazy"
             decoding="async"
@@ -117,7 +117,7 @@ export default function UnifiedProductCard({
           </span>
         )}
         {badge && (
-          <span className="absolute bottom-3 left-3 bg-primary text-white text-[9px] font-bold px-1.5 py-0.5 rounded-lg z-10">
+          <span className="absolute bottom-3 left-3 bg-primary text-primary-foreground text-[9px] font-bold px-1.5 py-0.5 rounded-lg z-10">
             {badge}
           </span>
         )}
@@ -182,7 +182,7 @@ export default function UnifiedProductCard({
                   key={star}
                   className={`w-3 h-3 flex-shrink-0 ${
                     star <= Math.round(product.rating)
-                      ? "fill-[#F6B01E] text-[#F6B01E]"
+                      ? "fill-amber-400 text-amber-400"
                       : "fill-muted text-muted-foreground"
                   }`}
                   viewBox="0 0 20 20"
@@ -262,7 +262,7 @@ export default function UnifiedProductCard({
               disabled={!inStock}
               className={`w-full h-9 md:h-10 rounded-lg text-xs md:text-sm font-bold flex items-center justify-center transition-colors ${
                 inStock
-                  ? "bg-primary text-white hover:bg-primary/90 cursor-pointer"
+                  ? "bg-primary text-primary-foreground hover:bg-primary/90 cursor-pointer"
                   : "bg-muted text-muted-foreground cursor-not-allowed"
               }`}
             >

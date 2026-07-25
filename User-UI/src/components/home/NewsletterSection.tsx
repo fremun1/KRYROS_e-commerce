@@ -48,7 +48,7 @@ export default function NewsletterSection({
 
   if (done) {
     return (
-      <section className="py-8 md:py-12 text-center" style={{ background: bgColor || '#f8fafc' }}>
+      <section className="py-8 md:py-12 text-center" style={{ background: bgColor || 'var(--kryros-secondary-bg)' }}>
         <div className="max-w-lg mx-auto px-4">
           <CheckCircle className="w-10 h-10 mx-auto mb-3 text-primary" />
           <h3 className="text-lg font-bold mb-1">You're subscribed!</h3>
@@ -59,11 +59,11 @@ export default function NewsletterSection({
   }
 
   return (
-    <section className="py-8 md:py-12 relative overflow-hidden" style={{ background: bgColor || '#f8fafc', color: textColor }}>
+    <section className="py-8 md:py-12 relative overflow-hidden" style={{ background: bgColor || 'var(--kryros-secondary-bg)', color: textColor }}>
       {backgroundImage && <img src={backgroundImage} alt="" className="absolute inset-0 w-full h-full object-cover opacity-10" />}
       <div className="max-w-lg mx-auto px-4 text-center relative z-10">
         <h2 className="text-2xl font-black mb-2">{title}</h2>
-        {subtitle && <p className="text-sm text-muted-foreground mb-6">{subtitle}</p>}
+        {subtitle && <p className="text-sm text-muted-foreground mb-6">{subtitle}</p>
         <div className="flex gap-2">
           <input
             type="email"
@@ -82,7 +82,7 @@ export default function NewsletterSection({
             {ctaText}
           </button>
         </div>
-        {error && <p className="text-xs text-red-500 mt-2">{error}</p>}
+        {error && <p className="text-xs text-destructive mt-2">{error}</p>}
         <p className="text-[10px] text-muted-foreground mt-3">No spam, unsubscribe anytime.</p>
       </div>
     </section>

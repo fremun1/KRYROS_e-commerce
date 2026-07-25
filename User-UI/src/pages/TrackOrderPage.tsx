@@ -3,7 +3,7 @@ import { Link } from "wouter";
 import { Search, ChevronRight, Headphones, CheckCircle, Truck, MapPin, Loader2, Package, Link as LinkIcon } from "lucide-react";
 import { motion } from "framer-motion";
 import { useAuthStore } from "@/store/authStore";
-import { fetchOrders, trackOrder, type ApiOrder, API_BASE } from "@/lib/api";
+import { fetchOrders, trackOrder, type ApiOrder, EFFECTIVE_API_BASE } from "@/lib/api";
 import AccountLayout from "@/components/layout/AccountLayout";
 import { formatDeliveryDate, formatDeliveryWindow, resolveDeliveryWindowFromItems } from "@/lib/delivery";
 import { formatSpecs } from "@/lib/utils";
@@ -215,7 +215,7 @@ export default function TrackOrderPage() {
       setSearchError("No order was found for that ID.");
       // Try direct payment lookup if order lookup fails
       try {
-        const directPaymentResult = await fetch(`${API_BASE}/api/payments/direct-status/${cleanQuery}`, {
+        const directPaymentResult = await fetch(`${EFFECTIVE_API_BASE}/api/payments/direct-status/${cleanQuery}`, {
           headers: { ...(token && { Authorization: `Bearer ${token}` }) },
         });
         const directPaymentData = await directPaymentResult.json();

@@ -3,7 +3,7 @@ import { Link } from "wouter";
 import { PackageSearch } from "lucide-react";
 import { useWishlistStore } from "@/store/wishlistStore";
 import { useAuthStore } from "@/store/authStore";
-import { API_BASE } from "@/lib/api";
+import { EFFECTIVE_API_BASE } from "@/lib/api";
 import type { Product } from "@/lib/api";
 import AccountLayout from "@/components/layout/AccountLayout";
 import UnifiedProductCard from "@/components/UnifiedProductCard";
@@ -75,7 +75,7 @@ export default function WishlistPage() {
   useEffect(() => {
     if (isAuthenticated) {
       setLoading(true);
-      fetch(`${API_BASE}/api/wishlist`, {
+      fetch(`${EFFECTIVE_API_BASE}/api/wishlist`, {
         headers: { Authorization: `Bearer ${token}` },
       })
         .then((r) => r.json())
@@ -94,7 +94,7 @@ export default function WishlistPage() {
       setLoading(true);
       Promise.all(
         wishlistIds.map((id) =>
-          fetch(`${API_BASE}/api/products/${id}`)
+          fetch(`${EFFECTIVE_API_BASE}/api/products/${id}`)
             .then((r) => (r.ok ? r.json() : null))
             .catch(() => null)
         )

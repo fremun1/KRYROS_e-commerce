@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "wouter";
 import { Search } from "lucide-react";
-import { API_BASE, fetchProductsPage } from "@/lib/api";
+import { EFFECTIVE_API_BASE, fetchProductsPage } from "@/lib/api";
 import type { ApiCMSSection, Product } from "@/lib/api";
 import DynamicSectionRendererV2 from "@/components/home/DynamicSectionRendererV2";
 import UnifiedProductCard from "@/components/UnifiedProductCard";
@@ -45,7 +45,7 @@ export default function ShopPage() {
 
       try {
         const response = await fetch(
-          `${API_BASE}/api/cms/sections?pageSlug=shop`,
+          `${EFFECTIVE_API_BASE}/api/cms/sections?pageSlug=shop`,
           { cache: "no-store" }
         );
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { API_BASE } from "@/lib/api";
+import { EFFECTIVE_API_BASE } from "@/lib/api";
 import type { ApiCMSSection } from "@/lib/api";
 import DynamicSectionRendererV2 from "@/components/home/DynamicSectionRendererV2";
 import ErrorBoundary from "@/components/ErrorBoundary";
@@ -16,7 +16,7 @@ export default function WholesalePage() {
 
       try {
         const response = await fetch(
-          `${API_BASE}/api/cms/sections?pageSlug=wholesale`,
+          `${EFFECTIVE_API_BASE}/api/cms/sections?pageSlug=wholesale`,
           { cache: "no-store" }
         );
 

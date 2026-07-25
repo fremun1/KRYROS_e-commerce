@@ -49,7 +49,7 @@ export default function ContentSection({
             {subtitle && <p className="text-lg opacity-90">{subtitle}</p>}
             {ctaText && ctaLink && (
               <Link href={ctaLink}>
-                <a className="inline-block mt-4 px-6 py-2 bg-white text-gray-900 rounded-xl text-sm font-bold">
+                <a className="inline-block mt-4 px-6 py-2 bg-background text-foreground rounded-xl text-sm font-bold">
                   {ctaText}
                 </a>
               </Link>

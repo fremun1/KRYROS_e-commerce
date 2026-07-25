@@ -133,7 +133,7 @@ export default function SearchAutocomplete({
         {showSearchButton && (
           <button
             type="submit"
-            className="px-4 py-2.5 bg-primary text-white hover:bg-primary/90 transition-colors text-sm font-medium"
+            className="px-4 py-2.5 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors text-sm font-medium"
           >
             <Search className="w-4 h-4" />
           </button>

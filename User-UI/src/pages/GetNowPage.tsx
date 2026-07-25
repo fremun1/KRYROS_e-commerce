@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { API_BASE } from "@/lib/api";
+import { EFFECTIVE_API_BASE } from "@/lib/api";
 import type { ApiCMSSection } from "@/lib/api";
 import DynamicSectionRendererV2 from "@/components/home/DynamicSectionRendererV2";
 import AccountLayout from "@/components/layout/AccountLayout";
@@ -17,7 +17,7 @@ export default function GetNowPage() {
 
       try {
         const response = await fetch(
-          `${API_BASE}/api/cms/sections?pageSlug=get-now`,
+          `${EFFECTIVE_API_BASE}/api/cms/sections?pageSlug=get-now`,
           { cache: "no-store" }
         );
 

@@ -51,13 +51,13 @@ export default class ErrorBoundary extends Component<Props, State> {
             fontSize: '1.25rem',
             fontWeight: 700,
             marginBottom: '0.5rem',
-            color: '#1a1a1a',
+            color: 'var(--kryros-primary-text)',
           }}>
             Something went wrong
           </h2>
           <p style={{
             fontSize: '0.875rem',
-            color: '#666',
+            color: 'var(--kryros-secondary-text)',
             marginBottom: '1.5rem',
             maxWidth: '400px',
           }}>
@@ -73,7 +73,7 @@ export default class ErrorBoundary extends Component<Props, State> {
               borderRadius: '0.75rem',
               border: 'none',
               background: 'var(--kryros-primary, #0d9488)',
-              color: 'white',
+              color: 'var(--kryros-white-text)',
               fontWeight: 600,
               fontSize: '0.875rem',
               cursor: 'pointer',

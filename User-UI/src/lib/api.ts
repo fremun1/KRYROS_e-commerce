@@ -439,7 +439,7 @@ export async function fetchBrands(): Promise<ApiBrand[]> {
 
 export async function fetchBanners(): Promise<ApiBanner[]> {
   try {
-    const res = await fetch(`${API_BASE}/api/cms/banners`, {
+    const res = await fetch(`${EFFECTIVE_API_BASE}/api/cms/banners`, {
       headers: { "Content-Type": "application/json" },
       cache: "no-store",
     });
@@ -531,7 +531,7 @@ export async function fetchSectionByIdOrSlug(idOrSlug: string, pageSlug?: string
 
 export async function fetchAllBrandBanners(): Promise<ApiBrandBanner[]> {
   try {
-    const res = await fetch(`${API_BASE}/api/cms/brand-banners`, { cache: "no-store" });
+    const res = await fetch(`${EFFECTIVE_API_BASE}/api/cms/brand-banners`, { cache: "no-store" });
     if (!res.ok) return [];
     const data = await res.json();
     return Array.isArray(data) ? data : [];
@@ -542,7 +542,7 @@ export async function fetchAllBrandBanners(): Promise<ApiBrandBanner[]> {
 
 export async function fetchBrandBannerBySlug(slug: string): Promise<ApiBrandBanner | null> {
   try {
-    const res = await fetch(`${API_BASE}/api/cms/brand-banners/${slug}`, { cache: "no-store" });
+    const res = await fetch(`${EFFECTIVE_API_BASE}/api/cms/brand-banners/${slug}`, { cache: "no-store" });
     if (!res.ok) return null;
     return await res.json();
   } catch {
@@ -557,7 +557,7 @@ export async function fetchBrandBannerBySlug(slug: string): Promise<ApiBrandBann
  */
 export async function fetchPageSections(pageSlug: string): Promise<ApiCMSSection[]> {
   try {
-    const res = await fetch(`${API_BASE}/api/cms/sections?pageSlug=${encodeURIComponent(pageSlug)}`, { cache: "no-store" });
+    const res = await fetch(`${EFFECTIVE_API_BASE}/api/cms/sections?pageSlug=${encodeURIComponent(pageSlug)}`, { cache: "no-store" });
     if (!res.ok) return [];
     const data = await res.json();
     const sections = Array.isArray(data) ? data : data?.data || [];
@@ -577,7 +577,7 @@ export async function fetchPageSections(pageSlug: string): Promise<ApiCMSSection
  */
 export async function fetchSiteConfig<T = Record<string, unknown>>(key: string): Promise<T | null> {
   try {
-    const res = await fetch(`${API_BASE}/api/cms/site-config/${encodeURIComponent(key)}`, { cache: "no-store" });
+    const res = await fetch(`${EFFECTIVE_API_BASE}/api/cms/site-config/${encodeURIComponent(key)}`, { cache: "no-store" });
     if (!res.ok) return null;
     const data: ApiSiteConfig | null = await res.json();
     return (data?.value as T) ?? null;
@@ -600,7 +600,7 @@ export async function fetchStoreStatus(): Promise<{
   nextOpeningDay?: string;
 } | null> {
   try {
-    const res = await fetch(`${API_BASE}/api/settings/store-status`, { cache: "no-store" });
+    const res = await fetch(`${EFFECTIVE_API_BASE}/api/settings/store-status`, { cache: "no-store" });
     if (!res.ok) return null;
     return await res.json();
   } catch {
@@ -613,7 +613,7 @@ export async function fetchStoreStatus(): Promise<{
  */
 export async function fetchSettings(): Promise<any[]> {
   try {
-    const res = await fetch(`${API_BASE}/api/settings`, { cache: "no-store" });
+    const res = await fetch(`${EFFECTIVE_API_BASE}/api/settings`, { cache: "no-store" });
     if (!res.ok) return [];
     const data = await res.json();
     return Array.isArray(data) ? data : data?.data || [];

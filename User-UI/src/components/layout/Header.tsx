@@ -2,15 +2,14 @@ import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "wouter";
 import { inferPageContext, getScopedBrowsePath, getPageContextDisplayPath } from "@/lib/pageContext";
 import {
-  ShoppingBag, Heart, User, Sun, Moon, Globe, Menu, Mic, ChevronDown, LogOut, LayoutDashboard, X, Grid2x2,
+  ShoppingBag, Heart, User, Globe, Menu, Mic, ChevronDown, LogOut, LayoutDashboard, X, Grid2x2,
 } from "lucide-react";
 import { useCartStore } from "@/store/cartStore";
 import { useWishlistStore } from "@/store/wishlistStore";
-import { useThemeStore } from "@/store/themeStore";
 import { useSidebarStore } from "@/store/sidebarStore";
 import { useCurrencyStore } from "@/store/currencyStore";
 import { useAuthStore } from "@/store/authStore";
-import { API_BASE } from "@/lib/api";
+import { EFFECTIVE_API_BASE } from "@/lib/api";
 import Sidebar from "./Sidebar";
 import SearchAutocomplete from "./SearchAutocomplete";
 import AnnouncementBar from "./AnnouncementBar";
@@ -48,14 +47,14 @@ export default function Header() {
   const headerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    fetch(`${API_BASE}/api/cms/site-config/header`, { cache: "no-store" })
+    fetch(`${EFFECTIVE_API_BASE}/api/cms/site-config/header`, { cache: "no-store" })
       .then((r) => r.ok ? r.json() : null)
       .then((d) => { if (d?.value) setHeaderCfg(d.value); })
       .catch(() => {});
   }, []);
 
   useEffect(() => {
-    fetch(`${API_BASE}/api/categories/active`)
+    fetch(`${EFFECTIVE_API_BASE}/api/categories/active`)
       .then(r => r.ok ? r.json() : [])
       .then(data => setHeaderCategories(Array.isArray(data) ? data : (data.data ?? [])))
       .catch(() => {});
@@ -82,7 +81,6 @@ export default function Header() {
   const items = useCartStore((s) => s.items);
   const cartCount = items.reduce((t, i) => t + i.qty, 0);
   const wishlist = useWishlistStore((s) => s.items);
-  const { theme, toggleTheme } = useThemeStore();
 
   const { currencies, selected, setCurrency } = useCurrencyStore();
   const [currencyOpen, setCurrencyOpen] = useState(false);
@@ -143,7 +141,7 @@ export default function Header() {
             <div className="relative flex-shrink-0">
               <button
                 onClick={() => setCatMenuOpen(!catMenuOpen)}
-                className="flex items-center gap-2 px-3 py-2.5 bg-primary text-white rounded-xl text-sm font-medium hover:bg-primary/90 transition-colors lg:px-4"
+                className="flex items-center gap-2 px-3 py-2.5 bg-primary text-primary-foreground rounded-xl text-sm font-medium hover:bg-primary/90 transition-colors lg:px-4"
               >
                 <Menu className="w-4 h-4" />
                 All Categories
@@ -230,9 +228,6 @@ export default function Header() {
             <button className="flex items-center gap-1 px-2 py-2 rounded-xl hover:bg-muted transition-colors text-sm text-muted-foreground">
               <Globe className="w-4 h-4" /><span>EN</span><ChevronDown className="w-3 h-3" />
             </button>
-            <button onClick={toggleTheme} className="p-2 rounded-xl hover:bg-muted transition-colors" data-testid="theme-toggle">
-              {theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-            </button>
 
             {/* User menu */}
             <div className="relative">
@@ -242,7 +237,7 @@ export default function Header() {
                     onClick={() => { setUserMenuOpen(!userMenuOpen); setCurrencyOpen(false); }}
                     className="flex items-center gap-1.5 p-2 rounded-xl hover:bg-muted transition-colors"
                   >
-                    <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center text-white text-[10px] font-black">
+                    <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-[10px] font-black">
                       {user.firstName?.[0]?.toUpperCase() ?? "U"}
                     </div>
                     <ChevronDown className="w-3 h-3 text-muted-foreground" />
@@ -263,7 +258,7 @@ export default function Header() {
                         </Link>
                         <button
                           onClick={handleLogout}
-                          className="w-full flex items-center gap-3 px-4 py-3 hover:bg-destructive/10 dark:hover:bg-destructive/20 transition-colors text-destructive border-t border-border"
+                          className="w-full flex items-center gap-3 px-4 py-3 hover:bg-destructive/10 transition-colors text-destructive border-t border-border"
                         >
                           <LogOut className="w-4 h-4" />
                           <span className="text-sm font-medium">Logout</span>
@@ -285,7 +280,7 @@ export default function Header() {
               <button className="relative p-2 rounded-xl hover:bg-muted transition-colors">
                 <Heart className="w-5 h-5" />
                 {wishlist.length > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 bg-primary text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+                  <span className="absolute -top-0.5 -right-0.5 bg-primary text-primary-foreground text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
                     {wishlist.length > 9 ? "9+" : wishlist.length}
                   </span>
                 )}
@@ -295,7 +290,7 @@ export default function Header() {
               <button className="relative p-2 rounded-xl hover:bg-muted transition-colors" data-testid="cart-icon">
                 <ShoppingBag className="w-5 h-5" />
                 {cartCount > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 bg-primary text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+                  <span className="absolute -top-0.5 -right-0.5 bg-primary text-primary-foreground text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
                     {cartCount > 9 ? "9+" : cartCount}
                   </span>
                 )}
@@ -322,7 +317,7 @@ export default function Header() {
               <button className="relative p-1.5 rounded-xl hover:bg-muted transition-colors">
                 <Heart className="w-5 h-5" />
                 {wishlist.length > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 bg-primary text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+                  <span className="absolute -top-0.5 -right-0.5 bg-primary text-primary-foreground text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
                     {wishlist.length > 9 ? "9+" : wishlist.length}
                   </span>
                 )}
@@ -332,7 +327,7 @@ export default function Header() {
               <button className="relative p-1.5 rounded-xl hover:bg-muted transition-colors">
                 <ShoppingBag className="w-5 h-5" />
                 {cartCount > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 bg-primary text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+                  <span className="absolute -top-0.5 -right-0.5 bg-primary text-primary-foreground text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
                     {cartCount > 9 ? "9+" : cartCount}
                   </span>
                 )}

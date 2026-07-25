@@ -203,12 +203,12 @@ export default function ProductPage() {
 
   if (error) return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-background p-6 text-center">
-      <div className="w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/20 flex items-center justify-center mb-4">
+      <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mb-4">
         <span className="text-2xl">⚠️</span>
       </div>
       <h1 className="text-xl font-bold mb-2 text-foreground">Something went wrong</h1>
       <p className="text-muted-foreground mb-2">{error}</p>
-      <button onClick={() => window.location.reload()} className="bg-primary text-white px-8 py-3 rounded-2xl font-bold mt-4">
+      <button onClick={() => window.location.reload()} className="bg-primary text-primary-foreground px-8 py-3 rounded-2xl font-bold mt-4">
         Try Again
       </button>
     </div>
@@ -221,7 +221,7 @@ export default function ProductPage() {
       <p className="text-muted-foreground mb-6">The product you're looking for doesn't exist or has been removed.</p>
       <button 
         onClick={() => window.history.back()} 
-        className="bg-primary text-white px-8 py-3 rounded-2xl font-bold"
+        className="bg-primary text-primary-foreground px-8 py-3 rounded-2xl font-bold"
       >
         Go Back
       </button>
@@ -323,7 +323,7 @@ export default function ProductPage() {
           <img
             src={activeImg}
             alt={product.name}
-            className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal transition-opacity duration-300"
+            className="w-full h-full object-contain mix-blend-multiply transition-opacity duration-300"
             draggable={false}
           />
           {product.discount > 0 && (
@@ -351,7 +351,7 @@ export default function ProductPage() {
             {images.map((img, i) => (
               <button key={i} onClick={() => goToSlide(i)}
                 className={`flex-shrink-0 w-20 h-20 rounded-2xl border-2 overflow-hidden transition-all bg-muted ${activeIndex === i ? "border-primary shadow-md scale-95" : "border-transparent"}`}>
-                <img src={img} alt="" className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal" />
+                <img src={img} alt="" className="w-full h-full object-contain mix-blend-multiply" />
               </button>
             ))}
           </div>
@@ -409,7 +409,7 @@ export default function ProductPage() {
           <div className="bg-primary/5 border border-primary/10 p-4 rounded-2xl space-y-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center flex-shrink-0 shadow-sm">
-                <CreditCard className="w-5 h-5 text-white" />
+                <CreditCard className="w-5 h-5 text-primary-foreground" />
               </div>
               <div>
                 <p className="text-[10px] font-black text-primary uppercase tracking-wider">Payment Breakdown</p>
@@ -513,7 +513,7 @@ export default function ProductPage() {
             <>
               {/* Buy It Now — solid primary */}
               <button onClick={handleAction} disabled={product.stock === 0 || (product.isWholesaleOnly && qty < (product.wholesaleMoq || 1))}
-                className="w-full py-3.5 bg-primary text-white rounded-full font-bold text-sm hover:bg-primary/90 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2">
+                className="w-full py-3.5 bg-primary text-primary-foreground rounded-full font-bold text-sm hover:bg-primary/90 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2">
                 {product.allowCredit ? (
                   <><CreditCard className="w-4 h-4" /> Apply for Credit</>
                 ) : product.isWholesaleOnly ? (

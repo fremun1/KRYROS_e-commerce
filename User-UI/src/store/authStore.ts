@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { API_BASE } from '@/lib/api';
+import { EFFECTIVE_API_BASE } from '@/lib/api';
 import { initFirebase, requestNotificationPermission } from '@/lib/firebase';
 
 let messagingInstance: Awaited<ReturnType<typeof initFirebase>>['messaging'] | null = null;
@@ -20,7 +20,7 @@ function normalizeIdentifier(value: string) {
 async function registerFcmToken(authToken: string | null, fcmToken: string | null) {
   if (!fcmToken) return;
   try {
-    const endpoint = authToken ? `${API_BASE}/api/notifications/token` : `${API_BASE}/api/notifications/token/public`;
+    const endpoint = authToken ? `${EFFECTIVE_API_BASE}/api/notifications/token` : `${EFFECTIVE_API_BASE}/api/notifications/token/public`;
     const headers: Record<string, string> = { 'Content-Type': 'application/json' };
     if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
 
@@ -94,7 +94,7 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoading: true, error: null });
         try {
           const normalizedIdentifier = normalizeIdentifier(identifier);
-          const res = await fetch(`${API_BASE}/api/auth/login`, {
+          const res = await fetch(`${EFFECTIVE_API_BASE}/api/auth/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ identifier: normalizedIdentifier, password, ...(captchaToken ? { captchaToken } : {}) }),
@@ -129,7 +129,7 @@ export const useAuthStore = create<AuthState>()(
         try {
           const identifier = normalizeIdentifier(data.identifier || "");
           const isEmail = identifier.includes("@");
-          const res = await fetch(`${API_BASE}/api/auth/register`, {
+          const res = await fetch(`${EFFECTIVE_API_BASE}/api/auth/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -162,7 +162,7 @@ export const useAuthStore = create<AuthState>()(
         const { token, refreshToken } = get();
         if (token) {
           try {
-            await fetch(`${API_BASE}/api/auth/logout`, {
+            await fetch(`${EFFECTIVE_API_BASE}/api/auth/logout`, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -181,12 +181,12 @@ export const useAuthStore = create<AuthState>()(
         const { token, refreshToken } = get();
         if (!token) return;
         try {
-          const res = await fetch(`${API_BASE}/api/auth/me`, {
+          const res = await fetch(`${EFFECTIVE_API_BASE}/api/auth/me`, {
             headers: { Authorization: `Bearer ${token}` },
           });
           if (res.status === 401 && refreshToken) {
             try {
-              const refreshRes = await fetch(`${API_BASE}/api/auth/refresh`, {
+              const refreshRes = await fetch(`${EFFECTIVE_API_BASE}/api/auth/refresh`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ refreshToken }),
@@ -194,7 +194,7 @@ export const useAuthStore = create<AuthState>()(
               if (refreshRes.ok) {
                 const { accessToken: newAccess, refreshToken: newRefresh } = await refreshRes.json();
                 set({ token: newAccess, refreshToken: newRefresh });
-                const retryRes = await fetch(`${API_BASE}/api/auth/me`, {
+                const retryRes = await fetch(`${EFFECTIVE_API_BASE}/api/auth/me`, {
                   headers: { Authorization: `Bearer ${newAccess}` },
                 });
                 if (retryRes.ok) {

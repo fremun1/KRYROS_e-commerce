@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import { useCurrencyStore } from "@/store/currencyStore";
-import { API_BASE } from "@/lib/api";
+import { EFFECTIVE_API_BASE } from "@/lib/api";
 
 interface CreditPlan {
   id: string;
@@ -70,8 +70,8 @@ export default function ApplyCreditPage() {
     try {
       // Fetch credit plans, optionally filtered by productId
       const plansUrl = productId 
-        ? `${API_BASE}/api/credit/plans?productId=${encodeURIComponent(productId)}`
-        : `${API_BASE}/api/credit/plans`;
+        ? `${EFFECTIVE_API_BASE}/api/credit/plans?productId=${encodeURIComponent(productId)}`
+        : `${EFFECTIVE_API_BASE}/api/credit/plans`;
       const res = await fetch(plansUrl);
       if (res.ok) {
         const data = await res.json();
@@ -80,7 +80,7 @@ export default function ApplyCreditPage() {
 
         // If we have a productId, try to set the default amount
         if (productId) {
-          const prodRes = await fetch(`${API_BASE}/api/products/${productId}`);
+          const prodRes = await fetch(`${EFFECTIVE_API_BASE}/api/products/${productId}`);
           if (prodRes.ok) {
             const prodData = await prodRes.json();
             if (prodData.price) {
@@ -112,7 +112,7 @@ export default function ApplyCreditPage() {
       const searchParams = new URLSearchParams(window.location.search);
       const productId = searchParams.get("productId");
       
-      const res = await fetch(`${API_BASE}/api/credit/apply`, {
+      const res = await fetch(`${EFFECTIVE_API_BASE}/api/credit/apply`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

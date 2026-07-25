@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { API_BASE } from '@/lib/api';
+import { EFFECTIVE_API_BASE } from '@/lib/api';
 
 export interface Currency {
   id: string;
@@ -92,7 +92,7 @@ export const useCurrencyStore = create<CurrencyState>()(
       fetchCurrencies: async () => {
         set({ isLoading: true });
         try {
-          const res = await fetch(`${API_BASE}/api/countries`);
+          const res = await fetch(`${EFFECTIVE_API_BASE}/api/countries`);
           if (!res.ok) throw new Error('fetch failed');
           const raw = await res.json();
           const list: any[] = Array.isArray(raw) ? raw : (raw.data ?? []);
@@ -118,14 +118,14 @@ export const useCurrencyStore = create<CurrencyState>()(
         set({ isLoading: true });
         try {
           // First, fetch all available currencies
-          const currenciesRes = await fetch(`${API_BASE}/api/countries`);
+          const currenciesRes = await fetch(`${EFFECTIVE_API_BASE}/api/countries`);
           if (!currenciesRes.ok) throw new Error('Failed to fetch currencies');
           const raw = await currenciesRes.json();
           const list: any[] = Array.isArray(raw) ? raw : (raw.data ?? []);
           const currencies = buildCurrencies(list);
 
           // Then, detect user's location and get the appropriate currency
-          const geoRes = await fetch(`${API_BASE}/api/countries/detect/by-ip`);
+          const geoRes = await fetch(`${EFFECTIVE_API_BASE}/api/countries/detect/by-ip`);
           if (!geoRes.ok) throw new Error('Failed to detect location');
           const geoData = await geoRes.json();
 
@@ -159,7 +159,7 @@ export const useCurrencyStore = create<CurrencyState>()(
         } catch (error) {
           // If geolocation fails, fall back to regular currency fetch
           try {
-            const res = await fetch(`${API_BASE}/api/countries`);
+            const res = await fetch(`${EFFECTIVE_API_BASE}/api/countries`);
             if (!res.ok) throw new Error('fetch failed');
             const raw = await res.json();
             const list: any[] = Array.isArray(raw) ? raw : (raw.data ?? []);

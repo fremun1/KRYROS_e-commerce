@@ -4,12 +4,11 @@ import { inferPageContext, getScopedBrowsePath } from "@/lib/pageContext";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X, Home, ShoppingBag, Zap, Package, MapPin, Truck, Info, Phone, Shield, FileText, RefreshCw,
-  ChevronRight, Search, Grid2x2, Globe, Moon, Sun, DollarSign, ChevronDown, LogOut, User, Heart, LayoutDashboard
+  ChevronRight, Search, Grid2x2, Globe, DollarSign, ChevronDown, LogOut, User, Heart, LayoutDashboard
 } from "lucide-react";
-import { useThemeStore } from "@/store/themeStore";
 import { useCurrencyStore } from "@/store/currencyStore";
 import { useAuthStore } from "@/store/authStore";
-import { API_BASE } from "@/lib/api";
+import { EFFECTIVE_API_BASE } from "@/lib/api";
 
 const menuItems = [
   { label: "Home", icon: Home, href: "/" },
@@ -64,7 +63,6 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
   const [currencyOpen, setCurrencyOpen] = useState(false);
   const [location, setLocation] = useLocation();
   const pageContext = inferPageContext(location);
-  const { theme, toggleTheme } = useThemeStore();
 
   const { currencies, selected, setCurrency, fetchCurrencies } = useCurrencyStore();
   const { user, token, logout } = useAuthStore();
@@ -79,7 +77,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
 
     if (categories.length === 0) {
       setCatsLoading(true);
-      fetch(`${API_BASE}/api/categories/active`)
+      fetch(`${EFFECTIVE_API_BASE}/api/categories/active`)
         .then((r) => {
           if (!r.ok) throw new Error("Failed");
           return r.json();
@@ -90,7 +88,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
           setCatsLoading(false);
         })
         .catch(() => {
-          fetch(`${API_BASE}/api/categories/homepage`)
+          fetch(`${EFFECTIVE_API_BASE}/api/categories/homepage`)
             .then((r) => r.json())
             .then((data) => {
               const list: ApiCategory[] = Array.isArray(data) ? data : (data.data ?? []);
@@ -102,7 +100,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
     }
 
     if (brands.length === 0) {
-      fetch(`${API_BASE}/api/brands`)
+      fetch(`${EFFECTIVE_API_BASE}/api/brands`)
         .then((r) => r.json())
         .then((data) => {
           const list: ApiBrand[] = Array.isArray(data) ? data : (data.data ?? []);
@@ -431,16 +429,6 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                                 ))}
                               </div>
                             )}
-                          </div>
-                          {/* Theme */}
-                          <div className="flex items-center justify-between px-10 py-3 hover:bg-muted transition-colors cursor-pointer" onClick={toggleTheme}>
-                            <div className="flex items-center gap-3 text-foreground">
-                              {theme === "dark" ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
-                              <span className="text-sm font-medium">Theme</span>
-                            </div>
-                            <div className={`w-9 h-5 rounded-full transition-all duration-300 relative ${theme === "dark" ? "bg-primary" : "bg-muted-foreground/30"}`}>
-                              <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-all duration-300 ${theme === "dark" ? "left-[18px]" : "left-0.5"}`} />
-                            </div>
                           </div>
                         </div>
                       </motion.div>

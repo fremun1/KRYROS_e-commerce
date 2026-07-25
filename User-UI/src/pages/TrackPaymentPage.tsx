@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useRoute, Link } from "wouter";
 import { CheckCircle, Loader2, CreditCard, Calendar, Hash, Info, Lock, ChevronLeft, Download, AlertCircle, Clock, Smartphone, Building2 } from "lucide-react";
-import { API_BASE } from "@/lib/api";
+import { EFFECTIVE_API_BASE } from "@/lib/api";
 
 const statusColors: Record<string, string> = {
   "PENDING": "bg-yellow-500/10 text-yellow-600 border-yellow-500/20",
@@ -27,7 +27,7 @@ export default function TrackPaymentPage() {
   const [error, setError] = useState<string | null>(null);
 
   const fetchPaymentStatus = async (identifier: string) => {
-    const res = await fetch(`${API_BASE}/api/payments/direct-status/${identifier}`);
+    const res = await fetch(`${EFFECTIVE_API_BASE}/api/payments/direct-status/${identifier}`);
     const raw = await res.text();
     let data: any = null;
 

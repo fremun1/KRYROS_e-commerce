@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Mail, Lock, User, Eye, EyeOff } from "lucide-react";
 import { useLocation } from "wouter";
 import { useAuthStore } from "@/store/authStore";
-import { API_BASE } from "@/lib/api";
+import { EFFECTIVE_API_BASE } from "@/lib/api";
 
 interface AuthPageProps {
   initialTab?: "login" | "register" | "forgot";
@@ -162,7 +162,7 @@ export default function AuthPage({ initialTab = "login" }: AuthPageProps) {
     // Step 1: request reset token email/SMS
     if (forgotStep === 1) {
       try {
-        const res = await fetch(`${API_BASE}/api/auth/forgot-password`, {
+        const res = await fetch(`${EFFECTIVE_API_BASE}/api/auth/forgot-password`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ identifier: normalizeIdentifier(forgotIdentifier) }),
@@ -184,7 +184,7 @@ export default function AuthPage({ initialTab = "login" }: AuthPageProps) {
 
     // Step 2: reset password using token
     try {
-      const res = await fetch(`${API_BASE}/api/auth/reset-password`, {
+      const res = await fetch(`${EFFECTIVE_API_BASE}/api/auth/reset-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token: resetToken.trim(), newPassword: resetPassword }),
@@ -218,7 +218,7 @@ export default function AuthPage({ initialTab = "login" }: AuthPageProps) {
     <button
       type="submit"
       disabled={isLoading}
-      className="w-full h-[44px] border-none rounded-[10px] bg-primary text-white text-[14px] font-semibold transition-opacity transition-transform active:scale-95 letter-spacing-[0.01em] disabled:cursor-not-allowed disabled:opacity-70"
+      className="w-full h-[44px] border-none rounded-[10px] bg-primary text-primary-foreground text-[14px] font-semibold transition-opacity transition-transform active:scale-95 letter-spacing-[0.01em] disabled:cursor-not-allowed disabled:opacity-70"
     >
       {isLoading ? loadingLabel : label}
     </button>

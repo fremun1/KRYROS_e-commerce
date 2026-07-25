@@ -51,13 +51,13 @@ export default function MobileBottomNav() {
             className="absolute top-0 left-1/2 -translate-x-1/2 w-[68px] h-[68px] rounded-full pointer-events-none z-10"
             style={{
               background:
-                "radial-gradient(circle, rgba(39,185,175,0.30) 0%, rgba(39,185,175,0.12) 50%, transparent 72%)",
+                "radial-gradient(circle, rgba(192,21,27,0.30) 0%, rgba(192,21,27,0.12) 50%, transparent 72%)",
             }}
           />
 
           {/* Rectangular bar with gently rounded corners */}
           <div
-            className="absolute bottom-0 left-0 right-0 h-[54px] bg-card rounded-[16px] shadow-lg flex items-stretch z-0 overflow-visible dark:shadow-xl dark:shadow-black/20"
+            className="absolute bottom-0 left-0 right-0 h-[54px] bg-card rounded-[16px] shadow-lg flex items-stretch z-0 overflow-visible"
           >
             {/* Home */}
             <Link
@@ -157,7 +157,7 @@ export default function MobileBottomNav() {
             href="/pay"
             className="absolute top-[14px] left-1/2 -translate-x-1/2 w-10 h-10 rounded-full bg-primary flex items-center justify-center shadow-lg z-20 no-underline"
             style={{
-              boxShadow: "0 4px 14px rgba(39,185,175,0.45), 0 2px 6px rgba(39,185,175,0.25)",
+              boxShadow: "0 4px 14px rgba(192,21,27,0.45), 0 2px 6px rgba(192,21,27,0.25)",
             }}
           >
             <CreditCard strokeWidth={2} width={20} height={20} color="#fff" />

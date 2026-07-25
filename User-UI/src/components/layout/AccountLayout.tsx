@@ -190,7 +190,7 @@ export default function AccountLayout({ children, showTopBar = true }: AccountLa
                 </Link>
                 <button
                   onClick={handleLogout}
-                  className="p-1.5 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/20 text-muted-foreground hover:text-red-500 transition-colors"
+                  className="p-1.5 rounded-lg hover:bg-red-100 text-muted-foreground hover:text-red-500 transition-colors"
                   title="Logout"
                 >
                   <LogOut className="w-4 h-4" />

@@ -3,7 +3,7 @@ import { Link, useLocation } from "wouter";
 import { useCartStore } from "@/store/cartStore";
 import { useAuthStore } from "@/store/authStore";
 import { useCurrencyStore } from "@/store/currencyStore";
-import { API_BASE, fetchSettings } from "@/lib/api";
+import { EFFECTIVE_API_BASE, fetchSettings } from "@/lib/api";
 import { formatDeliveryDuration, formatDeliveryWindow, resolveDeliveryWindowFromItems } from "@/lib/delivery";
 import { toast } from "sonner";
 import {
@@ -122,15 +122,15 @@ function MethodIcon({ method }: { method: PaymentConfigMethod }) {
     );
   }
 
-  if (method.type === "card") return <CreditCard className="w-4 h-4 text-blue-600" />;
-  if (method.type === "bank") return <Building2 className="w-4 h-4 text-slate-600" />;
+  if (method.type === "card") return <CreditCard className="w-4 h-4 text-primary" />;
+  if (method.type === "bank") return <Building2 className="w-4 h-4 text-muted-foreground" />;
   return <Smartphone className="w-4 h-4 text-primary" />;
 }
 
 function getMethodIconBg(method: PaymentConfigMethod) {
-  if (isWhatsAppMethod(method)) return "bg-green-50";
-  if (method.type === "card") return "bg-blue-50";
-  if (method.type === "bank") return "bg-slate-50";
+  if (isWhatsAppMethod(method)) return "bg-primary/10";
+  if (method.type === "card") return "bg-primary/10";
+  if (method.type === "bank") return "bg-muted";
   return "bg-primary/10";
 }
 
@@ -265,7 +265,7 @@ export default function CheckoutPage() {
     : "#—";
 
   useEffect(() => {
-    fetch(`${API_BASE}/api/countries`).then(r => r.json()).then(data => {
+    fetch(`${EFFECTIVE_API_BASE}/api/countries`).then(r => r.json()).then(data => {
       const raw = Array.isArray(data?.data) ? data.data : data;
       const mapped = raw.map((c: any) => ({ name: c.name, code: c.code, shippingEnabled: c.shippingEnabled !== false, isActive: c.isActive !== false }));
       setShippingCountries(mapped);
@@ -273,7 +273,7 @@ export default function CheckoutPage() {
       if (def && !country) setCountry(def.name);
     }).catch(() => setShippingCountries([{ name: 'Zambia', code: 'ZM', shippingEnabled: true, isActive: true }]));
 
-    fetch(`${API_BASE}/api/pickup-stations?active=true`).then(r => r.json()).then(data => {
+    fetch(`${EFFECTIVE_API_BASE}/api/pickup-stations?active=true`).then(r => r.json()).then(data => {
       const list = Array.isArray(data) ? data : (data?.data ?? []);
       setPickupStations(list.filter((s: any) => s.isActive !== false).map(normalizePickupStation));
     }).catch(() => {});
@@ -291,7 +291,7 @@ export default function CheckoutPage() {
   // We prioritize the country associated with the selected currency, falling back to detected country.
   useEffect(() => {
     const countryParam = effectivePaymentCountryCode ? `?countryCode=${effectivePaymentCountryCode}` : '';
-    fetch(`${API_BASE}/api/payment-config/public${countryParam}`).then(r => r.json()).then(data => {
+    fetch(`${EFFECTIVE_API_BASE}/api/payment-config/public${countryParam}`).then(r => r.json()).then(data => {
       const arr = (Array.isArray(data) ? data : data?.data ?? []) as PaymentConfigMethod[];
       const methods = arr.filter((method) => method?.isEnabled !== false);
       setActiveMethods(methods);
@@ -434,7 +434,7 @@ export default function CheckoutPage() {
     setIsSubmitting(true); setOrderError(null);
     try {
       const headers = { "Content-Type": "application/json", ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}) };
-      const res = await fetch(`${API_BASE}/api/orders`, { method: "POST", headers, body: JSON.stringify(buildOrderPayload("MOBILE_MONEY")) });
+      const res = await fetch(`${EFFECTIVE_API_BASE}/api/orders`, { method: "POST", headers, body: JSON.stringify(buildOrderPayload("MOBILE_MONEY")) });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Failed to place order");
       
@@ -444,7 +444,7 @@ export default function CheckoutPage() {
       setMmPhase("initializing");
       
       const phoneWithDialCode = `${dialCode}${mmPhone}`;
-      const initRes = await fetch(`${API_BASE}/api/payments/initialize`, { method: "POST", headers, body: JSON.stringify({ orderId, phone: phoneWithDialCode, countryCode: effectivePaymentCountryCode, amount: Math.round(calculateGatewayTotal() * 100) / 100 }) });
+      const initRes = await fetch(`${EFFECTIVE_API_BASE}/api/payments/initialize`, { method: "POST", headers, body: JSON.stringify({ orderId, phone: phoneWithDialCode, countryCode: effectivePaymentCountryCode, amount: Math.round(calculateGatewayTotal() * 100) / 100 }) });
       const initData = await initRes.json().catch(() => null);
       if (!initRes.ok) throw new Error(initData?.message || "Payment init failed");
       if (initData?.success === false || String(initData?.status || "").toLowerCase() === "failed") {
@@ -463,7 +463,7 @@ export default function CheckoutPage() {
     pollRef.current = setInterval(async () => {
       if (++attempts > 36) { clearInterval(pollRef.current!); setMmPhase("timed_out"); return; }
       try {
-        const r = await fetch(`${API_BASE}/api/payments/status/${orderId}`, { headers });
+        const r = await fetch(`${EFFECTIVE_API_BASE}/api/payments/status/${orderId}`, { headers });
         const d = await r.json();
         if (d.status?.toLowerCase() === "paid") {
           clearInterval(pollRef.current!); setPlacedOrderNumber(orderNum); clearCart(); setOrdered(true); setMmPhase("idle");
@@ -482,7 +482,7 @@ export default function CheckoutPage() {
     try {
       const headers = { "Content-Type": "application/json", ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}) };
       
-      const res = await fetch(`${API_BASE}/api/orders`, { method: "POST", headers, body: JSON.stringify(buildOrderPayload(getBackendPaymentMethod(openMethod))) });
+      const res = await fetch(`${EFFECTIVE_API_BASE}/api/orders`, { method: "POST", headers, body: JSON.stringify(buildOrderPayload(getBackendPaymentMethod(openMethod))) });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Failed");
       

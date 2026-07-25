@@ -216,7 +216,7 @@ export default function CartPage() {
 
             <Link href="/checkout">
               {/* lg: slightly taller checkout button */}
-              <button className="w-full py-3.5 bg-primary text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-primary/90 transition-all active:scale-95 lg:py-4 lg:text-base">
+              <button className="w-full py-3.5 bg-primary text-primary-foreground rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-primary/90 transition-all active:scale-95 lg:py-4 lg:text-base">
                 Proceed to Checkout
                 <ArrowRight className="w-4 h-4" />
               </button>

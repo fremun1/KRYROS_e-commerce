@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import { useCurrencyStore } from "@/store/currencyStore";
-import { API_BASE } from "@/lib/api";
+import { EFFECTIVE_API_BASE } from "@/lib/api";
 import { formatDeliveryWindow, resolveDeliveryWindowFromItems } from "@/lib/delivery";
 
 const footerLinks = [
@@ -162,7 +162,7 @@ export default function DashboardPage() {
   useEffect(() => {
     if (!token) return;
     setOrdersLoading(true);
-    fetch(`${API_BASE}/api/orders/my-orders`, {
+    fetch(`${EFFECTIVE_API_BASE}/api/orders/my-orders`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((r) => r.json())
@@ -199,7 +199,7 @@ export default function DashboardPage() {
   useEffect(() => {
     if (!token) return;
     setWishlistLoading(true);
-    fetch(`${API_BASE}/api/wishlist`, {
+    fetch(`${EFFECTIVE_API_BASE}/api/wishlist`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((r) => r.json())
@@ -214,7 +214,7 @@ export default function DashboardPage() {
   useEffect(() => {
     if (!token) return;
     setProfileLoading(true);
-    fetch(`${API_BASE}/api/users/profile`, {
+    fetch(`${EFFECTIVE_API_BASE}/api/users/profile`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((r) => r.json())
@@ -240,7 +240,7 @@ export default function DashboardPage() {
     setEditSaving(true);
     setEditError("");
     try {
-      const res = await fetch(`${API_BASE}/api/users/${user.id}`, {
+      const res = await fetch(`${EFFECTIVE_API_BASE}/api/users/${user.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify(editForm),
@@ -490,7 +490,7 @@ export default function DashboardPage() {
           </Link>
           <button
             onClick={handleLogout}
-            className="flex items-center gap-1.5 px-4 py-2 border border-red-200 dark:border-red-900/30 rounded-xl text-xs font-semibold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+            className="flex items-center gap-1.5 px-4 py-2 border border-destructive/20 rounded-xl text-xs font-semibold text-destructive hover:bg-destructive/10 transition-colors"
           >
             <LogOut className="w-3.5 h-3.5" /> Sign Out
           </button>
@@ -507,7 +507,7 @@ export default function DashboardPage() {
           <p className="text-sm text-muted-foreground">Manage your installment payments</p>
         </div>
         <Link href="/apply-credit">
-          <button className="flex items-center gap-1.5 px-4 py-2 bg-primary text-white rounded-xl text-xs font-bold hover:bg-primary/90 transition-colors">
+          <button className="flex items-center gap-1.5 px-4 py-2 bg-primary text-primary-foreground rounded-xl text-xs font-bold hover:bg-primary/90 transition-colors">
             <Plus className="w-3.5 h-3.5" /> Apply for Credit
           </button>
         </Link>
@@ -819,7 +819,7 @@ export default function DashboardPage() {
                 <span className="hidden md:block text-sm font-semibold text-foreground max-w-[100px] truncate">{displayName}</span>
                 <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
               </button>
-              <button onClick={handleLogout} className="p-1.5 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/20 text-muted-foreground hover:text-red-500 transition-colors" title="Logout">
+              <button onClick={handleLogout} className="p-1.5 rounded-lg hover:bg-red-100 text-muted-foreground hover:text-red-500 transition-colors" title="Logout">
                 <LogOut className="w-4 h-4" />
               </button>
             </div>

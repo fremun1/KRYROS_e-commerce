@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { Link } from "wouter";
-import { api, API_BASE } from "@/lib/api";
+import { api, EFFECTIVE_API_BASE } from "@/lib/api";
 
 interface AnnouncementBarProps {
   text?: string;
@@ -54,7 +54,7 @@ export default function AnnouncementBar({
       } catch {
         // Fallback: try legacy site-config endpoint
         try {
-          const res = await fetch(`${API_BASE}/api/cms/site-config/header`, { cache: "no-store" });
+          const res = await fetch(`${EFFECTIVE_API_BASE}/api/cms/site-config/header`, { cache: "no-store" });
           if (res.ok) {
             const d = await res.json();
             if (d?.value?.announcementEnabled && d.value?.announcementText) {

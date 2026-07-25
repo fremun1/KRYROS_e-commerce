@@ -133,18 +133,18 @@ export default function PwaInstallPrompt() {
 
   return (
     <div className="fixed inset-x-3 top-3 z-[9997] sm:left-1/2 sm:right-auto sm:w-[min(32rem,calc(100vw-1.5rem))] sm:-translate-x-1/2">
-      <div className="overflow-hidden rounded-[1.75rem] border border-black/5 bg-white/95 shadow-[0_10px_30px_rgba(15,23,42,0.14)] backdrop-blur-md">
+      <div className="overflow-hidden rounded-[1.75rem] border border-border bg-card/95 shadow-lg backdrop-blur-md">
         <div className="flex items-center gap-3 px-4 py-3.5">
           <img
             src="/apple-touch-icon.png"
             alt="KRYROS app icon"
-            className="h-14 w-14 flex-shrink-0 rounded-[1.15rem] border border-black/5 bg-white object-cover shadow-sm"
+            className="h-14 w-14 flex-shrink-0 rounded-[1.15rem] border border-border bg-card object-cover shadow-sm"
           />
           <div className="min-w-0 flex-1">
-            <p className="truncate text-[1.35rem] leading-none font-medium tracking-[-0.03em] text-slate-900">
+            <p className="truncate text-[1.35rem] leading-none font-medium tracking-[-0.03em] text-foreground">
               Install KRYROS
             </p>
-            <p className="mt-1 truncate text-[1rem] leading-none text-slate-500">
+            <p className="mt-1 truncate text-[1rem] leading-none text-muted-foreground">
               {siteHost}
             </p>
           </div>
@@ -152,7 +152,7 @@ export default function PwaInstallPrompt() {
             type="button"
             onClick={handleInstall}
             disabled={installing}
-            className="shrink-0 rounded-full px-3 py-2 text-sm font-semibold text-[#2a6ca8] transition-colors hover:bg-[#2a6ca8]/10 hover:text-[#1f598c] disabled:opacity-70"
+            className="shrink-0 rounded-full px-3 py-2 text-sm font-semibold text-primary transition-colors hover:bg-primary/10 hover:text-primary/80 disabled:opacity-70"
           >
             {installing ? "Opening..." : "Install"}
           </button>

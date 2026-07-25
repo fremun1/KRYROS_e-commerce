@@ -23,7 +23,7 @@ const bannerFrameClassName =
   "mx-auto w-full max-w-[1440px] px-1.5 pt-2 sm:px-4 sm:pt-3 md:px-6";
 
 const bannerShellClassName =
-  "relative overflow-hidden rounded-[8px] border border-slate-200/70 bg-white shadow-[0_18px_45px_-30px_rgba(15,23,42,0.5)] ring-1 ring-black/5 sm:rounded-[10px]";
+  "relative overflow-hidden rounded-[8px] border border-border bg-card shadow-lg ring-1 ring-border/50 sm:rounded-[10px]";
 
 const bannerMediaClassName =
   "w-full h-[180px] object-cover pointer-events-none sm:h-[250px] md:h-[380px] lg:h-[480px] xl:h-[540px]";
