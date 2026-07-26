@@ -182,12 +182,12 @@ function ReceiptScreen({ receipt, onClose }: { receipt: ReceiptData; onClose: ()
       <div className="w-full max-w-sm space-y-4">
         <div ref={receiptRef} className="bg-card rounded-3xl overflow-hidden shadow-xl border border-card-border">
           <div className="px-6 pt-8 pb-6 text-center border-b border-card-border">
-            <div className="w-16 h-16 rounded-full bg-green-500 flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 rounded-full bg-kryros-success flex items-center justify-center mx-auto mb-4">
               <Check className="w-8 h-8 text-white" strokeWidth={3} />
             </div>
             <h2 className="text-xl font-bold text-foreground mb-1.5">Transaction Successful</h2>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              <span className="text-red-500 font-bold">{receipt.currency} {receipt.amount.toFixed(2)}</span>
+              <span className="text-kryros-error font-bold">{receipt.currency} {receipt.amount.toFixed(2)}</span>
               {" "}has been successfully sent to<br />KRYROS MOBILE TECH LIMITED ({receipt.recipientNumber}).
             </p>
           </div>

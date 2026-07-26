@@ -209,7 +209,7 @@ export default function CartPage() {
             {/* Promo code */}
             <div className="flex gap-2 mb-5">
               <input type="text" placeholder="Promo code" className="flex-1 px-3 py-2.5 bg-muted border border-border rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary/30" />
-              <button className="px-4 py-2.5 bg-foreground text-background rounded-xl text-sm font-semibold hover:opacity-90 transition-opacity flex-shrink-0">
+              <button className="px-4 py-2.5 bg-primary text-primary-foreground rounded-xl text-sm font-semibold hover:opacity-90 transition-opacity flex-shrink-0">
                 Apply
               </button>
             </div>

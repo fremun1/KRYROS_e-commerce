@@ -231,9 +231,9 @@ export default function ProductShelf({
                     Ends in:
                   </span>
                   <div className={`flex items-center gap-1 font-bold ${headerBgColor ? 'text-white' : 'text-primary'}`}>
-                    <span className="text-sm bg-black/10 px-1.5 py-0.5 rounded">{fmt(timeLeft.hours)}h</span>
-                    <span className="text-sm bg-black/10 px-1.5 py-0.5 rounded">{fmt(timeLeft.minutes)}m</span>
-                    <span className="text-sm bg-black/10 px-1.5 py-0.5 rounded">{fmt(timeLeft.seconds)}s</span>
+                    <span className="text-sm bg-kryros-primary/10 px-1.5 py-0.5 rounded">{fmt(timeLeft.hours)}h</span>
+                    <span className="text-sm bg-kryros-primary/10 px-1.5 py-0.5 rounded">{fmt(timeLeft.minutes)}m</span>
+                    <span className="text-sm bg-kryros-primary/10 px-1.5 py-0.5 rounded">{fmt(timeLeft.seconds)}s</span>
                   </div>
                 </div>
               )}

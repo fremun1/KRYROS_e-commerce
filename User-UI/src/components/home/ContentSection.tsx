@@ -43,7 +43,7 @@ export default function ContentSection({
           {backgroundImage && (
             <img src={backgroundImage} alt="" className="absolute inset-0 w-full h-full object-cover" />
           )}
-          <div className="absolute inset-0 bg-black/50" />
+          <div className="absolute inset-0 bg-kryros-overlay-dark/50" />
           <div className="relative z-10 text-white">
             <h1 className="text-3xl font-black mb-2">{title || 'Welcome'}</h1>
             {subtitle && <p className="text-lg opacity-90">{subtitle}</p>}

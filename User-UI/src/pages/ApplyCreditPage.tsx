@@ -178,8 +178,8 @@ export default function ApplyCreditPage() {
       <div className="max-w-2xl mx-auto px-4 md:px-6 py-6">
         {submitSuccess ? (
           <div className="text-center py-12">
-            <div className="w-16 h-16 rounded-full bg-green-500/10 flex items-center justify-center mx-auto mb-4">
-              <Check className="w-8 h-8 text-green-500" />
+            <div className="w-16 h-16 rounded-full bg-kryros-success/10 flex items-center justify-center mx-auto mb-4">
+              <Check className="w-8 h-8 text-kryros-success" />
             </div>
             <h2 className="text-2xl font-black text-foreground mb-2">Application Submitted!</h2>
             <p className="text-sm text-muted-foreground mb-6">
@@ -225,11 +225,11 @@ export default function ApplyCreditPage() {
             </div>
 
             {submitError && (
-              <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-start gap-3">
-                <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+              <div className="mb-6 p-4 bg-kryros-error/10 border border-kryros-error/20 rounded-xl flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-kryros-error flex-shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-sm font-bold text-red-600">Error</p>
-                  <p className="text-xs text-red-600/80 mt-0.5">{submitError}</p>
+                  <p className="text-sm font-bold text-kryros-error">Error</p>
+                  <p className="text-xs text-kryros-error/80 mt-0.5">{submitError}</p>
                 </div>
               </div>
             )}

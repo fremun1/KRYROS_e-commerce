@@ -185,6 +185,8 @@
   --color-kryros-success: var(--kryros-success);
   --color-kryros-warning: var(--kryros-warning);
   --color-kryros-accent-purple: var(--kryros-accent-purple);
+  --color-kryros-link: var(--kryros-link);
+  --color-kryros-error: var(--kryros-error);
 
   --font-sans: 'Roboto', sans-serif;
   --font-serif: Georgia, serif;

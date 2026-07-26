@@ -338,7 +338,7 @@ export default function ProductPage() {
                   key={i}
                   onClick={() => goToSlide(i)}
                   className={`rounded-full transition-all ${
-                    activeIndex === i ? "w-5 h-1.5 bg-foreground shadow" : "w-1.5 h-1.5 bg-foreground/50"
+                    activeIndex === i ? "w-5 h-1.5 bg-primary shadow" : "w-1.5 h-1.5 bg-primary/30"
                   }`}
                 />
               ))}

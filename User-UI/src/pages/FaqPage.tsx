@@ -30,7 +30,7 @@ export default function FaqPage() {
           <button
             key={tab}
             onClick={() => { setActiveTab(tab); setOpenIndex(null); }}
-            className={`flex-shrink-0 px-4 py-1.5 rounded-xl text-xs font-semibold transition-all ${activeTab === tab ? "bg-foreground text-background" : "bg-muted text-muted-foreground hover:text-foreground"}`}
+            className={`flex-shrink-0 px-4 py-1.5 rounded-xl text-xs font-semibold transition-all ${activeTab === tab ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"}`}
           >
             {tab}
           </button>

@@ -707,7 +707,7 @@ export default function DashboardPage() {
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
         <div className="fixed inset-0 z-50 lg:hidden flex">
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setSidebarOpen(false)} />
+          <div className="absolute inset-0 bg-kryros-overlay-dark/40 backdrop-blur-sm" onClick={() => setSidebarOpen(false)} />
           <div className="relative w-56 bg-background h-full flex flex-col shadow-2xl z-10 border-r border-border">
             <SidebarContent />
           </div>

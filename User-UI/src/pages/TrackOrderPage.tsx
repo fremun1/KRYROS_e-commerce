@@ -9,16 +9,16 @@ import { formatDeliveryDate, formatDeliveryWindow, resolveDeliveryWindowFromItem
 import { formatSpecs } from "@/lib/utils";
 
 const statusColors: Record<string, string> = {
-  "Pending":          "bg-yellow-500/10 text-yellow-600 border-yellow-500/20",
-  "Processing":       "bg-blue-500/10 text-blue-600 border-blue-500/20",
-  "Paid":             "bg-indigo-500/10 text-indigo-600 border-indigo-500/20",
-  "Shipped":          "bg-sky-500/10 text-sky-600 border-sky-500/20",
-  "In Transit":       "bg-primary/10 text-primary border-primary/20",
-  "Delivered":        "bg-green-500/10 text-green-600 border-green-500/20",
-  "Collected":        "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
-  "Cancelled":        "bg-red-500/10 text-red-600 border-red-500/20",
-  "Refunded":         "bg-orange-500/10 text-orange-600 border-orange-500/20",
-  "Returned":         "bg-pink-500/10 text-pink-600 border-pink-500/20",
+  "Pending":          "bg-kryros-warning/10 text-kryros-warning border-kryros-warning/20",
+  "Processing":       "bg-kryros-link/10 text-kryros-link border-kryros-link/20",
+  "Paid":             "bg-kryros-accent-purple/10 text-kryros-accent-purple border-kryros-accent-purple/20",
+  "Shipped":          "bg-kryros-link/10 text-kryros-link border-kryros-link/20",
+  "In Transit":       "bg-kryros-primary/10 text-kryros-primary border-kryros-primary/20",
+  "Delivered":        "bg-kryros-success/10 text-kryros-success border-kryros-success/20",
+  "Collected":        "bg-kryros-success/10 text-kryros-success border-kryros-success/20",
+  "Cancelled":        "bg-kryros-error/10 text-kryros-error border-kryros-error/20",
+  "Refunded":         "bg-kryros-gold/10 text-kryros-gold border-kryros-gold/20",
+  "Returned":         "bg-kryros-error/10 text-kryros-error border-kryros-error/20",
 };
 
 const filterTabs = ["All Orders", "Paid", "Shipped", "In Transit", "Delivered", "Collected", "Cancelled"];
@@ -297,7 +297,7 @@ export default function TrackOrderPage() {
           <button
             type="submit"
             disabled={searchLoading}
-            className="px-4 py-3 bg-foreground text-background rounded-xl font-bold text-xs hover:opacity-90 transition-opacity flex-shrink-0 disabled:opacity-60"
+            className="px-4 py-3 bg-primary text-primary-foreground rounded-xl font-bold text-xs hover:opacity-90 transition-opacity flex-shrink-0 disabled:opacity-60"
           >
             {searchLoading ? "Searching..." : "Track Order"}
           </button>
@@ -377,7 +377,7 @@ export default function TrackOrderPage() {
                 <button
                   key={tab}
                   onClick={() => setActiveFilter(tab)}
-                  className={`flex-shrink-0 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${activeFilter === tab ? "bg-foreground text-background" : "bg-muted text-muted-foreground hover:text-foreground"}`}
+                  className={`flex-shrink-0 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${activeFilter === tab ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"}`}
                 >
                   {tab}
                 </button>
@@ -420,7 +420,7 @@ export default function TrackOrderPage() {
                       <p className="text-[9px] text-muted-foreground mt-1.5">
                         {order.status === "Delivered" ? "Delivered on" : order.status === "Cancelled" ? "Cancelled" : "Est. Delivery"}
                       </p>
-                      <p className={`text-[10px] font-bold ${order.status === "Cancelled" ? "text-red-500" : "text-primary"}`}>{order.estDelivery}</p>
+                      <p className={`text-[10px] font-bold ${order.status === "Cancelled" ? "text-kryros-error" : "text-primary"}`}>{order.estDelivery}</p>
                     </div>
                     <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                   </motion.div>
@@ -431,8 +431,8 @@ export default function TrackOrderPage() {
         )}
 
         {/* Need Help */}
-        <div className="bg-primary/5 border border-primary/20 rounded-2xl p-4 flex items-center gap-3 mt-4">
-          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+        <div className="bg-kryros-primary/5 border border-kryros-primary/20 rounded-2xl p-4 flex items-center gap-3 mt-4">
+          <div className="w-10 h-10 rounded-xl bg-kryros-primary/10 flex items-center justify-center flex-shrink-0">
             <Headphones className="w-5 h-5 text-primary" />
           </div>
           <div className="flex-1">
