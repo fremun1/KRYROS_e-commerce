@@ -30,7 +30,12 @@ function NotificationsContent() {
 
 // ─── Push Tab ────────────────────────────────────────────────────────────────
 function PushContent() {
-  const { card, border, textMain, textMuted, surface, primary } = useColors();
+  const card = 'var(--card)';
+  const border = 'var(--border)';
+  const textMain = 'var(--text-main)';
+  const textMuted = 'var(--text-muted)';
+  const surface = 'var(--surface)';
+  const primary = '#1FA89A';
   const [devices, setDevices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<string[]>([]);
@@ -220,7 +225,12 @@ function PushContent() {
 // ─── SMS Tab ─────────────────────────────────────────────────────────────────
 // ─── SMS Countries Section ───────────────────────────────────────────────────
 function SmsCountriesSection() {
-  const { card, border, textMain, textMuted, surface, primary } = useColors();
+  const card = 'var(--card)';
+  const border = 'var(--border)';
+  const textMain = 'var(--text-main)';
+  const textMuted = 'var(--text-muted)';
+  const surface = 'var(--surface)';
+  const primary = '#1FA89A';
   const [countries, setCountries]   = useState<SmsCountry[]>([]);
   const [loading, setLoading]       = useState(true);
   const [showAdd, setShowAdd]       = useState(false);
@@ -353,7 +363,12 @@ function SmsCountriesSection() {
 }
 
 function SmsContent() {
-  const { card, border, textMain, textMuted, surface, primary } = useColors();
+  const card = 'var(--card)';
+  const border = 'var(--border)';
+  const textMain = 'var(--text-main)';
+  const textMuted = 'var(--text-muted)';
+  const surface = 'var(--surface)';
+  const primary = '#1FA89A';
   const [contacts, setContacts] = useState<SmsContact[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<string[]>([]);
@@ -570,7 +585,12 @@ function SmsContent() {
 
 // ─── Newsletter Tab ───────────────────────────────────────────────────────────
 function NewsletterContent() {
-  const { card, border, textMain, textMuted, surface, primary } = useColors();
+  const card = 'var(--card)';
+  const border = 'var(--border)';
+  const textMain = 'var(--text-main)';
+  const textMuted = 'var(--text-muted)';
+  const surface = 'var(--surface)';
+  const primary = '#1FA89A';
   const [subscribers, setSubscribers] = useState<NLSubscriber[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<string[]>([]);
@@ -699,7 +719,12 @@ function NewsletterContent() {
 
 // ─── Email Contacts Tab ───────────────────────────────────────────────────────
 function EmailContent() {
-  const { card, border, textMain, textMuted, surface, primary } = useColors();
+  const card = 'var(--card)';
+  const border = 'var(--border)';
+  const textMain = 'var(--text-main)';
+  const textMuted = 'var(--text-muted)';
+  const surface = 'var(--surface)';
+  const primary = '#1FA89A';
   const [contacts, setContacts] = useState<EmailContact[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<string[]>([]);
@@ -896,7 +921,12 @@ function EmailContent() {
 
 // ─── Diagnostics Tab ─────────────────────────────────────────────────────────
 function DiagnosticsContent() {
-  const { card, border, textMain, textMuted, surface, primary } = useColors();
+  const card = 'var(--card)';
+  const border = 'var(--border)';
+  const textMain = 'var(--text-main)';
+  const textMuted = 'var(--text-muted)';
+  const surface = 'var(--surface)';
+  const primary = '#1FA89A';
   const [status, setStatus] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
@@ -1011,7 +1041,10 @@ function DiagnosticsContent() {
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function NotificationsPage() {
   const [activeSection, setActiveSection] = useState<'push' | 'sms' | 'newsletter' | 'email' | 'diagnostics'>('push');
-  const { card, border, textMuted, surface } = useColors();
+  const card = 'var(--card)';
+  const border = 'var(--border)';
+  const textMuted = 'var(--text-muted)';
+  const surface = 'var(--surface)';
 
   const tabs = [
     { id: 'push',       label: 'Push & Alerts', Icon: Bell },
