@@ -92,16 +92,14 @@ interface Customer {
 }
 
 function DashboardContent() {
-  const { theme } = useTheme();
   const router = useRouter();
-  const D = theme === "dark";
-  const card      = D ? "#0D1523" : "#FFFFFF";
-  const border    = D ? "#1E293B" : "#E2E8F0";
-  const textMain  = D ? "#FFFFFF" : "#0F172A";
-  const textMuted = D ? "#8E9AAF" : "#64748B";
-  const textSec   = D ? "#94A3B8" : "#475569";
-  const surface   = D ? "#101826" : "#F1F5F9";
-  const gridLine  = D ? "#1E293B" : "#E2E8F0";
+  const card      = "var(--card)";
+  const border    = "var(--border)";
+  const textMain  = "var(--text-main)";
+  const textMuted = "var(--text-muted)";
+  const textSec   = "var(--text-sec)";
+  const surface   = "var(--surface)";
+  const gridLine  = "var(--border)";
 
   const [orders, setOrders]       = useState<Order[]>([]);
   const [products, setProducts]   = useState<Product[]>([]);
@@ -320,7 +318,7 @@ function DashboardContent() {
             <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
               <div style={{ position: "relative", width: 90, height: 90, flexShrink: 0 }}>
                 <svg viewBox="0 0 90 90" width="90" height="90">
-                  <circle cx="45" cy="45" r="36" fill="none" stroke={D ? "#1E293B" : "#E2E8F0"} strokeWidth="8" />
+                  <circle cx="45" cy="45" r="36" fill="none" stroke="var(--border)" strokeWidth="8" />
                   <circle cx="45" cy="45" r="36" fill="none" stroke="#1FA89A" strokeWidth="8"
                     strokeDasharray="226.19" strokeDashoffset={totalOrdersCount > 0 ? "74.6" : "226.19"} strokeLinecap="round" transform="rotate(-90 45 45)" />
                 </svg>
