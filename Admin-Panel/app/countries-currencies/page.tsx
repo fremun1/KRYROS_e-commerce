@@ -4,7 +4,6 @@ import AdminShell from '@/components/admin/admin-shell';
 import DataTable, { Column } from '@/components/admin/data-table';
 import PageHeader from '@/components/admin/page-header';
 import { Modal, FormField, ModalFooter } from '@/components/admin/modal';
-import { useTheme } from '@/contexts/theme-context';
 import { Globe } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getCountries, updateCountry, createCountry } from '@/lib/api';
@@ -23,13 +22,11 @@ const EMPTY_CFORM = {
 };
 
 function CountriesContent() {
-  const { theme } = useTheme();
-  const isDark = theme === 'dark';
-  const border = isDark ? '#1E293B' : '#E2E8F0';
-  const textMain = isDark ? '#FFFFFF' : '#0F172A';
-  const textMuted = isDark ? '#8E9AAF' : '#64748B';
-  const surface = isDark ? '#101826' : '#F1F5F9';
-  const card = isDark ? '#0D1523' : '#FFFFFF';
+  const border = 'var(--border)';
+  const textMain = 'var(--text-main)';
+  const textMuted = 'var(--text-muted)';
+  const surface = 'var(--surface)';
+  const card = 'var(--card)';
 
   const [tab, setTab] = useState<'countries'|'currencies'>('countries');
   const [countries, setCountries] = useState<Country[]>([]);
@@ -189,28 +186,28 @@ function CountriesContent() {
 
   const editCountryFields = (
     <>
-      <FormField label="Exchange Rate" value={cForm.rate} onChange={cfp('rate')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 27.5" />
-      <FormField label="Currency Symbol Position" value={cForm.symbolPosition} onChange={cfp('symbolPosition')} options={['BEFORE','AFTER']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-      <FormField label="Flag Emoji" value={cForm.flag} onChange={cfp('flag')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 🇿🇲" />
-      <FormField label="Auto Update Rate" value={cForm.autoRate} onChange={cfp('autoRate')} options={['true','false']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-      <FormField label="Shipping Enabled" value={cForm.shippingEnabled} onChange={cfp('shippingEnabled')} options={['true','false']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-      <FormField label="Set as Default Country" value={cForm.isDefault} onChange={cfp('isDefault')} options={['false','true']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-      <FormField label="Status" value={cForm.status} onChange={cfp('status')} options={['Active','Inactive']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+      <FormField label="Exchange Rate" value={cForm.rate} onChange={cfp('rate')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 27.5" />
+      <FormField label="Currency Symbol Position" value={cForm.symbolPosition} onChange={cfp('symbolPosition')} options={['BEFORE','AFTER']} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+      <FormField label="Flag Emoji" value={cForm.flag} onChange={cfp('flag')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 🇿🇲" />
+      <FormField label="Auto Update Rate" value={cForm.autoRate} onChange={cfp('autoRate')} options={['true','false']} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+      <FormField label="Shipping Enabled" value={cForm.shippingEnabled} onChange={cfp('shippingEnabled')} options={['true','false']} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+      <FormField label="Set as Default Country" value={cForm.isDefault} onChange={cfp('isDefault')} options={['false','true']} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+      <FormField label="Status" value={cForm.status} onChange={cfp('status')} options={['Active','Inactive']} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
     </>
   );
 
   const addCountryFields = (
     <>
-      <FormField label="Country Name *" value={addCForm.name} onChange={acfp('name')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. Zambia" />
-      <FormField label="Country Code * (2-letter)" value={addCForm.code} onChange={acfp('code')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. ZM" />
-      <FormField label="Currency Code * (3-letter)" value={addCForm.currency} onChange={acfp('currency')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. USD" />
-      <FormField label="Currency Symbol *" value={addCForm.symbol} onChange={acfp('symbol')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. $" />
-      <FormField label="Exchange Rate (vs USD)" value={addCForm.rate} onChange={acfp('rate')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 27.5" />
-      <FormField label="Symbol Position" value={addCForm.symbolPosition} onChange={acfp('symbolPosition')} options={['BEFORE','AFTER']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-      <FormField label="Flag Emoji" value={addCForm.flag} onChange={acfp('flag')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 🇿🇲" />
-      <FormField label="Auto Update Rate" value={addCForm.autoRate} onChange={acfp('autoRate')} options={['true','false']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-      <FormField label="Shipping Enabled" value={addCForm.shippingEnabled} onChange={acfp('shippingEnabled')} options={['true','false']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-      <FormField label="Status" value={addCForm.status} onChange={acfp('status')} options={['Active','Inactive']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+      <FormField label="Country Name *" value={addCForm.name} onChange={acfp('name')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. Zambia" />
+      <FormField label="Country Code * (2-letter)" value={addCForm.code} onChange={acfp('code')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. ZM" />
+      <FormField label="Currency Code * (3-letter)" value={addCForm.currency} onChange={acfp('currency')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. USD" />
+      <FormField label="Currency Symbol *" value={addCForm.symbol} onChange={acfp('symbol')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. $" />
+      <FormField label="Exchange Rate (vs USD)" value={addCForm.rate} onChange={acfp('rate')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 27.5" />
+      <FormField label="Symbol Position" value={addCForm.symbolPosition} onChange={acfp('symbolPosition')} options={['BEFORE','AFTER']} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+      <FormField label="Flag Emoji" value={addCForm.flag} onChange={acfp('flag')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 🇿🇲" />
+      <FormField label="Auto Update Rate" value={addCForm.autoRate} onChange={acfp('autoRate')} options={['true','false']} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+      <FormField label="Shipping Enabled" value={addCForm.shippingEnabled} onChange={acfp('shippingEnabled')} options={['true','false']} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+      <FormField label="Status" value={addCForm.status} onChange={acfp('status')} options={['Active','Inactive']} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
     </>
   );
 
@@ -246,20 +243,20 @@ function CountriesContent() {
       {/* Edit Country Modal */}
       <Modal open={!!editCountry} onClose={()=>setEditCountry(null)} title={`Edit Country: ${editCountry?.name ?? ''}`}>
         {editCountryFields}
-        <ModalFooter onClose={()=>setEditCountry(null)} onSubmit={handleSaveCountry} loading={loading} submitLabel="Save Changes" isDark={isDark} border={border} textMain={textMain} />
+        <ModalFooter onClose={()=>setEditCountry(null)} onSubmit={handleSaveCountry} loading={loading} submitLabel="Save Changes" border={border} textMain={textMain} />
       </Modal>
 
       {/* Add Country Modal */}
       <Modal open={addCountryOpen} onClose={()=>setAddCountryOpen(false)} title="Add New Country">
         {addCountryFields}
-        <ModalFooter onClose={()=>setAddCountryOpen(false)} onSubmit={handleAddCountry} loading={loading} submitLabel="Add Country" isDark={isDark} border={border} textMain={textMain} />
+        <ModalFooter onClose={()=>setAddCountryOpen(false)} onSubmit={handleAddCountry} loading={loading} submitLabel="Add Country" border={border} textMain={textMain} />
       </Modal>
 
       {/* Edit Currency Rate Modal */}
       <Modal open={!!editCurrency} onClose={()=>setEditCurrency(null)} title={`Edit Currency: ${editCurrency?.code ?? ''}`}>
-        <FormField label="Exchange Rate (vs USD)" value={curForm.rate} onChange={(v)=>setCurForm(f=>({...f,rate:v}))} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 27.5" />
-        <FormField label="Status" value={curForm.status} onChange={(v)=>setCurForm(f=>({...f,status:v}))} options={['Active','Inactive','Base']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-        <ModalFooter onClose={()=>setEditCurrency(null)} onSubmit={handleSaveCurrency} loading={loading} submitLabel="Save Rate" isDark={isDark} border={border} textMain={textMain} />
+        <FormField label="Exchange Rate (vs USD)" value={curForm.rate} onChange={(v)=>setCurForm(f=>({...f,rate:v}))} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 27.5" />
+        <FormField label="Status" value={curForm.status} onChange={(v)=>setCurForm(f=>({...f,status:v}))} options={['Active','Inactive','Base']} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+        <ModalFooter onClose={()=>setEditCurrency(null)} onSubmit={handleSaveCurrency} loading={loading} submitLabel="Save Rate" border={border} textMain={textMain} />
       </Modal>
     </div>
   );

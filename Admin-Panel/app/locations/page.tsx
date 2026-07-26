@@ -4,7 +4,6 @@ import AdminShell from '@/components/admin/admin-shell';
 import DataTable, { Column } from '@/components/admin/data-table';
 import PageHeader from '@/components/admin/page-header';
 import { Modal, ConfirmDialog, FormField, ModalFooter } from '@/components/admin/modal';
-import { useTheme } from '@/contexts/theme-context';
 import { MapPin } from 'lucide-react';
 import toast from 'react-hot-toast';
 import CloudinaryUpload from '@/components/ui/file-upload';
@@ -43,13 +42,11 @@ const EMPTY_CFORM = {
 };
 
 function LocationsContent() {
-  const { theme } = useTheme();
-  const isDark = theme === 'dark';
-  const card    = isDark ? '#0D1523' : '#FFFFFF';
-  const border  = isDark ? '#1E293B' : '#E2E8F0';
-  const textMain = isDark ? '#FFFFFF' : '#0F172A';
-  const textMuted = isDark ? '#8E9AAF' : '#64748B';
-  const surface  = isDark ? '#101826' : '#F1F5F9';
+  const card    = 'var(--card)';
+  const border  = 'var(--border)';
+  const textMain = 'var(--text-main)';
+  const textMuted = 'var(--text-muted)';
+  const surface  = 'var(--surface)';
 
   type Tab = 'countries' | 'states' | 'cities' | 'pickups';
   const [tab, setTab] = useState<Tab>('countries');
@@ -463,28 +460,28 @@ function LocationsContent() {
           />
           {/* Edit Country Modal */}
           <Modal open={!!editCountry} onClose={() => setEditCountry(null)} title={`Edit Country: ${editCountry?.name ?? ''}`}>
-            <FormField label="Exchange Rate (vs USD)" value={cForm.rate} onChange={cfp('rate')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 27.5" />
-            <FormField label="Symbol Position" value={cForm.symbolPosition} onChange={cfp('symbolPosition')} options={['BEFORE', 'AFTER']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-            <FormField label="Flag Emoji" value={cForm.flag} onChange={cfp('flag')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 🇿🇲" />
-            <FormField label="Auto Update Rate" value={cForm.autoRate} onChange={cfp('autoRate')} options={['true', 'false']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-            <FormField label="Shipping Enabled" value={cForm.shippingEnabled} onChange={cfp('shippingEnabled')} options={['true', 'false']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-            <FormField label="Set as Default Country" value={cForm.isDefault} onChange={cfp('isDefault')} options={['false', 'true']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-            <FormField label="Status" value={cForm.status} onChange={cfp('status')} options={['Active', 'Inactive']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-            <ModalFooter onClose={() => setEditCountry(null)} onSubmit={handleSaveCountry} loading={loadingCountry} submitLabel="Save Changes" isDark={isDark} border={border} textMain={textMain} />
+            <FormField label="Exchange Rate (vs USD)" value={cForm.rate} onChange={cfp('rate')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 27.5" />
+            <FormField label="Symbol Position" value={cForm.symbolPosition} onChange={cfp('symbolPosition')} options={['BEFORE', 'AFTER']} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="Flag Emoji" value={cForm.flag} onChange={cfp('flag')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 🇿🇲" />
+            <FormField label="Auto Update Rate" value={cForm.autoRate} onChange={cfp('autoRate')} options={['true', 'false']} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="Shipping Enabled" value={cForm.shippingEnabled} onChange={cfp('shippingEnabled')} options={['true', 'false']} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="Set as Default Country" value={cForm.isDefault} onChange={cfp('isDefault')} options={['false', 'true']} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="Status" value={cForm.status} onChange={cfp('status')} options={['Active', 'Inactive']} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <ModalFooter onClose={() => setEditCountry(null)} onSubmit={handleSaveCountry} loading={loadingCountry} submitLabel="Save Changes" border={border} textMain={textMain} />
           </Modal>
           {/* Add Country Modal */}
           <Modal open={addCountryOpen} onClose={() => setAddCountryOpen(false)} title="Add New Country">
-            <FormField label="Country Name *" value={addCForm.name} onChange={acfp('name')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. Zambia" />
-            <FormField label="Country Code * (2-letter)" value={addCForm.code} onChange={acfp('code')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. ZM" />
-            <FormField label="Currency Code * (3-letter)" value={addCForm.currency} onChange={acfp('currency')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. ZMW" />
-            <FormField label="Currency Symbol" value={addCForm.symbol} onChange={acfp('symbol')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. ZK" />
-            <FormField label="Exchange Rate (vs USD)" value={addCForm.rate} onChange={acfp('rate')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 27.5" />
-            <FormField label="Symbol Position" value={addCForm.symbolPosition} onChange={acfp('symbolPosition')} options={['BEFORE', 'AFTER']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-            <FormField label="Flag Emoji" value={addCForm.flag} onChange={acfp('flag')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 🇿🇲" />
-            <FormField label="Auto Update Rate" value={addCForm.autoRate} onChange={acfp('autoRate')} options={['true', 'false']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-            <FormField label="Shipping Enabled" value={addCForm.shippingEnabled} onChange={acfp('shippingEnabled')} options={['true', 'false']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-            <FormField label="Status" value={addCForm.status} onChange={acfp('status')} options={['Active', 'Inactive']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-            <ModalFooter onClose={() => setAddCountryOpen(false)} onSubmit={handleAddCountry} loading={loadingCountry} submitLabel="Add Country" isDark={isDark} border={border} textMain={textMain} />
+            <FormField label="Country Name *" value={addCForm.name} onChange={acfp('name')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. Zambia" />
+            <FormField label="Country Code * (2-letter)" value={addCForm.code} onChange={acfp('code')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. ZM" />
+            <FormField label="Currency Code * (3-letter)" value={addCForm.currency} onChange={acfp('currency')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. ZMW" />
+            <FormField label="Currency Symbol" value={addCForm.symbol} onChange={acfp('symbol')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. ZK" />
+            <FormField label="Exchange Rate (vs USD)" value={addCForm.rate} onChange={acfp('rate')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 27.5" />
+            <FormField label="Symbol Position" value={addCForm.symbolPosition} onChange={acfp('symbolPosition')} options={['BEFORE', 'AFTER']} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="Flag Emoji" value={addCForm.flag} onChange={acfp('flag')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 🇿🇲" />
+            <FormField label="Auto Update Rate" value={addCForm.autoRate} onChange={acfp('autoRate')} options={['true', 'false']} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="Shipping Enabled" value={addCForm.shippingEnabled} onChange={acfp('shippingEnabled')} options={['true', 'false']} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="Status" value={addCForm.status} onChange={acfp('status')} options={['Active', 'Inactive']} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <ModalFooter onClose={() => setAddCountryOpen(false)} onSubmit={handleAddCountry} loading={loadingCountry} submitLabel="Add Country" border={border} textMain={textMain} />
           </Modal>
         </>
       )}
@@ -500,8 +497,8 @@ function LocationsContent() {
             onDelete={(row) => setDeleteState(row as unknown as StateRow)}
           />
           <Modal open={addStateOpen} onClose={() => setAddStateOpen(false)} title="Add State / Province">
-            <FormField label="State / Province Name *" value={stateForm.name} onChange={sfp('name')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. Lusaka Province" />
-            <FormField label="State Code" value={stateForm.code} onChange={sfp('code')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. LP" />
+            <FormField label="State / Province Name *" value={stateForm.name} onChange={sfp('name')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. Lusaka Province" />
+            <FormField label="State Code" value={stateForm.code} onChange={sfp('code')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. LP" />
             <div style={{ marginBottom: '14px' }}>
               <div style={{ fontSize: '12px', fontWeight: 600, color: textMuted, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Country *</div>
               <select value={stateForm.countryId} onChange={e => { const c = countriesList.find(x => x.id === e.target.value); sfp('countryId')(e.target.value); if (c) sfp('countryName')(c.name); }} style={selStyle}>
@@ -509,14 +506,14 @@ function LocationsContent() {
                 {countriesList.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </div>
-            <FormField label="Status" value={stateForm.status} onChange={sfp('status')} options={['Active', 'Inactive']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-            <ModalFooter onClose={() => setAddStateOpen(false)} onSubmit={handleAddState} loading={loadingState} submitLabel="Add State" isDark={isDark} border={border} textMain={textMain} />
+            <FormField label="Status" value={stateForm.status} onChange={sfp('status')} options={['Active', 'Inactive']} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <ModalFooter onClose={() => setAddStateOpen(false)} onSubmit={handleAddState} loading={loadingState} submitLabel="Add State" border={border} textMain={textMain} />
           </Modal>
           <Modal open={!!editState} onClose={() => setEditState(null)} title={`Edit State: ${editState?.name ?? ''}`}>
-            <FormField label="State / Province Name *" value={stateForm.name} onChange={sfp('name')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-            <FormField label="State Code" value={stateForm.code} onChange={sfp('code')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-            <FormField label="Status" value={stateForm.status} onChange={sfp('status')} options={['Active', 'Inactive']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-            <ModalFooter onClose={() => setEditState(null)} onSubmit={handleEditState} loading={loadingState} submitLabel="Save Changes" isDark={isDark} border={border} textMain={textMain} />
+            <FormField label="State / Province Name *" value={stateForm.name} onChange={sfp('name')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="State Code" value={stateForm.code} onChange={sfp('code')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="Status" value={stateForm.status} onChange={sfp('status')} options={['Active', 'Inactive']} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <ModalFooter onClose={() => setEditState(null)} onSubmit={handleEditState} loading={loadingState} submitLabel="Save Changes" border={border} textMain={textMain} />
           </Modal>
           <ConfirmDialog open={!!deleteState_row} onClose={() => setDeleteState(null)} onConfirm={handleDeleteState} loading={loadingState} title="Delete State" message={`Delete "${deleteState_row?.name}" and all its cities?`} />
         </>
@@ -533,7 +530,7 @@ function LocationsContent() {
             onDelete={(row) => setDeleteCity(row as unknown as CityRow)}
           />
           <Modal open={addCityOpen} onClose={() => setAddCityOpen(false)} title="Add City">
-            <FormField label="City Name *" value={cityForm.name} onChange={cyfp('name')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. Lusaka" />
+            <FormField label="City Name *" value={cityForm.name} onChange={cyfp('name')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. Lusaka" />
             <div style={{ marginBottom: '14px' }}>
               <div style={{ fontSize: '12px', fontWeight: 600, color: textMuted, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>State / Province *</div>
               <select value={cityForm.stateId} onChange={e => { const s = statesList.find(x => x.id === e.target.value); cyfp('stateId')(e.target.value); if (s) cyfp('stateName')(s.name); }} style={selStyle}>
@@ -541,13 +538,13 @@ function LocationsContent() {
                 {statesList.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
               </select>
             </div>
-            <FormField label="Status" value={cityForm.status} onChange={cyfp('status')} options={['Active', 'Inactive']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-            <ModalFooter onClose={() => setAddCityOpen(false)} onSubmit={handleAddCity} loading={loadingCity} submitLabel="Add City" isDark={isDark} border={border} textMain={textMain} />
+            <FormField label="Status" value={cityForm.status} onChange={cyfp('status')} options={['Active', 'Inactive']} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <ModalFooter onClose={() => setAddCityOpen(false)} onSubmit={handleAddCity} loading={loadingCity} submitLabel="Add City" border={border} textMain={textMain} />
           </Modal>
           <Modal open={!!editCity} onClose={() => setEditCity(null)} title={`Edit City: ${editCity?.name ?? ''}`}>
-            <FormField label="City Name *" value={cityForm.name} onChange={cyfp('name')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-            <FormField label="Status" value={cityForm.status} onChange={cyfp('status')} options={['Active', 'Inactive']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-            <ModalFooter onClose={() => setEditCity(null)} onSubmit={handleEditCity} loading={loadingCity} submitLabel="Save Changes" isDark={isDark} border={border} textMain={textMain} />
+            <FormField label="City Name *" value={cityForm.name} onChange={cyfp('name')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="Status" value={cityForm.status} onChange={cyfp('status')} options={['Active', 'Inactive']} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <ModalFooter onClose={() => setEditCity(null)} onSubmit={handleEditCity} loading={loadingCity} submitLabel="Save Changes" border={border} textMain={textMain} />
           </Modal>
           <ConfirmDialog open={!!deleteCity_row} onClose={() => setDeleteCity(null)} onConfirm={handleDeleteCity} loading={loadingCity} title="Delete City" message={`Delete "${deleteCity_row?.name}" permanently?`} />
         </>
@@ -570,40 +567,40 @@ function LocationsContent() {
 
           {/* Add Pickup Modal */}
           <Modal open={addPickupOpen} onClose={() => setAddPickupOpen(false)} title="Add Pickup Station">
-            <FormField label="Station Name *" value={pickupForm.name} onChange={pfp('name')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. Lusaka Central Pickup" />
-            <FormField label="Full Address *" value={pickupForm.address} onChange={pfp('address')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 12 Cairo Road, Lusaka" />
-            <FormField label="City *" value={pickupForm.city} onChange={pfp('city')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. Lusaka" />
-            <FormField label="State / Province" value={pickupForm.state} onChange={pfp('state')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. Lusaka Province" />
-            <FormField label="Country" value={pickupForm.country} onChange={pfp('country')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Zambia" />
-            <FormField label="Phone Number" value={pickupForm.phone} onChange={pfp('phone')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="+260..." />
-            <FormField label="Email Address" value={pickupForm.email} onChange={pfp('email')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="pickup@example.com" />
-            <FormField label="Opening Hours" value={pickupForm.openingHours} onChange={pfp('openingHours')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. Mon–Fri 8am–6pm" />
-            <FormField label="Description / Landmark" value={pickupForm.description} onChange={pfp('description')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. Near Manda Hill Mall" />
-            <FormField label="Latitude (GPS)" value={pickupForm.latitude} onChange={pfp('latitude')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. -15.4166" />
-            <FormField label="Longitude (GPS)" value={pickupForm.longitude} onChange={pfp('longitude')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 28.2833" />
+            <FormField label="Station Name *" value={pickupForm.name} onChange={pfp('name')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. Lusaka Central Pickup" />
+            <FormField label="Full Address *" value={pickupForm.address} onChange={pfp('address')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 12 Cairo Road, Lusaka" />
+            <FormField label="City *" value={pickupForm.city} onChange={pfp('city')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. Lusaka" />
+            <FormField label="State / Province" value={pickupForm.state} onChange={pfp('state')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. Lusaka Province" />
+            <FormField label="Country" value={pickupForm.country} onChange={pfp('country')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Zambia" />
+            <FormField label="Phone Number" value={pickupForm.phone} onChange={pfp('phone')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="+260..." />
+            <FormField label="Email Address" value={pickupForm.email} onChange={pfp('email')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="pickup@example.com" />
+            <FormField label="Opening Hours" value={pickupForm.openingHours} onChange={pfp('openingHours')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. Mon–Fri 8am–6pm" />
+            <FormField label="Description / Landmark" value={pickupForm.description} onChange={pfp('description')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. Near Manda Hill Mall" />
+            <FormField label="Latitude (GPS)" value={pickupForm.latitude} onChange={pfp('latitude')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. -15.4166" />
+            <FormField label="Longitude (GPS)" value={pickupForm.longitude} onChange={pfp('longitude')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 28.2833" />
             <div>
               <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: textMuted, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Station Image</label>
-              <CloudinaryUpload value={pickupForm.image} onChange={(url) => pfp('image')(url)} folder="kryros/pickup-stations" accept="image/*" showUrlInput={true} isDark={isDark} border={border} surface={surface} textMuted={textMuted} textMain={textMain} />
+              <CloudinaryUpload value={pickupForm.image} onChange={(url) => pfp('image')(url)} folder="kryros/pickup-stations" accept="image/*" showUrlInput={true} border={border} surface={surface} textMuted={textMuted} textMain={textMain} />
             </div>
-            <FormField label="Status" value={pickupForm.status} onChange={pfp('status')} options={['Active', 'Inactive']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-            <ModalFooter onClose={() => setAddPickupOpen(false)} onSubmit={handleAddPickup} loading={loadingPickup} submitLabel="Add Station" isDark={isDark} border={border} textMain={textMain} />
+            <FormField label="Status" value={pickupForm.status} onChange={pfp('status')} options={['Active', 'Inactive']} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <ModalFooter onClose={() => setAddPickupOpen(false)} onSubmit={handleAddPickup} loading={loadingPickup} submitLabel="Add Station" border={border} textMain={textMain} />
           </Modal>
 
           {/* Edit Pickup Modal */}
           <Modal open={!!editPickup} onClose={() => setEditPickup(null)} title={`Edit: ${editPickup?.name ?? ''}`}>
-            <FormField label="Station Name *" value={pickupForm.name} onChange={pfp('name')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-            <FormField label="Full Address *" value={pickupForm.address} onChange={pfp('address')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-            <FormField label="City *" value={pickupForm.city} onChange={pfp('city')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-            <FormField label="State / Province" value={pickupForm.state} onChange={pfp('state')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-            <FormField label="Country" value={pickupForm.country} onChange={pfp('country')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-            <FormField label="Phone Number" value={pickupForm.phone} onChange={pfp('phone')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-            <FormField label="Email Address" value={pickupForm.email} onChange={pfp('email')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-            <FormField label="Opening Hours" value={pickupForm.openingHours} onChange={pfp('openingHours')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-            <FormField label="Description / Landmark" value={pickupForm.description} onChange={pfp('description')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-            <FormField label="Latitude (GPS)" value={pickupForm.latitude} onChange={pfp('latitude')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-            <FormField label="Longitude (GPS)" value={pickupForm.longitude} onChange={pfp('longitude')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-            <FormField label="Status" value={pickupForm.status} onChange={pfp('status')} options={['Active', 'Inactive']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-            <ModalFooter onClose={() => setEditPickup(null)} onSubmit={handleEditPickup} loading={loadingPickup} submitLabel="Save Changes" isDark={isDark} border={border} textMain={textMain} />
+            <FormField label="Station Name *" value={pickupForm.name} onChange={pfp('name')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="Full Address *" value={pickupForm.address} onChange={pfp('address')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="City *" value={pickupForm.city} onChange={pfp('city')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="State / Province" value={pickupForm.state} onChange={pfp('state')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="Country" value={pickupForm.country} onChange={pfp('country')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="Phone Number" value={pickupForm.phone} onChange={pfp('phone')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="Email Address" value={pickupForm.email} onChange={pfp('email')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="Opening Hours" value={pickupForm.openingHours} onChange={pfp('openingHours')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="Description / Landmark" value={pickupForm.description} onChange={pfp('description')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="Latitude (GPS)" value={pickupForm.latitude} onChange={pfp('latitude')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="Longitude (GPS)" value={pickupForm.longitude} onChange={pfp('longitude')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="Status" value={pickupForm.status} onChange={pfp('status')} options={['Active', 'Inactive']} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <ModalFooter onClose={() => setEditPickup(null)} onSubmit={handleEditPickup} loading={loadingPickup} submitLabel="Save Changes" border={border} textMain={textMain} />
           </Modal>
 
           <ConfirmDialog open={!!deletePickup} onClose={() => setDeletePickup(null)} onConfirm={handleDeletePickup} loading={loadingPickup} title="Delete Pickup Station" message={`Delete "${deletePickup?.name}" permanently?`} />

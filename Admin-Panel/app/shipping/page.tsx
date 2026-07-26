@@ -4,7 +4,6 @@ import AdminShell from '@/components/admin/admin-shell';
 import DataTable, { Column } from '@/components/admin/data-table';
 import PageHeader from '@/components/admin/page-header';
 import { Modal, ConfirmDialog, FormField, ModalFooter } from '@/components/admin/modal';
-import { useTheme } from '@/contexts/theme-context';
 import { Truck } from 'lucide-react';
 import toast from 'react-hot-toast';
 import {
@@ -20,12 +19,10 @@ const EMPTY_METHOD = { name: '', description: '', fee: '0', minThreshold: '0', e
 const METHODS_LIST = ['Standard', 'Express', 'International', 'Free', 'Pickup'];
 
 function ShippingContent() {
-  const { theme } = useTheme();
-  const isDark = theme === 'dark';
-  const border    = isDark ? '#1E293B' : '#E2E8F0';
-  const textMain  = isDark ? '#FFFFFF' : '#0F172A';
-  const textMuted = isDark ? '#8E9AAF' : '#64748B';
-  const surface   = isDark ? '#101826' : '#F1F5F9';
+  const border    = 'var(--border)';
+  const textMain  = 'var(--text-main)';
+  const textMuted = 'var(--text-muted)';
+  const surface   = 'var(--surface)';
 
   type Tab = 'zones' | 'methods';
   const [tab, setTab] = useState<Tab>('zones');
@@ -209,26 +206,26 @@ function ShippingContent() {
             onDelete={(row) => setDeleteZone(row as unknown as Zone)}
           />
           <Modal open={addZoneOpen} onClose={() => setAddZoneOpen(false)} title="Add Shipping Zone">
-            <FormField label="Zone Name *" value={zoneForm.name} onChange={zfp('name')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. Lusaka Zone" />
-            <FormField label="Region / Area" value={zoneForm.region} onChange={zfp('region')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. Central Province" />
-            <FormField label="Countries Covered (comma-separated)" value={zoneForm.countries} onChange={zfp('countries')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. Zambia" />
-            <FormField label="Default Shipping Method" value={zoneForm.method} onChange={zfp('method')} options={METHODS_LIST} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-            <FormField label="Shipping Rate ($)" value={zoneForm.rate} onChange={zfp('rate')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="0" />
-            <FormField label="Minimum Order ($)" value={zoneForm.minOrder} onChange={zfp('minOrder')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="0" />
-            <FormField label="Estimated Delivery Days" value={zoneForm.days} onChange={zfp('days')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 2-3 days" />
-            <FormField label="Status" value={zoneForm.status} onChange={zfp('status')} options={['Active', 'Inactive']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-            <ModalFooter onClose={() => setAddZoneOpen(false)} onSubmit={handleAddZone} loading={loadingZone} submitLabel="Add Zone" isDark={isDark} border={border} textMain={textMain} />
+            <FormField label="Zone Name *" value={zoneForm.name} onChange={zfp('name')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. Lusaka Zone" />
+            <FormField label="Region / Area" value={zoneForm.region} onChange={zfp('region')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. Central Province" />
+            <FormField label="Countries Covered (comma-separated)" value={zoneForm.countries} onChange={zfp('countries')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. Zambia" />
+            <FormField label="Default Shipping Method" value={zoneForm.method} onChange={zfp('method')} options={METHODS_LIST} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="Shipping Rate ($)" value={zoneForm.rate} onChange={zfp('rate')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="0" />
+            <FormField label="Minimum Order ($)" value={zoneForm.minOrder} onChange={zfp('minOrder')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="0" />
+            <FormField label="Estimated Delivery Days" value={zoneForm.days} onChange={zfp('days')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 2-3 days" />
+            <FormField label="Status" value={zoneForm.status} onChange={zfp('status')} options={['Active', 'Inactive']} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <ModalFooter onClose={() => setAddZoneOpen(false)} onSubmit={handleAddZone} loading={loadingZone} submitLabel="Add Zone" border={border} textMain={textMain} />
           </Modal>
           <Modal open={!!editZone} onClose={() => setEditZone(null)} title={`Edit Zone: ${editZone?.name ?? ''}`}>
-            <FormField label="Zone Name *" value={zoneForm.name} onChange={zfp('name')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-            <FormField label="Region / Area" value={zoneForm.region} onChange={zfp('region')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-            <FormField label="Countries Covered" value={zoneForm.countries} onChange={zfp('countries')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-            <FormField label="Default Shipping Method" value={zoneForm.method} onChange={zfp('method')} options={METHODS_LIST} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-            <FormField label="Shipping Rate ($)" value={zoneForm.rate} onChange={zfp('rate')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-            <FormField label="Minimum Order ($)" value={zoneForm.minOrder} onChange={zfp('minOrder')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-            <FormField label="Estimated Delivery Days" value={zoneForm.days} onChange={zfp('days')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-            <FormField label="Status" value={zoneForm.status} onChange={zfp('status')} options={['Active', 'Inactive']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-            <ModalFooter onClose={() => setEditZone(null)} onSubmit={handleEditZone} loading={loadingZone} submitLabel="Save Changes" isDark={isDark} border={border} textMain={textMain} />
+            <FormField label="Zone Name *" value={zoneForm.name} onChange={zfp('name')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="Region / Area" value={zoneForm.region} onChange={zfp('region')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="Countries Covered" value={zoneForm.countries} onChange={zfp('countries')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="Default Shipping Method" value={zoneForm.method} onChange={zfp('method')} options={METHODS_LIST} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="Shipping Rate ($)" value={zoneForm.rate} onChange={zfp('rate')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="Minimum Order ($)" value={zoneForm.minOrder} onChange={zfp('minOrder')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="Estimated Delivery Days" value={zoneForm.days} onChange={zfp('days')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="Status" value={zoneForm.status} onChange={zfp('status')} options={['Active', 'Inactive']} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <ModalFooter onClose={() => setEditZone(null)} onSubmit={handleEditZone} loading={loadingZone} submitLabel="Save Changes" border={border} textMain={textMain} />
           </Modal>
           <ConfirmDialog open={!!deleteZone} onClose={() => setDeleteZone(null)} onConfirm={handleDeleteZone} loading={loadingZone} title="Delete Zone" message={`Delete "${deleteZone?.name}" permanently?`} />
         </>
@@ -245,24 +242,24 @@ function ShippingContent() {
             onDelete={(row) => setDeleteMethod(row as unknown as ShippingMethod)}
           />
           <Modal open={addMethodOpen} onClose={() => setAddMethodOpen(false)} title="Add Shipping Method">
-            <FormField label="Method Name *" value={methodForm.name} onChange={mfp('name')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. Standard Delivery" />
-            <FormField label="Description" value={methodForm.description} onChange={mfp('description')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Brief description" />
-            <FormField label="Fee ($)" value={methodForm.fee} onChange={mfp('fee')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="0" />
-            <FormField label="Free Shipping Above ($)" value={methodForm.minThreshold} onChange={mfp('minThreshold')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="0 = never free" />
-            <FormField label="Estimated Delivery Days" value={methodForm.estimatedDays} onChange={mfp('estimatedDays')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 2-3 business days" />
-            <FormField label="Sort Order" value={methodForm.sortOrder} onChange={mfp('sortOrder')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="0" />
-            <FormField label="Status" value={methodForm.status} onChange={mfp('status')} options={['Active', 'Inactive']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-            <ModalFooter onClose={() => setAddMethodOpen(false)} onSubmit={handleAddMethod} loading={loadingMethod} submitLabel="Add Method" isDark={isDark} border={border} textMain={textMain} />
+            <FormField label="Method Name *" value={methodForm.name} onChange={mfp('name')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. Standard Delivery" />
+            <FormField label="Description" value={methodForm.description} onChange={mfp('description')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Brief description" />
+            <FormField label="Fee ($)" value={methodForm.fee} onChange={mfp('fee')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="0" />
+            <FormField label="Free Shipping Above ($)" value={methodForm.minThreshold} onChange={mfp('minThreshold')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="0 = never free" />
+            <FormField label="Estimated Delivery Days" value={methodForm.estimatedDays} onChange={mfp('estimatedDays')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 2-3 business days" />
+            <FormField label="Sort Order" value={methodForm.sortOrder} onChange={mfp('sortOrder')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="0" />
+            <FormField label="Status" value={methodForm.status} onChange={mfp('status')} options={['Active', 'Inactive']} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <ModalFooter onClose={() => setAddMethodOpen(false)} onSubmit={handleAddMethod} loading={loadingMethod} submitLabel="Add Method" border={border} textMain={textMain} />
           </Modal>
           <Modal open={!!editMethod} onClose={() => setEditMethod(null)} title={`Edit: ${editMethod?.name ?? ''}`}>
-            <FormField label="Method Name *" value={methodForm.name} onChange={mfp('name')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-            <FormField label="Description" value={methodForm.description} onChange={mfp('description')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-            <FormField label="Fee ($)" value={methodForm.fee} onChange={mfp('fee')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-            <FormField label="Free Shipping Above ($)" value={methodForm.minThreshold} onChange={mfp('minThreshold')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-            <FormField label="Estimated Delivery Days" value={methodForm.estimatedDays} onChange={mfp('estimatedDays')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-            <FormField label="Sort Order" value={methodForm.sortOrder} onChange={mfp('sortOrder')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-            <FormField label="Status" value={methodForm.status} onChange={mfp('status')} options={['Active', 'Inactive']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-            <ModalFooter onClose={() => setEditMethod(null)} onSubmit={handleEditMethod} loading={loadingMethod} submitLabel="Save Changes" isDark={isDark} border={border} textMain={textMain} />
+            <FormField label="Method Name *" value={methodForm.name} onChange={mfp('name')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="Description" value={methodForm.description} onChange={mfp('description')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="Fee ($)" value={methodForm.fee} onChange={mfp('fee')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="Free Shipping Above ($)" value={methodForm.minThreshold} onChange={mfp('minThreshold')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="Estimated Delivery Days" value={methodForm.estimatedDays} onChange={mfp('estimatedDays')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="Sort Order" value={methodForm.sortOrder} onChange={mfp('sortOrder')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="Status" value={methodForm.status} onChange={mfp('status')} options={['Active', 'Inactive']} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <ModalFooter onClose={() => setEditMethod(null)} onSubmit={handleEditMethod} loading={loadingMethod} submitLabel="Save Changes" border={border} textMain={textMain} />
           </Modal>
           <ConfirmDialog open={!!deleteMethod} onClose={() => setDeleteMethod(null)} onConfirm={handleDeleteMethod} loading={loadingMethod} title="Delete Method" message={`Delete "${deleteMethod?.name}" permanently?`} />
         </>

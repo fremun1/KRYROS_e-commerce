@@ -1,7 +1,6 @@
 'use client';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import AdminShell from '@/components/admin/admin-shell';
-import { useTheme } from '@/contexts/theme-context';
 import { useAuth } from '@/contexts/auth-context';
 import {
   Search, X, ChevronRight, Package, Truck, MapPin,
@@ -143,18 +142,16 @@ const fmtMoney = (amount: number, symbol = '$') =>
 
 // ─── Main Content ─────────────────────────────────────────
 function OrdersContent() {
-  const { theme } = useTheme();
   const { user, loading } = useAuth();
-  const dark = theme === 'dark';
   const T = {
-    card:    dark ? '#0D1523' : '#FFFFFF',
-    border:  dark ? '#1E293B' : '#E2E8F0',
-    text:    dark ? '#FFFFFF' : '#0F172A',
-    muted:   dark ? '#8E9AAF' : '#64748B',
-    surface: dark ? '#101826' : '#F1F5F9',
-    hover:   dark ? '#152035' : '#F8FAFC',
-    panel:   dark ? '#0A1220' : '#FFFFFF',
-    input:   dark ? '#0D1523' : '#FFFFFF',
+    card:    'var(--card)',
+    border:  'var(--border)',
+    text:    'var(--text-main)',
+    muted:   'var(--text-muted)',
+    surface: 'var(--surface)',
+    hover:   'var(--surface)',
+    panel:   'var(--card)',
+    input:   'var(--card)',
   };
 
   const r = (user?.role || '').toUpperCase().replace(/[\s_]+/g, '');

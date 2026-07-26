@@ -4,7 +4,6 @@ import AdminShell from '@/components/admin/admin-shell';
 import DataTable, { Column } from '@/components/admin/data-table';
 import PageHeader from '@/components/admin/page-header';
 import { Modal, ConfirmDialog, FormField, ModalFooter } from '@/components/admin/modal';
-import { useTheme } from '@/contexts/theme-context';
 import { Star } from 'lucide-react';
 import { updateReview, deleteReview, getReviews } from '@/lib/api';
 import toast from 'react-hot-toast';
@@ -14,13 +13,11 @@ type Review = { id: string; product: string; customer: string; rating: number; c
 // Review data loaded from API
 
 function ReviewsContent() {
-  const { theme } = useTheme();
-  const isDark = theme === 'dark';
-  const card = isDark ? '#0D1523' : '#FFFFFF';
-  const border = isDark ? '#1E293B' : '#E2E8F0';
-  const textMain = isDark ? '#FFFFFF' : '#0F172A';
-  const textMuted = isDark ? '#8E9AAF' : '#64748B';
-  const surface = isDark ? '#101826' : '#F1F5F9';
+  const card = 'var(--card)';
+  const border = 'var(--border)';
+  const textMain = 'var(--text-main)';
+  const textMuted = 'var(--text-muted)';
+  const surface = 'var(--surface)';
 
   const [data, setData] = useState<Review[]>([]);
   useEffect(() => {
@@ -131,18 +128,18 @@ function ReviewsContent() {
       {/* View Modal */}
       <Modal open={!!viewRow} onClose={() => setViewRow(null)} title="Review Details">
         {viewRow && <>
-          <FormField label="Product" value={viewRow.product} readOnly isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-          <FormField label="Customer" value={viewRow.customer} readOnly isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+          <FormField label="Product" value={viewRow.product} readOnly border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+          <FormField label="Customer" value={viewRow.customer} readOnly border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
           <div style={{ marginBottom: '14px' }}>
             <label style={{ display: 'block', fontSize: '11.5px', fontWeight: 600, color: textMuted, marginBottom: '5px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Rating</label>
             <Stars n={viewRow.rating} size={20} />
           </div>
-          <FormField label="Comment" value={viewRow.comment} type="textarea" readOnly isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+          <FormField label="Comment" value={viewRow.comment} type="textarea" readOnly border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-            <FormField label="Date" value={viewRow.date} readOnly isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-            <FormField label="Status" value={viewRow.status} readOnly isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="Date" value={viewRow.date} readOnly border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="Status" value={viewRow.status} readOnly border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
           </div>
-          <button onClick={() => setViewRow(null)} style={{ width: '100%', padding: '10px', borderRadius: '9px', marginTop: '6px', background: isDark ? '#1E293B' : '#F1F5F9', border: `1px solid ${border}`, color: textMain, fontSize: '13.5px', fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-inter)' }}>Close</button>
+          <button onClick={() => setViewRow(null)} style={{ width: '100%', padding: '10px', borderRadius: '9px', marginTop: '6px', background: 'var(--surface)', border: `1px solid ${border}`, color: textMain, fontSize: '13.5px', fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-inter)' }}>Close</button>
         </>}
       </Modal>
 
@@ -150,8 +147,8 @@ function ReviewsContent() {
       <Modal open={!!editRow} onClose={() => setEditRow(null)} title={`Moderate: ${editRow?.product ?? ''}`}>
         {editRow && <>
           <p style={{ fontSize: '13px', color: textMuted, marginBottom: '16px' }}>By <strong style={{ color: textMain }}>{editRow.customer}</strong> — {editRow.rating}★</p>
-          <FormField label="Review Status" value={editStatus} onChange={setEditStatus} options={['Published', 'Pending', 'Rejected']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-          <ModalFooter onClose={() => setEditRow(null)} onSubmit={handleUpdateStatus} loading={loading} submitLabel="Update Status" isDark={isDark} border={border} textMain={textMain} />
+          <FormField label="Review Status" value={editStatus} onChange={setEditStatus} options={['Published', 'Pending', 'Rejected']} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+          <ModalFooter onClose={() => setEditRow(null)} onSubmit={handleUpdateStatus} loading={loading} submitLabel="Update Status" border={border} textMain={textMain} />
         </>}
       </Modal>
 

@@ -2,20 +2,17 @@
 import { useState, useEffect } from 'react';
 import AdminShell from '@/components/admin/admin-shell';
 import PageHeader from '@/components/admin/page-header';
-import { useTheme } from '@/contexts/theme-context';
 import { BarChart3, TrendingUp, TrendingDown, Download } from 'lucide-react';
 import { getReportsSummary } from '@/lib/api';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 function ReportsContent() {
-  const { theme } = useTheme();
-  const isDark = theme === 'dark';
-  const card = isDark ? '#0D1523' : '#FFFFFF';
-  const border = isDark ? '#1E293B' : '#E2E8F0';
-  const textMain = isDark ? '#FFFFFF' : '#0F172A';
-  const textMuted = isDark ? '#8E9AAF' : '#64748B';
-  const surface = isDark ? '#101826' : '#F1F5F9';
-  const gridColor = isDark ? '#1E293B' : '#E2E8F0';
+  const card = 'var(--card)';
+  const border = 'var(--border)';
+  const textMain = 'var(--text-main)';
+  const textMuted = 'var(--text-muted)';
+  const surface = 'var(--surface)';
+  const gridColor = 'var(--border)';
   const fmt = (n: number) => `$${Number(n || 0).toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
 
   const [selectedMonth, setSelectedMonth] = useState(() => new Date().toISOString().slice(0, 7));

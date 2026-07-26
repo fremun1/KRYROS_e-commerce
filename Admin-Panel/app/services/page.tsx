@@ -4,7 +4,6 @@ import AdminShell from '@/components/admin/admin-shell';
 import DataTable, { Column } from '@/components/admin/data-table';
 import PageHeader from '@/components/admin/page-header';
 import { Modal, ConfirmDialog, FormField, ModalFooter } from '@/components/admin/modal';
-import { useTheme } from '@/contexts/theme-context';
 import { Wrench } from 'lucide-react';
 import { getServices, createService, updateService, deleteService } from '@/lib/api';
 import toast from 'react-hot-toast';
@@ -24,13 +23,11 @@ const CATEGORIES = ['Repair', 'Setup', 'Recovery', 'Network'];
 const EMPTY_FORM = { name: '', category: 'Repair', price: '', duration: '', provider: '', status: 'Active' };
 
 function ServicesContent() {
-  const { theme } = useTheme();
-  const isDark = theme === 'dark';
-  const card = isDark ? '#0D1523' : '#FFFFFF';
-  const border = isDark ? '#1E293B' : '#E2E8F0';
-  const textMain = isDark ? '#FFFFFF' : '#0F172A';
-  const textMuted = isDark ? '#8E9AAF' : '#64748B';
-  const surface = isDark ? '#101826' : '#F1F5F9';
+  const card = 'var(--card)';
+  const border = 'var(--border)';
+  const textMain = 'var(--text-main)';
+  const textMuted = 'var(--text-muted)';
+  const surface = 'var(--surface)';
 
   const [data, setData] = useState<Service[]>([]);
   useEffect(() => {
@@ -127,16 +124,16 @@ function ServicesContent() {
 
   const modalFields = (
     <>
-      <FormField label="Service Name" value={form.name} onChange={fp('name')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. Screen Repair" />
+      <FormField label="Service Name" value={form.name} onChange={fp('name')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. Screen Repair" />
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-        <FormField label="Category" value={form.category} onChange={fp('category')} options={CATEGORIES} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-        <FormField label="Status" value={form.status} onChange={fp('status')} options={['Active', 'Inactive']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+        <FormField label="Category" value={form.category} onChange={fp('category')} options={CATEGORIES} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+        <FormField label="Status" value={form.status} onChange={fp('status')} options={['Active', 'Inactive']} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-        <FormField label="Price" value={form.price} onChange={fp('price')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="$0.00" />
-        <FormField label="Duration" value={form.duration} onChange={fp('duration')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 2 hours" />
+        <FormField label="Price" value={form.price} onChange={fp('price')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="$0.00" />
+        <FormField label="Duration" value={form.duration} onChange={fp('duration')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 2 hours" />
       </div>
-      <FormField label="Provider" value={form.provider} onChange={fp('provider')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. TechFix Zambia" />
+      <FormField label="Provider" value={form.provider} onChange={fp('provider')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. TechFix Zambia" />
     </>
   );
 
@@ -162,12 +159,12 @@ function ServicesContent() {
 
       <Modal open={addOpen} onClose={() => setAddOpen(false)} title="Add New Service">
         {modalFields}
-        <ModalFooter onClose={() => setAddOpen(false)} onSubmit={handleAdd} loading={loading} submitLabel="Add Service" isDark={isDark} border={border} textMain={textMain} />
+        <ModalFooter onClose={() => setAddOpen(false)} onSubmit={handleAdd} loading={loading} submitLabel="Add Service" border={border} textMain={textMain} />
       </Modal>
 
       <Modal open={!!editRow} onClose={() => setEditRow(null)} title={`Edit: ${editRow?.name ?? ''}`}>
         {modalFields}
-        <ModalFooter onClose={() => setEditRow(null)} onSubmit={handleEdit} loading={loading} submitLabel="Save Changes" isDark={isDark} border={border} textMain={textMain} />
+        <ModalFooter onClose={() => setEditRow(null)} onSubmit={handleEdit} loading={loading} submitLabel="Save Changes" border={border} textMain={textMain} />
       </Modal>
 
       <ConfirmDialog open={!!deleteRow} onClose={() => setDeleteRow(null)} onConfirm={handleDelete} loading={loading} title="Delete Service" message={`Are you sure you want to delete "${deleteRow?.name}"? This cannot be undone.`} />

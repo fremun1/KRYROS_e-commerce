@@ -4,7 +4,6 @@ import AdminShell from '@/components/admin/admin-shell';
 import DataTable, { Column } from '@/components/admin/data-table';
 import PageHeader from '@/components/admin/page-header';
 import { Modal, ConfirmDialog, FormField, ModalFooter } from '@/components/admin/modal';
-import { useTheme } from '@/contexts/theme-context';
 import { Users } from 'lucide-react';
 import { createUser, updateUser, deleteUser, getUsers } from '@/lib/api';
 import { useAuth } from '@/contexts/auth-context';
@@ -32,19 +31,16 @@ function formatUserDisplayId(id?: string, email?: string) {
 }
 
 function UsersContent() {
-  const { theme } = useTheme();
-  const isDark = theme === 'dark';
-  const card = isDark ? '#0D1523' : '#FFFFFF';
-  const border = isDark ? '#1E293B' : '#E2E8F0';
-  const textMain = isDark ? '#FFFFFF' : '#0F172A';
-  const textMuted = isDark ? '#8E9AAF' : '#64748B';
-  const surface = isDark ? '#101826' : '#F1F5F9';
-
   const { user: currentUser, loading: authLoading } = useAuth();
   const isSuperAdmin = (currentUser?.role || '').toUpperCase().replace(/[\s_]+/g, '') === 'SUPERADMIN';
-const currentUserRoleNorm = (currentUser?.role || '').toUpperCase().replace(/[\s_]+/g, '');
-const canDeleteUsers = currentUserRoleNorm === 'SUPERADMIN' || currentUserRoleNorm === 'ADMIN' || currentUserRoleNorm === 'MANAGER';
-const canManageRoles = isSuperAdmin;
+  const currentUserRoleNorm = (currentUser?.role || '').toUpperCase().replace(/[\s_]+/g, '');
+  const canDeleteUsers = currentUserRoleNorm === 'SUPERADMIN' || currentUserRoleNorm === 'ADMIN' || currentUserRoleNorm === 'MANAGER';
+  const canManageRoles = isSuperAdmin;
+  const card = 'var(--card)';
+  const border = 'var(--border)';
+  const textMain = 'var(--text-main)';
+  const textMuted = 'var(--text-muted)';
+  const surface = 'var(--surface)';
 
   const [data, setData] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -226,12 +222,12 @@ const canManageRoles = isSuperAdmin;
 
   const modalFields = (
     <>
-      <FormField label="Full Name" value={form.name} onChange={fp('name')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. John Banda" />
-      <FormField label="Email Address" value={form.email} onChange={fp('email')} type="email" isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="john@example.com" />
-      <FormField label="Password (leave blank to keep)" value={(form as any).password || ''} onChange={fp('password')} type="password" isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Min 8 chars, upper+lower+number" />
+      <FormField label="Full Name" value={form.name} onChange={fp('name')} isDark={false} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. John Banda" />
+      <FormField label="Email Address" value={form.email} onChange={fp('email')} type="email" isDark={false} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="john@example.com" />
+      <FormField label="Password (leave blank to keep)" value={(form as any).password || ''} onChange={fp('password')} type="password" isDark={false} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Min 8 chars, upper+lower+number" />
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-        <FormField label="Role" value={form.role} onChange={fp('role')} options={isSuperAdmin ? ['Customer', 'Wholesale', 'Staff', 'Manager', 'Admin', 'Super Admin'] : ['Customer', 'Wholesale', 'Staff']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-        <FormField label="Status" value={form.status} onChange={fp('status')} options={['Active', 'Inactive', 'Blocked']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+        <FormField label="Role" value={form.role} onChange={fp('role')} options={isSuperAdmin ? ['Customer', 'Wholesale', 'Staff', 'Manager', 'Admin', 'Super Admin'] : ['Customer', 'Wholesale', 'Staff']} isDark={false} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+        <FormField label="Status" value={form.status} onChange={fp('status')} options={['Active', 'Inactive', 'Blocked']} isDark={false} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
       </div>
     </>
   );
@@ -288,27 +284,27 @@ const canManageRoles = isSuperAdmin;
 
       <Modal open={addOpen} onClose={() => setAddOpen(false)} title="Add New User">
         {modalFields}
-        <ModalFooter onClose={() => setAddOpen(false)} onSubmit={handleAdd} loading={loading} submitLabel="Add User" isDark={isDark} border={border} textMain={textMain} />
+        <ModalFooter onClose={() => setAddOpen(false)} onSubmit={handleAdd} loading={loading} submitLabel="Add User" isDark={false} border={border} textMain={textMain} />
       </Modal>
 
       <Modal open={!!editRow} onClose={() => setEditRow(null)} title={`Edit: ${editRow?.name ?? ''}`}>
         {modalFields}
-        <ModalFooter onClose={() => setEditRow(null)} onSubmit={handleEdit} loading={loading} submitLabel="Save Changes" isDark={isDark} border={border} textMain={textMain} />
+        <ModalFooter onClose={() => setEditRow(null)} onSubmit={handleEdit} loading={loading} submitLabel="Save Changes" isDark={false} border={border} textMain={textMain} />
       </Modal>
 
       <Modal open={!!viewRow} onClose={() => setViewRow(null)} title="User Details">
         {viewRow && <>
-          <FormField label="Full Name" value={viewRow.name} readOnly isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-          <FormField label="Email" value={viewRow.email} readOnly isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+          <FormField label="Full Name" value={viewRow.name} readOnly isDark={false} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+          <FormField label="Email" value={viewRow.email} readOnly isDark={false} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-            <FormField label="Role" value={viewRow.role} readOnly isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-            <FormField label="Status" value={viewRow.status} readOnly isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="Role" value={viewRow.role} readOnly isDark={false} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="Status" value={viewRow.status} readOnly isDark={false} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-            <FormField label="Joined" value={viewRow.joined} readOnly isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-            <FormField label="Total Orders" value={String(viewRow.orders)} readOnly isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="Joined" value={viewRow.joined} readOnly isDark={false} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="Total Orders" value={String(viewRow.orders)} readOnly isDark={false} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
           </div>
-          <div style={{ marginTop: '6px' }}><button onClick={() => setViewRow(null)} style={{ width: '100%', padding: '10px', borderRadius: '9px', background: isDark ? '#1E293B' : '#F1F5F9', border: `1px solid ${border}`, color: textMain, fontSize: '13.5px', fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-inter)' }}>Close</button></div>
+          <div style={{ marginTop: '6px' }}><button onClick={() => setViewRow(null)} style={{ width: '100%', padding: '10px', borderRadius: '9px', background: surface, border: `1px solid ${border}`, color: textMain, fontSize: '13.5px', fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-inter)' }}>Close</button></div>
         </>}
       </Modal>
 

@@ -4,7 +4,6 @@ import AdminShell from '@/components/admin/admin-shell';
 import DataTable, { Column } from '@/components/admin/data-table';
 import PageHeader from '@/components/admin/page-header';
 import { Modal, ConfirmDialog, FormField, ModalFooter } from '@/components/admin/modal';
-import { useTheme } from '@/contexts/theme-context';
 import { Package, Settings2 } from 'lucide-react';
 import { createProduct, updateProduct, deleteProduct, getProducts, getBrands, getSettings, updateSettings } from '@/lib/api';
 import toast from 'react-hot-toast';
@@ -93,8 +92,6 @@ const EMPTY_FORM = {
 };
 
 function ProductsContent() {
-  const { theme } = useTheme();
-  const isDark = theme === 'dark';
   // CSS variables — single source of truth from globals.css
   const card = 'var(--card)'; const border = 'var(--border)';
   const textMain = 'var(--text-main)'; const textMuted = 'var(--text-muted)';
@@ -517,19 +514,19 @@ function ProductsContent() {
   const formFields = (
     <>
       {sectionLabel('Basic Information')}
-      <FormField label="Product Name *" value={form.name} onChange={fp('name')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. Samsung Galaxy S24 Ultra" />
-      <FormField label="URL Slug" value={form.slug} onChange={fp('slug')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="auto-generated from name" />
-      <FormField label="SKU / Product Code *" value={form.sku} onChange={fp('sku')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. SAM-S24U-BLK" />
-      <FormField label="Description" value={form.description} onChange={fp('description')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Describe this product in detail — features, what's in the box, warranty info..." type="textarea" />
+      <FormField label="Product Name *" value={form.name} onChange={fp('name')} isDark={false} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. Samsung Galaxy S24 Ultra" />
+      <FormField label="URL Slug" value={form.slug} onChange={fp('slug')} isDark={false} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="auto-generated from name" />
+      <FormField label="SKU / Product Code *" value={form.sku} onChange={fp('sku')} isDark={false} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. SAM-S24U-BLK" />
+      <FormField label="Description" value={form.description} onChange={fp('description')} isDark={false} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Describe this product in detail — features, what's in the box, warranty info..." type="textarea" />
 
       {sectionLabel('Pricing & Inventory')}
-      <FormField label="Price (USD) *" value={form.price} onChange={fp('price')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="0.00" />
-      <FormField label="Sale Price (optional)" value={form.salePrice} onChange={fp('salePrice')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Optional — leave blank if no sale" />
-      <FormField label="Stock Qty" value={form.stock} onChange={fp('stock')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="0" />
-      <FormField label="Weight (KG)" value={form.weight} onChange={fp('weight')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 0.5" />
+      <FormField label="Price (USD) *" value={form.price} onChange={fp('price')} isDark={false} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="0.00" />
+      <FormField label="Sale Price (optional)" value={form.salePrice} onChange={fp('salePrice')} isDark={false} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Optional — leave blank if no sale" />
+      <FormField label="Stock Qty" value={form.stock} onChange={fp('stock')} isDark={false} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="0" />
+      <FormField label="Weight (KG)" value={form.weight} onChange={fp('weight')} isDark={false} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 0.5" />
 
       {sectionLabel('Categorization')}
-      <FormField label="Brand" value={form.brand} onChange={fp('brand')} options={brands.length > 0 ? brands : ['Apple', 'Samsung', 'Sony', 'Beats', 'Bose', 'Dell', 'LG', 'Huawei', 'Other']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+      <FormField label="Brand" value={form.brand} onChange={fp('brand')} options={brands.length > 0 ? brands : ['Apple', 'Samsung', 'Sony', 'Beats', 'Bose', 'Dell', 'LG', 'Huawei', 'Other']} isDark={false} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
 
       {sectionLabel('Product Images')}
       <div>
@@ -550,7 +547,7 @@ function ProductsContent() {
           accept="image/*"
           folder="kryros/products"
           showUrlInput={false}
-          isDark={isDark}
+          isDark={false}
           border={border}
           surface={surface}
           textMuted={textMuted}
@@ -560,41 +557,41 @@ function ProductsContent() {
       </div>
 
       {sectionLabel('Specifications')}
-      <FormField label="Specifications" value={form.specifications} onChange={fp('specifications')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. Color: Black | RAM: 8GB | Storage: 256GB | Screen: 6.7 inch (or one per line)" type="textarea" />
+      <FormField label="Specifications" value={form.specifications} onChange={fp('specifications')} isDark={false} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. Color: Black | RAM: 8GB | Storage: 256GB | Screen: 6.7 inch (or one per line)" type="textarea" />
 
       {sectionLabel('Tags')}
-      <FormField label="Tags (comma-separated)" value={form.tags} onChange={fp('tags')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. apple, iphone, smartphone, 5G" />
+      <FormField label="Tags (comma-separated)" value={form.tags} onChange={fp('tags')} isDark={false} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. apple, iphone, smartphone, 5G" />
 
       {sectionLabel('SEO Meta')}
-      <FormField label="Meta Title" value={form.metaTitle} onChange={fp('metaTitle')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Leave blank to use product name" />
-      <FormField label="Meta Description" value={form.metaDescription} onChange={fp('metaDescription')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Short description for search engines (max 160 chars)" type="textarea" />
+      <FormField label="Meta Title" value={form.metaTitle} onChange={fp('metaTitle')} isDark={false} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Leave blank to use product name" />
+      <FormField label="Meta Description" value={form.metaDescription} onChange={fp('metaDescription')} isDark={false} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Short description for search engines (max 160 chars)" type="textarea" />
 
       {sectionLabel('Visibility & Status')}
-      <FormField label="Status" value={form.status} onChange={fp('status')} options={STATUSES} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-      <FormField label="Featured on Homepage" value={form.featured} onChange={fp('featured')} options={BOOL_OPTS} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-      <FormField label="Mark as New Arrival" value={form.isNew} onChange={fp('isNew')} options={BOOL_OPTS} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+      <FormField label="Status" value={form.status} onChange={fp('status')} options={STATUSES} isDark={false} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+      <FormField label="Featured on Homepage" value={form.featured} onChange={fp('featured')} options={BOOL_OPTS} isDark={false} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+      <FormField label="Mark as New Arrival" value={form.isNew} onChange={fp('isNew')} options={BOOL_OPTS} isDark={false} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
 
       {sectionLabel('Flash Sale')}
-      <FormField label="Enable Flash Sale" value={form.isFlashSale} onChange={fp('isFlashSale')} options={BOOL_OPTS} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+      <FormField label="Enable Flash Sale" value={form.isFlashSale} onChange={fp('isFlashSale')} options={BOOL_OPTS} isDark={false} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
       {strToBool(form.isFlashSale) && (
         <>
-          <FormField label="Flash Sale Price" value={form.flashSalePrice} onChange={fp('flashSalePrice')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Discounted price during flash sale" />
-          <FormField label="Flash Sale End Date & Time" value={form.flashSaleEnd} onChange={fp('flashSaleEnd')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} type="datetime-local" />
+          <FormField label="Flash Sale Price" value={form.flashSalePrice} onChange={fp('flashSalePrice')} isDark={false} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Discounted price during flash sale" />
+          <FormField label="Flash Sale End Date & Time" value={form.flashSaleEnd} onChange={fp('flashSaleEnd')} isDark={false} border={border} textMain={textMain} textMuted={textMuted} surface={surface} type="datetime-local" />
         </>
       )}
 
       {sectionLabel('Credit / Get Now')}
-      <FormField label="Allow Credit Purchase" value={form.allowCredit} onChange={fp('allowCredit')} options={BOOL_OPTS} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+      <FormField label="Allow Credit Purchase" value={form.allowCredit} onChange={fp('allowCredit')} options={BOOL_OPTS} isDark={false} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
       {strToBool(form.allowCredit) && (
         <>
-          <FormField label="Credit Message" value={form.creditMessage} onChange={fp('creditMessage')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. Get Now, Pay Later" />
-          <FormField label="Minimum Deposit" value={form.creditMinimum} onChange={fp('creditMinimum')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 200" />
+          <FormField label="Credit Message" value={form.creditMessage} onChange={fp('creditMessage')} isDark={false} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. Get Now, Pay Later" />
+          <FormField label="Minimum Deposit" value={form.creditMinimum} onChange={fp('creditMinimum')} isDark={false} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 200" />
         </>
       )}
 
       {sectionLabel('Trust & Guarantee Badges')}
-      <FormField label="Show Guarantee Badge" value={form.showGuaranteeBadge} onChange={fp('showGuaranteeBadge')} options={BOOL_OPTS} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-      <FormField label="Show Free Returns Badge" value={form.showReturnsBadge} onChange={fp('showReturnsBadge')} options={BOOL_OPTS} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+      <FormField label="Show Guarantee Badge" value={form.showGuaranteeBadge} onChange={fp('showGuaranteeBadge')} options={BOOL_OPTS} isDark={false} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+      <FormField label="Show Free Returns Badge" value={form.showReturnsBadge} onChange={fp('showReturnsBadge')} options={BOOL_OPTS} isDark={false} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
 
       {sectionLabel('Product Condition & Shipping')}
       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:'12px', marginBottom:'8px' }}>
@@ -623,16 +620,16 @@ function ProductsContent() {
           Edit Conditions
         </button>
       </div>
-      <FormField label="Product Condition" value={form.condition} onChange={fp('condition')} options={productConditionOptions} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-      <FormField label="Shipping Fee (USD, optional)" value={form.shippingFee} onChange={fp('shippingFee')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Leave blank for free shipping" />
-      <FormField label="Estimated Delivery Days (Min)" value={form.estimatedDeliveryMinDays} onChange={fp('estimatedDeliveryMinDays')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="2" />
-      <FormField label="Estimated Delivery Days (Max)" value={form.estimatedDeliveryMaxDays} onChange={fp('estimatedDeliveryMaxDays')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="7" />
-      <FormField label="Product Card Promo Text (shown before stock status on the frontend)" value={form.popularItemText} onChange={fp('popularItemText')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. Express Checkout, Jumia Express, Fast Delivery, Pay Small Small" />
-      <FormField label="Easy Returns Text (optional)" value={form.easyReturnsText} onChange={fp('easyReturnsText')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g., 30-day returns accepted" />
-      <FormField label="Guarantee Text (optional)" value={form.fiveYearGuaranteeText} onChange={fp('fiveYearGuaranteeText')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g., Protected" />
-      <FormField label="Free Returns Text (optional)" value={form.freeReturnsText} onChange={fp('freeReturnsText')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g., Returns accepted" />
-      <FormField label="Free Returns Description (optional)" value={form.freeReturnsDescription} onChange={fp('freeReturnsDescription')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g., Easy 30-day returns" />
-      <FormField label="Protection Description (optional)" value={form.protectionDescription} onChange={fp('protectionDescription')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g., Delivery cover against loss or damage" />
+      <FormField label="Product Condition" value={form.condition} onChange={fp('condition')} options={productConditionOptions} isDark={false} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+      <FormField label="Shipping Fee (USD, optional)" value={form.shippingFee} onChange={fp('shippingFee')} isDark={false} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Leave blank for free shipping" />
+      <FormField label="Estimated Delivery Days (Min)" value={form.estimatedDeliveryMinDays} onChange={fp('estimatedDeliveryMinDays')} isDark={false} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="2" />
+      <FormField label="Estimated Delivery Days (Max)" value={form.estimatedDeliveryMaxDays} onChange={fp('estimatedDeliveryMaxDays')} isDark={false} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="7" />
+      <FormField label="Product Card Promo Text (shown before stock status on the frontend)" value={form.popularItemText} onChange={fp('popularItemText')} isDark={false} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. Express Checkout, Jumia Express, Fast Delivery, Pay Small Small" />
+      <FormField label="Easy Returns Text (optional)" value={form.easyReturnsText} onChange={fp('easyReturnsText')} isDark={false} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g., 30-day returns accepted" />
+      <FormField label="Guarantee Text (optional)" value={form.fiveYearGuaranteeText} onChange={fp('fiveYearGuaranteeText')} isDark={false} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g., Protected" />
+      <FormField label="Free Returns Text (optional)" value={form.freeReturnsText} onChange={fp('freeReturnsText')} isDark={false} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g., Returns accepted" />
+      <FormField label="Free Returns Description (optional)" value={form.freeReturnsDescription} onChange={fp('freeReturnsDescription')} isDark={false} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g., Easy 30-day returns" />
+      <FormField label="Protection Description (optional)" value={form.protectionDescription} onChange={fp('protectionDescription')} isDark={false} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g., Delivery cover against loss or damage" />
     </>
   );
 
@@ -692,27 +689,27 @@ function ProductsContent() {
 
       <Modal open={addOpen} onClose={() => setAddOpen(false)} title="Add New Product">
         {formFields}
-        <ModalFooter onClose={() => setAddOpen(false)} onSubmit={handleAdd} loading={loading} submitLabel="Create Product" isDark={isDark} border={border} textMain={textMain} />
+        <ModalFooter onClose={() => setAddOpen(false)} onSubmit={handleAdd} loading={loading} submitLabel="Create Product" isDark={false} border={border} textMain={textMain} />
       </Modal>
 
       <Modal open={!!editRow} onClose={() => setEditRow(null)} title={`Edit: ${editRow?.name ?? ''}`}>
         {formFields}
-        <ModalFooter onClose={() => setEditRow(null)} onSubmit={handleEdit} loading={loading} submitLabel="Save Changes" isDark={isDark} border={border} textMain={textMain} />
+        <ModalFooter onClose={() => setEditRow(null)} onSubmit={handleEdit} loading={loading} submitLabel="Save Changes" isDark={false} border={border} textMain={textMain} />
       </Modal>
 
       {viewRow && (
         <Modal open={!!viewRow} onClose={() => setViewRow(null)} title="Product Details">
-          <FormField label="Name" value={viewRow.name} readOnly isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-          <FormField label="SKU" value={viewRow.sku} readOnly isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-          <FormField label="Brand" value={viewRow.brand} readOnly isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-          <FormField label="Price" value={viewRow.price} readOnly isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-          <FormField label="Sale Price" value={viewRow.salePrice || '—'} readOnly isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-          <FormField label="Stock" value={String(viewRow.stock)} readOnly isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-          <FormField label="Weight (KG)" value={viewRow.weight || '—'} readOnly isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-          <FormField label="Description" value={viewRow.description || '—'} readOnly isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-          <FormField label="Specifications" value={viewRow.specifications || '—'} readOnly isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-          <FormField label="Tags" value={viewRow.tags || '—'} readOnly isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-          <FormField label="Status" value={viewRow.status} readOnly isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+          <FormField label="Name" value={viewRow.name} readOnly isDark={false} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+          <FormField label="SKU" value={viewRow.sku} readOnly isDark={false} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+          <FormField label="Brand" value={viewRow.brand} readOnly isDark={false} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+          <FormField label="Price" value={viewRow.price} readOnly isDark={false} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+          <FormField label="Sale Price" value={viewRow.salePrice || '—'} readOnly isDark={false} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+          <FormField label="Stock" value={String(viewRow.stock)} readOnly isDark={false} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+          <FormField label="Weight (KG)" value={viewRow.weight || '—'} readOnly isDark={false} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+          <FormField label="Description" value={viewRow.description || '—'} readOnly isDark={false} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+          <FormField label="Specifications" value={viewRow.specifications || '—'} readOnly isDark={false} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+          <FormField label="Tags" value={viewRow.tags || '—'} readOnly isDark={false} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+          <FormField label="Status" value={viewRow.status} readOnly isDark={false} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
           <button onClick={() => setViewRow(null)} style={{ width: '100%', padding: '10px', borderRadius: '9px', background: surface, border: `1px solid ${border}`, color: textMain, fontSize: '13.5px', fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-inter)', marginTop: '8px' }}>Close</button>
         </Modal>
       )}
@@ -728,7 +725,7 @@ function ProductsContent() {
           value={conditionDraft}
           onChange={setConditionDraft}
           type="textarea"
-          isDark={isDark}
+          isDark={false}
           border={border}
           textMain={textMain}
           textMuted={textMuted}
@@ -740,7 +737,7 @@ function ProductsContent() {
           onSubmit={handleSaveConditionOptions}
           loading={conditionSaving}
           submitLabel="Save Conditions"
-          isDark={isDark}
+          isDark={false}
           border={border}
           textMain={textMain}
         />

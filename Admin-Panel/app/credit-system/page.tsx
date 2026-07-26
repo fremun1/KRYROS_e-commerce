@@ -4,7 +4,6 @@ import AdminShell from '@/components/admin/admin-shell';
 import DataTable, { Column } from '@/components/admin/data-table';
 import PageHeader from '@/components/admin/page-header';
 import { Modal, ConfirmDialog, FormField, ModalFooter } from '@/components/admin/modal';
-import { useTheme } from '@/contexts/theme-context';
 import { CreditCard, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api, { getCreditAccounts, getCreditPlans, createCreditPlan, updateCreditPlan, deleteCreditPlan, getProducts, createProduct, updateProduct, deleteProduct } from '@/lib/api';
@@ -26,13 +25,11 @@ const APP_STATUSES = ['Pending', 'Approved', 'Rejected'];
 const PLAN_STATUSES = ['Active', 'Inactive'];
 
 function CreditContent() {
-  const { theme } = useTheme();
-  const isDark = theme === 'dark';
-  const card = isDark ? '#0D1523' : '#FFFFFF';
-  const border = isDark ? '#1E293B' : '#E2E8F0';
-  const textMain = isDark ? '#FFFFFF' : '#0F172A';
-  const textMuted = isDark ? '#8E9AAF' : '#64748B';
-  const surface = isDark ? '#101826' : '#F1F5F9';
+  const card = 'var(--card)';
+  const border = 'var(--border)';
+  const textMain = 'var(--text-main)';
+  const textMuted = 'var(--text-muted)';
+  const surface = 'var(--surface)';
 
   type Tab = 'applications' | 'plans' | 'products' | 'accounts';
   const [activeTab, setActiveTab] = useState<Tab>('applications');
@@ -390,12 +387,12 @@ function CreditContent() {
 
   const planFormFields = (
     <>
-      <FormField label="Plan Name *" value={planForm.name} onChange={v=>setPlanForm(f=>({...f,name:v}))} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder='e.g. Pay in 3' />
-      <FormField label="Duration (months)" value={planForm.months} onChange={v=>setPlanForm(f=>({...f,months:v}))} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder='3' />
-      <FormField label="Interest Rate" value={planForm.interest} onChange={v=>setPlanForm(f=>({...f,interest:v}))} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder='e.g. 0% or 2.5%' />
-      <FormField label="Minimum Amount" value={planForm.minAmount} onChange={v=>setPlanForm(f=>({...f,minAmount:v}))} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder='e.g. $100' />
-      <FormField label="Maximum Amount" value={planForm.maxAmount} onChange={v=>setPlanForm(f=>({...f,maxAmount:v}))} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder='e.g. $5,000' />
-      <FormField label="Status" value={planForm.status} onChange={v=>setPlanForm(f=>({...f,status:v}))} options={PLAN_STATUSES} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+      <FormField label="Plan Name *" value={planForm.name} onChange={v=>setPlanForm(f=>({...f,name:v}))} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder='e.g. Pay in 3' />
+      <FormField label="Duration (months)" value={planForm.months} onChange={v=>setPlanForm(f=>({...f,months:v}))} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder='3' />
+      <FormField label="Interest Rate" value={planForm.interest} onChange={v=>setPlanForm(f=>({...f,interest:v}))} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder='e.g. 0% or 2.5%' />
+      <FormField label="Minimum Amount" value={planForm.minAmount} onChange={v=>setPlanForm(f=>({...f,minAmount:v}))} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder='e.g. $100' />
+      <FormField label="Maximum Amount" value={planForm.maxAmount} onChange={v=>setPlanForm(f=>({...f,maxAmount:v}))} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder='e.g. $5,000' />
+      <FormField label="Status" value={planForm.status} onChange={v=>setPlanForm(f=>({...f,status:v}))} options={PLAN_STATUSES} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
     </>
   );
 
@@ -503,42 +500,42 @@ function CreditContent() {
       {/* ── Modals: Applications ── */}
       {editApp && (
         <Modal open={!!editApp} onClose={()=>setEditApp(null)} title="Update Application Status">
-          <FormField label="Application" value={editApp.user + ' — ' + editApp.product} readOnly isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-          <FormField label="Plan" value={editApp.plan} readOnly isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-          <FormField label="Amount" value={editApp.amount} readOnly isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-          <FormField label="Status" value={appStatus} onChange={setAppStatus} options={APP_STATUSES} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-          <ModalFooter onClose={()=>setEditApp(null)} onSubmit={handleEditApp} loading={false} submitLabel="Update Status" isDark={isDark} border={border} textMain={textMain} />
+          <FormField label="Application" value={editApp.user + ' — ' + editApp.product} readOnly border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+          <FormField label="Plan" value={editApp.plan} readOnly border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+          <FormField label="Amount" value={editApp.amount} readOnly border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+          <FormField label="Status" value={appStatus} onChange={setAppStatus} options={APP_STATUSES} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+          <ModalFooter onClose={()=>setEditApp(null)} onSubmit={handleEditApp} loading={false} submitLabel="Update Status" border={border} textMain={textMain} />
         </Modal>
       )}
       {viewApp && (
         <Modal open={!!viewApp} onClose={()=>setViewApp(null)} title="Application Details">
-          <FormField label="User" value={viewApp.user} readOnly isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-          <FormField label="Email" value={viewApp.email} readOnly isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-          <FormField label="Product" value={viewApp.product} readOnly isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-          <FormField label="Plan" value={viewApp.plan} readOnly isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-          <FormField label="Amount" value={viewApp.amount} readOnly isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-          <FormField label="Status" value={viewApp.status} readOnly isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-          <FormField label="Date" value={viewApp.date} readOnly isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-          <button onClick={()=>setViewApp(null)} style={{width:'100%',padding:'10px',borderRadius:'9px',background:isDark?'#1E293B':'#F1F5F9',border:`1px solid ${border}`,color:textMain,fontSize:'13.5px',fontWeight:600,cursor:'pointer',fontFamily:'var(--font-inter)'}}>Close</button>
+          <FormField label="User" value={viewApp.user} readOnly border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+          <FormField label="Email" value={viewApp.email} readOnly border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+          <FormField label="Product" value={viewApp.product} readOnly border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+          <FormField label="Plan" value={viewApp.plan} readOnly border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+          <FormField label="Amount" value={viewApp.amount} readOnly border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+          <FormField label="Status" value={viewApp.status} readOnly border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+          <FormField label="Date" value={viewApp.date} readOnly border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+          <button onClick={()=>setViewApp(null)} style={{width:'100%',padding:'10px',borderRadius:'9px',background:'var(--surface)',border:`1px solid ${border}`,color:textMain,fontSize:'13.5px',fontWeight:600,cursor:'pointer',fontFamily:'var(--font-inter)'}}>Close</button>
         </Modal>
       )}
 
       {/* ── Modals: Plans ── */}
       <Modal open={addPlanOpen} onClose={()=>setAddPlanOpen(false)} title="Add New Plan">
         {planFormFields}
-        <ModalFooter onClose={()=>setAddPlanOpen(false)} onSubmit={handleAddPlan} loading={false} submitLabel="Add Plan" isDark={isDark} border={border} textMain={textMain} />
+        <ModalFooter onClose={()=>setAddPlanOpen(false)} onSubmit={handleAddPlan} loading={false} submitLabel="Add Plan" border={border} textMain={textMain} />
       </Modal>
       {editPlan && (
         <Modal open={!!editPlan} onClose={()=>setEditPlan(null)} title={`Edit Plan: ${editPlan.name}`}>
           {planFormFields}
-          <ModalFooter onClose={()=>setEditPlan(null)} onSubmit={handleEditPlan} loading={false} submitLabel="Save Changes" isDark={isDark} border={border} textMain={textMain} />
+          <ModalFooter onClose={()=>setEditPlan(null)} onSubmit={handleEditPlan} loading={false} submitLabel="Save Changes" border={border} textMain={textMain} />
         </Modal>
       )}
       <ConfirmDialog open={!!deletePlan} onClose={()=>setDeletePlan(null)} onConfirm={handleDeletePlan} loading={false} title="Delete Plan" message={`Delete "${deletePlan?.name}" permanently?`} />
 
       {/* ── Modals: Installment Products ── */}
       <Modal open={addProdOpen} onClose={() => setAddProdOpen(false)} title="Add Credit Product">
-        <FormField label="Product Name *" value={prodForm.name} onChange={v => setProdForm(f => ({ ...f, name: v }))} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Product name" />
+        <FormField label="Product Name *" value={prodForm.name} onChange={v => setProdForm(f => ({ ...f, name: v }))} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Product name" />
         <div style={{ marginBottom: '14px' }}>
           <label style={{ display: 'block', fontSize: '11.5px', fontWeight: 600, color: textMuted, marginBottom: '8px', textTransform: 'uppercase' }}>Product Images</label>
           <CloudinaryUpload
@@ -548,25 +545,25 @@ function CreditContent() {
             showUrlInput={false}
           />
         </div>
-        <FormField label="Description" value={prodForm.description} onChange={v => setProdForm(f => ({ ...f, description: v }))} type="textarea" isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Detailed product description..." />
+        <FormField label="Description" value={prodForm.description} onChange={v => setProdForm(f => ({ ...f, description: v }))} type="textarea" border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Detailed product description..." />
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-          <FormField label="SKU" value={prodForm.sku} onChange={v => setProdForm(f => ({ ...f, sku: v }))} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. CRD-PRD-001" />
-          <FormField label="Price" value={prodForm.price} onChange={v => setProdForm(f => ({ ...f, price: v }))} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 1500" />
+          <FormField label="SKU" value={prodForm.sku} onChange={v => setProdForm(f => ({ ...f, sku: v }))} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. CRD-PRD-001" />
+          <FormField label="Price" value={prodForm.price} onChange={v => setProdForm(f => ({ ...f, price: v }))} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 1500" />
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-          <FormField label="Total Stock" value={prodForm.stockTotal} onChange={v => setProdForm(f => ({ ...f, stockTotal: v }))} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 100" />
-          <FormField label="Current Stock" value={prodForm.stockCurrent} onChange={v => setProdForm(f => ({ ...f, stockCurrent: v }))} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 50" />
+          <FormField label="Total Stock" value={prodForm.stockTotal} onChange={v => setProdForm(f => ({ ...f, stockTotal: v }))} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 100" />
+          <FormField label="Current Stock" value={prodForm.stockCurrent} onChange={v => setProdForm(f => ({ ...f, stockCurrent: v }))} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 50" />
         </div>
-        <FormField label="Credit Message" value={prodForm.creditMessage} onChange={v => setProdForm(f => ({ ...f, creditMessage: v }))} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. Get now, pay later" />
-        <FormField label="Credit Minimum Deposit" value={prodForm.creditMinimum} onChange={v => setProdForm(f => ({ ...f, creditMinimum: v }))} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 500" />
-        <FormField label="Specifications" value={prodForm.specifications} onChange={v => setProdForm(f => ({ ...f, specifications: v }))} type="textarea" isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Key: Value (one per line)" />
-        <FormField label="Status" value={prodForm.status} onChange={v => setProdForm(f => ({ ...f, status: v }))} options={['Active', 'Inactive']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-        <ModalFooter onClose={() => setAddProdOpen(false)} onSubmit={handleAddProd} loading={prodSaving} submitLabel="Add Product" isDark={isDark} border={border} textMain={textMain} />
+        <FormField label="Credit Message" value={prodForm.creditMessage} onChange={v => setProdForm(f => ({ ...f, creditMessage: v }))} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. Get now, pay later" />
+        <FormField label="Credit Minimum Deposit" value={prodForm.creditMinimum} onChange={v => setProdForm(f => ({ ...f, creditMinimum: v }))} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 500" />
+        <FormField label="Specifications" value={prodForm.specifications} onChange={v => setProdForm(f => ({ ...f, specifications: v }))} type="textarea" border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Key: Value (one per line)" />
+        <FormField label="Status" value={prodForm.status} onChange={v => setProdForm(f => ({ ...f, status: v }))} options={['Active', 'Inactive']} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+        <ModalFooter onClose={() => setAddProdOpen(false)} onSubmit={handleAddProd} loading={prodSaving} submitLabel="Add Product" border={border} textMain={textMain} />
       </Modal>
 
       {editProd && (
         <Modal open={!!editProd} onClose={() => setEditProd(null)} title={`Edit: ${editProd.name}`}>
-          <FormField label="Product Name *" value={prodForm.name} onChange={v => setProdForm(f => ({ ...f, name: v }))} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Product name" />
+          <FormField label="Product Name *" value={prodForm.name} onChange={v => setProdForm(f => ({ ...f, name: v }))} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Product name" />
           <div style={{ marginBottom: '14px' }}>
             <label style={{ display: 'block', fontSize: '11.5px', fontWeight: 600, color: textMuted, marginBottom: '8px', textTransform: 'uppercase' }}>Product Images</label>
             
@@ -593,20 +590,20 @@ function CreditContent() {
               showUrlInput={false}
             />
           </div>
-          <FormField label="Description" value={prodForm.description} onChange={v => setProdForm(f => ({ ...f, description: v }))} type="textarea" isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Detailed product description..." />
+          <FormField label="Description" value={prodForm.description} onChange={v => setProdForm(f => ({ ...f, description: v }))} type="textarea" border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Detailed product description..." />
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-            <FormField label="SKU" value={prodForm.sku} onChange={v => setProdForm(f => ({ ...f, sku: v }))} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. CRD-PRD-001" />
-            <FormField label="Price" value={prodForm.price} onChange={v => setProdForm(f => ({ ...f, price: v }))} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 1500" />
+            <FormField label="SKU" value={prodForm.sku} onChange={v => setProdForm(f => ({ ...f, sku: v }))} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. CRD-PRD-001" />
+            <FormField label="Price" value={prodForm.price} onChange={v => setProdForm(f => ({ ...f, price: v }))} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 1500" />
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-            <FormField label="Total Stock" value={prodForm.stockTotal} onChange={v => setProdForm(f => ({ ...f, stockTotal: v }))} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 100" />
-            <FormField label="Current Stock" value={prodForm.stockCurrent} onChange={v => setProdForm(f => ({ ...f, stockCurrent: v }))} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 50" />
+            <FormField label="Total Stock" value={prodForm.stockTotal} onChange={v => setProdForm(f => ({ ...f, stockTotal: v }))} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 100" />
+            <FormField label="Current Stock" value={prodForm.stockCurrent} onChange={v => setProdForm(f => ({ ...f, stockCurrent: v }))} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 50" />
           </div>
-          <FormField label="Credit Message" value={prodForm.creditMessage} onChange={v => setProdForm(f => ({ ...f, creditMessage: v }))} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. Get now, pay later" />
-          <FormField label="Credit Minimum Deposit" value={prodForm.creditMinimum} onChange={v => setProdForm(f => ({ ...f, creditMinimum: v }))} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 500" />
-          <FormField label="Specifications" value={prodForm.specifications} onChange={v => setProdForm(f => ({ ...f, specifications: v }))} type="textarea" isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Key: Value (one per line)" />
-          <FormField label="Status" value={prodForm.status} onChange={v => setProdForm(f => ({ ...f, status: v }))} options={['Active', 'Inactive']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-          <ModalFooter onClose={() => setEditProd(null)} onSubmit={handleEditProd} loading={prodSaving} submitLabel="Save Changes" isDark={isDark} border={border} textMain={textMain} />
+          <FormField label="Credit Message" value={prodForm.creditMessage} onChange={v => setProdForm(f => ({ ...f, creditMessage: v }))} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. Get now, pay later" />
+          <FormField label="Credit Minimum Deposit" value={prodForm.creditMinimum} onChange={v => setProdForm(f => ({ ...f, creditMinimum: v }))} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 500" />
+          <FormField label="Specifications" value={prodForm.specifications} onChange={v => setProdForm(f => ({ ...f, specifications: v }))} type="textarea" border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Key: Value (one per line)" />
+          <FormField label="Status" value={prodForm.status} onChange={v => setProdForm(f => ({ ...f, status: v }))} options={['Active', 'Inactive']} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+          <ModalFooter onClose={() => setEditProd(null)} onSubmit={handleEditProd} loading={prodSaving} submitLabel="Save Changes" border={border} textMain={textMain} />
         </Modal>
       )}
 
@@ -615,23 +612,23 @@ function CreditContent() {
       {/* ── Modals: Credit Accounts ── */}
       {editCredit && (
         <Modal open={!!editCredit} onClose={()=>setEditCredit(null)} title="Edit Credit Account">
-          <FormField label="Customer" value={editCredit.customer} readOnly isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-          <FormField label="Plan" value={editCredit.plan} readOnly isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-          <FormField label="Status" value={creditForm.status} onChange={v=>setCreditForm(f=>({...f,status:v}))} options={['Active','Inactive','Defaulted','Paid']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-          <ModalFooter onClose={()=>setEditCredit(null)} onSubmit={handleEditCredit} loading={false} submitLabel="Save Changes" isDark={isDark} border={border} textMain={textMain} />
+          <FormField label="Customer" value={editCredit.customer} readOnly border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+          <FormField label="Plan" value={editCredit.plan} readOnly border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+          <FormField label="Status" value={creditForm.status} onChange={v=>setCreditForm(f=>({...f,status:v}))} options={['Active','Inactive','Defaulted','Paid']} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+          <ModalFooter onClose={()=>setEditCredit(null)} onSubmit={handleEditCredit} loading={false} submitLabel="Save Changes" border={border} textMain={textMain} />
         </Modal>
       )}
       {viewCredit && (
         <Modal open={!!viewCredit} onClose={()=>setViewCredit(null)} title="Credit Account Details">
-          <FormField label="Customer" value={viewCredit.customer} readOnly isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-          <FormField label="Phone" value={viewCredit.phone} readOnly isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-          <FormField label="Plan" value={viewCredit.plan} readOnly isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-          <FormField label="Credit Limit" value={viewCredit.limit} readOnly isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-          <FormField label="Used" value={viewCredit.used} readOnly isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-          <FormField label="Outstanding" value={viewCredit.outstanding} readOnly isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-          <FormField label="Due Date" value={viewCredit.due} readOnly isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-          <FormField label="Status" value={viewCredit.status} readOnly isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-          <button onClick={()=>setViewCredit(null)} style={{width:'100%',padding:'10px',borderRadius:'9px',background:isDark?'#1E293B':'#F1F5F9',border:`1px solid ${border}`,color:textMain,fontSize:'13.5px',fontWeight:600,cursor:'pointer',fontFamily:'var(--font-inter)'}}>Close</button>
+          <FormField label="Customer" value={viewCredit.customer} readOnly border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+          <FormField label="Phone" value={viewCredit.phone} readOnly border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+          <FormField label="Plan" value={viewCredit.plan} readOnly border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+          <FormField label="Credit Limit" value={viewCredit.limit} readOnly border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+          <FormField label="Used" value={viewCredit.used} readOnly border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+          <FormField label="Outstanding" value={viewCredit.outstanding} readOnly border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+          <FormField label="Due Date" value={viewCredit.due} readOnly border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+          <FormField label="Status" value={viewCredit.status} readOnly border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+          <button onClick={()=>setViewCredit(null)} style={{width:'100%',padding:'10px',borderRadius:'9px',background:'var(--surface)',border:`1px solid ${border}`,color:textMain,fontSize:'13.5px',fontWeight:600,cursor:'pointer',fontFamily:'var(--font-inter)'}}>Close</button>
         </Modal>
       )}
 

@@ -4,7 +4,6 @@ import AdminShell from '@/components/admin/admin-shell';
 import DataTable, { Column } from '@/components/admin/data-table';
 import PageHeader from '@/components/admin/page-header';
 import { Modal, FormField, ModalFooter } from '@/components/admin/modal';
-import { useTheme } from '@/contexts/theme-context';
 import { DollarSign } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { createCountry, getCountries, updateCountry } from '@/lib/api';
@@ -34,12 +33,10 @@ const EMPTY_ADD_FORM = {
 };
 
 function CurrenciesContent() {
-  const { theme } = useTheme();
-  const isDark = theme === 'dark';
-  const border    = isDark ? '#1E293B' : '#E2E8F0';
-  const textMain  = isDark ? '#FFFFFF' : '#0F172A';
-  const textMuted = isDark ? '#8E9AAF' : '#64748B';
-  const surface   = isDark ? '#101826' : '#F1F5F9';
+  const border    = 'var(--border)';
+  const textMain  = 'var(--text-main)';
+  const textMuted = 'var(--text-muted)';
+  const surface   = 'var(--surface)';
 
   const [currencies, setCurrencies] = useState<CurrencyRow[]>([]);
   const [loading, setLoading] = useState(false);
@@ -239,21 +236,21 @@ function CurrenciesContent() {
           label="Currency Code"
           value={curForm.code}
           onChange={(v) => setCurForm(f => ({ ...f, code: v.toUpperCase() }))}
-          isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
+          border={border} textMain={textMain} textMuted={textMuted} surface={surface}
           placeholder="e.g. USD"
         />
         <FormField
           label="Currency Symbol"
           value={curForm.symbol}
           onChange={(v) => setCurForm(f => ({ ...f, symbol: v }))}
-          isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
+          border={border} textMain={textMain} textMuted={textMuted} surface={surface}
           placeholder="e.g. $ or USD"
         />
         <FormField
           label="Exchange Rate (vs USD)"
           value={curForm.rate}
           onChange={(v) => setCurForm(f => ({ ...f, rate: v }))}
-          isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
+          border={border} textMain={textMain} textMuted={textMuted} surface={surface}
           placeholder="e.g. 27.5"
         />
         <FormField
@@ -261,21 +258,21 @@ function CurrenciesContent() {
           value={curForm.symbolPosition}
           onChange={(v) => setCurForm(f => ({ ...f, symbolPosition: v }))}
           options={['BEFORE', 'AFTER']}
-          isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
+          border={border} textMain={textMain} textMuted={textMuted} surface={surface}
         />
         <FormField
           label="Auto Update Rate"
           value={curForm.autoRate}
           onChange={(v) => setCurForm(f => ({ ...f, autoRate: v }))}
           options={['true', 'false']}
-          isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
+          border={border} textMain={textMain} textMuted={textMuted} surface={surface}
         />
         <ModalFooter
           onClose={() => setEditCurrency(null)}
           onSubmit={handleSave}
           loading={loading}
           submitLabel="Save Rate"
-          isDark={isDark} border={border} textMain={textMain}
+          border={border} textMain={textMain}
         />
       </Modal>
 
@@ -288,35 +285,35 @@ function CurrenciesContent() {
             label="Country Name"
             value={addForm.countryName}
             onChange={(v) => setAddForm(f => ({ ...f, countryName: v }))}
-            isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
+            border={border} textMain={textMain} textMuted={textMuted} surface={surface}
             placeholder="e.g. United States"
           />
           <FormField
             label="Country Code"
             value={addForm.countryCode}
             onChange={(v) => setAddForm(f => ({ ...f, countryCode: v.toUpperCase() }))}
-            isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
+            border={border} textMain={textMain} textMuted={textMuted} surface={surface}
             placeholder="e.g. US"
           />
           <FormField
             label="Currency Code"
             value={addForm.code}
             onChange={(v) => setAddForm(f => ({ ...f, code: v.toUpperCase() }))}
-            isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
+            border={border} textMain={textMain} textMuted={textMuted} surface={surface}
             placeholder="e.g. USD"
           />
           <FormField
             label="Currency Symbol"
             value={addForm.symbol}
             onChange={(v) => setAddForm(f => ({ ...f, symbol: v }))}
-            isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
+            border={border} textMain={textMain} textMuted={textMuted} surface={surface}
             placeholder="e.g. $ or USD"
           />
           <FormField
             label="Exchange Rate (vs USD)"
             value={addForm.rate}
             onChange={(v) => setAddForm(f => ({ ...f, rate: v }))}
-            isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
+            border={border} textMain={textMain} textMuted={textMuted} surface={surface}
             placeholder="e.g. 1"
           />
           <FormField
@@ -324,34 +321,34 @@ function CurrenciesContent() {
             value={addForm.symbolPosition}
             onChange={(v) => setAddForm(f => ({ ...f, symbolPosition: v }))}
             options={['BEFORE', 'AFTER']}
-            isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
+            border={border} textMain={textMain} textMuted={textMuted} surface={surface}
           />
           <FormField
             label="Auto Update Rate"
             value={addForm.autoRate}
             onChange={(v) => setAddForm(f => ({ ...f, autoRate: v }))}
             options={['true', 'false']}
-            isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
+            border={border} textMain={textMain} textMuted={textMuted} surface={surface}
           />
           <FormField
             label="Shipping Enabled"
             value={addForm.shippingEnabled}
             onChange={(v) => setAddForm(f => ({ ...f, shippingEnabled: v }))}
             options={['true', 'false']}
-            isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
+            border={border} textMain={textMain} textMuted={textMuted} surface={surface}
           />
           <FormField
             label="Set As Default"
             value={addForm.isDefault}
             onChange={(v) => setAddForm(f => ({ ...f, isDefault: v }))}
             options={['false', 'true']}
-            isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
+            border={border} textMain={textMain} textMuted={textMuted} surface={surface}
           />
           <FormField
             label="Flag Emoji"
             value={addForm.flag}
             onChange={(v) => setAddForm(f => ({ ...f, flag: v }))}
-            isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
+            border={border} textMain={textMain} textMuted={textMuted} surface={surface}
             placeholder="e.g. 🇺🇸"
           />
         </div>
@@ -360,7 +357,7 @@ function CurrenciesContent() {
           onSubmit={handleAddCurrency}
           loading={loading}
           submitLabel="Add Currency"
-          isDark={isDark} border={border} textMain={textMain}
+          border={border} textMain={textMain}
         />
       </Modal>
     </div>

@@ -4,7 +4,6 @@ import AdminShell from '@/components/admin/admin-shell';
 import DataTable, { Column } from '@/components/admin/data-table';
 import PageHeader from '@/components/admin/page-header';
 import { Modal, ConfirmDialog, FormField, ModalFooter } from '@/components/admin/modal';
-import { useTheme } from '@/contexts/theme-context';
 import { FileText } from 'lucide-react';
 import { getOrders, getDirectPayments } from '@/lib/api';
 import toast from 'react-hot-toast';
@@ -28,13 +27,11 @@ function shortRef(prefix: string, value?: string | null) {
 }
 
 function InvoicingContent() {
-  const { theme } = useTheme();
-  const isDark = theme === 'dark';
-  const card = isDark ? '#0D1523' : '#FFFFFF';
-  const border = isDark ? '#1E293B' : '#E2E8F0';
-  const textMain = isDark ? '#FFFFFF' : '#0F172A';
-  const textMuted = isDark ? '#8E9AAF' : '#64748B';
-  const surface = isDark ? '#101826' : '#F1F5F9';
+  const card = 'var(--card)';
+  const border = 'var(--border)';
+  const textMain = 'var(--text-main)';
+  const textMuted = 'var(--text-muted)';
+  const surface = 'var(--surface)';
   const [data, setData] = useState<Invoice[]>(INITIAL);
   useEffect(() => {
     Promise.all([
@@ -130,17 +127,17 @@ function InvoicingContent() {
 
   const addFields = (
     <>
-      <FormField label="Client Name" value={form.client} onChange={fp('client')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. TechHub Zambia" />
+      <FormField label="Client Name" value={form.client} onChange={fp('client')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. TechHub Zambia" />
       <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'10px'}}>
-        <FormField label="Issue Date" value={form.date} onChange={fp('date')} type="date" isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-        <FormField label="Due Date" value={form.due} onChange={fp('due')} type="date" isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+        <FormField label="Issue Date" value={form.date} onChange={fp('date')} type="date" border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+        <FormField label="Due Date" value={form.due} onChange={fp('due')} type="date" border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
       </div>
       <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:'10px'}}>
-        <FormField label="Amount" value={form.amount} onChange={fp('amount')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="$0.00" />
-        <FormField label="Processing Fees" value={form.processingFees} onChange={fp('processingFees')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="$0.00" />
-        <FormField label="Total" value={form.total} onChange={fp('total')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="$0.00" />
+        <FormField label="Amount" value={form.amount} onChange={fp('amount')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="$0.00" />
+        <FormField label="Processing Fees" value={form.processingFees} onChange={fp('processingFees')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="$0.00" />
+        <FormField label="Total" value={form.total} onChange={fp('total')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="$0.00" />
       </div>
-      <FormField label="Status" value={form.status} onChange={fp('status')} options={INV_STATUSES} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+      <FormField label="Status" value={form.status} onChange={fp('status')} options={INV_STATUSES} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
     </>
   );
 
@@ -157,27 +154,27 @@ function InvoicingContent() {
       </div>
       <DataTable columns={columns} data={data as unknown as Record<string,unknown>[]} searchPlaceholder="Search invoices..." onView={openView} onEdit={openEdit} onDelete={openDelete} />
 
-      <Modal open={addOpen} onClose={()=>setAddOpen(false)} title="Create New Invoice">{addFields}<ModalFooter onClose={()=>setAddOpen(false)} onSubmit={handleAdd} loading={false} submitLabel="Create Invoice" isDark={isDark} border={border} textMain={textMain} /></Modal>
+      <Modal open={addOpen} onClose={()=>setAddOpen(false)} title="Create New Invoice">{addFields}<ModalFooter onClose={()=>setAddOpen(false)} onSubmit={handleAdd} loading={false} submitLabel="Create Invoice" border={border} textMain={textMain} /></Modal>
       <Modal open={!!viewRow} onClose={()=>setViewRow(null)} title={`Invoice ${viewRow?.id??''}`}>
         {viewRow && <>
-          <FormField label="Client" value={viewRow.client} readOnly isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+          <FormField label="Client" value={viewRow.client} readOnly border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
           <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'10px'}}>
-            <FormField label="Issue Date" value={viewRow.date} readOnly isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-            <FormField label="Due Date" value={viewRow.due} readOnly isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="Issue Date" value={viewRow.date} readOnly border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="Due Date" value={viewRow.due} readOnly border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
           </div>
           <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:'10px'}}>
-            <FormField label="Amount" value={viewRow.amount} readOnly isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-            <FormField label="Processing Fees" value={viewRow.processingFees} readOnly isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-            <FormField label="Total" value={viewRow.total} readOnly isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="Amount" value={viewRow.amount} readOnly border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="Processing Fees" value={viewRow.processingFees} readOnly border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="Total" value={viewRow.total} readOnly border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
           </div>
-          <FormField label="Status" value={viewRow.status} readOnly isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-          <button onClick={()=>setViewRow(null)} style={{width:'100%',padding:'10px',borderRadius:'9px',background:isDark?'#1E293B':'#F1F5F9',border:`1px solid ${border}`,color:textMain,fontSize:'13.5px',fontWeight:600,cursor:'pointer',fontFamily:'var(--font-inter)'}}>Close</button>
+          <FormField label="Status" value={viewRow.status} readOnly border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+          <button onClick={()=>setViewRow(null)} style={{width:'100%',padding:'10px',borderRadius:'9px',background:'var(--surface)',border:`1px solid ${border}`,color:textMain,fontSize:'13.5px',fontWeight:600,cursor:'pointer',fontFamily:'var(--font-inter)'}}>Close</button>
         </>}
       </Modal>
       <Modal open={!!editRow} onClose={()=>setEditRow(null)} title={`Update: ${editRow?.id??''}`}>
         {editRow && <><p style={{fontSize:'13px',color:textMuted,marginBottom:'16px'}}>Client: <strong style={{color:textMain}}>{editRow.client}</strong></p>
-        <FormField label="Invoice Status" value={editStatus} onChange={setEditStatus} options={INV_STATUSES} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-        <ModalFooter onClose={()=>setEditRow(null)} onSubmit={handleEdit} loading={false} submitLabel="Update Status" isDark={isDark} border={border} textMain={textMain} /></>}
+        <FormField label="Invoice Status" value={editStatus} onChange={setEditStatus} options={INV_STATUSES} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+        <ModalFooter onClose={()=>setEditRow(null)} onSubmit={handleEdit} loading={false} submitLabel="Update Status" border={border} textMain={textMain} /></>}
       </Modal>
       <ConfirmDialog open={!!deleteRow} onClose={()=>setDeleteRow(null)} onConfirm={handleDelete} loading={false} title="Delete Invoice" message={`Delete invoice ${deleteRow?.id} for ${deleteRow?.client}?`} />
       <style>{`.sg{} @media(max-width:768px){.sg{grid-template-columns:1fr 1fr!important;}}`}</style>
