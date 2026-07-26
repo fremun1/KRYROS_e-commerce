@@ -222,12 +222,12 @@ function UsersContent() {
 
   const modalFields = (
     <>
-      <FormField label="Full Name" value={form.name} onChange={fp('name')} isDark={false} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. John Banda" />
-      <FormField label="Email Address" value={form.email} onChange={fp('email')} type="email" isDark={false} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="john@example.com" />
-      <FormField label="Password (leave blank to keep)" value={(form as any).password || ''} onChange={fp('password')} type="password" isDark={false} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Min 8 chars, upper+lower+number" />
+      <FormField label="Full Name" value={form.name} onChange={fp('name')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. John Banda" />
+      <FormField label="Email Address" value={form.email} onChange={fp('email')} type="email" border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="john@example.com" />
+      <FormField label="Password (leave blank to keep)" value={(form as any).password || ''} onChange={fp('password')} type="password" border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Min 8 chars, upper+lower+number" />
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-        <FormField label="Role" value={form.role} onChange={fp('role')} options={isSuperAdmin ? ['Customer', 'Wholesale', 'Staff', 'Manager', 'Admin', 'Super Admin'] : ['Customer', 'Wholesale', 'Staff']} isDark={false} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-        <FormField label="Status" value={form.status} onChange={fp('status')} options={['Active', 'Inactive', 'Blocked']} isDark={false} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+        <FormField label="Role" value={form.role} onChange={fp('role')} options={isSuperAdmin ? ['Customer', 'Wholesale', 'Staff', 'Manager', 'Admin', 'Super Admin'] : ['Customer', 'Wholesale', 'Staff']} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+        <FormField label="Status" value={form.status} onChange={fp('status')} options={['Active', 'Inactive', 'Blocked']} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
       </div>
     </>
   );
@@ -270,7 +270,7 @@ function UsersContent() {
           {[...Array(8)].map((_, i) => (
             <div key={i} style={{
               height: 52,
-              background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
+              background: 'var(--surface)',
               borderRadius: 8, marginBottom: 8,
               animation: 'skeletonPulse 1.4s ease-in-out infinite',
               animationDelay: `${i * 0.08}s`,
@@ -284,25 +284,25 @@ function UsersContent() {
 
       <Modal open={addOpen} onClose={() => setAddOpen(false)} title="Add New User">
         {modalFields}
-        <ModalFooter onClose={() => setAddOpen(false)} onSubmit={handleAdd} loading={loading} submitLabel="Add User" isDark={false} border={border} textMain={textMain} />
+        <ModalFooter onClose={() => setAddOpen(false)} onSubmit={handleAdd} loading={loading} submitLabel="Add User" border={border} textMain={textMain} />
       </Modal>
 
       <Modal open={!!editRow} onClose={() => setEditRow(null)} title={`Edit: ${editRow?.name ?? ''}`}>
         {modalFields}
-        <ModalFooter onClose={() => setEditRow(null)} onSubmit={handleEdit} loading={loading} submitLabel="Save Changes" isDark={false} border={border} textMain={textMain} />
+        <ModalFooter onClose={() => setEditRow(null)} onSubmit={handleEdit} loading={loading} submitLabel="Save Changes" border={border} textMain={textMain} />
       </Modal>
 
       <Modal open={!!viewRow} onClose={() => setViewRow(null)} title="User Details">
         {viewRow && <>
-          <FormField label="Full Name" value={viewRow.name} readOnly isDark={false} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-          <FormField label="Email" value={viewRow.email} readOnly isDark={false} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+          <FormField label="Full Name" value={viewRow.name} readOnly border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+          <FormField label="Email" value={viewRow.email} readOnly border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-            <FormField label="Role" value={viewRow.role} readOnly isDark={false} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-            <FormField label="Status" value={viewRow.status} readOnly isDark={false} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="Role" value={viewRow.role} readOnly border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="Status" value={viewRow.status} readOnly border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-            <FormField label="Joined" value={viewRow.joined} readOnly isDark={false} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-            <FormField label="Total Orders" value={String(viewRow.orders)} readOnly isDark={false} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="Joined" value={viewRow.joined} readOnly border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="Total Orders" value={String(viewRow.orders)} readOnly border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
           </div>
           <div style={{ marginTop: '6px' }}><button onClick={() => setViewRow(null)} style={{ width: '100%', padding: '10px', borderRadius: '9px', background: surface, border: `1px solid ${border}`, color: textMain, fontSize: '13.5px', fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-inter)' }}>Close</button></div>
         </>}
