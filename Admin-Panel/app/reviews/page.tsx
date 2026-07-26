@@ -80,7 +80,7 @@ function ReviewsContent() {
   const Stars = ({ n, size = 14 }: { n: number; size?: number }) => (
     <div style={{ display: 'flex', gap: '1px' }}>
       {[1,2,3,4,5].map(i => (
-        <span key={i} style={{ fontSize: `${size}px`, color: i <= n ? '#FFC107' : (isDark ? '#1E293B' : '#D1D5DB') }}>&#9733;</span>
+        <span key={i} style={{ fontSize: `${size}px`, color: i <= n ? '#FFC107' : 'var(--border)' }}>&#9733;</span>
       ))}
     </div>
   );
