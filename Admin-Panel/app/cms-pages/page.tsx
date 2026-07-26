@@ -4,7 +4,6 @@ import AdminShell from '@/components/admin/admin-shell';
 import PageHeader from '@/components/admin/page-header';
 import { Modal, ConfirmDialog, FormField, ModalFooter } from '@/components/admin/modal';
 import CloudinaryUpload from '@/components/ui/file-upload';
-import { useTheme } from '@/contexts/theme-context';
 import {
   Plus, Edit, Trash2, GripVertical, Eye, EyeOff, ChevronUp, ChevronDown,
   Zap, ShoppingBag, Users, TrendingUp, Layout, MousePointer, Info, Image
@@ -112,12 +111,10 @@ const resolveOptionLabel = (
 
 
 export default function CMSPagesPage() {
-  const { theme } = useTheme();
-  const isDark = theme === 'dark';
-  const border = isDark ? '#1E293B' : '#E2E8F0';
-  const textMain = isDark ? '#FFFFFF' : '#0F172A';
-  const textMuted = isDark ? '#8E9AAF' : '#64748B';
-  const surface = isDark ? '#0D1523' : '#FFFFFF';
+  const border = 'var(--border)';
+  const textMain = 'var(--text-main)';
+  const textMuted = 'var(--text-muted)';
+  const surface = 'var(--card)';
   
   const [sections, setSections] = useState<any[]>([]);
   const [rulesGrouped, setRulesGrouped] = useState<Record<string, any[]>>({});
@@ -521,14 +518,14 @@ export default function CMSPagesPage() {
                 value={formData.title || ''} 
                 onChange={(v) => setFormData({...formData, title: v})} 
                 placeholder="Visible to customers"
-                isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
+                border={border} textMain={textMain} textMuted={textMuted} surface={surface}
               />
               <FormField 
                 label="Internal Name" 
                 value={formData.name || ''} 
                 onChange={(v) => setFormData({...formData, name: v})} 
                 placeholder="For admin use"
-                isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
+                border={border} textMain={textMain} textMuted={textMuted} surface={surface}
               />
             </div>
             
@@ -536,7 +533,7 @@ export default function CMSPagesPage() {
               label="Subtitle (Optional)" 
               value={formData.subtitle || ''} 
               onChange={(v) => setFormData({...formData, subtitle: v})}
-              isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
+              border={border} textMain={textMain} textMuted={textMuted} surface={surface}
             />
             
             <div className="p-4 bg-muted/30 rounded-xl border space-y-4">
@@ -660,7 +657,7 @@ export default function CMSPagesPage() {
                   type="number" 
                   value={String(formData.config?.limit || 8)} 
                   onChange={(v) => setFormData({...formData, config: {...formData.config, limit: parseInt(v)}})}
-                  isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
+                  border={border} textMain={textMain} textMuted={textMuted} surface={surface}
                 />
                 
                 {/* Product Layout */}
@@ -784,21 +781,21 @@ export default function CMSPagesPage() {
                     type="datetime-local"
                     value={formData.config?.endTime || formData.config?.timerEndDate || ''} 
                     onChange={(v) => setFormData({...formData, config: {...formData.config, endTime: v, timerEndDate: v}})}
-                    isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
+                    border={border} textMain={textMain} textMuted={textMuted} surface={surface}
                   />
                   <FormField 
                     label="Timer Label" 
                     value={formData.config?.countdownLabel || formData.config?.timerLabel || ''} 
                     onChange={(v) => setFormData({...formData, config: {...formData.config, countdownLabel: v, timerLabel: v}})}
                     placeholder="Ends in"
-                    isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
+                    border={border} textMain={textMain} textMuted={textMuted} surface={surface}
                   />
                   <FormField 
                     label="Discount Text" 
                     value={formData.config?.discountText || ''} 
                     onChange={(v) => setFormData({...formData, config: {...formData.config, discountText: v}})}
                     placeholder="Up to 50% OFF"
-                    isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
+                    border={border} textMain={textMain} textMuted={textMuted} surface={surface}
                   />
                   <FormField 
                     label="Discount %" 
@@ -806,7 +803,7 @@ export default function CMSPagesPage() {
                     value={String(formData.config?.discountPercent || '')} 
                     onChange={(v) => setFormData({...formData, config: {...formData.config, discountPercent: parseInt(v)}})}
                     placeholder="50"
-                    isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
+                    border={border} textMain={textMain} textMuted={textMuted} surface={surface}
                   />
                 </div>
               )}
@@ -970,7 +967,7 @@ export default function CMSPagesPage() {
                           }}
                           accept="image/*,video/*"
                           folder="kryros/banners"
-                          isDark={isDark} border={border} surface={surface} textMuted={textMuted} textMain={textMain}
+                          border={border} surface={surface} textMuted={textMuted} textMain={textMain}
                         />
                         <p className="text-[10px] text-muted-foreground">
                           Upload an image or video banner. Uploading a new file replaces the current banner media for this slide.
@@ -986,7 +983,7 @@ export default function CMSPagesPage() {
                             setFormData({...formData, config: {...formData.config, slides}});
                           }}
                           placeholder="Summer Sale"
-                          isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
+                          border={border} textMain={textMain} textMuted={textMuted} surface={surface}
                         />
                         <FormField
                           label="Subtitle (optional)"
@@ -997,7 +994,7 @@ export default function CMSPagesPage() {
                             setFormData({...formData, config: {...formData.config, slides}});
                           }}
                           placeholder="Up to 50% off"
-                          isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
+                          border={border} textMain={textMain} textMuted={textMuted} surface={surface}
                         />
                       </div>
                       <div className="grid grid-cols-2 gap-2">
@@ -1010,7 +1007,7 @@ export default function CMSPagesPage() {
                             setFormData({...formData, config: {...formData.config, slides}});
                           }}
                           placeholder="Shop Now"
-                          isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
+                          border={border} textMain={textMain} textMuted={textMuted} surface={surface}
                         />
                         <FormField
                           label="Link URL"
@@ -1021,7 +1018,7 @@ export default function CMSPagesPage() {
                             setFormData({...formData, config: {...formData.config, slides}});
                           }}
                           placeholder="/shop/sale"
-                          isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
+                          border={border} textMain={textMain} textMuted={textMuted} surface={surface}
                         />
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -1162,7 +1159,7 @@ export default function CMSPagesPage() {
             onSubmit={handleSaveSection}
             loading={saving}
             submitLabel={editingSection ? 'Save Changes' : 'Add Section'}
-            isDark={isDark} border={border} textMain={textMain}
+            border={border} textMain={textMain}
           />
         </Modal>
       )}
