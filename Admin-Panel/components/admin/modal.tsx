@@ -9,14 +9,13 @@ interface CustomSelectProps {
   onChange?: (v: string) => void;
   options: string[];
   disabled?: boolean;
-  isDark: boolean;
   border: string;
   textMain: string;
   textMuted: string;
   surface: string;
 }
 
-function CustomSelect({ value, onChange, options, disabled = false, isDark, border, textMain, textMuted, surface }: CustomSelectProps) {
+function CustomSelect({ value, onChange, options, disabled = false, border, textMain, textMuted, surface }: CustomSelectProps) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -35,7 +34,7 @@ function CustomSelect({ value, onChange, options, disabled = false, isDark, bord
         onClick={() => !disabled && setOpen(o => !o)}
         style={{
           width: '100%', padding: '9px 36px 9px 12px', borderRadius: '8px',
-          background: disabled ? (isDark ? '#080e1a' : '#F8FAFC') : surface,
+          background: disabled ? 'var(--surface)' : surface,
           border: `1px solid ${open ? '#1FA89A' : border}`,
           color: disabled ? textMuted : textMain,
           fontSize: '13.5px', cursor: disabled ? 'default' : 'pointer',
@@ -65,12 +64,10 @@ function CustomSelect({ value, onChange, options, disabled = false, isDark, bord
         <div style={{
           position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0,
           zIndex: 99999,
-          background: isDark ? '#0D1523' : '#FFFFFF',
+          background: 'var(--card)',
           border: `1px solid ${border}`,
           borderRadius: '10px',
-          boxShadow: isDark
-            ? '0 12px 40px rgba(0,0,0,0.6)'
-            : '0 8px 32px rgba(0,0,0,0.14)',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.14)',
           overflow: 'hidden',
           maxHeight: '220px',
           overflowY: 'auto',
@@ -85,7 +82,7 @@ function CustomSelect({ value, onChange, options, disabled = false, isDark, bord
                 fontSize: '13.5px',
                 color: opt === value ? '#1FA89A' : textMain,
                 background: opt === value
-                  ? (isDark ? 'rgba(31,168,154,0.12)' : 'rgba(31,168,154,0.07)')
+                  ? 'rgba(31,168,154,0.12)'
                   : 'transparent',
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                 fontFamily: 'var(--font-inter)',
@@ -93,7 +90,7 @@ function CustomSelect({ value, onChange, options, disabled = false, isDark, bord
                 transition: 'background 0.1s',
               }}
               onMouseEnter={e => {
-                if (opt !== value) e.currentTarget.style.background = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(31,168,154,0.05)';
+                if (opt !== value) e.currentTarget.style.background = 'rgba(31,168,154,0.05)';
               }}
               onMouseLeave={e => {
                 if (opt !== value) e.currentTarget.style.background = 'transparent';
@@ -119,12 +116,10 @@ interface ModalProps {
 }
 
 export function Modal({ open, onClose, title, children, maxWidth = '500px' }: ModalProps) {
-  const { theme } = useTheme();
-  const isDark = theme === 'dark';
-  const bg = isDark ? '#0D1523' : '#FFFFFF';
-  const border = isDark ? '#1E293B' : '#E2E8F0';
-  const textMain = isDark ? '#FFFFFF' : '#0F172A';
-  const textMuted = isDark ? '#8E9AAF' : '#64748B';
+  const bg = 'var(--card)';
+  const border = 'var(--border)';
+  const textMain = 'var(--text-main)';
+  const textMuted = 'var(--text-muted)';
 
   if (!open) return null;
   return (
@@ -135,7 +130,7 @@ export function Modal({ open, onClose, title, children, maxWidth = '500px' }: Mo
       <div style={{ background: bg, border: `1px solid ${border}`, borderRadius: '16px', width: '100%', maxWidth, maxHeight: '90vh', overflow: 'auto', boxShadow: '0 30px 60px rgba(0,0,0,0.45)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px 16px', borderBottom: `1px solid ${border}` }}>
           <h2 style={{ fontSize: '15px', fontWeight: 700, color: textMain, margin: 0 }}>{title}</h2>
-          <button onClick={onClose} style={{ width: '28px', height: '28px', borderRadius: '7px', background: isDark ? '#1E293B' : '#F1F5F9', border: `1px solid ${border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
+          <button onClick={onClose} style={{ width: '28px', height: '28px', borderRadius: '7px', background: 'var(--surface)', border: `1px solid ${border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
             <X size={14} color={textMuted} />
           </button>
         </div>
@@ -157,12 +152,10 @@ interface ConfirmDialogProps {
 }
 
 export function ConfirmDialog({ open, onClose, onConfirm, title, message, confirmLabel = 'Delete', loading = false }: ConfirmDialogProps) {
-  const { theme } = useTheme();
-  const isDark = theme === 'dark';
-  const bg = isDark ? '#0D1523' : '#FFFFFF';
-  const border = isDark ? '#1E293B' : '#E2E8F0';
-  const textMain = isDark ? '#FFFFFF' : '#0F172A';
-  const textMuted = isDark ? '#8E9AAF' : '#64748B';
+  const bg = 'var(--card)';
+  const border = 'var(--border)';
+  const textMain = 'var(--text-main)';
+  const textMuted = 'var(--text-muted)';
 
   if (!open) return null;
   return (
@@ -177,7 +170,7 @@ export function ConfirmDialog({ open, onClose, onConfirm, title, message, confir
         <h3 style={{ fontSize: '16px', fontWeight: 700, color: textMain, margin: '0 0 8px' }}>{title}</h3>
         <p style={{ fontSize: '13.5px', color: textMuted, margin: '0 0 24px', lineHeight: 1.6 }}>{message}</p>
         <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
-          <button onClick={onClose} disabled={loading} style={{ padding: '9px 18px', borderRadius: '9px', background: isDark ? '#1E293B' : '#F1F5F9', border: `1px solid ${border}`, color: textMain, fontSize: '13.5px', fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-inter)' }}>Cancel</button>
+          <button onClick={onClose} disabled={loading} style={{ padding: '9px 18px', borderRadius: '9px', background: 'var(--surface)', border: `1px solid ${border}`, color: textMain, fontSize: '13.5px', fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-inter)' }}>Cancel</button>
           <button onClick={onConfirm} disabled={loading} style={{ padding: '9px 18px', borderRadius: '9px', background: 'linear-gradient(135deg, #ef4444, #dc2626)', border: 'none', color: 'white', fontSize: '13.5px', fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1, fontFamily: 'var(--font-inter)' }}>
             {loading ? 'Deleting...' : confirmLabel}
           </button>
@@ -195,7 +188,6 @@ interface FormFieldProps {
   type?: string;
   options?: string[];
   readOnly?: boolean;
-  isDark: boolean;
   border: string;
   textMain: string;
   textMuted: string;
@@ -203,10 +195,10 @@ interface FormFieldProps {
   placeholder?: string;
 }
 
-export function FormField({ label, value, onChange, type = 'text', options, readOnly = false, isDark, border, textMain, textMuted, surface, placeholder }: FormFieldProps) {
+export function FormField({ label, value, onChange, type = 'text', options, readOnly = false, border, textMain, textMuted, surface, placeholder }: FormFieldProps) {
   const inputStyle: React.CSSProperties = {
     width: '100%', padding: '9px 12px', borderRadius: '8px',
-    background: readOnly ? (isDark ? '#080e1a' : '#F8FAFC') : surface,
+    background: readOnly ? 'var(--surface)' : surface,
     border: `1px solid ${border}`,
     color: readOnly ? textMuted : textMain,
     fontSize: '13.5px', outline: 'none',
@@ -226,7 +218,6 @@ export function FormField({ label, value, onChange, type = 'text', options, read
             onChange={onChange}
             options={options}
             disabled={readOnly}
-            isDark={isDark}
             border={border}
             textMain={textMain}
             textMuted={textMuted}
@@ -248,15 +239,14 @@ interface ModalFooterProps {
   onSubmit: () => void;
   loading: boolean;
   submitLabel: string;
-  isDark: boolean;
   border: string;
   textMain: string;
 }
 
-export function ModalFooter({ onClose, onSubmit, loading, submitLabel, isDark, border, textMain }: ModalFooterProps) {
+export function ModalFooter({ onClose, onSubmit, loading, submitLabel, border, textMain }: ModalFooterProps) {
   return (
     <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '6px', paddingTop: '16px', borderTop: `1px solid ${border}` }}>
-      <button onClick={onClose} disabled={loading} style={{ padding: '9px 18px', borderRadius: '9px', background: isDark ? '#1E293B' : '#F1F5F9', border: `1px solid ${border}`, color: textMain, fontSize: '13.5px', fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-inter)' }}>Cancel</button>
+      <button onClick={onClose} disabled={loading} style={{ padding: '9px 18px', borderRadius: '9px', background: 'var(--surface)', border: `1px solid ${border}`, color: textMain, fontSize: '13.5px', fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-inter)' }}>Cancel</button>
       <button onClick={onSubmit} disabled={loading} style={{ padding: '9px 18px', borderRadius: '9px', background: 'linear-gradient(135deg, #1FA89A, #27B9AF)', border: 'none', color: 'white', fontSize: '13.5px', fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1, fontFamily: 'var(--font-inter)' }}>
         {loading ? 'Saving...' : submitLabel}
       </button>

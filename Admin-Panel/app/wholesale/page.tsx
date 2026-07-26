@@ -4,7 +4,6 @@ import AdminShell from '@/components/admin/admin-shell';
 import DataTable, { Column } from '@/components/admin/data-table';
 import PageHeader from '@/components/admin/page-header';
 import { Modal, ConfirmDialog, FormField, ModalFooter } from '@/components/admin/modal';
-import { useTheme } from '@/contexts/theme-context';
 import { Truck, Users, Star, Package, ChevronRight, ChevronLeft, X, ClipboardList } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { 
@@ -54,13 +53,11 @@ const DEFAULT_WHOLESALE_CATEGORIES = ['Electronics', 'Audio', 'Wearables', 'Clot
 const toSlug = (value: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 
 function WholesaleContent() {
-  const { theme } = useTheme();
-  const isDark = theme === 'dark';
-  const card = isDark ? '#0D1523' : '#FFFFFF';
-  const border = isDark ? '#1E293B' : '#E2E8F0';
-  const textMain = isDark ? '#FFFFFF' : '#0F172A';
-  const textMuted = isDark ? '#8E9AAF' : '#64748B';
-  const surface = isDark ? '#101826' : '#F1F5F9';
+  const card = 'var(--card)';
+  const border = 'var(--border)';
+  const textMain = 'var(--text-main)';
+  const textMuted = 'var(--text-muted)';
+  const surface = 'var(--surface)';
 
   type Section = 'applications' | 'accounts' | 'deals' | 'inventory';
   const [section, setSection] = useState<Section>('applications');
@@ -370,22 +367,22 @@ function WholesaleContent() {
 
   const inventoryForm = (
     <div>
-      <FormField label="Product Name" value={iForm.name} onChange={ifp('name')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. Samsung Galaxy S24 Ultra" />
-      <FormField label="SKU" value={iForm.sku} onChange={ifp('sku')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. SAM-S24U-WHS" />
+      <FormField label="Product Name" value={iForm.name} onChange={ifp('name')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. Samsung Galaxy S24 Ultra" />
+      <FormField label="SKU" value={iForm.sku} onChange={ifp('sku')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. SAM-S24U-WHS" />
       <div style={{ display:'grid', gridTemplateColumns:'repeat(2, minmax(0, 1fr))', gap:'12px' }}>
-        <FormField label="Wholesale Price" value={iForm.price} onChange={ifp('price')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="0.00" />
-        <FormField label="MOQ" value={iForm.moq} onChange={ifp('moq')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="1" />
+        <FormField label="Wholesale Price" value={iForm.price} onChange={ifp('price')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="0.00" />
+        <FormField label="MOQ" value={iForm.moq} onChange={ifp('moq')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="1" />
       </div>
       <div style={{ display:'grid', gridTemplateColumns:'repeat(2, minmax(0, 1fr))', gap:'12px' }}>
-        <FormField label="Category" value={iForm.category} onChange={ifp('category')} options={categories.length > 0 ? categories : DEFAULT_WHOLESALE_CATEGORIES} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-        <FormField label="Status" value={iForm.status} onChange={ifp('status')} options={['Active', 'Inactive']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+        <FormField label="Category" value={iForm.category} onChange={ifp('category')} options={categories.length > 0 ? categories : DEFAULT_WHOLESALE_CATEGORIES} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+        <FormField label="Status" value={iForm.status} onChange={ifp('status')} options={['Active', 'Inactive']} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
       </div>
       <div style={{ display:'grid', gridTemplateColumns:'repeat(2, minmax(0, 1fr))', gap:'12px' }}>
-        <FormField label="Total Stock" value={iForm.stockTotal} onChange={ifp('stockTotal')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="100" />
-        <FormField label="Current Stock" value={iForm.stockCurrent} onChange={ifp('stockCurrent')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="100" />
+        <FormField label="Total Stock" value={iForm.stockTotal} onChange={ifp('stockTotal')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="100" />
+        <FormField label="Current Stock" value={iForm.stockCurrent} onChange={ifp('stockCurrent')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="100" />
       </div>
-      <FormField label="Description" value={iForm.description} onChange={ifp('description')} type="textarea" isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Describe the wholesale product..." />
-      <FormField label="Specifications" value={iForm.specifications} onChange={ifp('specifications')} type="textarea" isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. Color: Black | RAM: 8GB | Storage: 256GB" />
+      <FormField label="Description" value={iForm.description} onChange={ifp('description')} type="textarea" border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Describe the wholesale product..." />
+      <FormField label="Specifications" value={iForm.specifications} onChange={ifp('specifications')} type="textarea" border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. Color: Black | RAM: 8GB | Storage: 256GB" />
 
       <div style={{ marginBottom:'14px' }}>
         <label style={{ display:'block', fontSize:'11.5px', fontWeight:600, color:textMuted, marginBottom:'5px', textTransform:'uppercase', letterSpacing:'0.4px' }}>
@@ -408,7 +405,6 @@ function WholesaleContent() {
           accept="image/*"
           folder="kryros/wholesale-products"
           showUrlInput={false}
-          isDark={isDark}
           border={border}
           surface={surface}
           textMuted={textMuted}
@@ -546,31 +542,31 @@ function WholesaleContent() {
       {/* Modals for Applications */}
       <Modal open={!!editApp} onClose={() => setEditApp(null)} title="Update Application Status">
         <div style={{ padding:'20px' }}>
-          <FormField label="Status" value={appStatus} onChange={setAppStatus} options={APP_STATUSES} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+          <FormField label="Status" value={appStatus} onChange={setAppStatus} options={APP_STATUSES} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
           <p style={{ fontSize:'12px', color:textMuted, marginTop:'12px' }}>Approving will automatically create a wholesale account for this user.</p>
         </div>
-        <ModalFooter onClose={() => setEditApp(null)} onSubmit={handleUpdateAppStatus} loading={false} submitLabel="Update Status" isDark={isDark} border={border} textMain={textMain} />
+        <ModalFooter onClose={() => setEditApp(null)} onSubmit={handleUpdateAppStatus} loading={false} submitLabel="Update Status" border={border} textMain={textMain} />
       </Modal>
 
       {/* Deal Modal */}
       <Modal open={addDealOpen || !!editDeal} onClose={() => { setAddDealOpen(false); setEditDeal(null); }} title={editDeal ? "Edit Deal" : "Add New Deal"}>
         <div style={{ padding:'20px' }}>
-          <FormField label="Title" value={dForm.title} onChange={v => setDForm(f=>({...f,title:v}))} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-          <FormField label="Discount (%)" value={dForm.discount} onChange={v => setDForm(f=>({...f,discount:v}))} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-          <FormField label="Min Order" value={dForm.minOrder} onChange={v => setDForm(f=>({...f,minOrder:v}))} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-          <FormField label="Valid Until" value={dForm.validUntil} onChange={v => setDForm(f=>({...f,validUntil:v}))} type="date" isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+          <FormField label="Title" value={dForm.title} onChange={v => setDForm(f=>({...f,title:v}))} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+          <FormField label="Discount (%)" value={dForm.discount} onChange={v => setDForm(f=>({...f,discount:v}))} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+          <FormField label="Min Order" value={dForm.minOrder} onChange={v => setDForm(f=>({...f,minOrder:v}))} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+          <FormField label="Valid Until" value={dForm.validUntil} onChange={v => setDForm(f=>({...f,validUntil:v}))} type="date" border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
         </div>
-        <ModalFooter onClose={() => { setAddDealOpen(false); setEditDeal(null); }} onSubmit={editDeal ? handleEditDeal : handleAddDeal} loading={false} submitLabel={editDeal ? "Update Deal" : "Create Deal"} isDark={isDark} border={border} textMain={textMain} />
+        <ModalFooter onClose={() => { setAddDealOpen(false); setEditDeal(null); }} onSubmit={editDeal ? handleEditDeal : handleAddDeal} loading={false} submitLabel={editDeal ? "Update Deal" : "Create Deal"} border={border} textMain={textMain} />
       </Modal>
 
       <Modal open={addInvOpen} onClose={() => setAddInvOpen(false)} title="Add Wholesale Product" maxWidth="680px">
         {inventoryForm}
-        <ModalFooter onClose={() => setAddInvOpen(false)} onSubmit={handleAddInv} loading={inventorySaving} submitLabel="Create Product" isDark={isDark} border={border} textMain={textMain} />
+        <ModalFooter onClose={() => setAddInvOpen(false)} onSubmit={handleAddInv} loading={inventorySaving} submitLabel="Create Product" border={border} textMain={textMain} />
       </Modal>
 
       <Modal open={!!editInv} onClose={() => setEditInv(null)} title={`Edit Wholesale Product${editInv?.name ? `: ${editInv.name}` : ''}`} maxWidth="680px">
         {inventoryForm}
-        <ModalFooter onClose={() => setEditInv(null)} onSubmit={handleEditInv} loading={inventorySaving} submitLabel="Save Changes" isDark={isDark} border={border} textMain={textMain} />
+        <ModalFooter onClose={() => setEditInv(null)} onSubmit={handleEditInv} loading={inventorySaving} submitLabel="Save Changes" border={border} textMain={textMain} />
       </Modal>
 
       {/* Delete Dialogs */}

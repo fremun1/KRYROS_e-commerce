@@ -1,7 +1,6 @@
 'use client';
 import AdminShell from '@/components/admin/admin-shell';
 import PageHeader from '@/components/admin/page-header';
-import { useTheme } from '@/contexts/theme-context';
 import { Bell, Send, Globe, Smartphone, Mail, Users, CheckCircle2, Loader2, Plus, Trash2, MessageSquare, X } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
@@ -21,19 +20,13 @@ type SmsCountry     = { id: string; name: string; dialCode: string; isoCode: str
 type EmailContact   = { id: string; email: string; name?: string; source: string; isActive: boolean; createdAt: string };
 
 // ─── Shared theme hook ───────────────────────────────────────────────────────
-function useColors() {
-  const { theme } = useTheme();
-  const isDark = theme === 'dark';
-  return {
-    isDark,
-    card:      isDark ? '#0D1523' : '#FFFFFF',
-    border:    isDark ? '#1E293B' : '#E2E8F0',
-    textMain:  isDark ? '#FFFFFF' : '#0F172A',
-    textMuted: isDark ? '#8E9AAF' : '#64748B',
-    surface:   isDark ? '#101826' : '#F1F5F9',
-    primary:   '#1FA89A',
-  };
-}
+function NotificationsContent() {
+  const card = 'var(--card)';
+  const border = 'var(--border)';
+  const textMain = 'var(--text-main)';
+  const textMuted = 'var(--text-muted)';
+  const surface = 'var(--surface)';
+  const primary = '#1FA89A';
 
 // ─── Push Tab ────────────────────────────────────────────────────────────────
 function PushContent() {
