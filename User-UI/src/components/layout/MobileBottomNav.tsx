@@ -51,7 +51,7 @@ export default function MobileBottomNav() {
             className="absolute top-0 left-1/2 -translate-x-1/2 w-[68px] h-[68px] rounded-full pointer-events-none z-10"
             style={{
               background:
-                "radial-gradient(circle, rgba(192,21,27,0.30) 0%, rgba(192,21,27,0.12) 50%, transparent 72%)",
+                "radial-gradient(circle, var(--kryros-shadow-primary-lg) 0%, rgba(var(--kryros-primary-rgb),0.12) 50%, transparent 72%)",
             }}
           />
 
@@ -157,10 +157,10 @@ export default function MobileBottomNav() {
             href="/pay"
             className="absolute top-[14px] left-1/2 -translate-x-1/2 w-10 h-10 rounded-full bg-primary flex items-center justify-center shadow-lg z-20 no-underline"
             style={{
-              boxShadow: "0 4px 14px rgba(192,21,27,0.45), 0 2px 6px rgba(192,21,27,0.25)",
+              boxShadow: "0 4px 14px var(--kryros-shadow-primary-btn), 0 2px 6px var(--kryros-shadow-primary-md)",
             }}
           >
-            <CreditCard strokeWidth={2} width={20} height={20} color="#fff" />
+            <CreditCard strokeWidth={2} width={20} height={20} color="var(--kryros-white-text)" />
           </Link>
         </div>
       </div>

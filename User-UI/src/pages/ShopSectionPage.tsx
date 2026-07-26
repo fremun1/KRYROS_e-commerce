@@ -186,7 +186,7 @@ export default function ShopSectionPage() {
 
   const accentColor = useMemo(() => {
     if (sectionConfig.accentColor) return sectionConfig.accentColor;
-    return isFlashSale ? "#ef4444" : "var(--color-primary, #0d9488)";
+    return isFlashSale ? "var(--kryros-error)" : "var(--kryros-primary)";
   }, [isFlashSale, sectionConfig]);
 
   const headerBgColor = sectionConfig.headerBgColor;

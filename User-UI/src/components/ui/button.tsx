@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils"
 /**
  * KRYROS Primary Button
  * Height: 48px | Padding: 16px 24px | Radius: 8px | Font: Roboto 500 16px
- * Colors: bg #C0151B → hover #A01015 → active #8A0F13 | Disabled #C7C7CD
+ * All colors sourced from CSS variables in index.css (:root)
  * Shadow + translateY(-2px) on hover | 4px ring on focus
  */
 const buttonVariants = cva(
@@ -17,11 +17,11 @@ const buttonVariants = cva(
       variant: {
         default:
           "bg-primary text-white border border-white/15 " +
-          "shadow-[0_2px_8px_rgba(0,0,0,0.10),0_8px_20px_rgba(192,21,27,0.25)] " +
-          "hover:bg-[#A01015] hover:-translate-y-0.5 hover:shadow-[0_12px_28px_rgba(192,21,27,0.30)] " +
-          "active:bg-[#8A0F13] active:translate-y-0 active:shadow-[0_3px_10px_rgba(192,21,27,0.18)] " +
-          "focus-visible:shadow-[0_0_0_4px_rgba(192,21,27,0.18),0_8px_20px_rgba(192,21,27,0.25)] " +
-          "disabled:bg-[#C7C7CD] disabled:text-white disabled:shadow-none disabled:cursor-not-allowed disabled:opacity-100",
+          "shadow-[0_2px_8px_var(--kryros-shadow),0_8px_20px_var(--kryros-shadow-primary-md)] " +
+          "hover:bg-[var(--kryros-primary-hover)] hover:-translate-y-0.5 hover:shadow-[0_12px_28px_var(--kryros-shadow-primary-lg)] " +
+          "active:bg-[var(--kryros-primary-active)] active:translate-y-0 active:shadow-[0_3px_10px_var(--kryros-shadow-primary-sm)] " +
+          "focus-visible:shadow-[0_0_0_4px_var(--kryros-shadow-primary-sm),0_8px_20px_var(--kryros-shadow-primary-md)] " +
+          "disabled:bg-[var(--kryros-disabled-btn)] disabled:text-white disabled:shadow-none disabled:cursor-not-allowed disabled:opacity-100",
         destructive:
           "bg-destructive text-destructive-foreground shadow-sm border-destructive-border hover:bg-destructive/90",
         outline:

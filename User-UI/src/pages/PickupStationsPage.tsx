@@ -113,32 +113,37 @@ export default function PickupStationsPage() {
       <div className="rounded-2xl overflow-hidden mb-5 border border-border md:h-80" style={{ height: 220 }}>
         <iframe
           title="KRYROS Pickup Stations Map"
-          srcDoc={`<!DOCTYPE html>
+          srcDoc={(() => {
+            const markerColor = typeof window !== "undefined"
+              ? (getComputedStyle(document.documentElement).getPropertyValue("--kryros-map-marker").trim() || "#0ea5e9")
+              : "#0ea5e9";
+            return `<!DOCTYPE html>
 <html>
 <head>
-<meta charset=\"utf-8\" />
+<meta charset="utf-8" />
 <style>
   body{margin:0;padding:0;overflow:hidden;}
   #map{width:100%;height:220px;}
 </style>
-<link rel=\"stylesheet\" href=\"https://unpkg.com/leaflet@1.9.4/dist/leaflet.css\" />
-<script src=\"https://unpkg.com/leaflet@1.9.4/dist/leaflet.js\"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"><\/script>
 </head>
 <body>
-<div id=\"map\"></div>
+<div id="map"></div>
 <script>
   var map = L.map('map', { zoomControl: true, scrollWheelZoom: false, attributionControl: false }).setView([-15.4167, 28.2833], 12);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: ''
   }).addTo(map);
   var icon = L.divIcon({
-    html: '<div style=\"background:#0ea5e9;width:14px;height:14px;border-radius:50%;border:2.5px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3);\"></div>',
+    html: '<div style="background:${markerColor};width:14px;height:14px;border-radius:50%;border:2.5px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3);"></div>',
     iconSize: [14, 14], iconAnchor: [7, 7]
   });
   L.marker([-15.4167, 28.2833], { icon: icon }).addTo(map).bindPopup('<b>KRYROS Pickup Station</b><br>Lusaka, Zambia').openPopup();
-</script>
+<\/script>
 </body>
-</html>`}
+</html>`;
+          })()}
           style={{ width: "100%", height: "100%", border: "none" }}
           loading="lazy"
         />

@@ -64,6 +64,54 @@
 
   /* RGB versions for opacity use */
   --kryros-primary-rgb: 192, 21, 27;
+  --kryros-secondary-rgb: 52, 74, 100;
+
+  /* BUTTON HOVER / ACTIVE STATES */
+  --kryros-primary-active: #8A0F13;
+
+  /* OVERLAY / BACKDROP COLORS */
+  --kryros-overlay-dark: rgba(0,0,0,0.62);
+  --kryros-overlay-navy: rgba(15,23,42,0.72);
+  --kryros-overlay-light: rgba(255,255,255,0.90);
+  --kryros-shadow-subtle: rgba(15,23,42,0.04);
+  --kryros-shadow-primary-sm: rgba(192,21,27,0.18);
+  --kryros-shadow-primary-md: rgba(192,21,27,0.25);
+  --kryros-shadow-primary-lg: rgba(192,21,27,0.30);
+  --kryros-shadow-primary-btn: rgba(192,21,27,0.45);
+
+  /* THIRD-PARTY / BRAND COLORS (not part of KRYROS palette — used for external services) */
+  --kryros-whatsapp: #25D366;
+  --kryros-map-marker: #0ea5e9;
+
+  /* ICON ACCENT COLORS (dashboard stat cards) */
+  --kryros-icon-bg-orders: rgba(192,21,27,0.08);
+  --kryros-icon-bg-wishlist: #fdf2f8;
+  --kryros-icon-color-wishlist: #ec4899;
+  --kryros-icon-bg-credit: #fff7ed;
+  --kryros-icon-color-credit: #f97316;
+  --kryros-icon-bg-address: #f5f3ff;
+  --kryros-icon-color-address: #8b5cf6;
+
+  /* GET NOW BANNER GRADIENT */
+  --kryros-get-now-gradient: linear-gradient(135deg, #07392f 0%, #0a5544 60%, #073d2e 100%);
+
+  /* WARNING / NOTICE COLORS */
+  --kryros-warning-bg: #fffbeb;
+  --kryros-warning-border: #fde68a;
+  --kryros-warning-text: #92400e;
+  --kryros-star-filled: #FFC107;
+
+  /* RECEIPT / PRINT COLORS (standalone HTML document) */
+  --kryros-receipt-bg: #f5f5f5;
+  --kryros-receipt-card: #ffffff;
+  --kryros-receipt-border: #f0f0f0;
+  --kryros-receipt-success: #22c55e;
+  --kryros-receipt-text-primary: #111111;
+  --kryros-receipt-text-secondary: #555555;
+  --kryros-receipt-label: #888888;
+  --kryros-receipt-muted: #aaaaaa;
+  --kryros-receipt-red: #b91c1c;
+  --kryros-receipt-teal: #27B9AF;
 }
 
 @theme inline {

@@ -5,6 +5,9 @@
  * This is the CSS-only reference/equivalent of the Tailwind implementation
  * in UnifiedProductCard.tsx.
  *
+ * All colors are sourced from CSS variables defined in index.css (:root).
+ * No hardcoded color values — change the theme in index.css to update globally.
+ *
  * Usage (HTML structure):
  *
  *   <div class="product-image-wrapper">
@@ -45,14 +48,7 @@
 
   /* ── Aesthetics ── */
   border-radius: 12px;         /* Clean, consistent corner radius on this layer */
-  background-color: #F5F5F5;   /* KRYROS Main Background */
-}
-
-/* Dark mode background fallback */
-@media (prefers-color-scheme: dark) {
-  .product-image-wrapper {
-    background-color: #1A1A1A;
-  }
+  background-color: var(--kryros-secondary-bg); /* KRYROS Secondary Background */
 }
 
 /* =============================================================================
@@ -63,7 +59,7 @@
    Default fitting mode: CONTAIN (best for electronics / isolated product cuts).
    - object-fit: contain  — no distortion; entire product is always visible
    - padding: 12px        — safety margin so edges never touch the boundary
-   - mix-blend-multiply   — removes white halo on PNG product shots (light mode)
+   - mix-blend-multiply   — removes white halo on PNG product shots
    ============================================================================= */
 .product-image-wrapper__img {
   /* ── Fill the wrapper boundary exactly ── */
@@ -77,31 +73,19 @@
   /* 12px safety padding — edges never clip against boundary */
   padding: 12px;
 
-  /* Remove white halos from transparent PNGs in light mode */
+  /* Remove white halos from transparent PNGs */
   mix-blend-mode: multiply;
 
   /* ── Hardware-accelerated hover micro-zoom ────────────────────────────────
    * Uses transform (GPU composited layer) not width/height changes.
    * cubic-bezier(0.25, 1, 0.5, 1) = fast acceleration, smooth deceleration.
    * scale(1.04) = 4% zoom — subtle enough to feel premium, not jarring.
-   *
-   * Performance note: `will-change: transform` is intentionally omitted here.
-   * It creates a new compositor layer for EVERY card on load which wastes GPU
-   * memory. The transform already promotes the layer on interaction.
-   * Only add `will-change: transform` if you have 100+ cards visible at once.
    * ──────────────────────────────────────────────────────────────────────── */
   transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
 .product-image-wrapper:hover .product-image-wrapper__img {
   transform: scale(1.04);
-}
-
-/* Dark mode: restore normal blending so dark backgrounds don't wash out */
-@media (prefers-color-scheme: dark) {
-  .product-image-wrapper__img {
-    mix-blend-mode: normal;
-  }
 }
 
 /* =============================================================================
@@ -138,7 +122,7 @@
   line-height: 1;
   padding: 3px 6px;
   border-radius: 8px;
-  color: #ffffff;
+  color: var(--kryros-white-text);
   white-space: nowrap;
   pointer-events: none;        /* Badges don't block clicks through to the card */
 }
@@ -147,15 +131,15 @@
 .product-image-wrapper__badge--discount {
   top: 12px;
   left: 12px;
-  background-color: #D63031;   /* KRYROS Sale/Error Red */
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  background-color: var(--kryros-error); /* KRYROS Sale/Error Red */
+  box-shadow: 0 1px 3px var(--kryros-shadow);
 }
 
 /* ── Modifier: wholesale tag — top-left corner (same position as discount) ── */
 .product-image-wrapper__badge--wholesale {
   top: 12px;
   left: 12px;
-  background-color: #2563EB;   /* Blue-600 */
+  background-color: var(--kryros-link); /* KRYROS Link Blue */
   font-size: 9px;
 }
 
@@ -163,7 +147,7 @@
 .product-image-wrapper__badge--extra {
   bottom: 12px;
   left: 12px;
-  background-color: var(--color-primary, #C0151B); /* KRYROS Primary Red */
+  background-color: var(--kryros-primary); /* KRYROS Primary Red */
   font-size: 9px;
 }
 
@@ -185,10 +169,10 @@
   border: 1px solid transparent;
 
   /* ── Appearance ── */
-  background-color: rgba(255, 255, 255, 0.90);
+  background-color: var(--kryros-overlay-light);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 1px 3px var(--kryros-shadow);
 
   /* ── Layout ── */
   display: flex;
@@ -201,7 +185,7 @@
 }
 
 .product-image-wrapper__wishlist:hover {
-  background-color: rgba(255, 255, 255, 1);
+  background-color: var(--kryros-white);
   transform: scale(1.1);
 }
 
@@ -209,22 +193,10 @@
   transform: scale(0.95);
 }
 
-/* Dark mode wishlist button */
-@media (prefers-color-scheme: dark) {
-  .product-image-wrapper__wishlist {
-    background-color: rgba(43, 47, 57, 0.80);
-    border-color: rgba(255, 255, 255, 0.10);
-  }
-
-  .product-image-wrapper__wishlist:hover {
-    background-color: rgba(43, 47, 57, 0.95);
-  }
-}
-
 /* ── Wishlisted state (add .is-wishlisted to the button element via JS) ── */
 .product-image-wrapper__wishlist.is-wishlisted .product-image-wrapper__wishlist-icon {
-  fill: #D63031;
-  color: #D63031;
+  fill: var(--kryros-error);
+  color: var(--kryros-error);
 }
 
 /* =============================================================================
@@ -239,5 +211,5 @@
   align-items: center;
   justify-content: center;
   font-size: 12px;
-  color: var(--color-muted-foreground, #94a3b8);
+  color: var(--color-muted-foreground);
 }

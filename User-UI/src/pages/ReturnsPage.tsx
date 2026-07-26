@@ -55,8 +55,8 @@ export default function ReturnsPage() {
         </div>
       </div>
 
-      <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/40 rounded-2xl p-3">
-        <p className="text-xs text-amber-700 dark:text-amber-400 leading-relaxed">
+      <div className="rounded-2xl p-3" style={{ backgroundColor: "var(--kryros-warning-bg)", border: "1px solid var(--kryros-warning-border)" }}>
+        <p className="text-xs leading-relaxed" style={{ color: "var(--kryros-warning-text)" }}>
           After 7 days from delivery, we are unable to process any return or exchange request. Please inspect your order immediately upon receipt and contact us right away if there is an issue.
         </p>
       </div>

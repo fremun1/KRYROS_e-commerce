@@ -95,7 +95,7 @@ export default function NewsletterPopup() {
   return (
     <div
       className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
-      style={{ background: "rgba(0, 0, 0, 0.62)", backdropFilter: "blur(4px)" }}
+      style={{ background: "var(--kryros-overlay-dark)", backdropFilter: "blur(4px)" }}
       onClick={handleDismiss}
     >
       <div
@@ -114,7 +114,7 @@ export default function NewsletterPopup() {
           style={{
             position: "absolute", top: 12, right: 12,
             width: 38, height: 38,
-            background: "rgba(15, 23, 42, 0.72)",
+            background: "var(--kryros-overlay-navy)",
             backdropFilter: "blur(4px)",
             borderRadius: 10,
             border: "none",
@@ -166,7 +166,7 @@ export default function NewsletterPopup() {
                 background: "linear-gradient(135deg,var(--kryros-primary) 0%,var(--kryros-primary-hover) 55%,var(--kryros-dark-card) 100%)",
                 display: "flex", alignItems: "center", justifyContent: "center",
               }}>
-                <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="rgba(255, 255, 255, 0.5)" strokeWidth="1.2">
+                <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="1.2">
                   <rect x="2" y="4" width="20" height="16" rx="2"/>
                   <path d="m2 7 10 7 10-7"/>
                 </svg>
@@ -205,7 +205,7 @@ export default function NewsletterPopup() {
                   borderRadius: 10,
                   outline: "none",
                   background: "hsl(var(--background))",
-                  boxShadow: "0 1px 2px rgba(15, 23, 42, 0.04)",
+                  boxShadow: "0 1px 2px var(--kryros-shadow-subtle)",
                   fontFamily: "inherit",
                   boxSizing: "border-box",
                   marginBottom: error ? 6 : 10,

@@ -614,7 +614,7 @@ export default function ProductPage() {
                       <span className="text-sm font-bold text-foreground">{product.rating}</span>
                       <div className="flex items-center gap-0.5">
                         {[...Array(5)].map((_, i) => (
-                          <Star key={i} className={`w-3.5 h-3.5 ${i < Math.floor(product.rating) ? "fill-[#FFC107] text-[#FFC107]" : "fill-gray-200 dark:fill-[#2B2F39] text-gray-200"}`} />
+                          <Star key={i} className="w-3.5 h-3.5" style={{ fill: i < Math.floor(product.rating) ? "var(--kryros-star-filled)" : "var(--kryros-border)", color: i < Math.floor(product.rating) ? "var(--kryros-star-filled)" : "var(--kryros-border)" }} />
                         ))}
                       </div>
                     </>

@@ -852,10 +852,10 @@ export default function DashboardPage() {
               {/* 4 Stat cards */}
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
                 {[
-                  { icon: ShoppingBag, label: "Total Orders", value: ordersLoading ? "—" : String(recentOrders.length), href: "/track", iconBg: "#e6faf8", iconColor: "var(--kryros-primary)" },
-                  { icon: Heart, label: "Wishlist Items", value: wishlistLoading ? "—" : String(wishlist.length), href: "/wishlist", iconBg: "#fdf2f8", iconColor: "#ec4899" },
-                  { icon: Zap, label: "Get Now Credit", value: "Apply", href: "/get-now", iconBg: "#fff7ed", iconColor: "#f97316" },
-                  { icon: MapPin, label: "Addresses", value: profileLoading ? "—" : String(profile?.addresses?.length ?? 0), onClick: () => { setActiveSection("addresses"); window.scrollTo({ top: 0, behavior: "smooth" }); }, iconBg: "#f5f3ff", iconColor: "#8b5cf6" },
+                  { icon: ShoppingBag, label: "Total Orders", value: ordersLoading ? "—" : String(recentOrders.length), href: "/track", iconBg: "var(--kryros-icon-bg-orders)", iconColor: "var(--kryros-primary)" },
+                  { icon: Heart, label: "Wishlist Items", value: wishlistLoading ? "—" : String(wishlist.length), href: "/wishlist", iconBg: "var(--kryros-icon-bg-wishlist)", iconColor: "var(--kryros-icon-color-wishlist)" },
+                  { icon: Zap, label: "Get Now Credit", value: "Apply", href: "/get-now", iconBg: "var(--kryros-icon-bg-credit)", iconColor: "var(--kryros-icon-color-credit)" },
+                  { icon: MapPin, label: "Addresses", value: profileLoading ? "—" : String(profile?.addresses?.length ?? 0), onClick: () => { setActiveSection("addresses"); window.scrollTo({ top: 0, behavior: "smooth" }); }, iconBg: "var(--kryros-icon-bg-address)", iconColor: "var(--kryros-icon-color-address)" },
                 ].map(({ icon: Icon, label, value, href, onClick, iconBg, iconColor }) => (
                   <div key={label} onClick={onClick} className="cursor-pointer">
                     {href ? (
@@ -1027,7 +1027,7 @@ export default function DashboardPage() {
               {/* Get Now Banner */}
               <div
                 className="rounded-2xl overflow-hidden mb-4 relative"
-                style={{ background: "linear-gradient(135deg, #07392f 0%, #0a5544 60%, #073d2e 100%)" }}
+                style={{ background: "var(--kryros-get-now-gradient)" }}
               >
                 <div className="flex items-center justify-between p-5 md:p-6">
                   <div className="flex-1">
