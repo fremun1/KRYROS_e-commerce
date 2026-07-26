@@ -37,12 +37,12 @@ export default function Topbar({ collapsed, sidebarW, onMenuToggle, onMobileMenu
   const bellRef = useRef<HTMLButtonElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
 
-  const bg = "#FFFFFF";
-  const border = "#E2E8F0";
-  const textMain = "#0F172A";
-  const textMuted = "#64748B";
-  const surface = "#F8FAFC";
-  const card = "#FFFFFF";
+  const bg = "var(--card)";
+  const border = "var(--border)";
+  const textMain = "var(--text-main)";
+  const textMuted = "var(--text-muted)";
+  const surface = "var(--surface)";
+  const card = "var(--card)";
   const currentPage = pageNames[pathname] || "Dashboard";
 
   const unread = notifs.filter(n => !n.isRead).length;

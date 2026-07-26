@@ -1,6 +1,5 @@
 "use client";
 import AdminShell from "@/components/admin/admin-shell";
-import { useTheme } from "@/contexts/theme-context";
 // Lazy-loaded — recharts is ~180 KB, defer until after shell paint
 import dynamic from "next/dynamic";
 import type * as RechartsTypes from "recharts";

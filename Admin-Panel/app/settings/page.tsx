@@ -19,11 +19,11 @@ const tabs: {id: Tab; label: string; icon: React.ComponentType<{size?: number; c
 ];
 
 function SettingsContent() {
-  const card = '#FFFFFF';
-  const border = '#E2E8F0';
-  const textMain = '#0F172A';
-  const textMuted = '#64748B';
-  const surface = '#F1F5F9';
+  const card = 'var(--card)';
+  const border = 'var(--border)';
+  const textMain = 'var(--text-main)';
+  const textMuted = 'var(--text-muted)';
+  const surface = 'var(--surface)';
   const [activeTab, setActiveTab] = useState<Tab>('general');
   const [storeName, setStoreName] = useState('Kryros Mobile');
   const [storeEmail, setStoreEmail] = useState(process.env.NEXT_PUBLIC_STORE_EMAIL || 'info@kryros.com');

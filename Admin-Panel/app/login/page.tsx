@@ -142,15 +142,15 @@ function LoginForm() {
 
   const inputBase: React.CSSProperties = {
     width: "100%", padding: "16px 15px", fontSize: "14.5px",
-    background: "#FFFFFF", border: "1.5px solid #C8D3E0", borderRadius: "5px",
-    outline: "none", color: "#334155", fontFamily: "inherit",
+    background: "var(--card)", border: "1.5px solid var(--border)", borderRadius: "5px",
+    outline: "none", color: "var(--text-main)", fontFamily: "inherit",
     boxSizing: "border-box", transition: "border-color 0.15s",
   };
-  const errStyle: React.CSSProperties = { color: "#EF4444", fontSize: "13px", margin: "5px 0 8px", fontWeight: 500 };
+  const errStyle: React.CSSProperties = { color: "var(--danger)", fontSize: "13px", margin: "5px 0 8px", fontWeight: 500 };
 
   return (
     <div style={{
-      minHeight: "100vh", background: "#EDF1F8",
+      minHeight: "100vh", background: "var(--bg)",
       display: "flex", flexDirection: "column", alignItems: "center",
       justifyContent: "center", padding: "32px 20px 48px",
       fontFamily: "'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif",
@@ -167,10 +167,10 @@ function LoginForm() {
       {/* Logo */}
       <div style={{ textAlign: "center", marginBottom: "22px" }}>
         <div style={{ display: "inline-flex", alignItems: "center", position: "relative" }}>
-          <div style={{ width: "10px", height: "10px", background: "#F59E0B", borderRadius: "2px", position: "absolute", top: "2px", left: "-4px" }} />
-          <span style={{ fontSize: "38px", fontWeight: 800, color: "#1FA89A", letterSpacing: "-0.5px", lineHeight: 1 }}>KRYROS</span>
+          <div style={{ width: "10px", height: "10px", background: "var(--gold)", borderRadius: "2px", position: "absolute", top: "2px", left: "-4px" }} />
+          <span style={{ fontSize: "38px", fontWeight: 800, color: "var(--primary)", letterSpacing: "-0.5px", lineHeight: 1 }}>KRYROS</span>
         </div>
-        <p style={{ fontSize: "10.5px", color: "#94A3B8", letterSpacing: "3.5px", textTransform: "uppercase", marginTop: "5px" }}>
+        <p style={{ fontSize: "10.5px", color: "var(--text-muted)", letterSpacing: "3.5px", textTransform: "uppercase", marginTop: "5px" }}>
           Admin Portal
         </p>
       </div>
@@ -178,22 +178,22 @@ function LoginForm() {
       {/* ── STEP 1: Credentials ─────────────────────────────────────────────── */}
       {step === "credentials" && (
         <>
-          <h1 style={{ fontSize: "24px", fontWeight: 400, color: "#1E293B", margin: "0 0 26px", textAlign: "center", letterSpacing: "-0.2px" }}>
+          <h1 style={{ fontSize: "24px", fontWeight: 400, color: "var(--text-main)", margin: "0 0 26px", textAlign: "center", letterSpacing: "-0.2px" }}>
             Login to access Dashboard
           </h1>
           <form onSubmit={handleSubmit} style={{ width: "100%", maxWidth: "460px" }} noValidate>
             <input type="text" value={identifier}
               onChange={e => { setIdentifier(e.target.value); setIdentifierError(""); setLoginError(""); }}
               placeholder="Username, Email or Mobile Number" autoComplete="username" style={inputBase}
-              onFocus={e => e.target.style.borderColor = "#1FA89A"} onBlur={e => e.target.style.borderColor = "#C8D3E0"} />
+              onFocus={e => e.target.style.borderColor = "var(--primary)"} onBlur={e => e.target.style.borderColor = "var(--border)"} />
             {identifierError && <p style={errStyle}>{identifierError}</p>}
 
             <div style={{ position: "relative", marginTop: identifierError ? "0" : "8px" }}>
               <input type={showPassword ? "text" : "password"} value={password}
                 onChange={e => { setPassword(e.target.value); setPasswordError(""); setLoginError(""); }}
                 placeholder="Password" autoComplete="current-password" style={{ ...inputBase, paddingRight: "48px" }}
-                onFocus={e => e.target.style.borderColor = "#1FA89A"} onBlur={e => e.target.style.borderColor = "#C8D3E0"} />
-              <button type="button" onClick={() => setShowPassword(v => !v)} style={{ position: "absolute", right: "14px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "#94A3B8", display: "flex", alignItems: "center", padding: "4px" }}>
+                onFocus={e => e.target.style.borderColor = "var(--primary)"} onBlur={e => e.target.style.borderColor = "var(--border)"} />
+              <button type="button" onClick={() => setShowPassword(v => !v)} style={{ position: "absolute", right: "14px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)", display: "flex", alignItems: "center", padding: "4px" }}>
                 {showPassword ? <EyeOff size={19} /> : <Eye size={19} />}
               </button>
             </div>
@@ -201,24 +201,24 @@ function LoginForm() {
 
             {loginError && <p style={{ ...errStyle, textAlign: "center", margin: "12px 0" }}>{loginError}</p>}
 
-            <button type="submit" disabled={loading} style={{ width: "100%", padding: "16px", background: loading ? "#5BBFB5" : "#1FA89A", border: "none", borderRadius: "5px", color: "white", fontSize: "15.5px", fontWeight: 600, cursor: loading ? "not-allowed" : "pointer", letterSpacing: "0.3px", fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", transition: "background 0.2s", marginTop: "18px" }}>
+            <button type="submit" disabled={loading} style={{ width: "100%", padding: "16px", background: loading ? "var(--primary-hover)" : "var(--primary)", border: "none", borderRadius: "5px", color: "white", fontSize: "15.5px", fontWeight: 600, cursor: loading ? "not-allowed" : "pointer", letterSpacing: "0.3px", fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", transition: "background 0.2s", marginTop: "18px" }}>
               {loading ? (<><div style={{ width: "15px", height: "15px", border: "2px solid rgba(255,255,255,0.35)", borderTopColor: "white", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />Signing in...</>) : "Sign In"}
             </button>
 
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "16px" }}>
-              <label style={{ display: "flex", alignItems: "center", gap: "7px", cursor: "pointer", fontSize: "13.5px", color: "#64748B", userSelect: "none" }}>
-                <input type="checkbox" checked={rememberMe} onChange={e => setRememberMe(e.target.checked)} style={{ width: "15px", height: "15px", cursor: "pointer", accentColor: "#1FA89A" }} />
+              <label style={{ display: "flex", alignItems: "center", gap: "7px", cursor: "pointer", fontSize: "13.5px", color: "var(--text-muted)", userSelect: "none" }}>
+                <input type="checkbox" checked={rememberMe} onChange={e => setRememberMe(e.target.checked)} style={{ width: "15px", height: "15px", cursor: "pointer", accentColor: "var(--primary)" }} />
                 Remember Me
               </label>
-              <a href="#" onClick={e => e.preventDefault()} style={{ color: "#1FA89A", fontSize: "13.5px", textDecoration: "underline", fontWeight: 500 }}>Forgot Password</a>
+              <a href="#" onClick={e => e.preventDefault()} style={{ color: "var(--primary)", fontSize: "13.5px", textDecoration: "underline", fontWeight: 500 }}>Forgot Password</a>
             </div>
 
             {/* reCAPTCHA v3 notice — required by Google Terms of Service */}
-            <p style={{ fontSize: "11px", color: "#94A3B8", textAlign: "center", marginTop: "20px", lineHeight: 1.5 }}>
+            <p style={{ fontSize: "11px", color: "var(--text-muted)", textAlign: "center", marginTop: "20px", lineHeight: 1.5 }}>
               Protected by reCAPTCHA.{" "}
-              <a href="https://policies.google.com/privacy" target="_blank" rel="noreferrer" style={{ color: "#64748B" }}>Privacy</a>
+              <a href="https://policies.google.com/privacy" target="_blank" rel="noreferrer" style={{ color: "var(--text-muted)" }}>Privacy</a>
               {" · "}
-              <a href="https://policies.google.com/terms" target="_blank" rel="noreferrer" style={{ color: "#64748B" }}>Terms</a>
+              <a href="https://policies.google.com/terms" target="_blank" rel="noreferrer" style={{ color: "var(--text-muted)" }}>Terms</a>
             </p>
           </form>
         </>
@@ -227,12 +227,12 @@ function LoginForm() {
       {/* ── STEP 2: 2FA Code Entry ────────────────────────────────────────────── */}
       {step === "2fa" && (
         <form onSubmit={handle2faVerify} style={{ width: "100%", maxWidth: "420px", textAlign: "center" }}>
-          <div style={{ width: "64px", height: "64px", borderRadius: "50%", background: "rgba(31,168,154,0.12)", border: "2px solid #1FA89A", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px" }}>
-            <ShieldCheck size={28} color="#1FA89A" />
+          <div style={{ width: "64px", height: "64px", borderRadius: "50%", background: "var(--glow)", border: "2px solid var(--primary)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px" }}>
+            <ShieldCheck size={28} color="var(--primary)" />
           </div>
-          <h1 style={{ fontSize: "22px", fontWeight: 700, color: "#1E293B", margin: "0 0 8px" }}>Two-Factor Authentication</h1>
-          <p style={{ fontSize: "13.5px", color: "#64748B", margin: "0 0 28px", lineHeight: 1.6 }}>
-            Open your authenticator app (Google Authenticator, Authy) and enter the 6-digit code for <strong style={{ color: "#1E293B" }}>KRYROS</strong>.
+          <h1 style={{ fontSize: "22px", fontWeight: 700, color: "var(--text-main)", margin: "0 0 8px" }}>Two-Factor Authentication</h1>
+          <p style={{ fontSize: "13.5px", color: "var(--text-muted)", margin: "0 0 28px", lineHeight: 1.6 }}>
+            Open your authenticator app (Google Authenticator, Authy) and enter the 6-digit code for <strong style={{ color: "var(--text-main)" }}>KRYROS</strong>.
           </p>
 
           <input
@@ -242,22 +242,22 @@ function LoginForm() {
             maxLength={6}
             autoFocus
             style={{ ...inputBase, fontSize: "28px", fontFamily: "monospace", letterSpacing: "0.35em", textAlign: "center", padding: "18px", marginBottom: "8px" }}
-            onFocus={e => e.target.style.borderColor = "#1FA89A"}
-            onBlur={e => e.target.style.borderColor = "#C8D3E0"}
+            onFocus={e => e.target.style.borderColor = "var(--primary)"}
+            onBlur={e => e.target.style.borderColor = "var(--border)"}
           />
           {twoFaError && <p style={{ ...errStyle, textAlign: "center" }}>{twoFaError}</p>}
 
-          <button type="submit" disabled={twoFaLoading || twoFaCode.length !== 6} style={{ width: "100%", padding: "16px", background: (twoFaCode.length === 6 && !twoFaLoading) ? "#1FA89A" : "#9CA3AF", border: "none", borderRadius: "5px", color: "white", fontSize: "15px", fontWeight: 600, cursor: twoFaCode.length === 6 ? "pointer" : "not-allowed", fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", marginTop: "4px", transition: "background 0.2s" }}>
+          <button type="submit" disabled={twoFaLoading || twoFaCode.length !== 6} style={{ width: "100%", padding: "16px", background: (twoFaCode.length === 6 && !twoFaLoading) ? "var(--primary)" : "var(--text-light)", border: "none", borderRadius: "5px", color: "white", fontSize: "15px", fontWeight: 600, cursor: twoFaCode.length === 6 ? "pointer" : "not-allowed", fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", marginTop: "4px", transition: "background 0.2s" }}>
             {twoFaLoading ? (<><div style={{ width: "15px", height: "15px", border: "2px solid rgba(255,255,255,0.35)", borderTopColor: "white", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />Verifying...</>) : "Verify & Sign In"}
           </button>
 
-          <button type="button" onClick={() => { setStep("credentials"); setTwoFaCode(""); setTwoFaError(""); }} style={{ marginTop: "16px", background: "none", border: "none", cursor: "pointer", color: "#64748B", fontSize: "13px", display: "flex", alignItems: "center", gap: "6px", margin: "16px auto 0" }}>
+          <button type="button" onClick={() => { setStep("credentials"); setTwoFaCode(""); setTwoFaError(""); }} style={{ marginTop: "16px", background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)", fontSize: "13px", display: "flex", alignItems: "center", gap: "6px", margin: "16px auto 0" }}>
             <ArrowLeft size={14} /> Back to login
           </button>
         </form>
       )}
 
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } } input::placeholder { color: #9CA3AF; }`}</style>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } } input::placeholder { color: var(--text-light); }`}</style>
     </div>
   );
 }

@@ -44,11 +44,11 @@ export default function Sidebar({ collapsed, mobileOpen, onMobileClose }: Sideba
   const { user, logout } = useAuth();
   const [showUserPopup, setShowUserPopup] = useState(false);
 
-  const bg       = "#FFFFFF";
-  const border   = "#E2E8F0";
-  const textMain = "#0F172A";
-  const textMuted = "#64748B";
-  const surface  = "#F8FAFC";
+  const bg       = "var(--card)";
+  const border   = "var(--border)";
+  const textMain = "var(--text-main)";
+  const textMuted = "var(--text-muted)";
+  const surface  = "var(--surface)";
 
   const handleLogout = () => {
     setShowUserPopup(false);
