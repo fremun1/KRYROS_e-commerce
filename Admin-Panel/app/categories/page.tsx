@@ -129,12 +129,12 @@ function CategoriesContent() {
       );
     }},
     { key: 'name', label: 'Category', render: (v) => <span style={{ fontWeight: 600, color: textMain }}>{String(v)}</span> },
-    { key: 'slug', label: 'Slug', render: (v) => <code style={{ fontSize: '12px', color: '#1FA89A', background: 'rgba(31,168,154,0.1)', padding: '2px 6px', borderRadius: '4px' }}>{String(v)}</code> },
+    { key: 'slug', label: 'Slug', render: (v) => <code style={{ fontSize: '12px', color: 'var(--primary)', background: 'rgba(31,168,154,0.1)', padding: '2px 6px', borderRadius: '4px' }}>{String(v)}</code> },
     { key: 'parent', label: 'Parent' },
     { key: 'description', label: 'Description', render: (v) => <span style={{ color: textMuted, fontSize: '12px' }}>{String(v).slice(0, 40)}{String(v).length > 40 ? '...' : ''}</span> },
-    { key: 'showOnHome', label: 'On Home', render: (v) => <span style={{ padding: '2px 8px', borderRadius: '10px', fontSize: '11px', fontWeight: 600, background: v ? 'rgba(31,168,154,0.12)' : 'rgba(100,116,139,0.1)', color: v ? '#1FA89A' : '#8E9AAF' }}>{v ? 'Yes' : 'No'}</span> },
-    { key: 'products', label: 'Products', render: (v) => <span style={{ fontWeight: 700, color: '#6366f1' }}>{String(v)}</span> },
-    { key: 'status', label: 'Status', render: (v) => <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 600, background: v === 'Active' ? 'rgba(31,168,154,0.12)' : 'rgba(100,116,139,0.1)', color: v === 'Active' ? '#1FA89A' : '#8E9AAF' }}>{String(v)}</span> },
+    { key: 'showOnHome', label: 'On Home', render: (v) => <span style={{ padding: '2px 8px', borderRadius: '10px', fontSize: '11px', fontWeight: 600, background: v ? 'rgba(192,21,27,0.10)' : 'rgba(100,116,139,0.1)', color: v ? 'var(--primary)' : 'var(--text-muted)' }}>{v ? 'Yes' : 'No'}</span> },
+    { key: 'products', label: 'Products', render: (v) => <span style={{ fontWeight: 700, color: 'var(--secondary)' }}>{String(v)}</span> },
+    { key: 'status', label: 'Status', render: (v) => <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 600, background: v === 'Active' ? 'rgba(192,21,27,0.10)' : 'rgba(100,116,139,0.1)', color: v === 'Active' ? 'var(--primary)' : 'var(--text-muted)' }}>{String(v)}</span> },
   ];
 
   const formFields = (

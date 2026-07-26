@@ -164,21 +164,21 @@ function CountriesContent() {
 
   const countryColumns: Column[] = [
     { key:'flag', label:'', render:(v)=><span style={{fontSize:'20px'}}>{String(v||'🌍')}</span>, width:'40px' },
-    { key:'code', label:'Code', render:(v)=><span style={{fontWeight:700,color:'#1FA89A',fontSize:'13px'}}>{String(v)}</span>, width:'70px' },
+    { key:'code', label:'Code', render:(v)=><span style={{fontWeight:700,color:'var(--primary)',fontSize:'13px'}}>{String(v)}</span>, width:'70px' },
     { key:'name', label:'Country', render:(v)=><span style={{fontWeight:600,color:textMain}}>{String(v)}</span> },
     { key:'currency', label:'Currency', render:(v,row)=>{ const r=row as unknown as Country; return <span style={{color:textMain}}><b>{String(v)}</b> {r.symbol}</span>; }},
     { key:'rate', label:'Exchange Rate', render:(v,row)=>{ const r=row as unknown as Country; return <span style={{color:textMuted,fontSize:'12px'}}>{r.autoRate ? '🔄 Auto' : '🔒 Manual'} · {String(v)}</span>; }},
-    { key:'shippingEnabled', label:'Shipping', render:(v)=><span style={{padding:'3px 8px',borderRadius:'20px',fontSize:'11px',fontWeight:600,background:v?'rgba(31,168,154,0.12)':'rgba(239,68,68,0.1)',color:v?'#1FA89A':'#ef4444'}}>{v?'Enabled':'Disabled'}</span> },
-    { key:'status', label:'Status', render:(v)=><span style={{padding:'3px 10px',borderRadius:'20px',fontSize:'12px',fontWeight:600,background:v==='Active'?'rgba(31,168,154,0.12)':'rgba(100,116,139,0.1)',color:v==='Active'?'#1FA89A':'#8E9AAF'}}>{String(v)}</span> },
-    { key:'isDefault', label:'Default', render:(v)=>v?<span style={{color:'#f59e0b',fontWeight:700,fontSize:'12px'}}>★ Default</span>:<span style={{color:textMuted,fontSize:'12px'}}>—</span> },
+    { key:'shippingEnabled', label:'Shipping', render:(v)=><span style={{padding:'3px 8px',borderRadius:'20px',fontSize:'11px',fontWeight:600,background:v?'rgba(192,21,27,0.10)':'rgba(239,68,68,0.1)',color:v?'var(--primary)':'var(--danger)'}}>{v?'Enabled':'Disabled'}</span> },
+    { key:'status', label:'Status', render:(v)=><span style={{padding:'3px 10px',borderRadius:'20px',fontSize:'12px',fontWeight:600,background:v==='Active'?'rgba(192,21,27,0.10)':'rgba(100,116,139,0.1)',color:v==='Active'?'var(--primary)':'var(--text-muted)'}}>{String(v)}</span> },
+    { key:'isDefault', label:'Default', render:(v)=>v?<span style={{color:'var(--gold)',fontWeight:700,fontSize:'12px'}}>★ Default</span>:<span style={{color:textMuted,fontSize:'12px'}}>—</span> },
   ];
 
   const currencyColumns: Column[] = [
-    { key:'code', label:'Code', render:(v)=><span style={{fontWeight:700,color:'#1FA89A'}}>{String(v)}</span>, width:'80px' },
+    { key:'code', label:'Code', render:(v)=><span style={{fontWeight:700,color:'var(--primary)'}}>{String(v)}</span>, width:'80px' },
     { key:'symbol', label:'Symbol', render:(v)=><span style={{fontWeight:600,color:textMain}}>{String(v)}</span>, width:'70px' },
     { key:'name', label:'Name', render:(v)=><span style={{color:textMain}}>{String(v)}</span> },
     { key:'rate', label:'Rate (vs USD)', render:(v)=><span style={{color:textMuted}}>{String(v)}</span> },
-    { key:'status', label:'Status', render:(v)=><span style={{padding:'3px 10px',borderRadius:'20px',fontSize:'12px',fontWeight:600,background:'rgba(31,168,154,0.12)',color:'#1FA89A'}}>{String(v)}</span> },
+    { key:'status', label:'Status', render:(v)=><span style={{padding:'3px 10px',borderRadius:'20px',fontSize:'12px',fontWeight:600,background:'rgba(192,21,27,0.10)',color:'var(--primary)'}}>{String(v)}</span> },
   ];
 
   const cfp = (k:string)=>(v:string)=>setCForm(f=>({...f,[k]:v}));
@@ -213,7 +213,7 @@ function CountriesContent() {
 
   const tabStyle = (active:boolean) => ({
     padding:'8px 20px', borderRadius:'8px', fontSize:'13px', fontWeight:600, cursor:'pointer',
-    background:active ? '#1FA89A' : 'transparent',
+    background:active ? 'var(--primary)' : 'transparent',
     color: active ? '#fff' : textMuted, border:'none',
   });
 
@@ -233,7 +233,7 @@ function CountriesContent() {
 
       {tab === 'currencies' && (
         <>
-          <div style={{color:textMuted,fontSize:'12px',marginBottom:'12px',padding:'10px 14px',background:'rgba(31,168,154,0.06)',border:'1px solid rgba(31,168,154,0.2)',borderRadius:'8px'}}>
+          <div style={{color:textMuted,fontSize:'12px',marginBottom:'12px',padding:'10px 14px',background:'rgba(31,168,154,0.06)',border:'1px solid rgba(192,21,27,0.15)',borderRadius:'8px'}}>
             Currencies are derived from countries. To add a new currency, add a new country with that currency. To edit the exchange rate, click Edit on any currency row below.
           </div>
           <DataTable columns={currencyColumns} data={currencies as unknown as Record<string,unknown>[]} searchPlaceholder="Search currencies..." onEdit={openEditCurrency} />

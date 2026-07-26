@@ -63,7 +63,7 @@ export default async function Image() {
             style={{
               fontSize: 28,
               fontWeight: 400,
-              color: "#a1a1aa",
+              color: "var(--text-muted)",
               letterSpacing: "0.1em",
               textTransform: "uppercase",
             }}

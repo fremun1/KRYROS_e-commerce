@@ -215,12 +215,12 @@ function WholesaleContent() {
 
   const statusBadge = (s:string) => {
     const m: Record<string,{bg:string;color:string}> = {
-      Active:{bg:'rgba(31,168,154,0.12)',color:'#1FA89A'},
-      Approved:{bg:'rgba(31,168,154,0.12)',color:'#1FA89A'},
-      Inactive:{bg:'rgba(100,116,139,0.1)',color:'#8E9AAF'},
-      Pending:{bg:'rgba(255,193,7,0.12)',color:'#FFC107'},
-      Rejected:{bg:'rgba(239,68,68,0.12)',color:'#ef4444'},
-      Suspended:{bg:'rgba(239,68,68,0.12)',color:'#ef4444'},
+      Active:{bg:'rgba(192,21,27,0.10)',color:'var(--primary)'},
+      Approved:{bg:'rgba(192,21,27,0.10)',color:'var(--primary)'},
+      Inactive:{bg:'rgba(100,116,139,0.1)',color:'var(--text-muted)'},
+      Pending:{bg:'rgba(246,176,30,0.12)',color:'var(--gold)'},
+      Rejected:{bg:'rgba(214,48,49,0.12)',color:'var(--danger)'},
+      Suspended:{bg:'rgba(214,48,49,0.12)',color:'var(--danger)'},
     };
     const c = m[s] || m.Inactive;
     return <span style={{padding:'3px 10px',borderRadius:'20px',fontSize:'12px',fontWeight:600,background:c.bg,color:c.color}}>{s}</span>;
@@ -392,8 +392,8 @@ function WholesaleContent() {
           <div style={{display:'flex',gap:'8px',flexWrap:'wrap',marginBottom:'12px'}}>
             {invImages.map((img, idx) => (
               <div key={idx} style={{position:'relative',width:'80px',height:'80px',flexShrink:0}}>
-                <img src={img} alt="" style={{width:'80px',height:'80px',objectFit:'cover',borderRadius:'8px',border:idx===0?'2px solid #1FA89A':`1px solid ${border}`}} />
-                {idx===0 && <span style={{position:'absolute',bottom:'3px',left:'3px',background:'#1FA89A',color:'white',fontSize:'8px',fontWeight:700,padding:'1px 4px',borderRadius:'3px',letterSpacing:'0.3px'}}>MAIN</span>}
+                <img src={img} alt="" style={{width:'80px',height:'80px',objectFit:'cover',borderRadius:'8px',border:idx===0?'2px solid var(--primary)':`1px solid ${border}`}} />
+                {idx===0 && <span style={{position:'absolute',bottom:'3px',left:'3px',background:'var(--primary)',color:'white',fontSize:'8px',fontWeight:700,padding:'1px 4px',borderRadius:'3px',letterSpacing:'0.3px'}}>MAIN</span>}
                 <button type="button" onClick={() => setInvImages((imgs) => imgs.filter((_, imageIndex) => imageIndex !== idx))} style={{position:'absolute',top:'3px',right:'3px',width:'18px',height:'18px',borderRadius:'50%',background:'rgba(239,68,68,0.9)',border:'none',color:'white',cursor:'pointer',fontSize:'12px',fontWeight:700,display:'flex',alignItems:'center',justifyContent:'center',padding:0,lineHeight:1}}>×</button>
               </div>
             ))}
@@ -427,14 +427,14 @@ function WholesaleContent() {
     { key:'id', label:'ID', width:'90px' },
     { key:'name', label:'Company', render:(v)=><span style={{fontWeight:700,color:textMain}}>{String(v)}</span> },
     { key:'contact', label:'Contact' },
-    { key:'tier', label:'Tier', render:(v)=>{ const c={Bronze:{bg:'rgba(180,83,9,0.12)',color:'#b45309'},Silver:{bg:'rgba(100,116,139,0.12)',color:'#94a3b8'},Gold:{bg:'rgba(255,193,7,0.12)',color:'#FFC107'},Platinum:{bg:'rgba(139,92,246,0.12)',color:'#8b5cf6'}}[String(v)] || {bg:'rgba(100,116,139,0.1)',color:'#8E9AAF'}; return <span style={{padding:'3px 10px',borderRadius:'20px',fontSize:'12px',fontWeight:600,background:c.bg,color:c.color}}>{String(v)}</span>; }},
+    { key:'tier', label:'Tier', render:(v)=>{ const c={Bronze:{bg:'rgba(246,139,30,0.12)',color:'var(--warning)'},Silver:{bg:'rgba(83,83,87,0.12)',color:'var(--dark-gray)'},Gold:{bg:'rgba(246,176,30,0.12)',color:'var(--gold)'},Platinum:{bg:'rgba(139,92,246,0.12)',color:'var(--secondary)'}}[String(v)] || {bg:'rgba(100,116,139,0.1)',color:'var(--text-muted)'}; return <span style={{padding:'3px 10px',borderRadius:'20px',fontSize:'12px',fontWeight:600,background:c.bg,color:c.color}}>{String(v)}</span>; }},
     { key:'status', label:'Status', render:(v)=>statusBadge(String(v)) },
   ];
 
   const dealCols: Column[] = [
     { key:'id', label:'ID', width:'90px' },
     { key:'title', label:'Deal Title', render:(v)=><span style={{fontWeight:600,color:textMain}}>{String(v)}</span> },
-    { key:'discount', label:'Discount', render:(v)=><span style={{fontWeight:700,color:'#1FA89A'}}>{String(v)}</span> },
+    { key:'discount', label:'Discount', render:(v)=><span style={{fontWeight:700,color:'var(--primary)'}}>{String(v)}</span> },
     { key:'minOrder', label:'Min Order' },
     { key:'status', label:'Status', render:(v)=>statusBadge(String(v)) },
   ];
@@ -442,7 +442,7 @@ function WholesaleContent() {
   const invCols: Column[] = [
     { key:'id', label:'ID', width:'90px' },
     { key:'name', label:'Product', render:(v)=><span style={{fontWeight:600,color:textMain}}>{String(v)}</span> },
-    { key:'sku', label:'SKU', render:(v)=><code style={{fontSize:'12px',color:'#1FA89A',background:'rgba(31,168,154,0.1)',padding:'2px 6px',borderRadius:'4px'}}>{String(v)}</code> },
+    { key:'sku', label:'SKU', render:(v)=><code style={{fontSize:'12px',color:'var(--primary)',background:'rgba(31,168,154,0.1)',padding:'2px 6px',borderRadius:'4px'}}>{String(v)}</code> },
     { key:'price', label:'Price', render:(v)=><span style={{fontWeight:700,color:textMain}}>{String(v)}</span> },
     { key:'status', label:'Status', render:(v)=>statusBadge(String(v)) },
   ];
@@ -461,8 +461,8 @@ function WholesaleContent() {
           <button key={t.id} onClick={() => setSection(t.id as Section)} style={{
             display:'flex', alignItems:'center', gap:'8px', padding:'10px 16px', borderRadius:'12px', fontSize:'13.5px', fontWeight:600,
             background: section === t.id ? 'rgba(31,168,154,0.1)' : card,
-            color: section === t.id ? '#1FA89A' : textMuted,
-            border: `1px solid ${section === t.id ? '#1FA89A' : border}`,
+            color: section === t.id ? 'var(--primary)' : textMuted,
+            border: `1px solid ${section === t.id ? 'var(--primary)' : border}`,
             cursor:'pointer', whiteSpace:'nowrap', transition:'all 0.2s'
           }}>
             <t.icon size={16} /> {t.label}
@@ -486,7 +486,7 @@ function WholesaleContent() {
           <div style={{ padding:'20px' }}>
             <div style={{ display:'flex', justifyContent:'flex-end', marginBottom:'16px' }}>
               <button onClick={() => { setDForm({title:'',description:'',discount:'',minOrder:'',validUntil:'',status:'Active'}); setAddDealOpen(true); }}
-                style={{ background:'#1FA89A', color:'white', border:'none', padding:'8px 16px', borderRadius:'8px', fontWeight:600, cursor:'pointer' }}>
+                style={{ background:'var(--primary)', color:'white', border:'none', padding:'8px 16px', borderRadius:'8px', fontWeight:600, cursor:'pointer' }}>
                 Add New Deal
               </button>
             </div>
@@ -510,7 +510,7 @@ function WholesaleContent() {
           <div style={{ padding:'20px' }}>
             <div style={{ display:'flex', justifyContent:'flex-end', marginBottom:'16px' }}>
               <button onClick={() => { setIForm({name:'',sku:'',price:'',moq:'',category:'Electronics',status:'Active',description:'',imageUrl:'',images:[],specifications:'',stockTotal:'100',stockCurrent:'100'}); setInvImages([]); setAddInvOpen(true); }}
-                style={{ background:'#1FA89A', color:'white', border:'none', padding:'8px 16px', borderRadius:'8px', fontWeight:600, cursor:'pointer' }}>
+                style={{ background:'var(--primary)', color:'white', border:'none', padding:'8px 16px', borderRadius:'8px', fontWeight:600, cursor:'pointer' }}>
                 Add Wholesale Product
               </button>
             </div>

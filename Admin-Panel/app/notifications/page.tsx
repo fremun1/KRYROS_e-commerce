@@ -26,7 +26,7 @@ function PushContent() {
   const textMain = 'var(--text-main)';
   const textMuted = 'var(--text-muted)';
   const surface = 'var(--surface)';
-  const primary = '#1FA89A';
+  const primary = 'var(--primary)';
   const [devices, setDevices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<string[]>([]);
@@ -96,7 +96,7 @@ function PushContent() {
   };
 
   const platformColors: Record<string, string> = {
-    android: '#22c55e', ios: '#3b82f6', web: '#f59e0b',
+    android: 'var(--success)', ios: 'var(--link)', web: 'var(--gold)',
   };
   const platformLabel = (p: string) => p.charAt(0).toUpperCase() + p.slice(1).toLowerCase();
 
@@ -112,8 +112,8 @@ function PushContent() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, marginBottom: 20 }}>
         {[
           { label: 'Total Devices', value: devices.length, color: primary },
-          { label: 'Android', value: devices.filter(d => d.platform === 'android').length, color: '#22c55e' },
-          { label: 'iOS / Web', value: devices.filter(d => d.platform !== 'android').length, color: '#3b82f6' },
+          { label: 'Android', value: devices.filter(d => d.platform === 'android').length, color: 'var(--success)' },
+          { label: 'iOS / Web', value: devices.filter(d => d.platform !== 'android').length, color: 'var(--link)' },
         ].map(s => (
           <div key={s.label} style={{ background: card, border: `1px solid ${border}`, borderRadius: 10, padding: '14px 18px' }}>
             <div style={{ fontSize: 22, fontWeight: 800, color: s.color }}>{s.value}</div>
@@ -160,7 +160,7 @@ function PushContent() {
                 <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 20, background: `${platformColors[d.platform] || '#888'}20`, color: platformColors[d.platform] || '#888', border: `1px solid ${platformColors[d.platform] || '#888'}44`, flexShrink: 0 }}>
                   {platformLabel(d.platform)}
                 </span>
-                <button onClick={e => { e.stopPropagation(); handleDelete(d.id); }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: '#ef4444', flexShrink: 0 }}>
+                <button onClick={e => { e.stopPropagation(); handleDelete(d.id); }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--danger)', flexShrink: 0 }}>
                   <Trash2 style={{ width: 13, height: 13 }} />
                 </button>
               </div>
@@ -194,7 +194,7 @@ function PushContent() {
             </div>
 
             {/* Send Button */}
-            <button onClick={handleSend} disabled={sending || !pushTitle.trim() || !pushMessage.trim()} style={{ width: '100%', padding: '11px', borderRadius: 8, border: 'none', background: (!sending && pushTitle.trim() && pushMessage.trim()) ? 'linear-gradient(135deg,#1FA89A,#27B9AF)' : border, color: '#fff', fontWeight: 700, fontSize: 13, cursor: sending ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, opacity: (!pushTitle.trim() || !pushMessage.trim()) ? 0.5 : 1 }}>
+            <button onClick={handleSend} disabled={sending || !pushTitle.trim() || !pushMessage.trim()} style={{ width: '100%', padding: '11px', borderRadius: 8, border: 'none', background: (!sending && pushTitle.trim() && pushMessage.trim()) ? 'linear-gradient(135deg,var(--primary),var(--secondary))' : border, color: '#fff', fontWeight: 700, fontSize: 13, cursor: sending ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, opacity: (!pushTitle.trim() || !pushMessage.trim()) ? 0.5 : 1 }}>
               {sending ? <><Loader2 style={{ width: 14, height: 14, animation: 'spin 1s linear infinite' }} /> Sending...</> : <><Send style={{ width: 13, height: 13 }} /> Send Push</>}
             </button>
 
@@ -221,7 +221,7 @@ function SmsCountriesSection() {
   const textMain = 'var(--text-main)';
   const textMuted = 'var(--text-muted)';
   const surface = 'var(--surface)';
-  const primary = '#1FA89A';
+  const primary = 'var(--primary)';
   const [countries, setCountries]   = useState<SmsCountry[]>([]);
   const [loading, setLoading]       = useState(true);
   const [showAdd, setShowAdd]       = useState(false);
@@ -333,10 +333,10 @@ function SmsCountriesSection() {
             >
               <div style={{ position: 'absolute', top: 3, left: c.isActive ? 18 : 3, width: 14, height: 14, borderRadius: '50%', background: '#fff', transition: 'left 0.2s' }} />
             </div>
-            <span style={{ fontSize: 11, color: c.isActive ? '#22c55e' : textMuted, fontWeight: 600, minWidth: 46 }}>{c.isActive ? 'Active' : 'Off'}</span>
+            <span style={{ fontSize: 11, color: c.isActive ? 'var(--success)' : textMuted, fontWeight: 600, minWidth: 46 }}>{c.isActive ? 'Active' : 'Off'}</span>
             <button
               onClick={() => handleDelete(c.id)}
-              style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#ef4444', padding: 4, borderRadius: 5, display: 'flex', alignItems: 'center' }}
+              style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--danger)', padding: 4, borderRadius: 5, display: 'flex', alignItems: 'center' }}
               title="Remove country"
             >
               <Trash2 style={{ width: 14, height: 14 }} />
@@ -359,7 +359,7 @@ function SmsContent() {
   const textMain = 'var(--text-main)';
   const textMuted = 'var(--text-muted)';
   const surface = 'var(--surface)';
-  const primary = '#1FA89A';
+  const primary = 'var(--primary)';
   const [contacts, setContacts] = useState<SmsContact[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<string[]>([]);
@@ -439,7 +439,7 @@ function SmsContent() {
   };
 
   const sourceColors: Record<string, string> = {
-    Checkout: '#22c55e', Manual: '#3b82f6', WhatsApp: '#25D366',
+    Checkout: 'var(--success)', Manual: 'var(--link)', WhatsApp: 'var(--success)',
   };
 
   const inputStyle = { width:'100%', padding:'9px 12px', borderRadius:8, border:`1px solid ${border}`, background:surface, color:textMain, fontSize:13, outline:'none', boxSizing:'border-box' as const, fontFamily:'inherit' };
@@ -453,8 +453,8 @@ function SmsContent() {
       <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:12, marginBottom:20 }}>
         {[
           { label: 'Total Contacts', value: contacts.length, color: primary },
-          { label: 'From Checkout', value: contacts.filter(c=>c.source==='Checkout').length, color: '#22c55e' },
-          { label: 'Manual', value: contacts.filter(c=>c.source==='Manual').length, color: '#3b82f6' },
+          { label: 'From Checkout', value: contacts.filter(c=>c.source==='Checkout').length, color: 'var(--success)' },
+          { label: 'Manual', value: contacts.filter(c=>c.source==='Manual').length, color: 'var(--link)' },
         ].map(s => (
           <div key={s.label} style={{ background: card, border: `1px solid ${border}`, borderRadius: 10, padding: '14px 18px' }}>
             <div style={{ fontSize: 22, fontWeight: 800, color: s.color }}>{s.value}</div>
@@ -472,7 +472,7 @@ function SmsContent() {
             </span>
             <div style={{ display:'flex', gap:8, alignItems:'center' }}>
               <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search..." style={{ padding:'5px 10px', borderRadius:6, border:`1px solid ${border}`, background:surface, color:textMain, fontSize:11, outline:'none', width:120 }} />
-              <button onClick={()=>setShowAdd(true)} style={{ display:'flex', alignItems:'center', gap:4, padding:'5px 10px', borderRadius:6, background:'linear-gradient(135deg,#1FA89A,#27B9AF)', border:'none', color:'white', fontSize:11, fontWeight:600, cursor:'pointer' }}>
+              <button onClick={()=>setShowAdd(true)} style={{ display:'flex', alignItems:'center', gap:4, padding:'5px 10px', borderRadius:6, background:'linear-gradient(135deg,var(--primary),var(--secondary))', border:'none', color:'white', fontSize:11, fontWeight:600, cursor:'pointer' }}>
                 <Plus style={{ width:12, height:12 }} /> Add
               </button>
             </div>
@@ -504,7 +504,7 @@ function SmsContent() {
                 <span style={{ fontSize:9, fontWeight:700, padding:'2px 7px', borderRadius:20, background:`${sourceColors[c.source] || '#888'}20`, color: sourceColors[c.source] || '#888', border:`1px solid ${sourceColors[c.source] || '#888'}44`, flexShrink:0 }}>
                   {c.source}
                 </span>
-                <button onClick={e=>{ e.stopPropagation(); handleDelete(c.id); }} style={{ background:'none', border:'none', cursor:'pointer', padding:4, color:'#ef4444', flexShrink:0 }}>
+                <button onClick={e=>{ e.stopPropagation(); handleDelete(c.id); }} style={{ background:'none', border:'none', cursor:'pointer', padding:4, color:'var(--danger)', flexShrink:0 }}>
                   <Trash2 style={{ width:13, height:13 }} />
                 </button>
               </div>
@@ -528,7 +528,7 @@ function SmsContent() {
               <textarea value={smsMessage} onChange={e=>setSmsMessage(e.target.value)} placeholder="Write your SMS message here..." rows={6} style={{ ...inputStyle, resize:'vertical', lineHeight:1.6, display:'block' }} />
               <div style={{ fontSize:10, color:textMuted, marginTop:4 }}>{smsMessage.length} / 160 chars (1 SMS)</div>
             </div>
-            <button onClick={handleSendSms} disabled={sending || !smsMessage.trim()} style={{ width:'100%', padding:'11px', borderRadius:8, border:'none', background:(!sending && smsMessage.trim()) ? 'linear-gradient(135deg,#1FA89A,#27B9AF)' : border, color:'#fff', fontWeight:700, fontSize:13, cursor:sending?'wait':'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:8, opacity:!smsMessage.trim()?0.5:1 }}>
+            <button onClick={handleSendSms} disabled={sending || !smsMessage.trim()} style={{ width:'100%', padding:'11px', borderRadius:8, border:'none', background:(!sending && smsMessage.trim()) ? 'linear-gradient(135deg,var(--primary),var(--secondary))' : border, color:'#fff', fontWeight:700, fontSize:13, cursor:sending?'wait':'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:8, opacity:!smsMessage.trim()?0.5:1 }}>
               {sending ? <><Loader2 style={{ width:14, height:14, animation:'spin 1s linear infinite' }} /> Sending...</> : <><Send style={{ width:13, height:13 }} /> Send SMS</>}
             </button>
             <p style={{ fontSize:10, color:textMuted, textAlign:'center' }}>
@@ -555,7 +555,7 @@ function SmsContent() {
                 <label style={{ fontSize:11, fontWeight:600, color:textMuted, display:'block', marginBottom:5 }}>Phone Number *</label>
                 <input value={newPhone} onChange={e=>setNewPhone(e.target.value)} placeholder="+260 97X XXX XXX" type="tel" style={inputStyle} />
               </div>
-              <button onClick={handleAddContact} disabled={adding || !newPhone.trim()} style={{ width:'100%', padding:'11px', borderRadius:8, border:'none', background:'linear-gradient(135deg,#1FA89A,#27B9AF)', color:'#fff', fontWeight:700, fontSize:13, cursor:adding?'wait':'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:6 }}>
+              <button onClick={handleAddContact} disabled={adding || !newPhone.trim()} style={{ width:'100%', padding:'11px', borderRadius:8, border:'none', background:'linear-gradient(135deg,var(--primary),var(--secondary))', color:'#fff', fontWeight:700, fontSize:13, cursor:adding?'wait':'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:6 }}>
                 {adding ? <><Loader2 style={{ width:14, height:14, animation:'spin 1s linear infinite' }} /> Adding...</> : <><Plus style={{ width:13, height:13 }} /> Add Contact</>}
               </button>
             </div>
@@ -581,7 +581,7 @@ function NewsletterContent() {
   const textMain = 'var(--text-main)';
   const textMuted = 'var(--text-muted)';
   const surface = 'var(--surface)';
-  const primary = '#1FA89A';
+  const primary = 'var(--primary)';
   const [subscribers, setSubscribers] = useState<NLSubscriber[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<string[]>([]);
@@ -631,8 +631,8 @@ function NewsletterContent() {
       <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:16, marginBottom:24 }}>
         {[
           { label: 'Total Subscribers', value: subscribers.length, color: primary },
-          { label: 'Active', value: active.length, color: '#22c55e' },
-          { label: 'Unsubscribed', value: subscribers.length - active.length, color: '#ef4444' },
+          { label: 'Active', value: active.length, color: 'var(--success)' },
+          { label: 'Unsubscribed', value: subscribers.length - active.length, color: 'var(--danger)' },
         ].map(stat => (
           <div key={stat.label} style={{ background: card, border: `1px solid ${border}`, borderRadius: 10, padding: '14px 18px' }}>
             <div style={{ fontSize: 22, fontWeight: 800, color: stat.color }}>{stat.value}</div>
@@ -664,7 +664,7 @@ function NewsletterContent() {
                   <div style={{ fontSize:12, fontWeight:600, color:textMain, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{sub.email}</div>
                   <div style={{ fontSize:10, color:textMuted }}>{new Date(sub.createdAt).toLocaleDateString()}</div>
                 </div>
-                <span style={{ fontSize:9, fontWeight:700, padding:'2px 7px', borderRadius:20, background:sub.isActive?'#22c55e22':'#ef444422', color:sub.isActive?'#16a34a':'#dc2626', border:`1px solid ${sub.isActive?'#22c55e44':'#ef444444'}`, flexShrink:0 }}>
+                <span style={{ fontSize:9, fontWeight:700, padding:'2px 7px', borderRadius:20, background:sub.isActive?'var(--success)22':'var(--danger)22', color:sub.isActive?'var(--success)':'var(--danger)', border:`1px solid ${sub.isActive?'var(--success)44':'var(--danger)44'}`, flexShrink:0 }}>
                   {sub.isActive ? 'Active' : 'Off'}
                 </span>
               </div>
@@ -690,7 +690,7 @@ function NewsletterContent() {
               <label style={{ fontSize:11, fontWeight:600, color:textMuted, display:'block', marginBottom:5 }}>Message *</label>
               <textarea value={body} onChange={e=>setBody(e.target.value)} placeholder="Write your newsletter message here..." rows={7} style={{ width:'100%', padding:'9px 12px', borderRadius:8, border:`1px solid ${border}`, background:surface, color:textMain, fontSize:12, outline:'none', resize:'vertical', boxSizing:'border-box', fontFamily:'inherit', lineHeight:1.6 }} />
             </div>
-            <button onClick={handleSend} disabled={sending || !subject.trim() || !body.trim()} style={{ width:'100%', padding:'11px', borderRadius:8, border:'none', background:(!sending && subject.trim() && body.trim())?'linear-gradient(135deg,#1FA89A,#27B9AF)':border, color:'#fff', fontWeight:700, fontSize:13, cursor:sending?'wait':'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:8, opacity:(!subject.trim()||!body.trim())?0.5:1 }}>
+            <button onClick={handleSend} disabled={sending || !subject.trim() || !body.trim()} style={{ width:'100%', padding:'11px', borderRadius:8, border:'none', background:(!sending && subject.trim() && body.trim())?'linear-gradient(135deg,var(--primary),var(--secondary))':border, color:'#fff', fontWeight:700, fontSize:13, cursor:sending?'wait':'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:8, opacity:(!subject.trim()||!body.trim())?0.5:1 }}>
               {sending ? <><Loader2 style={{ width:14, height:14, animation:'spin 1s linear infinite' }} /> Sending...</> : <><Send style={{ width:13, height:13 }} /> Send Newsletter</>}
             </button>
             <p style={{ fontSize:10, color:textMuted, textAlign:'center' }}>
@@ -715,7 +715,7 @@ function EmailContent() {
   const textMain = 'var(--text-main)';
   const textMuted = 'var(--text-muted)';
   const surface = 'var(--surface)';
-  const primary = '#1FA89A';
+  const primary = 'var(--primary)';
   const [contacts, setContacts] = useState<EmailContact[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<string[]>([]);
@@ -789,7 +789,7 @@ function EmailContent() {
     finally { setSending(false); }
   };
 
-  const sourceColors: Record<string, string> = { Checkout: '#22c55e', Manual: '#3b82f6', Import: '#f59e0b' };
+  const sourceColors: Record<string, string> = { Checkout: 'var(--success)', Manual: 'var(--link)', Import: 'var(--gold)' };
   const inputStyle = { width:'100%', padding:'9px 12px', borderRadius:8, border:`1px solid ${border}`, background:surface, color:textMain, fontSize:13, outline:'none', boxSizing:'border-box' as const, fontFamily:'inherit' };
   const recipientLabel = selected.length > 0
     ? `${selected.length} selected contact${selected.length > 1 ? 's' : ''}`
@@ -800,8 +800,8 @@ function EmailContent() {
       <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:12, marginBottom:20 }}>
         {[
           { label: 'Total Contacts', value: contacts.length, color: primary },
-          { label: 'From Checkout', value: contacts.filter(c=>c.source==='Checkout').length, color: '#22c55e' },
-          { label: 'Manual', value: contacts.filter(c=>c.source==='Manual').length, color: '#3b82f6' },
+          { label: 'From Checkout', value: contacts.filter(c=>c.source==='Checkout').length, color: 'var(--success)' },
+          { label: 'Manual', value: contacts.filter(c=>c.source==='Manual').length, color: 'var(--link)' },
         ].map(s => (
           <div key={s.label} style={{ background: card, border: `1px solid ${border}`, borderRadius: 10, padding: '14px 18px' }}>
             <div style={{ fontSize: 22, fontWeight: 800, color: s.color }}>{s.value}</div>
@@ -817,7 +817,7 @@ function EmailContent() {
             </span>
             <div style={{ display:'flex', gap:8, alignItems:'center' }}>
               <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search..." style={{ padding:'5px 10px', borderRadius:6, border:`1px solid ${border}`, background:surface, color:textMain, fontSize:11, outline:'none', width:120 }} />
-              <button onClick={()=>setShowAdd(true)} style={{ display:'flex', alignItems:'center', gap:4, padding:'5px 10px', borderRadius:6, background:'linear-gradient(135deg,#1FA89A,#27B9AF)', border:'none', color:'white', fontSize:11, fontWeight:600, cursor:'pointer' }}>
+              <button onClick={()=>setShowAdd(true)} style={{ display:'flex', alignItems:'center', gap:4, padding:'5px 10px', borderRadius:6, background:'linear-gradient(135deg,var(--primary),var(--secondary))', border:'none', color:'white', fontSize:11, fontWeight:600, cursor:'pointer' }}>
                 <Plus style={{ width:12, height:12 }} /> Add
               </button>
             </div>
@@ -845,7 +845,7 @@ function EmailContent() {
                 <span style={{ fontSize:9, fontWeight:700, padding:'2px 7px', borderRadius:20, background:`${sourceColors[c.source] || '#888'}20`, color: sourceColors[c.source] || '#888', border:`1px solid ${sourceColors[c.source] || '#888'}44`, flexShrink:0 }}>
                   {c.source}
                 </span>
-                <button onClick={e=>{ e.stopPropagation(); handleDelete(c.id); }} style={{ background:'none', border:'none', cursor:'pointer', padding:4, color:'#ef4444', flexShrink:0 }}>
+                <button onClick={e=>{ e.stopPropagation(); handleDelete(c.id); }} style={{ background:'none', border:'none', cursor:'pointer', padding:4, color:'var(--danger)', flexShrink:0 }}>
                   <Trash2 style={{ width:13, height:13 }} />
                 </button>
               </div>
@@ -870,7 +870,7 @@ function EmailContent() {
               <label style={{ fontSize:11, fontWeight:600, color:textMuted, display:'block', marginBottom:5 }}>Message *</label>
               <textarea value={emailBody} onChange={e=>setEmailBody(e.target.value)} placeholder="Write your email message here..." rows={7} style={{ ...inputStyle, resize:'vertical', lineHeight:1.6, display:'block' }} />
             </div>
-            <button onClick={handleSendBlast} disabled={sending || !subject.trim() || !emailBody.trim()} style={{ width:'100%', padding:'11px', borderRadius:8, border:'none', background:(!sending && subject.trim() && emailBody.trim())?'linear-gradient(135deg,#1FA89A,#27B9AF)':border, color:'#fff', fontWeight:700, fontSize:13, cursor:sending?'wait':'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:8, opacity:(!subject.trim()||!emailBody.trim())?0.5:1 }}>
+            <button onClick={handleSendBlast} disabled={sending || !subject.trim() || !emailBody.trim()} style={{ width:'100%', padding:'11px', borderRadius:8, border:'none', background:(!sending && subject.trim() && emailBody.trim())?'linear-gradient(135deg,var(--primary),var(--secondary))':border, color:'#fff', fontWeight:700, fontSize:13, cursor:sending?'wait':'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:8, opacity:(!subject.trim()||!emailBody.trim())?0.5:1 }}>
               {sending ? <><Loader2 style={{ width:14, height:14, animation:'spin 1s linear infinite' }} /> Sending...</> : <><Send style={{ width:13, height:13 }} /> Send Email Blast</>}
             </button>
             <p style={{ fontSize:10, color:textMuted, textAlign:'center' }}>
@@ -895,7 +895,7 @@ function EmailContent() {
                 <label style={{ fontSize:11, fontWeight:600, color:textMuted, display:'block', marginBottom:5 }}>Email Address *</label>
                 <input value={newEmail} onChange={e=>setNewEmail(e.target.value)} placeholder="john@example.com" type="email" style={inputStyle} />
               </div>
-              <button onClick={handleAddContact} disabled={adding || !newEmail.trim()} style={{ width:'100%', padding:'11px', borderRadius:8, border:'none', background:'linear-gradient(135deg,#1FA89A,#27B9AF)', color:'#fff', fontWeight:700, fontSize:13, cursor:adding?'wait':'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:6 }}>
+              <button onClick={handleAddContact} disabled={adding || !newEmail.trim()} style={{ width:'100%', padding:'11px', borderRadius:8, border:'none', background:'linear-gradient(135deg,var(--primary),var(--secondary))', color:'#fff', fontWeight:700, fontSize:13, cursor:adding?'wait':'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:6 }}>
                 {adding ? <><Loader2 style={{ width:14, height:14, animation:'spin 1s linear infinite' }} /> Adding...</> : <><Plus style={{ width:13, height:13 }} /> Add Contact</>}
               </button>
             </div>
@@ -917,7 +917,7 @@ function DiagnosticsContent() {
   const textMain = 'var(--text-main)';
   const textMuted = 'var(--text-muted)';
   const surface = 'var(--surface)';
-  const primary = '#1FA89A';
+  const primary = 'var(--primary)';
   const [status, setStatus] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
@@ -951,18 +951,18 @@ function DiagnosticsContent() {
             borderRadius: 20,
             fontSize: 10,
             fontWeight: 700,
-            background: isOk ? '#22c55e20' : (isError ? '#ef444420' : '#f59e0b20'),
-            color: isOk ? '#22c55e' : (isError ? '#ef4444' : '#f59e0b'),
-            border: `1px solid ${isOk ? '#22c55e44' : (isError ? '#ef444444' : '#f59e0b44')}`
+            background: isOk ? 'var(--success)20' : (isError ? 'var(--danger)20' : 'var(--gold)20'),
+            color: isOk ? 'var(--success)' : (isError ? 'var(--danger)' : 'var(--gold)'),
+            border: `1px solid ${isOk ? 'var(--success)44' : (isError ? 'var(--danger)44' : 'var(--gold)44')}`
           }}>
             {data.status}
           </span>
         </div>
-        <div style={{ fontSize: 13, color: isError ? '#ef4444' : textMuted, fontWeight: isError ? 600 : 400 }}>
+        <div style={{ fontSize: 13, color: isError ? 'var(--danger)' : textMuted, fontWeight: isError ? 600 : 400 }}>
           {data.message}
         </div>
         {isMissing && (
-          <div style={{ fontSize: 11, color: '#f59e0b', background: '#f59e0b10', padding: 8, borderRadius: 6, border: '1px dashed #f59e0b44' }}>
+          <div style={{ fontSize: 11, color: 'var(--gold)', background: 'var(--gold)10', padding: 8, borderRadius: 6, border: '1px dashed var(--gold)44' }}>
             Check your .env file on the server.
           </div>
         )}
@@ -1050,7 +1050,7 @@ export default function NotificationsPage() {
       <PageHeader title="Notifications" subtitle="Manage push, SMS, and newsletter campaigns" icon={Bell} />
       <div style={{ display:'flex', gap:4, marginBottom:24, background:surface, padding:4, borderRadius:10, border:`1px solid ${border}`, width:'fit-content', flexWrap:'wrap' }}>
         {tabs.map(({ id, label, Icon }) => (
-          <button key={id} onClick={() => setActiveSection(id)} style={{ padding:'7px 18px', borderRadius:7, border:'none', fontWeight:600, fontSize:13, cursor:'pointer', display:'flex', alignItems:'center', gap:6, background: activeSection === id ? '#1FA89A' : 'transparent', color: activeSection === id ? '#fff' : textMuted, transition:'all 0.15s' }}>
+          <button key={id} onClick={() => setActiveSection(id)} style={{ padding:'7px 18px', borderRadius:7, border:'none', fontWeight:600, fontSize:13, cursor:'pointer', display:'flex', alignItems:'center', gap:6, background: activeSection === id ? 'var(--primary)' : 'transparent', color: activeSection === id ? '#fff' : textMuted, transition:'all 0.15s' }}>
             <Icon style={{ width:14, height:14 }} />
             {label}
           </button>

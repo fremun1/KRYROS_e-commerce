@@ -1,7 +1,6 @@
 'use client';
 import React, { useRef, useEffect, useState } from 'react';
 import { X, AlertTriangle, ChevronDown, Check } from 'lucide-react';
-import { useTheme } from '@/contexts/theme-context';
 
 // ── Custom Select (no native browser picker) ───────────────
 interface CustomSelectProps {
@@ -35,7 +34,7 @@ function CustomSelect({ value, onChange, options, disabled = false, border, text
         style={{
           width: '100%', padding: '9px 36px 9px 12px', borderRadius: '8px',
           background: disabled ? 'var(--surface)' : surface,
-          border: `1px solid ${open ? '#1FA89A' : border}`,
+          border: `1px solid ${open ? 'var(--primary)' : border}`,
           color: disabled ? textMuted : textMain,
           fontSize: '13.5px', cursor: disabled ? 'default' : 'pointer',
           fontFamily: 'var(--font-inter)',
@@ -67,7 +66,7 @@ function CustomSelect({ value, onChange, options, disabled = false, border, text
           background: 'var(--card)',
           border: `1px solid ${border}`,
           borderRadius: '10px',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.14)',
+          boxShadow: '0 8px 32px var(--shadow)',
           overflow: 'hidden',
           maxHeight: '220px',
           overflowY: 'auto',
@@ -80,9 +79,9 @@ function CustomSelect({ value, onChange, options, disabled = false, border, text
                 padding: '11px 14px',
                 cursor: 'pointer',
                 fontSize: '13.5px',
-                color: opt === value ? '#1FA89A' : textMain,
+                color: opt === value ? 'var(--primary)' : textMain,
                 background: opt === value
-                  ? 'rgba(31,168,154,0.12)'
+                  ? 'rgba(192,21,27,0.10)'
                   : 'transparent',
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                 fontFamily: 'var(--font-inter)',
@@ -90,14 +89,14 @@ function CustomSelect({ value, onChange, options, disabled = false, border, text
                 transition: 'background 0.1s',
               }}
               onMouseEnter={e => {
-                if (opt !== value) e.currentTarget.style.background = 'rgba(31,168,154,0.05)';
+                if (opt !== value) e.currentTarget.style.background = 'rgba(192,21,27,0.05)';
               }}
               onMouseLeave={e => {
                 if (opt !== value) e.currentTarget.style.background = 'transparent';
               }}
             >
               <span>{opt}</span>
-              {opt === value && <Check size={13} color="#1FA89A" />}
+              {opt === value && <Check size={13} color="var(--primary)" />}
             </div>
           ))}
         </div>
@@ -124,10 +123,10 @@ export function Modal({ open, onClose, title, children, maxWidth = '500px' }: Mo
   if (!open) return null;
   return (
     <div
-      style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.65)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', backdropFilter: 'blur(3px)' }}
+      style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'var(--overlay)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', backdropFilter: 'blur(3px)' }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div style={{ background: bg, border: `1px solid ${border}`, borderRadius: '16px', width: '100%', maxWidth, maxHeight: '90vh', overflow: 'auto', boxShadow: '0 30px 60px rgba(0,0,0,0.45)' }}>
+      <div style={{ background: bg, border: `1px solid ${border}`, borderRadius: '16px', width: '100%', maxWidth, maxHeight: '90vh', overflow: 'auto', boxShadow: '0 30px 60px rgba(0,0,0,0.35)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px 16px', borderBottom: `1px solid ${border}` }}>
           <h2 style={{ fontSize: '15px', fontWeight: 700, color: textMain, margin: 0 }}>{title}</h2>
           <button onClick={onClose} style={{ width: '28px', height: '28px', borderRadius: '7px', background: 'var(--surface)', border: `1px solid ${border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
@@ -160,18 +159,18 @@ export function ConfirmDialog({ open, onClose, onConfirm, title, message, confir
   if (!open) return null;
   return (
     <div
-      style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.65)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', backdropFilter: 'blur(3px)' }}
+      style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'var(--overlay)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', backdropFilter: 'blur(3px)' }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div style={{ background: bg, border: `1px solid ${border}`, borderRadius: '16px', width: '100%', maxWidth: '420px', padding: '28px', boxShadow: '0 30px 60px rgba(0,0,0,0.45)' }}>
-        <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'rgba(239,68,68,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}>
-          <AlertTriangle size={22} color="#ef4444" />
+      <div style={{ background: bg, border: `1px solid ${border}`, borderRadius: '16px', width: '100%', maxWidth: '420px', padding: '28px', boxShadow: '0 30px 60px rgba(0,0,0,0.35)' }}>
+        <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'rgba(214,48,49,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}>
+          <AlertTriangle size={22} color="var(--danger)" />
         </div>
         <h3 style={{ fontSize: '16px', fontWeight: 700, color: textMain, margin: '0 0 8px' }}>{title}</h3>
         <p style={{ fontSize: '13.5px', color: textMuted, margin: '0 0 24px', lineHeight: 1.6 }}>{message}</p>
         <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
           <button onClick={onClose} disabled={loading} style={{ padding: '9px 18px', borderRadius: '9px', background: 'var(--surface)', border: `1px solid ${border}`, color: textMain, fontSize: '13.5px', fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-inter)' }}>Cancel</button>
-          <button onClick={onConfirm} disabled={loading} style={{ padding: '9px 18px', borderRadius: '9px', background: 'linear-gradient(135deg, #ef4444, #dc2626)', border: 'none', color: 'white', fontSize: '13.5px', fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1, fontFamily: 'var(--font-inter)' }}>
+          <button onClick={onConfirm} disabled={loading} style={{ padding: '9px 18px', borderRadius: '9px', background: 'var(--danger)', border: 'none', color: 'var(--text-white)', fontSize: '13.5px', fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1, fontFamily: 'var(--font-inter)' }}>
             {loading ? 'Deleting...' : confirmLabel}
           </button>
         </div>
@@ -247,7 +246,7 @@ export function ModalFooter({ onClose, onSubmit, loading, submitLabel, border, t
   return (
     <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '6px', paddingTop: '16px', borderTop: `1px solid ${border}` }}>
       <button onClick={onClose} disabled={loading} style={{ padding: '9px 18px', borderRadius: '9px', background: 'var(--surface)', border: `1px solid ${border}`, color: textMain, fontSize: '13.5px', fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-inter)' }}>Cancel</button>
-      <button onClick={onSubmit} disabled={loading} style={{ padding: '9px 18px', borderRadius: '9px', background: 'linear-gradient(135deg, #1FA89A, #27B9AF)', border: 'none', color: 'white', fontSize: '13.5px', fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1, fontFamily: 'var(--font-inter)' }}>
+      <button onClick={onSubmit} disabled={loading} style={{ padding: '9px 18px', borderRadius: '9px', background: 'var(--btn-primary)', border: 'none', color: 'var(--text-white)', fontSize: '13.5px', fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1, fontFamily: 'var(--font-inter)' }}>
         {loading ? 'Saving...' : submitLabel}
       </button>
     </div>

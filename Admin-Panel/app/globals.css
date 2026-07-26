@@ -1,25 +1,68 @@
 @import "tailwindcss";
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   KRYROS GLOBAL THEME — Single source of truth for all colors
+   To change any color in the entire admin panel, edit only this file.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
 :root {
-  --primary: #C0151B;            /* KRYROS Primary Red */
-  --primary-hover: #A01015;        /* KRYROS Primary Hover */
-  --gold: #F6B01E;              /* KRYROS Rating Gold */
-  --danger: #D63031;            /* KRYROS Sale/Error Red */
-  --success: #2DBE60;           /* KRYROS Success Green */
-  --warning: #F68B1E;           /* KRYROS Warning Orange */
-  --link: #2563EB;              /* KRYROS Link/URL */
-  --sidebar-width: 260px;
-  --bg: #F5F5F5;               /* KRYROS Main Background */
-  --card: #FFFFFF;              /* KRYROS Card Background */
-  --surface: #FAFAFA;           /* KRYROS Secondary Background */
-  --border: #E5E5E5;            /* KRYROS Border */
-  --option: #E5E5E5;            /* KRYROS Border Gray */
-  --text-main: #313133;         /* KRYROS Primary Text */
-  --text-secondary: #535357;     /* KRYROS Dark Gray */
-  --text-muted: #75757A;        /* KRYROS Medium Gray */
-  --text-light: #9E9E9E;        /* KRYROS Disabled Text */
-  --glow: rgba(192,21,27,0.08); /* KRYROS Primary Glow */
-  --border-soft: rgba(49,49,51,0.06); /* KRYROS soft border */
+  /* ── PRIMARY COLORS ─────────────────────────────────────────────────────── */
+  --primary:              #C0151B;
+  --primary-hover:        #A01015;
+  --secondary:            #344a64;
+  --secondary-hover:      #2a3d54;
+
+  /* ── BACKGROUND COLORS ──────────────────────────────────────────────────── */
+  --bg:                   #FFFFFF;
+  --card:                 #FFFFFF;
+  --surface:              #FAFAFA;
+  --footer-bg:            #000000;
+
+  /* ── NEUTRAL / GRAY SCALE ───────────────────────────────────────────────── */
+  --light-gray:           #FFFFFF;
+  --border:               #E5E5E5;
+  --divider:              #E5E5E5;
+  --medium-gray:          #75757A;
+  --dark-gray:            #535357;
+
+  /* ── TEXT COLORS ────────────────────────────────────────────────────────── */
+  --text-main:            #313133;
+  --text-secondary:       #75757A;
+  --text-muted:           #75757A;
+  --text-light:           #9E9E9E;
+  --text-white:           #FFFFFF;
+  --text-disabled:        #9E9E9E;
+  --link:                 #2563EB;
+
+  /* ── BUTTON COLORS ──────────────────────────────────────────────────────── */
+  --btn-primary:          #344a64;
+  --btn-primary-hover:    #2a3d54;
+  --btn-secondary:        #C0151B;
+  --btn-secondary-hover:  #A01015;
+  --btn-dark:             #313133;
+  --btn-disabled:         #C7C7CD;
+
+  /* ── STATUS / FEEDBACK COLORS ───────────────────────────────────────────── */
+  --success:              #2DBE60;
+  --danger:               #D63031;
+  --warning:              #F68B1E;
+  --gold:                 #F6B01E;
+
+  /* ── SPECIAL EFFECTS / OVERLAYS ─────────────────────────────────────────── */
+  --glow:                 rgba(192,21,27,0.08);
+  --shadow:               rgba(0,0,0,0.10);
+  --overlay:              rgba(0,0,0,0.50);
+  --orange-glow:          rgba(246,139,30,0.15);
+
+  /* ── QUANTITY BOX ───────────────────────────────────────────────────────── */
+  --qty-bg:               #313133;
+  --qty-border:           #E5E5E5;
+
+  /* ── BORDER SOFT / MISC ─────────────────────────────────────────────────── */
+  --border-soft:          rgba(49,49,51,0.06);
+
+  /* ── SIDEBAR ────────────────────────────────────────────────────────────── */
+  --sidebar-width:        260px;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -29,16 +72,17 @@ body {
   font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   background-color: var(--bg);
   color: var(--text-main);
-  transition: background-color 0.3s ease, color 0.3s ease;
   -webkit-font-smoothing: antialiased;
   min-height: 100vh;
 }
 
+/* ── SCROLLBAR ─────────────────────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: var(--surface); }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--primary); }
 
+/* ── UTILITY CLASSES ───────────────────────────────────────────────────────── */
 .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
 .surface { background: var(--surface); }
 .text-main { color: var(--text-main); }
@@ -47,28 +91,28 @@ body {
 .text-primary-brand { color: var(--primary); }
 .bg-card { background: var(--card); }
 .bg-surface { background: var(--surface); }
-.card, .surface, button, input, select, textarea {
-  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
-}
-.badge-completed { background: rgba(45,190,96,0.15); color: #2DBE60; }   /* KRYROS Success */
-.badge-processing { background: rgba(59,130,246,0.15); color: #3b82f6; }
-.badge-pending { background: rgba(246,176,30,0.15); color: #F6B01E; }    /* KRYROS Rating Gold */
-.badge-cancelled { background: rgba(214,48,49,0.15); color: #D63031; }   /* KRYROS Error Red */
-.badge-shipped { background: rgba(139,92,246,0.15); color: #8b5cf6; }
-.badge-delivered { background: rgba(45,190,96,0.15); color: #2DBE60; }   /* KRYROS Success */
 
+/* ── STATUS BADGE CLASSES ──────────────────────────────────────────────────── */
+.badge-completed  { background: rgba(45,190,96,0.15);  color: var(--success); }
+.badge-processing { background: rgba(52,74,100,0.12);  color: var(--secondary); }
+.badge-pending    { background: rgba(246,176,30,0.15); color: var(--gold); }
+.badge-cancelled  { background: rgba(192,21,27,0.12);  color: var(--primary); }
+.badge-shipped    { background: rgba(52,74,100,0.12);  color: var(--secondary); }
+.badge-delivered  { background: rgba(45,190,96,0.15);  color: var(--success); }
+.badge-error      { background: rgba(214,48,49,0.12);  color: var(--danger); }
+.badge-warning    { background: rgba(246,139,30,0.15); color: var(--warning); }
+
+/* ── ANIMATIONS ────────────────────────────────────────────────────────────── */
 @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes spin { to { transform: rotate(360deg); } }
 .animate-fadeInUp { animation: fadeInUp 0.3s ease forwards; }
 
+/* ── RECHARTS OVERRIDES ────────────────────────────────────────────────────── */
 .recharts-cartesian-grid-horizontal line,
 .recharts-cartesian-grid-vertical line { stroke: var(--border) !important; }
 .recharts-text { fill: var(--text-muted) !important; }
 
-/* ── reCAPTCHA v3 badge ────────────────────────────────────────────────────────
-   Google ToS allows hiding the badge widget when the required privacy/terms
-   text is shown elsewhere on the site (it appears on the /login page).
-   Without this, the badge floats on every page after login. */
+/* ── reCAPTCHA v3 badge ────────────────────────────────────────────────────── */
 .grecaptcha-badge {
   display: none !important;
   visibility: hidden !important;

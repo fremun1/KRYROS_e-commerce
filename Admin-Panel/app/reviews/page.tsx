@@ -80,16 +80,16 @@ function ReviewsContent() {
   const Stars = ({ n, size = 14 }: { n: number; size?: number }) => (
     <div style={{ display: 'flex', gap: '1px' }}>
       {[1,2,3,4,5].map(i => (
-        <span key={i} style={{ fontSize: `${size}px`, color: i <= n ? '#FFC107' : 'var(--border)' }}>&#9733;</span>
+        <span key={i} style={{ fontSize: `${size}px`, color: i <= n ? 'var(--gold)' : 'var(--border)' }}>&#9733;</span>
       ))}
     </div>
   );
 
   const badge = (status: string) => {
     const m: Record<string, { bg: string; color: string }> = {
-      Published: { bg: 'rgba(31,168,154,0.12)', color: '#1FA89A' },
-      Pending: { bg: 'rgba(255,193,7,0.12)', color: '#FFC107' },
-      Rejected: { bg: 'rgba(185,28,28,0.12)', color: '#ef4444' },
+      Published: { bg: 'rgba(192,21,27,0.10)', color: 'var(--primary)' },
+      Pending: { bg: 'rgba(246,176,30,0.12)', color: 'var(--gold)' },
+      Rejected: { bg: 'rgba(185,28,28,0.12)', color: 'var(--danger)' },
     };
     const s = m[status] || m.Pending;
     return <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11.5px', fontWeight: 600, background: s.bg, color: s.color }}>{status}</span>;
@@ -106,10 +106,10 @@ function ReviewsContent() {
   ];
 
   const stats = [
-    { label: 'Total Reviews', val: String(data.length), color: '#1FA89A' },
-    { label: 'Published', val: String(data.filter(r=>r.status==='Published').length), color: '#1FA89A' },
-    { label: 'Pending', val: String(data.filter(r=>r.status==='Pending').length), color: '#FFC107' },
-    { label: 'Rejected', val: String(data.filter(r=>r.status==='Rejected').length), color: '#ef4444' },
+    { label: 'Total Reviews', val: String(data.length), color: 'var(--primary)' },
+    { label: 'Published', val: String(data.filter(r=>r.status==='Published').length), color: 'var(--primary)' },
+    { label: 'Pending', val: String(data.filter(r=>r.status==='Pending').length), color: 'var(--gold)' },
+    { label: 'Rejected', val: String(data.filter(r=>r.status==='Rejected').length), color: 'var(--danger)' },
   ];
 
   return (

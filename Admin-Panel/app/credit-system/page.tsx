@@ -325,16 +325,16 @@ function CreditContent() {
   // ── Status badge helpers ──
   const appBadge = (s: string) => {
     const m: Record<string,{bg:string;color:string}> = {
-      Approved:{bg:'rgba(31,168,154,0.12)',color:'#1FA89A'},
-      Pending:{bg:'rgba(255,193,7,0.12)',color:'#FFC107'},
-      Rejected:{bg:'rgba(239,68,68,0.12)',color:'#ef4444'},
+      Approved:{bg:'rgba(192,21,27,0.10)',color:'var(--primary)'},
+      Pending:{bg:'rgba(246,176,30,0.12)',color:'var(--gold)'},
+      Rejected:{bg:'rgba(214,48,49,0.12)',color:'var(--danger)'},
     };
     const c = m[s] || m.Pending;
     return <span style={{padding:'3px 10px',borderRadius:'20px',fontSize:'12px',fontWeight:600,background:c.bg,color:c.color}}>{s}</span>;
   };
   const statusBadge = (s: string) => {
     const active = s === 'Active';
-    return <span style={{padding:'3px 10px',borderRadius:'20px',fontSize:'12px',fontWeight:600,background:active?'rgba(31,168,154,0.12)':'rgba(100,116,139,0.1)',color:active?'#1FA89A':'#8E9AAF'}}>{s}</span>;
+    return <span style={{padding:'3px 10px',borderRadius:'20px',fontSize:'12px',fontWeight:600,background:active?'rgba(192,21,27,0.10)':'rgba(100,116,139,0.1)',color:active?'var(--primary)':'var(--text-muted)'}}>{s}</span>;
   };
 
   // ── Tab bar ──
@@ -352,15 +352,15 @@ function CreditContent() {
       <div><div style={{fontWeight:600,color:textMain}}>{String(v)}</div><div style={{fontSize:'11.5px',color:textMuted}}>{String(row.email)}</div></div>
     )},
     { key:'product', label:'Product', render:(v)=><span style={{fontWeight:500,color:textMain}}>{String(v)}</span> },
-    { key:'plan', label:'Plan', render:(v)=><span style={{fontSize:'12px',color:'#6366f1',background:'rgba(99,102,241,0.1)',padding:'2px 8px',borderRadius:'8px',fontWeight:600}}>{String(v)}</span> },
+    { key:'plan', label:'Plan', render:(v)=><span style={{fontSize:'12px',color:'var(--secondary)',background:'rgba(52,74,100,0.10)',padding:'2px 8px',borderRadius:'8px',fontWeight:600}}>{String(v)}</span> },
     { key:'amount', label:'Amount', render:(v)=><span style={{fontWeight:700,color:textMain}}>{String(v)}</span> },
     { key:'status', label:'Status', render:(v)=>appBadge(String(v)) },
   ];
   const planCols: Column[] = [
     { key:'id', label:'ID', width:'90px' },
     { key:'name', label:'Plan Name', render:(v)=><span style={{fontWeight:700,color:textMain}}>{String(v)}</span> },
-    { key:'months', label:'Duration', render:(v)=><span style={{color:'#6366f1',fontWeight:600}}>{String(v)} months</span> },
-    { key:'interest', label:'Interest Rate', render:(v)=><span style={{fontWeight:600,color:v==='0%'?'#1FA89A':'#FFC107'}}>{String(v)}</span> },
+    { key:'months', label:'Duration', render:(v)=><span style={{color:'var(--secondary)',fontWeight:600}}>{String(v)} months</span> },
+    { key:'interest', label:'Interest Rate', render:(v)=><span style={{fontWeight:600,color:v==='0%'?'var(--primary)':'var(--gold)'}}>{String(v)}</span> },
     { key:'minAmount', label:'Min Amount' },
     { key:'maxAmount', label:'Max Amount' },
     { key:'status', label:'Status', render:(v)=>statusBadge(String(v)) },
@@ -368,7 +368,7 @@ function CreditContent() {
   const instProdCols: Column[] = [
     { key:'id', label:'ID', width:'90px' },
     { key:'name', label:'Product', render:(v)=><span style={{fontWeight:600,color:textMain}}>{String(v)}</span> },
-    { key:'sku', label:'SKU', render:(v)=><code style={{fontSize:'12px',color:'#1FA89A',background:'rgba(31,168,154,0.1)',padding:'2px 6px',borderRadius:'4px'}}>{String(v)}</code> },
+    { key:'sku', label:'SKU', render:(v)=><code style={{fontSize:'12px',color:'var(--primary)',background:'rgba(31,168,154,0.1)',padding:'2px 6px',borderRadius:'4px'}}>{String(v)}</code> },
     { key:'price', label:'Price', render:(v)=><span style={{fontWeight:700,color:textMain}}>{String(v)}</span> },
     { key:'plans', label:'Available Plans', render:(v)=><span style={{fontSize:'12px',color:textMuted}}>{String(v)}</span> },
     { key:'status', label:'Status', render:(v)=>statusBadge(String(v)) },
@@ -377,10 +377,10 @@ function CreditContent() {
     { key:'id', label:'ID', width:'90px' },
     { key:'customer', label:'Customer', render:(v)=><span style={{fontWeight:600,color:textMain,fontSize:'13.5px'}}>{String(v)}</span> },
     { key:'phone', label:'Phone', render:(v)=><span style={{fontSize:'12px',color:textMuted}}>{String(v)}</span> },
-    { key:'plan', label:'Plan', render:(v)=><span style={{fontSize:'12px',color:'#6366f1',background:'rgba(99,102,241,0.1)',padding:'2px 8px',borderRadius:'8px',fontWeight:600}}>{String(v)}</span> },
+    { key:'plan', label:'Plan', render:(v)=><span style={{fontSize:'12px',color:'var(--secondary)',background:'rgba(52,74,100,0.10)',padding:'2px 8px',borderRadius:'8px',fontWeight:600}}>{String(v)}</span> },
     { key:'limit', label:'Limit', render:(v)=><span style={{fontWeight:700,color:textMain}}>{String(v)}</span> },
-    { key:'used', label:'Used', render:(v)=><span style={{color:'#FFC107',fontWeight:600}}>{String(v)}</span> },
-    { key:'outstanding', label:'Outstanding', render:(v)=><span style={{fontWeight:700,color:'#ef4444'}}>{String(v)}</span> },
+    { key:'used', label:'Used', render:(v)=><span style={{color:'var(--gold)',fontWeight:600}}>{String(v)}</span> },
+    { key:'outstanding', label:'Outstanding', render:(v)=><span style={{fontWeight:700,color:'var(--danger)'}}>{String(v)}</span> },
     { key:'due', label:'Due Date' },
     { key:'status', label:'Status', render:(v)=>statusBadge(String(v)) },
   ];
@@ -413,10 +413,10 @@ function CreditContent() {
       {/* ── Summary stats ── */}
       <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:'12px',marginBottom:'20px'}} className="cg">
         {[
-          {label:'Total Applications', val:String(applications.length), color:'#6366f1'},
-          {label:'Approved', val:String(applications.filter(a=>a.status==='Approved').length), color:'#1FA89A'},
-          {label:'Pending', val:String(applications.filter(a=>a.status==='Pending').length), color:'#FFC107'},
-          {label:'Credit Accounts', val:String(credits.length), color:'#1FA89A'},
+          {label:'Total Applications', val:String(applications.length), color:'var(--secondary)'},
+          {label:'Approved', val:String(applications.filter(a=>a.status==='Approved').length), color:'var(--primary)'},
+          {label:'Pending', val:String(applications.filter(a=>a.status==='Pending').length), color:'var(--gold)'},
+          {label:'Credit Accounts', val:String(credits.length), color:'var(--primary)'},
         ].map(s=>(
           <div key={s.label} style={{background:card,border:`1px solid ${border}`,borderRadius:'12px',padding:'14px'}}>
             <div style={{fontSize:'12px',color:textMuted,marginBottom:'4px'}}>{s.label}</div>
@@ -430,7 +430,7 @@ function CreditContent() {
         {TABS.map(t=>(
           <button key={t.key} onClick={()=>setActiveTab(t.key)} style={{
             flex:'1 0 auto', padding:'8px 14px', borderRadius:'8px', border:'none', cursor:'pointer',
-            background:activeTab===t.key?'#1FA89A':'transparent',
+            background:activeTab===t.key?'var(--primary)':'transparent',
             color:activeTab===t.key?'white':textMuted,
             fontSize:'13px', fontWeight:600, fontFamily:'var(--font-inter)',
             display:'flex', alignItems:'center', gap:'6px', justifyContent:'center', whiteSpace:'nowrap',
@@ -440,7 +440,7 @@ function CreditContent() {
             <span style={{
               fontSize:'10px', fontWeight:700, padding:'1px 6px', borderRadius:'10px',
               background:activeTab===t.key?'rgba(255,255,255,0.25)':'rgba(99,102,241,0.12)',
-              color:activeTab===t.key?'white':'#6366f1',
+              color:activeTab===t.key?'white':'var(--secondary)',
             }}>{t.count}</span>
           </button>
         ))}

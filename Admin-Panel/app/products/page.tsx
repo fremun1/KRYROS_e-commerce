@@ -466,10 +466,10 @@ function ProductsContent() {
 
   const statusBadge = (status: string) => {
     const map: Record<string, { bg: string; color: string }> = {
-      Active: { bg: 'rgba(31,168,154,0.12)', color: '#1FA89A' },
-      Inactive: { bg: 'rgba(100,116,139,0.1)', color: '#8E9AAF' },
-      'Low Stock': { bg: 'rgba(255,193,7,0.12)', color: '#FFC107' },
-      'Out of Stock': { bg: 'rgba(239,68,68,0.12)', color: '#ef4444' },
+      Active: { bg: 'rgba(192,21,27,0.10)', color: 'var(--primary)' },
+      Inactive: { bg: 'rgba(100,116,139,0.1)', color: 'var(--text-muted)' },
+      'Low Stock': { bg: 'rgba(246,176,30,0.12)', color: 'var(--gold)' },
+      'Out of Stock': { bg: 'rgba(214,48,49,0.12)', color: 'var(--danger)' },
     };
     const s = map[status] || map.Inactive;
     return <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 600, background: s.bg, color: s.color }}>{status}</span>;
@@ -498,12 +498,12 @@ function ProductsContent() {
       return (
         <div>
           <div style={{ fontWeight: 700, color: textMain }}>{String(v)}</div>
-          {r.salePrice && <div style={{ fontSize: '11px', color: '#1FA89A', marginTop: '1px' }}>Sale: {r.salePrice}</div>}
+          {r.salePrice && <div style={{ fontSize: '11px', color: 'var(--primary)', marginTop: '1px' }}>Sale: {r.salePrice}</div>}
         </div>
       );
     }},
-    { key: 'stock', label: 'Stock', render: (v) => <span style={{ fontWeight: 700, color: Number(v) === 0 ? '#ef4444' : Number(v) < 10 ? '#FFC107' : '#1FA89A' }}>{String(v)}</span> },
-    { key: 'featured', label: 'Featured', render: (v) => <span style={{ padding: '2px 7px', borderRadius: '10px', fontSize: '11px', fontWeight: 600, background: v ? 'rgba(99,102,241,0.12)' : 'rgba(100,116,139,0.08)', color: v ? '#6366f1' : '#8E9AAF' }}>{v ? 'Yes' : 'No'}</span> },
+    { key: 'stock', label: 'Stock', render: (v) => <span style={{ fontWeight: 700, color: Number(v) === 0 ? 'var(--danger)' : Number(v) < 10 ? 'var(--gold)' : 'var(--primary)' }}>{String(v)}</span> },
+    { key: 'featured', label: 'Featured', render: (v) => <span style={{ padding: '2px 7px', borderRadius: '10px', fontSize: '11px', fontWeight: 600, background: v ? 'rgba(99,102,241,0.12)' : 'rgba(100,116,139,0.08)', color: v ? 'var(--secondary)' : 'var(--text-muted)' }}>{v ? 'Yes' : 'No'}</span> },
     { key: 'status', label: 'Status', render: (v) => statusBadge(String(v)) },
   ];
 
@@ -534,8 +534,8 @@ function ProductsContent() {
           <div style={{display:'flex',gap:'8px',flexWrap:'wrap',marginBottom:'12px'}}>
             {productImages.map((img, idx) => (
               <div key={idx} style={{position:'relative',width:'80px',height:'80px',flexShrink:0}}>
-                <img src={img} alt="" style={{width:'80px',height:'80px',objectFit:'cover',borderRadius:'8px',border:idx===0?'2px solid #1FA89A':`1px solid ${border}`}} onError={(e:any)=>{e.target.style.opacity='0.3';}} />
-                {idx===0 && <span style={{position:'absolute',bottom:'3px',left:'3px',background:'#1FA89A',color:'white',fontSize:'8px',fontWeight:700,padding:'1px 4px',borderRadius:'3px',letterSpacing:'0.3px'}}>MAIN</span>}
+                <img src={img} alt="" style={{width:'80px',height:'80px',objectFit:'cover',borderRadius:'8px',border:idx===0?'2px solid var(--primary)':`1px solid ${border}`}} onError={(e:any)=>{e.target.style.opacity='0.3';}} />
+                {idx===0 && <span style={{position:'absolute',bottom:'3px',left:'3px',background:'var(--primary)',color:'white',fontSize:'8px',fontWeight:700,padding:'1px 4px',borderRadius:'3px',letterSpacing:'0.3px'}}>MAIN</span>}
                 <button type="button" onClick={()=>setProductImages(imgs=>imgs.filter((_,i)=>i!==idx))} style={{position:'absolute',top:'3px',right:'3px',width:'18px',height:'18px',borderRadius:'50%',background:'rgba(239,68,68,0.9)',border:'none',color:'white',cursor:'pointer',fontSize:'12px',fontWeight:700,display:'flex',alignItems:'center',justifyContent:'center',padding:0,lineHeight:1}}>×</button>
               </div>
             ))}

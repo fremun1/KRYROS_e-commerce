@@ -153,24 +153,24 @@ function ShippingContent() {
     { key: 'name',     label: 'Zone Name', render: (v) => <span style={{ fontWeight: 600, color: textMain }}>{String(v)}</span> },
     { key: 'region',   label: 'Region', render: (v) => <span style={{ color: textMuted, fontSize: '12px' }}>{String(v) || '—'}</span> },
     { key: 'method',   label: 'Method', render: (v) => <span style={{ color: textMain, fontSize: '12px' }}>{String(v) || '—'}</span> },
-    { key: 'rate',     label: 'Rate', render: (v) => <span style={{ fontWeight: 600, color: '#1FA89A' }}>${String(v)}</span> },
+    { key: 'rate',     label: 'Rate', render: (v) => <span style={{ fontWeight: 600, color: 'var(--primary)' }}>${String(v)}</span> },
     { key: 'minOrder', label: 'Min Order', render: (v) => <span style={{ color: textMuted, fontSize: '12px' }}>${String(v)}</span> },
     { key: 'days',     label: 'Est. Days', render: (v) => <span style={{ color: textMuted, fontSize: '12px' }}>{String(v) || '—'}</span> },
-    { key: 'status',   label: 'Status', render: (v) => <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 600, background: v === 'Active' ? 'rgba(31,168,154,0.12)' : 'rgba(100,116,139,0.1)', color: v === 'Active' ? '#1FA89A' : '#8E9AAF' }}>{String(v)}</span> },
+    { key: 'status',   label: 'Status', render: (v) => <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 600, background: v === 'Active' ? 'rgba(192,21,27,0.10)' : 'rgba(100,116,139,0.1)', color: v === 'Active' ? 'var(--primary)' : 'var(--text-muted)' }}>{String(v)}</span> },
   ];
 
   const methodColumns: Column[] = [
     { key: 'name',         label: 'Name', render: (v) => <span style={{ fontWeight: 600, color: textMain }}>{String(v)}</span> },
     { key: 'description',  label: 'Description', render: (v) => <span style={{ color: textMuted, fontSize: '12px' }}>{String(v).slice(0, 40) || '—'}</span> },
-    { key: 'fee',          label: 'Fee', render: (v) => <span style={{ fontWeight: 600, color: '#1FA89A' }}>${String(v)}</span> },
+    { key: 'fee',          label: 'Fee', render: (v) => <span style={{ fontWeight: 600, color: 'var(--primary)' }}>${String(v)}</span> },
     { key: 'minThreshold', label: 'Free Ship Above', render: (v) => <span style={{ color: textMuted, fontSize: '12px' }}>{Number(v) > 0 ? `$${v}` : '—'}</span> },
     { key: 'estimatedDays', label: 'Est. Days', render: (v) => <span style={{ color: textMuted, fontSize: '12px' }}>{String(v) || '—'}</span> },
-    { key: 'status',       label: 'Status', render: (v) => <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 600, background: v === 'Active' ? 'rgba(31,168,154,0.12)' : 'rgba(100,116,139,0.1)', color: v === 'Active' ? '#1FA89A' : '#8E9AAF' }}>{String(v)}</span> },
+    { key: 'status',       label: 'Status', render: (v) => <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 600, background: v === 'Active' ? 'rgba(192,21,27,0.10)' : 'rgba(100,116,139,0.1)', color: v === 'Active' ? 'var(--primary)' : 'var(--text-muted)' }}>{String(v)}</span> },
   ];
 
   const tabStyle = (active: boolean) => ({
     padding: '8px 18px', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: 'pointer',
-    background: active ? '#1FA89A' : 'transparent', color: active ? '#fff' : textMuted, border: 'none',
+    background: active ? 'var(--primary)' : 'transparent', color: active ? '#fff' : textMuted, border: 'none',
   });
 
   const ADD_LABELS   = { zones: 'Add Zone', methods: 'Add Method' };

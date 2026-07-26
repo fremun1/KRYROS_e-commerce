@@ -12,10 +12,10 @@ import toast from 'react-hot-toast';
 type User = { id: string; displayId: string; name: string; email: string; role: string; status: string; joined: string; orders: number };
 
 const roles = [
-  { name: 'Super Admin', permissions: 'Full Access', users: 1, color: '#ef4444' },
-  { name: 'Admin', permissions: 'Dashboard, Orders, Products, Users', users: 3, color: '#f59e0b' },
-  { name: 'Wholesale', permissions: 'Wholesale Orders, Products', users: 2, color: '#6366f1' },
-  { name: 'Customer', permissions: 'View Products, Place Orders', users: 150, color: '#1FA89A' },
+  { name: 'Super Admin', permissions: 'Full Access', users: 1, color: 'var(--danger)' },
+  { name: 'Admin', permissions: 'Dashboard, Orders, Products, Users', users: 3, color: 'var(--gold)' },
+  { name: 'Wholesale', permissions: 'Wholesale Orders, Products', users: 2, color: 'var(--secondary)' },
+  { name: 'Customer', permissions: 'View Products, Place Orders', users: 150, color: 'var(--primary)' },
 ];
 
 const EMPTY_FORM = { name: '', email: '', role: 'Customer', status: 'Active', password: '' };
@@ -187,17 +187,17 @@ function UsersContent() {
 
   const statusBadge = (status: string) => {
     const map: Record<string, { bg: string; color: string }> = {
-      Active: { bg: 'rgba(31,168,154,0.12)', color: '#1FA89A' },
-      Inactive: { bg: 'rgba(100,116,139,0.12)', color: '#64748b' },
-      Blocked: { bg: 'rgba(185,28,28,0.12)', color: '#ef4444' },
+      Active: { bg: 'rgba(192,21,27,0.10)', color: 'var(--primary)' },
+      Inactive: { bg: 'rgba(83,83,87,0.12)', color: 'var(--text-muted)' },
+      Blocked: { bg: 'rgba(185,28,28,0.12)', color: 'var(--danger)' },
     };
     const s = map[status] || map.Inactive;
     return <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11.5px', fontWeight: 600, background: s.bg, color: s.color }}>{status}</span>;
   };
 
   const roleBadge = (role: string) => {
-    const map: Record<string, string> = { Admin: '#ef4444', 'Super Admin': '#ef4444', Wholesale: '#6366f1', Customer: '#1FA89A' };
-    const color = map[role] || '#64748b';
+    const map: Record<string, string> = { Admin: 'var(--danger)', 'Super Admin': 'var(--danger)', Wholesale: 'var(--secondary)', Customer: 'var(--primary)' };
+    const color = map[role] || 'var(--text-muted)';
     return <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11.5px', fontWeight: 600, background: `${color}15`, color }}>{role}</span>;
   };
 
@@ -205,7 +205,7 @@ function UsersContent() {
     { key: 'displayId', label: 'ID', width: '110px' },
     { key: 'name', label: 'Name', render: (v, row) => (
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-        <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(31,168,154,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 700, color: '#1FA89A', flexShrink: 0 }}>
+        <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(192,21,27,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 700, color: 'var(--primary)', flexShrink: 0 }}>
           {String(v).charAt(0)}
         </div>
         <div>
@@ -237,7 +237,7 @@ function UsersContent() {
       <PageHeader title="Users & Roles" subtitle="Manage users and their permissions" icon={Users} onAdd={openAdd} addLabel="Add User" />
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '24px' }} className="stats-grid">
-        {[{ label: 'Total Users', val: String(data.length), color: '#1FA89A' }, { label: 'Active', val: String(data.filter(u=>u.status==='Active').length), color: '#1FA89A' }, { label: 'Inactive', val: String(data.filter(u=>u.status==='Inactive').length), color: '#64748b' }, { label: 'Blocked', val: String(data.filter(u=>u.status==='Blocked').length), color: '#ef4444' }].map((s) => (
+        {[{ label: 'Total Users', val: String(data.length), color: 'var(--primary)' }, { label: 'Active', val: String(data.filter(u=>u.status==='Active').length), color: 'var(--primary)' }, { label: 'Inactive', val: String(data.filter(u=>u.status==='Inactive').length), color: 'var(--text-muted)' }, { label: 'Blocked', val: String(data.filter(u=>u.status==='Blocked').length), color: 'var(--danger)' }].map((s) => (
           <div key={s.label} style={{ background: card, border: `1px solid ${border}`, borderRadius: '12px', padding: '16px' }}>
             <div style={{ fontSize: '12px', color: textMuted, marginBottom: '6px' }}>{s.label}</div>
             <div style={{ fontSize: '24px', fontWeight: 800, color: s.color }}>{s.val}</div>
@@ -249,10 +249,10 @@ function UsersContent() {
         <div style={{ fontSize: '14px', fontWeight: 700, color: textMain, marginBottom: '14px' }}>Roles Overview</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }} className="roles-grid">
           {[
-            { name: 'Super Admin', permissions: 'Full Access', users: data.filter(u=>u.role==='Super Admin').length, color: '#ef4444' },
-            { name: 'Admin', permissions: 'Dashboard, Orders, Products, Users', users: data.filter(u=>u.role==='Admin').length, color: '#f59e0b' },
-            { name: 'Wholesale', permissions: 'Wholesale Orders, Products', users: data.filter(u=>u.role==='Wholesale').length, color: '#6366f1' },
-            { name: 'Customer', permissions: 'View Products, Place Orders', users: data.filter(u=>u.role==='Customer').length, color: '#1FA89A' },
+            { name: 'Super Admin', permissions: 'Full Access', users: data.filter(u=>u.role==='Super Admin').length, color: 'var(--danger)' },
+            { name: 'Admin', permissions: 'Dashboard, Orders, Products, Users', users: data.filter(u=>u.role==='Admin').length, color: 'var(--gold)' },
+            { name: 'Wholesale', permissions: 'Wholesale Orders, Products', users: data.filter(u=>u.role==='Wholesale').length, color: 'var(--secondary)' },
+            { name: 'Customer', permissions: 'View Products, Place Orders', users: data.filter(u=>u.role==='Customer').length, color: 'var(--primary)' },
           ].map((r) => (
             <div key={r.name} style={{ background: surface, border: `1px solid ${border}`, borderRadius: '10px', padding: '14px' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>

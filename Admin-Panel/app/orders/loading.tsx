@@ -1,6 +1,6 @@
 export default function Loading() {
   return (
-    <div style={{ padding: "28px 24px", background: "#080C14", minHeight: "100vh" }}>
+    <div style={{ padding: "28px 24px", background: "var(--bg)", minHeight: "100vh" }}>
       <style>{`
         @keyframes shimmer {
           0% { background-position: -200% 0; }
@@ -22,12 +22,12 @@ export default function Loading() {
         <Sk h={36} w={120} radius={8} />
       </div>
       {/* Table */}
-      <div style={{ background: "#0D1523", borderRadius: 12, border: "1px solid #1E293B", overflow: "hidden" }}>
-        <div style={{ padding: "16px 20px", borderBottom: "1px solid #1E293B", display: "flex", gap: 24 }}>
+      <div style={{ background: "var(--card)", borderRadius: 12, border: "1px solid var(--border)", overflow: "hidden" }}>
+        <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--border)", display: "flex", gap: 24 }}>
           {[200, 120, 80, 100, 80, 60].map((w, i) => <Sk key={i} h={12} w={w} />)}
         </div>
         {[0,1,2,3,4,5,6,7,8,9].map(i => (
-          <div key={i} style={{ padding: "14px 20px", borderBottom: "1px solid #0D1A2A", display: "flex", gap: 24, alignItems: "center" }}>
+          <div key={i} style={{ padding: "14px 20px", borderBottom: "1px solid var(--border)", display: "flex", gap: 24, alignItems: "center" }}>
             {[200, 120, 80, 100, 80, 60].map((w, j) => <Sk key={j} h={14} w={w} />)}
           </div>
         ))}
@@ -40,7 +40,7 @@ function Sk({ w = "100%", h = 20, radius = 6 }: { w?: string | number; h?: numbe
   return (
     <div style={{
       width: w, height: h, borderRadius: radius,
-      background: "linear-gradient(90deg, #1E293B 25%, #263347 50%, #1E293B 75%)",
+      background: "linear-gradient(90deg, var(--border) 25%, var(--surface) 50%, var(--border) 75%)",
       backgroundSize: "200% 100%",
       animation: "shimmer 1.4s infinite",
       flexShrink: 0,

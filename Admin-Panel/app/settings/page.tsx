@@ -218,7 +218,7 @@ function SettingsContent() {
   const labelStyle = { fontSize:'12.5px', fontWeight:600, color:textMuted, display:'block' as const, marginBottom:'6px' };
 
   const ToggleSwitch = ({ value, onChange }: { value: boolean; onChange: () => void }) => (
-    <button onClick={onChange} style={{ width:'44px', height:'24px', borderRadius:'12px', background:value?'#1FA89A':'rgba(100,116,139,0.3)', border:'none', cursor:'pointer', padding:'2px', transition:'all 0.2s', display:'flex', alignItems:'center', justifyContent:value?'flex-end':'flex-start' }}>
+    <button onClick={onChange} style={{ width:'44px', height:'24px', borderRadius:'12px', background:value?'var(--primary)':'rgba(100,116,139,0.3)', border:'none', cursor:'pointer', padding:'2px', transition:'all 0.2s', display:'flex', alignItems:'center', justifyContent:value?'flex-end':'flex-start' }}>
       <div style={{ width:'20px', height:'20px', borderRadius:'50%', background:'white', boxShadow:'0 1px 3px rgba(0,0,0,0.2)' }} />
     </button>
   );
@@ -324,7 +324,7 @@ function SettingsContent() {
                 <textarea style={{...inputStyle, height:'100px', resize:'none'}} placeholder="Write your message here..." value={testBroadcastMsg} onChange={e=>setTestBroadcastMsg(e.target.value)} />
               </Field>
               <button onClick={handleBroadcast} disabled={broadcastSending}
-                style={{ background:'#1FA89A', color:'white', border:'none', borderRadius:'9px', padding:'10px 20px', fontSize:'13.5px', fontWeight:700, cursor:broadcastSending?'not-allowed':'pointer', display:'flex', alignItems:'center', gap:'8px', opacity:broadcastSending?0.7:1 }}>
+                style={{ background:'var(--primary)', color:'white', border:'none', borderRadius:'9px', padding:'10px 20px', fontSize:'13.5px', fontWeight:700, cursor:broadcastSending?'not-allowed':'pointer', display:'flex', alignItems:'center', gap:'8px', opacity:broadcastSending?0.7:1 }}>
                 {broadcastSending ? <RefreshCw size={16} className="animate-spin" /> : <Send size={16} />}
                 {broadcastSending ? 'Sending...' : 'Send Broadcast to All Users'}
               </button>
@@ -350,7 +350,7 @@ function SettingsContent() {
           <div style={{ background:surface, border:`1px solid ${border}`, borderRadius:'12px', padding:'20px', marginBottom:'24px' }}>
             <div style={{ display:'flex', alignItems:'start', gap:'16px' }}>
               <div style={{ width:'48px', height:'48px', borderRadius:'12px', background:'rgba(31,168,154,0.1)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-                <Shield size={24} color="#1FA89A" style={{margin:'auto'}} />
+                <Shield size={24} color="var(--primary)" style={{margin:'auto'}} />
               </div>
               <div style={{ flex:1 }}>
                 <div style={{ fontSize:'15px', fontWeight:700, color:textMain, marginBottom:'4px' }}>Two-Factor Authentication (2FA)</div>
@@ -363,7 +363,7 @@ function SettingsContent() {
                   
                   {twoFAStep === 'disabled' && (
                     <button onClick={handle2faSetup} disabled={twoFABusy}
-                      style={{ background:'#1FA89A', color:'white', border:'none', borderRadius:'8px', padding:'8px 16px', fontSize:'13px', fontWeight:600, cursor:'pointer' }}>
+                      style={{ background:'var(--primary)', color:'white', border:'none', borderRadius:'8px', padding:'8px 16px', fontSize:'13px', fontWeight:600, cursor:'pointer' }}>
                       Enable 2FA
                     </button>
                   )}
@@ -381,7 +381,7 @@ function SettingsContent() {
                       <div style={{ display:'flex', gap:'8px' }}>
                         <input style={{...inputStyle, width:'120px'}} maxLength={6} placeholder="000000" value={twoFACode} onChange={e=>setTwoFACode(e.target.value)} />
                         <button onClick={handle2faEnable} disabled={twoFABusy || twoFACode.length!==6}
-                          style={{ background:'#1FA89A', color:'white', border:'none', borderRadius:'8px', padding:'0 16px', fontSize:'13px', fontWeight:600, cursor:'pointer' }}>
+                          style={{ background:'var(--primary)', color:'white', border:'none', borderRadius:'8px', padding:'0 16px', fontSize:'13px', fontWeight:600, cursor:'pointer' }}>
                           Verify & Enable
                         </button>
                         <button onClick={()=>setTwoFAStep('disabled')} style={{ background:'transparent', border:'none', color:textMuted, fontSize:'13px', cursor:'pointer' }}>Cancel</button>
@@ -391,11 +391,11 @@ function SettingsContent() {
                   
                   {twoFAStep === 'enabled' && (
                     <div style={{ display:'flex', alignItems:'center', gap:'12px' }}>
-                      <div style={{ display:'flex', alignItems:'center', gap:'6px', color:'#1FA89A', fontSize:'13px', fontWeight:600 }}>
+                      <div style={{ display:'flex', alignItems:'center', gap:'6px', color:'var(--primary)', fontSize:'13px', fontWeight:600 }}>
                         <CheckCircle size={16} /> 2FA is currently active
                       </div>
                       <button onClick={()=>setTwoFAStep('disabling')}
-                        style={{ background:'rgba(239,68,68,0.1)', color:'#ef4444', border:'1px solid rgba(239,68,68,0.2)', borderRadius:'8px', padding:'6px 12px', fontSize:'12px', fontWeight:600, cursor:'pointer' }}>
+                        style={{ background:'rgba(239,68,68,0.1)', color:'var(--danger)', border:'1px solid rgba(239,68,68,0.2)', borderRadius:'8px', padding:'6px 12px', fontSize:'12px', fontWeight:600, cursor:'pointer' }}>
                         Disable 2FA
                       </button>
                     </div>
@@ -403,11 +403,11 @@ function SettingsContent() {
                   
                   {twoFAStep === 'disabling' && (
                     <div style={{ display:'flex', flexDirection:'column', gap:'12px' }}>
-                      <p style={{ fontSize:'13px', color:'#ef4444', fontWeight:600, marginBottom:'8px' }}>Confirm disabling 2FA. Enter your current code:</p>
+                      <p style={{ fontSize:'13px', color:'var(--danger)', fontWeight:600, marginBottom:'8px' }}>Confirm disabling 2FA. Enter your current code:</p>
                       <div style={{ display:'flex', gap:'8px' }}>
                         <input style={{...inputStyle, width:'120px'}} maxLength={6} placeholder="000000" value={twoFACode} onChange={e=>setTwoFACode(e.target.value)} />
                         <button onClick={handle2faDisable} disabled={twoFABusy || twoFACode.length!==6}
-                          style={{ background:'#ef4444', color:'white', border:'none', borderRadius:'8px', padding:'0 16px', fontSize:'13px', fontWeight:600, cursor:'pointer' }}>
+                          style={{ background:'var(--danger)', color:'white', border:'none', borderRadius:'8px', padding:'0 16px', fontSize:'13px', fontWeight:600, cursor:'pointer' }}>
                           Disable Now
                         </button>
                         <button onClick={()=>setTwoFAStep('enabled')} style={{ background:'transparent', border:'none', color:textMuted, fontSize:'13px', cursor:'pointer' }}>Cancel</button>
@@ -452,20 +452,20 @@ function SettingsContent() {
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:'16px' }}>
               <Field label="Primary Color">
                 <div style={{ display:'flex', gap:'8px' }}>
-                  <div style={{ width:'36px', height:'36px', borderRadius:'8px', background:'#1FA89A', border:`1px solid ${border}` }} />
-                  <input style={inputStyle} defaultValue="#1FA89A" />
+                  <div style={{ width:'36px', height:'36px', borderRadius:'8px', background:'var(--primary)', border:`1px solid ${border}` }} />
+                  <input style={inputStyle} defaultValue="var(--primary)" />
                 </div>
               </Field>
               <Field label="Secondary Color">
                 <div style={{ display:'flex', gap:'8px' }}>
-                  <div style={{ width:'36px', height:'36px', borderRadius:'8px', background:'#0F172A', border:`1px solid ${border}` }} />
-                  <input style={inputStyle} defaultValue="#0F172A" />
+                  <div style={{ width:'36px', height:'36px', borderRadius:'8px', background:'var(--text-main)', border:`1px solid ${border}` }} />
+                  <input style={inputStyle} defaultValue="var(--text-main)" />
                 </div>
               </Field>
               <Field label="Accent Color">
                 <div style={{ display:'flex', gap:'8px' }}>
-                  <div style={{ width:'36px', height:'36px', borderRadius:'8px', background:'#FFC107', border:`1px solid ${border}` }} />
-                  <input style={inputStyle} defaultValue="#FFC107" />
+                  <div style={{ width:'36px', height:'36px', borderRadius:'8px', background:'var(--gold)', border:`1px solid ${border}` }} />
+                  <input style={inputStyle} defaultValue="var(--gold)" />
                 </div>
               </Field>
             </div>
@@ -487,7 +487,7 @@ function SettingsContent() {
             <div style={{ background:card, border:`1px solid ${border}`, borderRadius:'16px', padding:'8px', position:'sticky', top:'24px' }}>
               {tabs.map(t => (
                 <button key={t.id} onClick={()=>setActiveTab(t.id)}
-                  style={{ width:'100%', display:'flex', alignItems:'center', gap:'12px', padding:'12px 16px', borderRadius:'12px', border:'none', background:activeTab===t.id?'rgba(31,168,154,0.1)':'transparent', color:activeTab===t.id?'#1FA89A':textMuted, fontSize:'14px', fontWeight:600, cursor:'pointer', transition:'all 0.2s', textAlign:'left' }}>
+                  style={{ width:'100%', display:'flex', alignItems:'center', gap:'12px', padding:'12px 16px', borderRadius:'12px', border:'none', background:activeTab===t.id?'rgba(31,168,154,0.1)':'transparent', color:activeTab===t.id?'var(--primary)':textMuted, fontSize:'14px', fontWeight:600, cursor:'pointer', transition:'all 0.2s', textAlign:'left' }}>
                   <t.icon size={18} />
                   {t.label}
                 </button>
@@ -502,7 +502,7 @@ function SettingsContent() {
               
               <div style={{ marginTop:'32px', paddingTop:'24px', borderTop:`1px solid ${border}`, display:'flex', justifyContent:'flex-end' }}>
                 <button onClick={handleSave} disabled={saving}
-                  style={{ background:'#1FA89A', color:'white', border:'none', borderRadius:'10px', padding:'12px 24px', fontSize:'14px', fontWeight:700, cursor:saving?'not-allowed':'pointer', display:'flex', alignItems:'center', gap:'8px', boxShadow:'0 4px 12px rgba(31,168,154,0.2)' }}>
+                  style={{ background:'var(--primary)', color:'white', border:'none', borderRadius:'10px', padding:'12px 24px', fontSize:'14px', fontWeight:700, cursor:saving?'not-allowed':'pointer', display:'flex', alignItems:'center', gap:'8px', boxShadow:'0 4px 12px rgba(192,21,27,0.15)' }}>
                   {saving ? <RefreshCw size={18} className="animate-spin" /> : <Save size={18} />}
                   {saving ? 'Saving...' : 'Save All Changes'}
                 </button>

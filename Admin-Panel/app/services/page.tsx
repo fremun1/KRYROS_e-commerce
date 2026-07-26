@@ -109,7 +109,7 @@ function ServicesContent() {
     setLoading(false);
   };
 
-  const catColor = (c: string) => ({ Repair: '#ef4444', Setup: '#1FA89A', Recovery: '#f59e0b', Network: '#6366f1' }[c] || '#64748b');
+  const catColor = (c: string) => ({ Repair: 'var(--danger)', Setup: 'var(--primary)', Recovery: 'var(--gold)', Network: 'var(--secondary)' }[c] || 'var(--text-muted)');
 
   const columns: Column[] = [
     { key: 'id', label: 'ID', width: '90px' },
@@ -118,8 +118,8 @@ function ServicesContent() {
     { key: 'price', label: 'Price', render: (v) => <span style={{ fontWeight: 700, color: textMain }}>{String(v)}</span> },
     { key: 'duration', label: 'Duration' },
     { key: 'provider', label: 'Provider' },
-    { key: 'bookings', label: 'Bookings', render: (v) => <span style={{ fontWeight: 700, color: '#6366f1' }}>{String(v)}</span> },
-    { key: 'status', label: 'Status', render: (v) => <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11.5px', fontWeight: 600, background: v === 'Active' ? 'rgba(31,168,154,0.12)' : 'rgba(100,116,139,0.12)', color: v === 'Active' ? '#1FA89A' : '#64748b' }}>{String(v)}</span> },
+    { key: 'bookings', label: 'Bookings', render: (v) => <span style={{ fontWeight: 700, color: 'var(--secondary)' }}>{String(v)}</span> },
+    { key: 'status', label: 'Status', render: (v) => <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11.5px', fontWeight: 600, background: v === 'Active' ? 'rgba(192,21,27,0.10)' : 'rgba(83,83,87,0.12)', color: v === 'Active' ? 'var(--primary)' : 'var(--text-muted)' }}>{String(v)}</span> },
   ];
 
   const modalFields = (
@@ -138,10 +138,10 @@ function ServicesContent() {
   );
 
   const stats = [
-    { label: 'Total Services', val: String(data.length), color: '#1FA89A' },
-    { label: 'Active', val: String(data.filter(s=>s.status==='Active').length), color: '#1FA89A' },
-    { label: 'Inactive', val: String(data.filter(s=>s.status==='Inactive').length), color: '#64748b' },
-    { label: 'Total Bookings', val: String(data.reduce((a,s)=>a+s.bookings,0)), color: '#6366f1' },
+    { label: 'Total Services', val: String(data.length), color: 'var(--primary)' },
+    { label: 'Active', val: String(data.filter(s=>s.status==='Active').length), color: 'var(--primary)' },
+    { label: 'Inactive', val: String(data.filter(s=>s.status==='Inactive').length), color: 'var(--text-muted)' },
+    { label: 'Total Bookings', val: String(data.reduce((a,s)=>a+s.bookings,0)), color: 'var(--secondary)' },
   ];
 
   return (

@@ -6,7 +6,7 @@ export default function Loading() {
         alignItems: "center",
         justifyContent: "center",
         height: "100vh",
-        background: "#080C14",
+        background: "var(--bg)",
         flexDirection: "column",
         gap: 16,
       }}
@@ -15,8 +15,8 @@ export default function Loading() {
         style={{
           width: 48,
           height: 48,
-          border: "3px solid #1E293B",
-          borderTop: "3px solid #1FA89A",
+          border: "3px solid var(--border)",
+          borderTop: "3px solid var(--primary)",
           borderRadius: "50%",
           animation: "spin 0.8s linear infinite",
         }}

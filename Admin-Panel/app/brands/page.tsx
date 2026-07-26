@@ -23,7 +23,7 @@ export default function BrandsPage() {
   const border   = 'var(--border)';
   const textMain = 'var(--text-main)';
   const textMuted= 'var(--text-muted)';
-  const accent   = '#1FA89A';
+  const accent   = 'var(--primary)';
 
   const [brands,    setBrands]   = useState<Brand[]>([]);
   const [modalOpen, setModalOpen]= useState(false);
@@ -129,7 +129,7 @@ export default function BrandsPage() {
     { key: 'country', label: 'Country', render: (v) => <span style={{ color: textMuted, fontSize: '12px' }}>{String(v || '—')}</span> },
     { key: 'status', label: 'Status', render: (v) => {
       const active = v === 'Active';
-      return <span style={{ background: active ? 'rgba(22,163,74,0.15)' : 'rgba(220,38,38,0.15)', color: active ? '#16a34a' : '#dc2626', fontWeight: 600, fontSize: '11px', padding: '2px 10px', borderRadius: '20px' }}>{String(v)}</span>;
+      return <span style={{ background: active ? 'rgba(22,163,74,0.15)' : 'rgba(214,48,49,0.15)', color: active ? 'var(--success)' : 'var(--danger)', fontWeight: 600, fontSize: '11px', padding: '2px 10px', borderRadius: '20px' }}>{String(v)}</span>;
     }},
     { key: 'slug', label: 'Shop Anchor', render: (v) => (
       <span style={{ fontFamily: 'monospace', fontSize: '11px', color: accent, background: surface, padding: '2px 8px', borderRadius: '6px' }}>#{String(v)}</span>
@@ -167,7 +167,7 @@ export default function BrandsPage() {
               onChange={(url) => setForm(p => ({ ...p, logo: url }))}
               folder="kryros/brands"
               accept="image/*"
-              isDark={false} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
+              border={border} textMain={textMain} textMuted={textMuted} surface={surface}
             />
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>

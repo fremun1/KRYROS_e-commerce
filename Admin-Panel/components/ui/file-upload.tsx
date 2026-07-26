@@ -32,7 +32,6 @@ export interface CloudinaryUploadProps {
   multiple?: boolean;
   folder?: string;
   showUrlInput?: boolean;
-  isDark?: boolean;
   border?: string;
   surface?: string;
   textMuted?: string;
@@ -47,11 +46,10 @@ export default function CloudinaryUpload({
   multiple = false,
   folder = "kryros/general",
   showUrlInput = true,
-  isDark = true,
-  border = "#1E293B",
-  surface = "#101826",
-  textMuted = "#8E9AAF",
-  textMain = "#FFFFFF",
+  border = "var(--border)",
+  surface = "var(--surface)",
+  textMuted = "var(--text-muted)",
+  textMain = "var(--text-main)",
 }: CloudinaryUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<{ name: string; type: string; url: string } | null>(null);
@@ -173,7 +171,7 @@ export default function CloudinaryUpload({
               <X size={13} color="white" />
             </button>
           </div>
-          <div style={{ padding: "6px 10px", background: isDark ? "rgba(0,0,0,0.4)" : "rgba(255,255,255,0.9)", fontSize: "11px", color: textMuted, display: "flex", alignItems: "center", gap: "6px" }}>
+          <div style={{ padding: "6px 10px", background: "rgba(0,0,0,0.5)", fontSize: "11px", color: textMuted, display: "flex", alignItems: "center", gap: "6px" }}>
             {displayType === "video" ? <Video size={11} /> : <ImageIcon size={11} />}
             {(preview?.name || value).startsWith("data:") ? "Uploaded file" : (preview?.name || value).slice(0, 50)}
           </div>
@@ -183,30 +181,30 @@ export default function CloudinaryUpload({
       {/* Drop zone */}
       <div
         onClick={() => { if (!uploading) inputRef.current?.click(); }}
-        style={{ border: `2px dashed ${uploading ? "#1FA89A" : border}`, borderRadius: "10px", padding: "16px", textAlign: "center", cursor: uploading ? "default" : "pointer", background: surface, transition: "border-color 0.15s", marginBottom: "8px" }}
-        onMouseEnter={e => { if (!uploading) e.currentTarget.style.borderColor = "#1FA89A"; }}
+        style={{ border: `2px dashed ${uploading ? "var(--primary)" : border}`, borderRadius: "10px", padding: "16px", textAlign: "center", cursor: uploading ? "default" : "pointer", background: surface, transition: "border-color 0.15s", marginBottom: "8px" }}
+        onMouseEnter={e => { if (!uploading) e.currentTarget.style.borderColor = "var(--primary)"; }}
         onMouseLeave={e => { if (!uploading) e.currentTarget.style.borderColor = border; }}
       >
         {uploading ? (
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", padding: "4px 0" }}>
-            <div style={{ width: "32px", height: "32px", border: "3px solid rgba(31,168,154,0.2)", borderTopColor: "#1FA89A", borderRadius: "50%", animation: "cwSpin 0.8s linear infinite" }} />
-            <p style={{ fontSize: "12px", color: "#1FA89A", margin: 0, fontWeight: 600 }}>{uploadProgress || "Uploading..."}</p>
+            <div style={{ width: "32px", height: "32px", border: "3px solid rgba(192,21,27,0.15)", borderTopColor: "var(--primary)", borderRadius: "50%", animation: "cwSpin 0.8s linear infinite" }} />
+            <p style={{ fontSize: "12px", color: "var(--primary)", margin: 0, fontWeight: 600 }}>{uploadProgress || "Uploading..."}</p>
             <style>{`@keyframes cwSpin{to{transform:rotate(360deg)}}`}</style>
           </div>
         ) : (
           <>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", marginBottom: "6px" }}>
-              <div style={{ width: "36px", height: "36px", borderRadius: "10px", background: "rgba(31,168,154,0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <Upload size={16} color="#1FA89A" />
+              <div style={{ width: "36px", height: "36px", borderRadius: "10px", background: "rgba(192,21,27,0.10)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <Upload size={16} color="var(--primary)" />
               </div>
               {accept.includes("video") && (
-                <div style={{ width: "36px", height: "36px", borderRadius: "10px", background: "rgba(99,102,241,0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <Video size={16} color="#6366f1" />
+                <div style={{ width: "36px", height: "36px", borderRadius: "10px", background: "rgba(52,74,100,0.10)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <Video size={16} color="var(--secondary)" />
                 </div>
               )}
             </div>
             <p style={{ fontSize: "13px", color: textMuted, margin: "0 0 2px" }}>
-              <span style={{ color: "#1FA89A", fontWeight: 600 }}>Click to upload</span>
+              <span style={{ color: "var(--primary)", fontWeight: 600 }}>Click to upload</span>
               {accept.includes("video") ? " image or video" : " image"}
               {multiple ? " (multiple)" : ""}
             </p>

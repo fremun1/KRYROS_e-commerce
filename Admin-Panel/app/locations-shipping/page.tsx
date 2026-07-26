@@ -369,33 +369,33 @@ function ShippingContent() {
     {key:'name',label:'Zone Name',render:(v)=><span style={{fontWeight:600,color:textMain}}>{String(v)}</span>},
     {key:'region',label:'Region',render:(v)=><span style={{color:textMuted,fontSize:'12px'}}>{String(v)||'—'}</span>},
     {key:'method',label:'Method',render:(v)=><span style={{color:textMain,fontSize:'12px'}}>{String(v)||'—'}</span>},
-    {key:'rate',label:'Rate',render:(v)=><span style={{fontWeight:600,color:'#1FA89A'}}>${String(v)}</span>},
+    {key:'rate',label:'Rate',render:(v)=><span style={{fontWeight:600,color:'var(--primary)'}}>${String(v)}</span>},
     {key:'minOrder',label:'Min Order',render:(v)=><span style={{color:textMuted,fontSize:'12px'}}>${String(v)}</span>},
     {key:'days',label:'Est. Days',render:(v)=><span style={{color:textMuted,fontSize:'12px'}}>{String(v)||'—'}</span>},
-    {key:'status',label:'Status',render:(v)=><span style={{padding:'3px 10px',borderRadius:'20px',fontSize:'12px',fontWeight:600,background:v==='Active'?'rgba(31,168,154,0.12)':'rgba(100,116,139,0.1)',color:v==='Active'?'#1FA89A':'#8E9AAF'}}>{String(v)}</span>},
+    {key:'status',label:'Status',render:(v)=><span style={{padding:'3px 10px',borderRadius:'20px',fontSize:'12px',fontWeight:600,background:v==='Active'?'rgba(192,21,27,0.10)':'rgba(100,116,139,0.1)',color:v==='Active'?'var(--primary)':'var(--text-muted)'}}>{String(v)}</span>},
   ];
 
   const methodColumns: Column[] = [
     {key:'name',label:'Name',render:(v)=><span style={{fontWeight:600,color:textMain}}>{String(v)}</span>},
     {key:'description',label:'Description',render:(v)=><span style={{color:textMuted,fontSize:'12px'}}>{String(v).slice(0,40)||'—'}</span>},
-    {key:'fee',label:'Fee',render:(v)=><span style={{fontWeight:600,color:'#1FA89A'}}>${String(v)}</span>},
+    {key:'fee',label:'Fee',render:(v)=><span style={{fontWeight:600,color:'var(--primary)'}}>${String(v)}</span>},
     {key:'minThreshold',label:'Free Ship Above',render:(v)=><span style={{color:textMuted,fontSize:'12px'}}>{Number(v)>0?`$${v}`:'—'}</span>},
     {key:'estimatedDays',label:'Est. Days',render:(v)=><span style={{color:textMuted,fontSize:'12px'}}>{String(v)||'—'}</span>},
-    {key:'status',label:'Status',render:(v)=><span style={{padding:'3px 10px',borderRadius:'20px',fontSize:'12px',fontWeight:600,background:v==='Active'?'rgba(31,168,154,0.12)':'rgba(100,116,139,0.1)',color:v==='Active'?'#1FA89A':'#8E9AAF'}}>{String(v)}</span>},
+    {key:'status',label:'Status',render:(v)=><span style={{padding:'3px 10px',borderRadius:'20px',fontSize:'12px',fontWeight:600,background:v==='Active'?'rgba(192,21,27,0.10)':'rgba(100,116,139,0.1)',color:v==='Active'?'var(--primary)':'var(--text-muted)'}}>{String(v)}</span>},
   ];
 
   const stateColumns: Column[] = [
     {key:'name',label:'State / Province',render:(v)=><span style={{fontWeight:600,color:textMain}}>{String(v)}</span>},
-    {key:'code',label:'Code',render:(v)=><span style={{color:'#1FA89A',fontWeight:700,fontSize:'12px'}}>{String(v)||'—'}</span>,width:'70px'},
+    {key:'code',label:'Code',render:(v)=><span style={{color:'var(--primary)',fontWeight:700,fontSize:'12px'}}>{String(v)||'—'}</span>,width:'70px'},
     {key:'countryName',label:'Country',render:(v)=><span style={{color:textMuted,fontSize:'12px'}}>{String(v)||'—'}</span>},
-    {key:'cities',label:'Cities',render:(v)=><span style={{fontWeight:600,color:'#6366f1'}}>{String(v)}</span>,width:'70px'},
-    {key:'status',label:'Status',render:(v)=><span style={{padding:'3px 10px',borderRadius:'20px',fontSize:'12px',fontWeight:600,background:v==='Active'?'rgba(31,168,154,0.12)':'rgba(100,116,139,0.1)',color:v==='Active'?'#1FA89A':'#8E9AAF'}}>{String(v)}</span>},
+    {key:'cities',label:'Cities',render:(v)=><span style={{fontWeight:600,color:'var(--secondary)'}}>{String(v)}</span>,width:'70px'},
+    {key:'status',label:'Status',render:(v)=><span style={{padding:'3px 10px',borderRadius:'20px',fontSize:'12px',fontWeight:600,background:v==='Active'?'rgba(192,21,27,0.10)':'rgba(100,116,139,0.1)',color:v==='Active'?'var(--primary)':'var(--text-muted)'}}>{String(v)}</span>},
   ];
 
   const cityColumns: Column[] = [
     {key:'name',label:'City',render:(v)=><span style={{fontWeight:600,color:textMain}}>{String(v)}</span>},
     {key:'stateName',label:'State / Province',render:(v)=><span style={{color:textMuted,fontSize:'12px'}}>{String(v)||'—'}</span>},
-    {key:'status',label:'Status',render:(v)=><span style={{padding:'3px 10px',borderRadius:'20px',fontSize:'12px',fontWeight:600,background:v==='Active'?'rgba(31,168,154,0.12)':'rgba(100,116,139,0.1)',color:v==='Active'?'#1FA89A':'#8E9AAF'}}>{String(v)}</span>},
+    {key:'status',label:'Status',render:(v)=><span style={{padding:'3px 10px',borderRadius:'20px',fontSize:'12px',fontWeight:600,background:v==='Active'?'rgba(192,21,27,0.10)':'rgba(100,116,139,0.1)',color:v==='Active'?'var(--primary)':'var(--text-muted)'}}>{String(v)}</span>},
   ];
 
   const pickupColumns: Column[] = [
@@ -408,8 +408,8 @@ function ShippingContent() {
       const p=row as unknown as PickupStation;
       return(
         <div style={{display:'flex',alignItems:'center',gap:'8px'}}>
-          <span style={{padding:'3px 10px',borderRadius:'20px',fontSize:'12px',fontWeight:600,background:v==='Active'?'rgba(31,168,154,0.12)':'rgba(100,116,139,0.1)',color:v==='Active'?'#1FA89A':'#8E9AAF'}}>{String(v)}</span>
-          <button onClick={()=>handleTogglePickup(p)} style={{fontSize:'11px',padding:'3px 8px',borderRadius:'6px',border:'1px solid rgba(99,102,241,0.3)',background:'rgba(99,102,241,0.08)',color:'#818cf8',cursor:'pointer',fontWeight:600}}>
+          <span style={{padding:'3px 10px',borderRadius:'20px',fontSize:'12px',fontWeight:600,background:v==='Active'?'rgba(192,21,27,0.10)':'rgba(100,116,139,0.1)',color:v==='Active'?'var(--primary)':'var(--text-muted)'}}>{String(v)}</span>
+          <button onClick={()=>handleTogglePickup(p)} style={{fontSize:'11px',padding:'3px 8px',borderRadius:'6px',border:'1px solid rgba(52,74,100,0.30)',background:'rgba(52,74,100,0.08)',color:'var(--secondary)',cursor:'pointer',fontWeight:600}}>
             {v==='Active'?'Deactivate':'Activate'}
           </button>
         </div>
@@ -419,7 +419,7 @@ function ShippingContent() {
 
   const tabStyle = (active:boolean)=>({
     padding:'8px 18px',borderRadius:'8px',fontSize:'13px',fontWeight:600,cursor:'pointer',
-    background:active?'#1FA89A':'transparent',color:active?'#fff':textMuted,border:'none',
+    background:active?'var(--primary)':'transparent',color:active?'#fff':textMuted,border:'none',
   });
 
   const TAB_CONFIG: {key:Tab;label:string;count?:number}[] = [

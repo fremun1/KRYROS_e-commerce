@@ -109,14 +109,14 @@ function InvoicingContent() {
   };
 
   const statusMap: Record<string,{bg:string;color:string}> = {
-    Paid:{bg:'rgba(31,168,154,0.12)',color:'#1FA89A'},
-    Unpaid:{bg:'rgba(255,193,7,0.12)',color:'#FFC107'},
-    Overdue:{bg:'rgba(185,28,28,0.12)',color:'#ef4444'},
-    Draft:{bg:'rgba(100,116,139,0.12)',color:'#64748b'},
+    Paid:{bg:'rgba(192,21,27,0.10)',color:'var(--primary)'},
+    Unpaid:{bg:'rgba(246,176,30,0.12)',color:'var(--gold)'},
+    Overdue:{bg:'rgba(185,28,28,0.12)',color:'var(--danger)'},
+    Draft:{bg:'rgba(83,83,87,0.12)',color:'var(--text-muted)'},
   };
 
   const columns: Column[] = [
-    { key:'id', label:'Invoice #', render:(v)=><span style={{fontWeight:700,color:'#1FA89A',fontSize:'13px'}}>{String(v)}</span> },
+    { key:'id', label:'Invoice #', render:(v)=><span style={{fontWeight:700,color:'var(--primary)',fontSize:'13px'}}>{String(v)}</span> },
     { key:'client', label:'Client', render:(v)=><span style={{fontWeight:600,color:textMain}}>{String(v)}</span> },
     { key:'date', label:'Issue Date' },
     { key:'due', label:'Due Date' },
@@ -145,7 +145,7 @@ function InvoicingContent() {
     <div>
       <PageHeader title="Invoicing" subtitle="Create and manage customer invoices" icon={FileText} onAdd={openAdd} addLabel="New Invoice" />
       <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:'14px',marginBottom:'24px'}} className="sg">
-        {[{label:'Total Invoices',val:String(data.length),color:'#1FA89A'},{label:'Paid',val:String(data.filter(i=>i.status==='Paid').length),color:'#1FA89A'},{label:'Outstanding',val:String(data.filter(i=>i.status==='Unpaid').length),color:'#FFC107'},{label:'Overdue',val:String(data.filter(i=>i.status==='Overdue').length),color:'#ef4444'}].map(s=>(
+        {[{label:'Total Invoices',val:String(data.length),color:'var(--primary)'},{label:'Paid',val:String(data.filter(i=>i.status==='Paid').length),color:'var(--primary)'},{label:'Outstanding',val:String(data.filter(i=>i.status==='Unpaid').length),color:'var(--gold)'},{label:'Overdue',val:String(data.filter(i=>i.status==='Overdue').length),color:'var(--danger)'}].map(s=>(
           <div key={s.label} style={{background:card,border:`1px solid ${border}`,borderRadius:'12px',padding:'16px'}}>
             <div style={{fontSize:'12px',color:textMuted,marginBottom:'6px'}}>{s.label}</div>
             <div style={{fontSize:'20px',fontWeight:800,color:s.color}}>{s.val}</div>

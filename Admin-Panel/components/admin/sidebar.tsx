@@ -80,7 +80,7 @@ export default function Sidebar({ collapsed, mobileOpen, onMobileClose }: Sideba
           />
           {!collapsed && (
             <span style={{ fontSize: 15, fontWeight: 800, color: textMain, letterSpacing: "-0.3px" }}>
-              KR<span style={{ color: "#1FA89A" }}>YROS</span>
+              KR<span style={{ color: "var(--primary)" }}>YROS</span>
             </span>
           )}
         </div>
@@ -104,18 +104,18 @@ export default function Sidebar({ collapsed, mobileOpen, onMobileClose }: Sideba
                 padding: collapsed ? "10px 0" : "9px 10px",
                 justifyContent: collapsed ? "center" : "flex-start",
                 borderRadius: 8, marginBottom: 1,
-                background: active ? "rgba(31,168,154,0.12)" : "transparent",
-                color: active ? "#1FA89A" : textMuted,
+                background: active ? "rgba(192,21,27,0.10)" : "transparent",
+                color: active ? "var(--primary)" : textMuted,
                 cursor: "pointer",
               }}>
                 <Icon size={16} style={{ flexShrink: 0 }} />
                 {!collapsed && (
-                  <span style={{ fontSize: 13, fontWeight: active ? 600 : 400, color: active ? "#1FA89A" : textMuted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>
+                  <span style={{ fontSize: 13, fontWeight: active ? 600 : 400, color: active ? "var(--primary)" : textMuted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>
                     {label}
                   </span>
                 )}
                 {active && !collapsed && (
-                  <div style={{ width: 3, height: 16, background: "#1FA89A", borderRadius: 2, flexShrink: 0 }} />
+                  <div style={{ width: 3, height: 16, background: "var(--primary)", borderRadius: 2, flexShrink: 0 }} />
                 )}
               </div>
             </Link>
@@ -129,11 +129,11 @@ export default function Sidebar({ collapsed, mobileOpen, onMobileClose }: Sideba
           {showUserPopup && !collapsed && (
             <div style={{
               position: "absolute", bottom: "100%", left: 0, right: 0,
-              background: "#FFFFFF",
+              background: "var(--card)",
               border: `1px solid ${border}`,
               borderRadius: "10px 10px 0 0",
               overflow: "hidden",
-              boxShadow: "0 -8px 24px rgba(0,0,0,0.1)",
+              boxShadow: "0 -8px 24px var(--shadow)",
             }}>
               <button onClick={handleProfile} style={{
                 width: "100%", display: "flex", alignItems: "center", gap: 10,
@@ -141,7 +141,7 @@ export default function Sidebar({ collapsed, mobileOpen, onMobileClose }: Sideba
                 cursor: "pointer", color: textMuted, fontSize: 13.5,
                 fontFamily: "var(--font-inter)",
               }}
-                onMouseEnter={e => e.currentTarget.style.background = "#F8FAFC"}
+                onMouseEnter={e => e.currentTarget.style.background = "var(--surface)"}
                 onMouseLeave={e => e.currentTarget.style.background = "none"}
               >
                 <User size={14} /> My Profile
@@ -150,10 +150,10 @@ export default function Sidebar({ collapsed, mobileOpen, onMobileClose }: Sideba
               <button onClick={handleLogout} style={{
                 width: "100%", display: "flex", alignItems: "center", gap: 10,
                 padding: "12px 16px", background: "none", border: "none",
-                cursor: "pointer", color: "#ef4444", fontSize: 13.5, fontWeight: 600,
+                cursor: "pointer", color: "var(--danger)", fontSize: 13.5, fontWeight: 600,
                 fontFamily: "var(--font-inter)",
               }}
-                onMouseEnter={e => e.currentTarget.style.background = "rgba(239,68,68,0.08)"}
+                onMouseEnter={e => e.currentTarget.style.background = "rgba(214,48,49,0.08)"}
                 onMouseLeave={e => e.currentTarget.style.background = "none"}
               >
                 <LogOut size={14} /> Sign Out
@@ -170,14 +170,14 @@ export default function Sidebar({ collapsed, mobileOpen, onMobileClose }: Sideba
               display: "flex", alignItems: "center",
               justifyContent: collapsed ? "center" : "space-between",
               gap: 10,
-              background: showUserPopup ? "#F8FAFC" : "transparent",
+              background: showUserPopup ? "var(--surface)" : "transparent",
               transition: "background 0.15s",
             }}
-            onMouseEnter={e => { if (!showUserPopup) e.currentTarget.style.background = "#F8FAFC"; }}
+            onMouseEnter={e => { if (!showUserPopup) e.currentTarget.style.background = "var(--surface)"; }}
             onMouseLeave={e => { if (!showUserPopup) e.currentTarget.style.background = "transparent"; }}
           >
             <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0, flex: 1 }}>
-              <div style={{ width: 30, height: 30, borderRadius: "50%", background: "linear-gradient(135deg, #1FA89A, #27B9AF)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, color: "white", flexShrink: 0 }}>
+              <div style={{ width: 30, height: 30, borderRadius: "50%", background: "linear-gradient(135deg, var(--primary), var(--secondary))", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, color: "var(--text-white)", flexShrink: 0 }}>
                 {user.name?.[0]?.toUpperCase() || "A"}
               </div>
               {!collapsed && (
@@ -209,7 +209,7 @@ export default function Sidebar({ collapsed, mobileOpen, onMobileClose }: Sideba
 
       {mobileOpen && (
         <div style={{ position: "fixed", inset: 0, zIndex: 200, display: "flex" }}>
-          <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.6)" }} onClick={onMobileClose} />
+          <div style={{ position: "absolute", inset: 0, background: "var(--overlay)" }} onClick={onMobileClose} />
           <aside style={{ position: "relative", width: 260, zIndex: 201, animation: "slideInLeft 0.2s ease" }}>
             <NavList onNav={onMobileClose} />
           </aside>

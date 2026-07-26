@@ -84,37 +84,37 @@ type DeleteTarget = {
 
 // ─── Tab definitions ──────────────────────────────────────
 const TABS: TabDef[] = [
-  { key: 'all',        label: 'All Orders',  color: '#8E9AAF', filter: () => true },
-  { key: 'pending',    label: 'Pending',     color: '#F59E0B', filter: (o) => o.paymentStatus === 'PENDING' && o.status === 'PENDING' },
-  { key: 'paid',       label: 'Paid',        color: '#00D4AA', filter: (o) => o.paymentStatus === 'PAID' && o.status === 'PENDING' },
-  { key: 'confirmed',  label: 'Confirmed',   color: '#818CF8', filter: (o) => o.status === 'CONFIRMED' },
-  { key: 'shipped',    label: 'Shipped',     color: '#60A5FA', filter: (o) => o.status === 'SHIPPED' },
-  { key: 'in_transit', label: 'In Transit',  color: '#C084FC', filter: (o) => o.status === 'IN_TRANSIT' },
-  { key: 'delivered',  label: 'Delivered',   color: '#34D399', filter: (o) => o.status === 'DELIVERED' },
-  { key: 'collected',  label: 'Collected',   color: '#10B981', filter: (o) => o.status === 'COLLECTED' },
-  { key: 'cancelled',  label: 'Cancelled',   color: '#F87171', filter: (o) => o.status === 'CANCELLED' },
+  { key: 'all',        label: 'All Orders',  color: 'var(--text-muted)', filter: () => true },
+  { key: 'pending',    label: 'Pending',     color: 'var(--gold)', filter: (o) => o.paymentStatus === 'PENDING' && o.status === 'PENDING' },
+  { key: 'paid',       label: 'Paid',        color: 'var(--success)', filter: (o) => o.paymentStatus === 'PAID' && o.status === 'PENDING' },
+  { key: 'confirmed',  label: 'Confirmed',   color: 'var(--secondary)', filter: (o) => o.status === 'CONFIRMED' },
+  { key: 'shipped',    label: 'Shipped',     color: 'var(--secondary)', filter: (o) => o.status === 'SHIPPED' },
+  { key: 'in_transit', label: 'In Transit',  color: 'var(--secondary)', filter: (o) => o.status === 'IN_TRANSIT' },
+  { key: 'delivered',  label: 'Delivered',   color: 'var(--success)', filter: (o) => o.status === 'DELIVERED' },
+  { key: 'collected',  label: 'Collected',   color: 'var(--success)', filter: (o) => o.status === 'COLLECTED' },
+  { key: 'cancelled',  label: 'Cancelled',   color: 'var(--danger)', filter: (o) => o.status === 'CANCELLED' },
 ];
 
 // ─── Status display config ────────────────────────────────
 const STATUS_CFG: Record<string, { label: string; color: string; bg: string }> = {
-  PENDING:    { label: 'Pending',    color: '#F59E0B', bg: 'rgba(245,158,11,0.12)' },
-  PROCESSING: { label: 'Processing', color: '#60A5FA', bg: 'rgba(96,165,250,0.12)' },
-  CONFIRMED:  { label: 'Confirmed',  color: '#818CF8', bg: 'rgba(129,140,248,0.12)' },
-  SHIPPED:    { label: 'Shipped',    color: '#60A5FA', bg: 'rgba(96,165,250,0.12)' },
-  IN_TRANSIT: { label: 'In Transit', color: '#C084FC', bg: 'rgba(192,132,252,0.12)' },
-  DELIVERED:  { label: 'Delivered',  color: '#34D399', bg: 'rgba(52,211,153,0.12)' },
-  COLLECTED:  { label: 'Collected',  color: '#10B981', bg: 'rgba(16,185,129,0.12)' },
-  CANCELLED:  { label: 'Cancelled',  color: '#F87171', bg: 'rgba(248,113,113,0.12)' },
-  REFUNDED:   { label: 'Refunded',   color: '#FB923C', bg: 'rgba(251,146,60,0.12)' },
-  RETURNED:   { label: 'Returned',   color: '#A1A1AA', bg: 'rgba(161,161,170,0.12)' },
+  PENDING:    { label: 'Pending',    color: 'var(--gold)', bg: 'rgba(246,176,30,0.12)' },
+  PROCESSING: { label: 'Processing', color: 'var(--secondary)', bg: 'rgba(52,74,100,0.12)' },
+  CONFIRMED:  { label: 'Confirmed',  color: 'var(--secondary)', bg: 'rgba(52,74,100,0.12)' },
+  SHIPPED:    { label: 'Shipped',    color: 'var(--secondary)', bg: 'rgba(52,74,100,0.12)' },
+  IN_TRANSIT: { label: 'In Transit', color: 'var(--secondary)', bg: 'rgba(52,74,100,0.12)' },
+  DELIVERED:  { label: 'Delivered',  color: 'var(--success)', bg: 'rgba(45,190,96,0.12)' },
+  COLLECTED:  { label: 'Collected',  color: 'var(--success)', bg: 'rgba(45,190,96,0.12)' },
+  CANCELLED:  { label: 'Cancelled',  color: 'var(--danger)', bg: 'rgba(214,48,49,0.12)' },
+  REFUNDED:   { label: 'Refunded',   color: 'var(--warning)', bg: 'rgba(246,139,30,0.12)' },
+  RETURNED:   { label: 'Returned',   color: 'var(--text-muted)', bg: 'rgba(83,83,87,0.12)' },
 };
 
 const PAY_CFG: Record<string, { label: string; color: string; bg: string }> = {
-  PENDING:       { label: 'Unpaid',   color: '#F59E0B', bg: 'rgba(245,158,11,0.12)' },
-  PAID:          { label: 'Paid',     color: '#34D399', bg: 'rgba(52,211,153,0.12)' },
-  FAILED:        { label: 'Failed',   color: '#F87171', bg: 'rgba(248,113,113,0.12)' },
-  REFUNDED:      { label: 'Refunded', color: '#FB923C', bg: 'rgba(251,146,60,0.12)' },
-  PARTIALLY_PAID:{ label: 'Partial',  color: '#FCD34D', bg: 'rgba(252,211,77,0.12)'  },
+  PENDING:       { label: 'Unpaid',   color: 'var(--gold)', bg: 'rgba(246,176,30,0.12)' },
+  PAID:          { label: 'Paid',     color: 'var(--success)', bg: 'rgba(45,190,96,0.12)' },
+  FAILED:        { label: 'Failed',   color: 'var(--danger)', bg: 'rgba(214,48,49,0.12)' },
+  REFUNDED:      { label: 'Refunded', color: 'var(--warning)', bg: 'rgba(246,139,30,0.12)' },
+  PARTIALLY_PAID:{ label: 'Partial',  color: 'var(--gold)', bg: 'rgba(246,176,30,0.12)'  },
 };
 
 const METHOD_LABEL: Record<string, string> = {
@@ -402,7 +402,7 @@ function OrdersContent() {
             style={{
               display: 'flex', alignItems: 'center', gap: '0.4rem',
               padding: '0.5rem 1rem', borderRadius: '8px', border: 'none',
-              background: '#00D4AA', color: '#000', fontWeight: 600, fontSize: '0.8rem',
+              background: 'var(--success)', color: '#000', fontWeight: 600, fontSize: '0.8rem',
               cursor: loading ? 'wait' : 'pointer', opacity: loading ? 0.6 : 1,
             }}
           >
@@ -454,7 +454,7 @@ function OrdersContent() {
                 style={{
                   display: 'flex', alignItems: 'center', gap: '0.3rem',
                   padding: '0.5rem 0.8rem', borderRadius: '8px', border: 'none',
-                  background: 'rgba(248,113,113,0.1)', color: '#F87171',
+                  background: 'rgba(214,48,49,0.10)', color: 'var(--danger)',
                   fontWeight: 600, fontSize: '0.75rem', cursor: bulkLoading ? 'wait' : 'pointer',
                 }}
               >
@@ -544,8 +544,8 @@ function OrdersContent() {
                       <td style={{ padding: '0.75rem 1rem' }}>
                         <span style={{
                           fontSize: '0.7rem', fontWeight: 600, padding: '2px 7px', borderRadius: '4px',
-                          background: isManual ? 'rgba(245,158,11,0.1)' : 'rgba(99,102,241,0.1)',
-                          color: isManual ? '#F59E0B' : '#818CF8',
+                          background: isManual ? 'rgba(245,158,11,0.1)' : 'rgba(52,74,100,0.10)',
+                          color: isManual ? 'var(--gold)' : 'var(--secondary)',
                         }}>
                           {METHOD_LABEL[o.paymentMethod?.toUpperCase()] || o.paymentMethod || 'N/A'}
                         </span>
@@ -564,7 +564,7 @@ function OrdersContent() {
                           {canDelete && (
                             <button
                               onClick={() => openSingleDeleteConfirm(o)}
-                              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#F87171', padding: '0.25rem' }}
+                              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--danger)', padding: '0.25rem' }}
                               title="Delete Order"
                             >
                               <Trash2 size={14} />
@@ -593,7 +593,7 @@ function OrdersContent() {
                   key={o.id}
                   onClick={() => openDetail(o.id)}
                   style={{
-                    background: T.card, border: `1px solid ${selectedIds.has(o.id) ? '#00D4AA' : T.border}`,
+                    background: T.card, border: `1px solid ${selectedIds.has(o.id) ? 'var(--success)' : T.border}`,
                     borderRadius: '12px', padding: '1rem', cursor: 'pointer', position: 'relative'
                   }}
                 >
@@ -634,7 +634,7 @@ function OrdersContent() {
                         {canDelete && (
                           <button
                             onClick={(e) => { e.stopPropagation(); openSingleDeleteConfirm(o); }}
-                            style={{ background: 'rgba(248,113,113,0.1)', border: 'none', cursor: 'pointer', color: '#F87171', padding: '5px', borderRadius: '6px' }}
+                            style={{ background: 'rgba(214,48,49,0.10)', border: 'none', cursor: 'pointer', color: 'var(--danger)', padding: '5px', borderRadius: '6px' }}
                           >
                             <Trash2 size={14} />
                           </button>
@@ -671,7 +671,7 @@ function OrdersContent() {
               width: '320px', background: T.panel, border: `1px solid ${T.border}`, borderRadius: '16px',
               padding: '1.5rem', zIndex: 101, textAlign: 'center'
             }}>
-              <div style={{ background: 'rgba(248,113,113,0.1)', color: '#F87171', width: '48px', height: '48px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem' }}>
+              <div style={{ background: 'rgba(214,48,49,0.10)', color: 'var(--danger)', width: '48px', height: '48px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem' }}>
                 <Trash2 size={24} />
               </div>
               <h3 style={{ color: T.text, margin: '0 0 0.5rem', fontSize: '1.1rem' }}>Permanently Delete?</h3>
@@ -690,7 +690,7 @@ function OrdersContent() {
                 <button
                   onClick={deleteConfirm === 'single' ? doDeleteOrder : doBulkDelete}
                   disabled={actionLoading || bulkLoading}
-                  style={{ flex: 1, padding: '0.6rem', borderRadius: '8px', border: 'none', background: '#F87171', color: '#fff', fontWeight: 600, cursor: 'pointer', opacity: (actionLoading || bulkLoading) ? 0.6 : 1 }}
+                  style={{ flex: 1, padding: '0.6rem', borderRadius: '8px', border: 'none', background: 'var(--danger)', color: '#fff', fontWeight: 600, cursor: 'pointer', opacity: (actionLoading || bulkLoading) ? 0.6 : 1 }}
                 >
                   {(actionLoading || bulkLoading) ? 'Deleting…' : 'Delete Now'}
                 </button>
@@ -752,8 +752,8 @@ function OrdersContent() {
                           <span style={{ background: sc.bg, color: sc.color, fontSize: '0.73rem', fontWeight: 700, padding: '3px 10px', borderRadius: '6px' }}>Order: {sc.label}</span>
                           <span style={{ background: psc.bg, color: psc.color, fontSize: '0.73rem', fontWeight: 700, padding: '3px 10px', borderRadius: '6px' }}>Payment: {psc.label}</span>
                           <span style={{
-                            background: isManual ? 'rgba(245,158,11,0.1)' : 'rgba(99,102,241,0.1)',
-                            color: isManual ? '#F59E0B' : '#818CF8',
+                            background: isManual ? 'rgba(245,158,11,0.1)' : 'rgba(52,74,100,0.10)',
+                            color: isManual ? 'var(--gold)' : 'var(--secondary)',
                             fontSize: '0.73rem', fontWeight: 600, padding: '3px 10px', borderRadius: '6px',
                           }}>{METHOD_LABEL[detail.paymentMethod?.toUpperCase()] || detail.paymentMethod}</span>
                         </>
@@ -791,9 +791,9 @@ function OrdersContent() {
                         <span style={{ color: T.muted, fontSize: '0.79rem' }}>{detail.shippingAddress.phone}</span>
                       </Row>
                       {detail.trackingNumber && (
-                        <div style={{ marginTop: '0.6rem', padding: '0.45rem 0.75rem', background: 'rgba(99,102,241,0.08)', borderRadius: '6px', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <Truck size={13} color="#818CF8" />
-                          <span style={{ color: '#818CF8', fontSize: '0.77rem', fontWeight: 600 }}>Tracking: {detail.trackingNumber}</span>
+                        <div style={{ marginTop: '0.6rem', padding: '0.45rem 0.75rem', background: 'rgba(52,74,100,0.08)', borderRadius: '6px', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <Truck size={13} color="var(--secondary)" />
+                          <span style={{ color: 'var(--secondary)', fontSize: '0.77rem', fontWeight: 600 }}>Tracking: {detail.trackingNumber}</span>
                         </div>
                       )}
                     </Section>
@@ -976,7 +976,7 @@ function OrdersContent() {
                         style={{
                           flex: 1, padding: '0.6rem 1rem', borderRadius: '8px', border: 'none',
                           cursor: actionLoading ? 'wait' : 'pointer', fontFamily: 'inherit',
-                          background: '#00D4AA', color: '#000',
+                          background: 'var(--success)', color: '#000',
                           fontWeight: 700, fontSize: '0.82rem',
                           opacity: actionLoading ? 0.65 : 1,
                         }}
@@ -990,7 +990,7 @@ function OrdersContent() {
                           style={{
                             padding: '0.6rem 1rem', borderRadius: '8px', border: 'none',
                             cursor: actionLoading ? 'wait' : 'pointer', fontFamily: 'inherit',
-                            background: 'rgba(248,113,113,0.1)', color: '#F87171',
+                            background: 'rgba(214,48,49,0.10)', color: 'var(--danger)',
                             fontWeight: 700, fontSize: '0.82rem',
                             display: 'flex', alignItems: 'center', gap: '0.3rem',
                           }}

@@ -167,14 +167,14 @@ function CurrenciesContent() {
   };
 
   const currencyColumns: Column[] = [
-    { key: 'code',   label: 'Code',   render: (v) => <span style={{ fontWeight: 700, color: '#1FA89A', fontSize: '14px' }}>{String(v)}</span>, width: '80px' },
+    { key: 'code',   label: 'Code',   render: (v) => <span style={{ fontWeight: 700, color: 'var(--primary)', fontSize: '14px' }}>{String(v)}</span>, width: '80px' },
     { key: 'symbol', label: 'Symbol', render: (v) => <span style={{ fontWeight: 600, color: textMain }}>{String(v)}</span>, width: '70px' },
     { key: 'rate',   label: 'Rate (vs USD)', render: (v, row) => {
         const r = row as unknown as CurrencyRow;
         return (
           <span style={{ color: textMain }}>
             {r.autoRate
-              ? <span style={{ color: '#1FA89A', fontSize: '11px', fontWeight: 600 }}>🔄 Auto · </span>
+              ? <span style={{ color: 'var(--primary)', fontSize: '11px', fontWeight: 600 }}>🔄 Auto · </span>
               : <span style={{ color: textMuted, fontSize: '11px' }}>🔒 Manual · </span>
             }
             {String(v)}
@@ -185,7 +185,7 @@ function CurrenciesContent() {
     { key: 'symbolPosition', label: 'Position', render: (v) => <span style={{ color: textMuted, fontSize: '12px' }}>{String(v)}</span>, width: '90px' },
     { key: 'countries', label: 'Used By', render: (v) => <span style={{ color: textMuted, fontSize: '12px' }}>{String(v)}</span> },
     { key: 'status', label: 'Status', render: (v) => (
-        <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 600, background: v === 'Base' ? 'rgba(245,158,11,0.12)' : 'rgba(31,168,154,0.12)', color: v === 'Base' ? '#f59e0b' : '#1FA89A' }}>
+        <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 600, background: v === 'Base' ? 'rgba(246,176,30,0.12)' : 'rgba(192,21,27,0.10)', color: v === 'Base' ? 'var(--gold)' : 'var(--primary)' }}>
           {String(v)}
         </span>
       )
@@ -206,7 +206,7 @@ function CurrenciesContent() {
       />
 
       {/* Info banner */}
-      <div style={{ marginBottom: '16px', padding: '12px 16px', background: 'rgba(31,168,154,0.06)', border: '1px solid rgba(31,168,154,0.2)', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
+      <div style={{ marginBottom: '16px', padding: '12px 16px', background: 'rgba(31,168,154,0.06)', border: '1px solid rgba(192,21,27,0.15)', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
         <div style={{ color: textMuted, fontSize: '13px', lineHeight: 1.5 }}>
           <span style={{ fontWeight: 600, color: textMain }}>How currencies work: </span>
           Each currency is linked to at least one country. You can add a currency here by creating its first country mapping, and edits here update all countries sharing that currency code.
@@ -214,7 +214,7 @@ function CurrenciesContent() {
         <button
           onClick={handleRefreshAll}
           disabled={loading}
-          style={{ padding: '8px 16px', borderRadius: '8px', background: '#1FA89A', color: '#fff', border: 'none', fontSize: '13px', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', opacity: loading ? 0.6 : 1 }}
+          style={{ padding: '8px 16px', borderRadius: '8px', background: 'var(--primary)', color: '#fff', border: 'none', fontSize: '13px', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', opacity: loading ? 0.6 : 1 }}
         >
           🔄 Enable Auto-Rate All
         </button>

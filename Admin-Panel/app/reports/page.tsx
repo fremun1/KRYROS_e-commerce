@@ -51,11 +51,11 @@ function ReportsContent() {
             }))
           : [{ month: 'No Data', revenue: 0, orders: 0, customers: 0 }]
       );
-      const colors = ['#1FA89A','#6366f1','#FFC107','#ef4444','#64748b'];
+      const colors = ['var(--primary)','var(--secondary)','var(--gold)','var(--danger)','var(--text-muted)'];
       setCatData(
         Array.isArray(d.salesByCategory) && d.salesByCategory.length > 0
           ? d.salesByCategory.map((c: any, i: number) => ({ name: c.name || c.category, value: Number(c.value || c.percentage || 0), color: colors[i % colors.length] }))
-          : [{ name: 'No sales yet', value: 100, color: '#64748b' }]
+          : [{ name: 'No sales yet', value: 100, color: 'var(--text-muted)' }]
       );
       setProdData(
         Array.isArray(d.topProducts)
@@ -99,7 +99,7 @@ function ReportsContent() {
           <div key={k.label} style={{background:card,border:`1px solid ${border}`,borderRadius:'12px',padding:'16px'}}>
             <div style={{fontSize:'12px',color:textMuted,marginBottom:'6px'}}>{k.label}</div>
             <div style={{fontSize:'22px',fontWeight:800,color:textMain}}>{k.val}</div>
-            <div style={{fontSize:'12px',fontWeight:600,color:k.up?'#1FA89A':'#ef4444',display:'flex',alignItems:'center',gap:'3px',marginTop:'4px'}}>
+            <div style={{fontSize:'12px',fontWeight:600,color:k.up?'var(--primary)':'var(--danger)',display:'flex',alignItems:'center',gap:'3px',marginTop:'4px'}}>
               {k.up?<TrendingUp size={12}/>:<TrendingDown size={12}/>}{k.change}{k.label === 'Avg Order Value' ? '' : ' vs previous month'}
             </div>
           </div>
@@ -117,7 +117,7 @@ function ReportsContent() {
               <XAxis dataKey="month" tick={{fontSize:11,fill:textMuted}} axisLine={false} tickLine={false} />
               <YAxis tick={{fontSize:11,fill:textMuted}} axisLine={false} tickLine={false} tickFormatter={v=>`$${(v/1000).toFixed(0)}k`} />
               <Tooltip contentStyle={{background:card,border:`1px solid ${border}`,borderRadius:'8px',fontSize:'12px'}} formatter={(v:number)=>[`$${v.toLocaleString()}`,'Revenue']} />
-              <Bar dataKey="revenue" fill="#1FA89A" radius={[4,4,0,0]} />
+              <Bar dataKey="revenue" fill="var(--primary)" radius={[4,4,0,0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -155,8 +155,8 @@ function ReportsContent() {
             <XAxis dataKey="month" tick={{fontSize:11,fill:textMuted}} axisLine={false} tickLine={false} />
             <YAxis tick={{fontSize:11,fill:textMuted}} axisLine={false} tickLine={false} />
             <Tooltip contentStyle={{background:card,border:`1px solid ${border}`,borderRadius:'8px',fontSize:'12px'}} />
-            <Line type="monotone" dataKey="orders" stroke="#1FA89A" strokeWidth={2.5} dot={{fill:'#1FA89A',r:4}} name="Orders" />
-            <Line type="monotone" dataKey="customers" stroke="#6366f1" strokeWidth={2.5} dot={{fill:'#6366f1',r:4}} name="Customers" />
+            <Line type="monotone" dataKey="orders" stroke="var(--primary)" strokeWidth={2.5} dot={{fill:'var(--primary)',r:4}} name="Orders" />
+            <Line type="monotone" dataKey="customers" stroke="var(--secondary)" strokeWidth={2.5} dot={{fill:'var(--secondary)',r:4}} name="Customers" />
           </LineChart>
         </ResponsiveContainer>
       </div>
@@ -171,11 +171,11 @@ function ReportsContent() {
           <tbody>
             {prodData.map(p=>(
               <tr key={p.rank} style={{borderTop:`1px solid ${border}`}}>
-                <td style={{padding:'12px 16px'}}><span style={{width:'26px',height:'26px',borderRadius:'50%',background:'rgba(31,168,154,0.12)',display:'inline-flex',alignItems:'center',justifyContent:'center',fontSize:'12px',fontWeight:700,color:'#1FA89A'}}>{p.rank}</span></td>
+                <td style={{padding:'12px 16px'}}><span style={{width:'26px',height:'26px',borderRadius:'50%',background:'rgba(192,21,27,0.10)',display:'inline-flex',alignItems:'center',justifyContent:'center',fontSize:'12px',fontWeight:700,color:'var(--primary)'}}>{p.rank}</span></td>
                 <td style={{padding:'12px 16px',fontWeight:600,color:textMain,fontSize:'13.5px'}}>{p.name}</td>
                 <td style={{padding:'12px 16px',fontWeight:700,color:textMain}}>{p.revenue}</td>
-                <td style={{padding:'12px 16px',color:'#6366f1',fontWeight:600}}>{p.units}</td>
-                <td style={{padding:'12px 16px'}}><span style={{fontSize:'12px',fontWeight:700,color:p.up?'#1FA89A':'#ef4444',display:'flex',alignItems:'center',gap:'3px'}}>{p.up?<TrendingUp size={12}/>:<TrendingDown size={12}/>}{p.growth}</span></td>
+                <td style={{padding:'12px 16px',color:'var(--secondary)',fontWeight:600}}>{p.units}</td>
+                <td style={{padding:'12px 16px'}}><span style={{fontSize:'12px',fontWeight:700,color:p.up?'var(--primary)':'var(--danger)',display:'flex',alignItems:'center',gap:'3px'}}>{p.up?<TrendingUp size={12}/>:<TrendingDown size={12}/>}{p.growth}</span></td>
               </tr>
             ))}
           </tbody>

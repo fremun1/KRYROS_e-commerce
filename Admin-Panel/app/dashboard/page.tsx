@@ -26,14 +26,14 @@ import { useRouter } from "next/navigation";
 import { getRecentOrders, getTopProducts, getRecentCustomers, getReportsSummary } from "@/lib/api";
 
 const quickActions = [
-  { label: "New Invoice",  Icon: FileText,    color: "#6366f1", href: "/invoicing"       },
-  { label: "New Estimate", Icon: FileText,    color: "#1FA89A", href: "/invoicing"       },
-  { label: "New Payment",  Icon: CreditCard,  color: "#FFC107", href: "/wallet-payments" },
-  { label: "Add Product",  Icon: Package,     color: "#f59e0b", href: "/products"        },
-  { label: "New Purchase", Icon: ShoppingCart,color: "#ec4899", href: "/orders"          },
-  { label: "New Customer", Icon: UserPlus,    color: "#8b5cf6", href: "/users"           },
-  { label: "View Reports", Icon: BarChart2,   color: "#1FA89A", href: "/reports"         },
-  { label: "Settings",     Icon: Settings,    color: "#64748b", href: "/settings"        },
+  { label: "New Invoice",  Icon: FileText,    color: "var(--secondary)", href: "/invoicing"       },
+  { label: "New Estimate", Icon: FileText,    color: "var(--primary)", href: "/invoicing"       },
+  { label: "New Payment",  Icon: CreditCard,  color: "var(--gold)", href: "/wallet-payments" },
+  { label: "Add Product",  Icon: Package,     color: "var(--gold)", href: "/products"        },
+  { label: "New Purchase", Icon: ShoppingCart,color: "var(--primary)", href: "/orders"          },
+  { label: "New Customer", Icon: UserPlus,    color: "var(--secondary)", href: "/users"           },
+  { label: "View Reports", Icon: BarChart2,   color: "var(--primary)", href: "/reports"         },
+  { label: "Settings",     Icon: Settings,    color: "var(--text-muted)", href: "/settings"        },
 ];
 
 function shortRef(prefix: string, value?: string | null) {
@@ -55,14 +55,14 @@ function formatActivityOrderRef(id?: string | null) {
 function StatusBadge({ status }: { status: string }) {
   const s = status?.toLowerCase() || "";
   const map: Record<string, { bg: string; color: string; label: string }> = {
-    completed: { bg: "rgba(31,168,154,0.15)",   color: "#1FA89A", label: "Completed"   },
-    delivered:  { bg: "rgba(31,168,154,0.15)",   color: "#1FA89A", label: "Delivered"   },
-    processing: { bg: "rgba(59,130,246,0.15)",   color: "#3b82f6", label: "Processing"  },
-    pending:    { bg: "rgba(255,193,7,0.15)",     color: "#FFC107", label: "Pending"     },
-    cancelled:  { bg: "rgba(185,28,28,0.15)",     color: "#B91C1C", label: "Cancelled"   },
-    paid:       { bg: "rgba(31,168,154,0.15)",    color: "#1FA89A", label: "Paid"        },
+    completed: { bg: "rgba(192,21,27,0.12)",   color: "var(--primary)", label: "Completed"   },
+    delivered:  { bg: "rgba(192,21,27,0.12)",   color: "var(--primary)", label: "Delivered"   },
+    processing: { bg: "rgba(37,99,235,0.12)",   color: "var(--link)", label: "Processing"  },
+    pending:    { bg: "rgba(246,176,30,0.15)",     color: "var(--gold)", label: "Pending"     },
+    cancelled:  { bg: "rgba(192,21,27,0.12)",     color: "var(--danger)", label: "Cancelled"   },
+    paid:       { bg: "rgba(192,21,27,0.12)",    color: "var(--primary)", label: "Paid"        },
   };
-  const style = map[s] || { bg: "rgba(100,116,139,0.15)", color: "#64748b", label: status };
+  const style = map[s] || { bg: "rgba(83,83,87,0.15)", color: "var(--text-muted)", label: status };
   return (
     <span style={{ background: style.bg, color: style.color, fontSize: "10.5px", fontWeight: 600, padding: "3px 8px", borderRadius: "20px", whiteSpace: "nowrap" }}>
       {style.label}
@@ -156,7 +156,7 @@ function DashboardContent() {
   const totalOutstanding = report?.credit?.totalOutstanding ?? 0;
   const selectedLabel = report?.selectedLabel || "This Month";
 
-  const CHART_COLORS = ["#1FA89A","#6366f1","#FFC107","#f59e0b","#64748b","#ec4899"];
+  const CHART_COLORS = ["var(--primary)","var(--secondary)","var(--gold)","var(--gold)","var(--text-muted)","var(--primary)"];
 
   // Sales area chart data — real monthly series from reports
   const salesData: Array<{ date: string; sales: number; customers: number }> = report?.revenueSeries?.length > 0
@@ -169,14 +169,14 @@ function DashboardContent() {
     ? report.salesByCategory.slice(0, 5).map((cat: any, i: number) => ({
         name: cat.name, value: Number(cat.value || 0), amount: 0, color: CHART_COLORS[i % CHART_COLORS.length],
       }))
-    : [{ name: "No sales yet", value: 100, amount: 0, color: "#64748b" }];
+    : [{ name: "No sales yet", value: 100, amount: 0, color: "var(--text-muted)" }];
 
   // Activity feed — real recent transactions
   const activities: Array<{ text: string; time: string; color: string; icon: string }> = report?.recentTransactions?.length > 0
     ? report.recentTransactions.slice(0, 5).map((tx: any) => ({
         text: `${formatActivityOrderRef(tx.id)}  ·  ${tx.customer || "Customer"}  ·  ${fmt(tx.amount)}`,
         time: tx.date ? new Date(tx.date).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "",
-        color: (tx.status === "paid" || tx.status === "delivered") ? "#1FA89A" : tx.status === "pending" ? "#FFC107" : "#6366f1",
+        color: (tx.status === "paid" || tx.status === "delivered") ? "var(--primary)" : tx.status === "pending" ? "var(--gold)" : "var(--secondary)",
         icon: "ShoppingBag",
       }))
     : orders.slice(0, 5).map((o, i) => ({
@@ -200,14 +200,14 @@ function DashboardContent() {
 
   // KPI cards with real data
   const kpiCards = [
-    { label: "Monthly Revenue",  value: fmt(totalRevenue),         change: `${report?.stats?.revenueGrowth ?? 0}%`,   up: (report?.stats?.revenueGrowth ?? 0) >= 0,  Icon: DollarSign,   color: "#1FA89A", spark: salesData.slice(-7).map(s => s.sales) },
-    { label: "Monthly Orders",   value: String(totalOrdersCount),  change: `${report?.stats?.ordersGrowth ?? 0}%`,    up: (report?.stats?.ordersGrowth ?? 0) >= 0,   Icon: ShoppingCart, color: "#f59e0b", spark: salesData.slice(-7).map(s => s.sales) },
-    { label: "New Customers",    value: String(totalUsersCount),   change: `${report?.stats?.customersGrowth ?? 0}%`, up: (report?.stats?.customersGrowth ?? 0) >= 0, Icon: UserPlus,     color: "#6366f1", spark: salesData.map(s => s.customers || 0).slice(-7) },
-    { label: "Credit Disbursed", value: fmt(creditDisbursed),      change: selectedLabel,                               up: true,                                              Icon: CreditCard,   color: "#FFC107", spark: [5,8,6,10,9,12,15] },
-    { label: "Outstanding",      value: fmt(totalOutstanding),     change: "Live", up: false, Icon: Wallet,       color: "#ef4444", spark: [5,5,5,5,5,5,5] },
+    { label: "Monthly Revenue",  value: fmt(totalRevenue),         change: `${report?.stats?.revenueGrowth ?? 0}%`,   up: (report?.stats?.revenueGrowth ?? 0) >= 0,  Icon: DollarSign,   color: "var(--primary)", spark: salesData.slice(-7).map(s => s.sales) },
+    { label: "Monthly Orders",   value: String(totalOrdersCount),  change: `${report?.stats?.ordersGrowth ?? 0}%`,    up: (report?.stats?.ordersGrowth ?? 0) >= 0,   Icon: ShoppingCart, color: "var(--gold)", spark: salesData.slice(-7).map(s => s.sales) },
+    { label: "New Customers",    value: String(totalUsersCount),   change: `${report?.stats?.customersGrowth ?? 0}%`, up: (report?.stats?.customersGrowth ?? 0) >= 0, Icon: UserPlus,     color: "var(--secondary)", spark: salesData.map(s => s.customers || 0).slice(-7) },
+    { label: "Credit Disbursed", value: fmt(creditDisbursed),      change: selectedLabel,                               up: true,                                              Icon: CreditCard,   color: "var(--gold)", spark: [5,8,6,10,9,12,15] },
+    { label: "Outstanding",      value: fmt(totalOutstanding),     change: "Live", up: false, Icon: Wallet,       color: "var(--danger)", spark: [5,5,5,5,5,5,5] },
   ];
 
-  const COLORS = ["#1FA89A","#6366f1","#FFC107","#ec4899","#8b5cf6"];
+  const COLORS = ["var(--primary)","var(--secondary)","var(--gold)","var(--primary)","var(--secondary)"];
 
   const getInitials = (order: Order) => {
     const u = order.user;
@@ -259,7 +259,7 @@ function DashboardContent() {
                       </div>
                       <span style={{ fontSize: 11, color: textMuted, fontWeight: 500 }}>{label}</span>
                     </div>
-                    <span style={{ fontSize: 10.5, fontWeight: 700, color: up ? "#1FA89A" : "#ef4444", display: "flex", alignItems: "center", gap: 2 }}>
+                    <span style={{ fontSize: 10.5, fontWeight: 700, color: up ? "var(--primary)" : "var(--danger)", display: "flex", alignItems: "center", gap: 2 }}>
                       {up ? <TrendingUp size={10} /> : <TrendingDown size={10} />}{change}
                     </span>
                   </div>
@@ -298,7 +298,7 @@ function DashboardContent() {
             <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8 }}>
               {quickActions.map(({ label, Icon, color, href }) => (
                 <button key={label} onClick={() => router.push(href)} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 5, background: surface, border: `1px solid ${border}`, borderRadius: 9, padding: "10px 4px", cursor: "pointer" }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = "#1FA89A"; (e.currentTarget as HTMLButtonElement).style.background = "rgba(31,168,154,0.08)"; }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--primary)"; (e.currentTarget as HTMLButtonElement).style.background = "rgba(192,21,27,0.08)"; }}
                   onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = border; (e.currentTarget as HTMLButtonElement).style.background = surface; }}>
                   <div style={{ width: 28, height: 28, borderRadius: 7, background: `${color}18`, display: "flex", alignItems: "center", justifyContent: "center" }}>
                     <Icon size={13} color={color} />
@@ -313,13 +313,13 @@ function DashboardContent() {
           <div style={cardStyle({ padding: 16, marginBottom: 16 })}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
               <div style={{ fontSize: 13, fontWeight: 700, color: textMain }}>Order Overview</div>
-              <span onClick={() => router.push("/orders")} style={{ fontSize: 11.5, color: "#1FA89A", fontWeight: 600, cursor: "pointer" }}>View All</span>
+              <span onClick={() => router.push("/orders")} style={{ fontSize: 11.5, color: "var(--primary)", fontWeight: 600, cursor: "pointer" }}>View All</span>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
               <div style={{ position: "relative", width: 90, height: 90, flexShrink: 0 }}>
                 <svg viewBox="0 0 90 90" width="90" height="90">
                   <circle cx="45" cy="45" r="36" fill="none" stroke="var(--border)" strokeWidth="8" />
-                  <circle cx="45" cy="45" r="36" fill="none" stroke="#1FA89A" strokeWidth="8"
+                  <circle cx="45" cy="45" r="36" fill="none" stroke="var(--primary)" strokeWidth="8"
                     strokeDasharray="226.19" strokeDashoffset={totalOrdersCount > 0 ? "74.6" : "226.19"} strokeLinecap="round" transform="rotate(-90 45 45)" />
                 </svg>
                 <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
@@ -329,10 +329,10 @@ function DashboardContent() {
               </div>
               <div style={{ flex: 1 }}>
                 {[
-                  { label: "Orders",         val: totalOrdersCount, color: "#1FA89A" },
-                  { label: "Revenue",        val: fmt(totalRevenue), color: "#6366f1" },
-                  { label: "New Customers",  val: totalUsersCount,  color: "#FFC107" },
-                  { label: "Credit Active",  val: report?.credit?.activeAccounts ?? 0, color: "#f59e0b" },
+                  { label: "Orders",         val: totalOrdersCount, color: "var(--primary)" },
+                  { label: "Revenue",        val: fmt(totalRevenue), color: "var(--secondary)" },
+                  { label: "New Customers",  val: totalUsersCount,  color: "var(--gold)" },
+                  { label: "Credit Active",  val: report?.credit?.activeAccounts ?? 0, color: "var(--gold)" },
                 ].map(item => (
                   <div key={item.label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -350,7 +350,7 @@ function DashboardContent() {
           <div style={cardStyle({ padding: 16 })}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
               <div style={{ fontSize: 13, fontWeight: 700, color: textMain }}>Recent Activities</div>
-              <span onClick={() => router.push("/orders")} style={{ fontSize: 11.5, color: "#1FA89A", fontWeight: 600, cursor: "pointer" }}>View All</span>
+              <span onClick={() => router.push("/orders")} style={{ fontSize: 11.5, color: "var(--primary)", fontWeight: 600, cursor: "pointer" }}>View All</span>
             </div>
             {activities.length === 0 ? (
               <div style={{ fontSize: 12, color: textMuted, textAlign: "center", padding: "20px 0" }}>No recent activity</div>
@@ -378,7 +378,7 @@ function DashboardContent() {
                   <div style={{ fontSize: 13, fontWeight: 700, color: textMain }}>Sales Analytics</div>
                   <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
                     <span style={{ fontSize: 22, fontWeight: 800, color: textMain }}>{fmt(totalRevenue)}</span>
-                    <span style={{ fontSize: 11.5, fontWeight: 600, color: "#1FA89A", display: "flex", alignItems: "center", gap: 2 }}>
+                    <span style={{ fontSize: 11.5, fontWeight: 600, color: "var(--primary)", display: "flex", alignItems: "center", gap: 2 }}>
                       <TrendingUp size={11} /> {selectedLabel}
                     </span>
                   </div>
@@ -390,15 +390,15 @@ function DashboardContent() {
                   <AreaChart data={salesData} margin={{ top: 5, right: 20, left: -20, bottom: 0 }}>
                     <defs>
                       <linearGradient id="salesGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#1FA89A" stopOpacity={0.3} />
-                        <stop offset="100%" stopColor="#1FA89A" stopOpacity={0} />
+                        <stop offset="0%" stopColor="var(--primary)" stopOpacity={0.3} />
+                        <stop offset="100%" stopColor="var(--primary)" stopOpacity={0} />
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke={gridLine} vertical={false} />
                     <XAxis dataKey="date" tick={{ fontSize: 10, fill: textMuted }} axisLine={false} tickLine={false} />
                     <YAxis tick={{ fontSize: 10, fill: textMuted }} axisLine={false} tickLine={false} tickFormatter={v => `$${(Number(v)/1000).toFixed(1)}k`} />
                     <Tooltip contentStyle={{ background: card, border: `1px solid ${border}`, borderRadius: 8, fontSize: 12 }} formatter={(v: number) => [`$${Number(v).toLocaleString()}`, "Revenue"]} />
-                    <Area type="monotone" dataKey="sales" stroke="#1FA89A" strokeWidth={2.5} fill="url(#salesGrad)" dot={{ fill: "#1FA89A", r: 4, strokeWidth: 0 }} activeDot={{ r: 6 }} />
+                    <Area type="monotone" dataKey="sales" stroke="var(--primary)" strokeWidth={2.5} fill="url(#salesGrad)" dot={{ fill: "var(--primary)", r: 4, strokeWidth: 0 }} activeDot={{ r: 6 }} />
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
@@ -447,7 +447,7 @@ function DashboardContent() {
             <div style={cardStyle({ padding: 16 })}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: textMain }}>Recent Orders</div>
-                <span onClick={() => router.push("/orders")} style={{ fontSize: 11.5, color: "#1FA89A", fontWeight: 600, cursor: "pointer" }}>View All</span>
+                <span onClick={() => router.push("/orders")} style={{ fontSize: 11.5, color: "var(--primary)", fontWeight: 600, cursor: "pointer" }}>View All</span>
               </div>
               {orders.length === 0 ? (
                 <div style={{ fontSize: 12, color: textMuted, textAlign: "center", padding: "20px 0" }}>No orders yet</div>
@@ -474,14 +474,14 @@ function DashboardContent() {
             <div style={cardStyle({ padding: 16 })}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: textMain }}>Top Selling Products</div>
-                <span onClick={() => router.push("/products")} style={{ fontSize: 11.5, color: "#1FA89A", fontWeight: 600, cursor: "pointer" }}>View All</span>
+                <span onClick={() => router.push("/products")} style={{ fontSize: 11.5, color: "var(--primary)", fontWeight: 600, cursor: "pointer" }}>View All</span>
               </div>
               {displayProducts.length === 0 ? (
                 <div style={{ fontSize: 12, color: textMuted, textAlign: "center", padding: "20px 0" }}>No products yet</div>
               ) : displayProducts.map((p, i) => (
                 <div key={p.id} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
                   <div style={{ width: 32, height: 32, borderRadius: 8, background: surface, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                    <Package size={14} color="#1FA89A" />
+                    <Package size={14} color="var(--primary)" />
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 12, fontWeight: 600, color: textMain, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.name}</div>
@@ -500,7 +500,7 @@ function DashboardContent() {
             <div style={cardStyle({ padding: 16 })}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: textMain }}>New Customers</div>
-                <span onClick={() => router.push("/users")} style={{ fontSize: 11.5, color: "#1FA89A", fontWeight: 600, cursor: "pointer" }}>View All</span>
+                <span onClick={() => router.push("/users")} style={{ fontSize: 11.5, color: "var(--primary)", fontWeight: 600, cursor: "pointer" }}>View All</span>
               </div>
               {customers.length === 0 ? (
                 <div style={{ fontSize: 12, color: textMuted, textAlign: "center", padding: "20px 0" }}>No customers yet</div>
@@ -526,13 +526,13 @@ function DashboardContent() {
           {/* Financial Summary */}
           <div className="financial-grid">
             {[
-              { label: "Outstanding Credit", val: fmt(totalOutstanding),  sub: "Total credit outstanding",         color: "#6366f1", hl: false },
-              { label: "Credit Disbursed",   val: fmt(creditDisbursed),   sub: `${selectedLabel} credit issued`,   color: "#FFC107", hl: false },
-              { label: "New Customers",      val: String(totalUsersCount), sub: `${selectedLabel} sign-ups`,      color: "#ef4444", hl: false },
-              { label: "Monthly Revenue",    val: fmt(totalRevenue),       sub: `${selectedLabel} (paid orders only)`, color: "#1FA89A", hl: true  },
+              { label: "Outstanding Credit", val: fmt(totalOutstanding),  sub: "Total credit outstanding",         color: "var(--secondary)", hl: false },
+              { label: "Credit Disbursed",   val: fmt(creditDisbursed),   sub: `${selectedLabel} credit issued`,   color: "var(--gold)", hl: false },
+              { label: "New Customers",      val: String(totalUsersCount), sub: `${selectedLabel} sign-ups`,      color: "var(--danger)", hl: false },
+              { label: "Monthly Revenue",    val: fmt(totalRevenue),       sub: `${selectedLabel} (paid orders only)`, color: "var(--primary)", hl: true  },
             ].map(item => (
               <div key={item.label} style={{
-                background: item.hl ? "linear-gradient(135deg, #1FA89A, #27B9AF)" : surface,
+                background: item.hl ? "linear-gradient(135deg, var(--primary), var(--secondary))" : surface,
                 border: `1px solid ${item.hl ? "transparent" : border}`,
                 borderRadius: 12, padding: "16px 14px",
               }}>

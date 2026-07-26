@@ -95,14 +95,14 @@ const METHOD_TYPES = [
 const FRONTEND_PAYMENT_URL = `${(process.env.NEXT_PUBLIC_FRONTEND_URL || '').replace(/\/$/, '')}/pay`;
 
 const STATUS_CFG: Record<string, { label: string; color: string; bg: string }> = {
-  COMPLETED: { label: 'Completed', color: '#1FA89A', bg: 'rgba(31,168,154,0.12)' },
-  PAID: { label: 'Paid', color: '#1FA89A', bg: 'rgba(31,168,154,0.12)' },
-  SUCCESS: { label: 'Success', color: '#1FA89A', bg: 'rgba(31,168,154,0.12)' },
-  ACTIVE: { label: 'Active', color: '#1FA89A', bg: 'rgba(31,168,154,0.12)' },
-  PENDING: { label: 'Pending', color: '#F59E0B', bg: 'rgba(245,158,11,0.12)' },
-  FAILED: { label: 'Failed', color: '#EF4444', bg: 'rgba(239,68,68,0.12)' },
-  EXPIRED: { label: 'Expired', color: '#EF4444', bg: 'rgba(239,68,68,0.12)' },
-  INACTIVE: { label: 'Inactive', color: '#64748B', bg: 'rgba(100,116,139,0.12)' },
+  COMPLETED: { label: 'Completed', color: 'var(--primary)', bg: 'rgba(192,21,27,0.10)' },
+  PAID: { label: 'Paid', color: 'var(--primary)', bg: 'rgba(192,21,27,0.10)' },
+  SUCCESS: { label: 'Success', color: 'var(--primary)', bg: 'rgba(192,21,27,0.10)' },
+  ACTIVE: { label: 'Active', color: 'var(--primary)', bg: 'rgba(192,21,27,0.10)' },
+  PENDING: { label: 'Pending', color: 'var(--gold)', bg: 'rgba(246,176,30,0.12)' },
+  FAILED: { label: 'Failed', color: 'var(--danger)', bg: 'rgba(214,48,49,0.12)' },
+  EXPIRED: { label: 'Expired', color: 'var(--danger)', bg: 'rgba(214,48,49,0.12)' },
+  INACTIVE: { label: 'Inactive', color: 'var(--text-muted)', bg: 'rgba(83,83,87,0.12)' },
 };
 
 const fmtDate = (iso: string) => {
@@ -316,15 +316,15 @@ function WalletPaymentsContent() {
     border: variant === 'primary' ? 'none' : `1px solid ${variant === 'danger' ? 'rgba(248,113,113,0.22)' : T.border}`,
     background:
       variant === 'primary'
-        ? '#00D4AA'
+        ? 'var(--success)'
         : variant === 'danger'
-          ? 'rgba(248,113,113,0.1)'
+          ? 'rgba(214,48,49,0.10)'
           : T.surface,
     color:
       variant === 'primary'
-        ? '#04130F'
+        ? 'var(--text-white)'
         : variant === 'danger'
-          ? '#F87171'
+          ? 'var(--danger)'
           : T.text,
     fontSize: '0.78rem',
     fontWeight: 700,
@@ -693,8 +693,8 @@ function WalletPaymentsContent() {
                   padding: '0.75rem 1rem 1rem',
                   background: 'none',
                   border: 'none',
-                  borderBottom: activeTab === t.id ? '2px solid #00D4AA' : '2px solid transparent',
-                  color: activeTab === t.id ? '#00D4AA' : T.muted,
+                  borderBottom: activeTab === t.id ? '2px solid var(--success)' : '2px solid transparent',
+                  color: activeTab === t.id ? 'var(--success)' : T.muted,
                   fontWeight: activeTab === t.id ? 700 : 500,
                   cursor: 'pointer',
                   fontSize: '0.82rem',
@@ -739,26 +739,26 @@ function WalletPaymentsContent() {
               <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fit, minmax(220px, 1fr))', gap: isMobile ? '0.55rem' : '0.9rem', marginBottom: '1rem' }}>
                 {activeTab === 'transactions' && (
                   <>
-                    <OverviewCard compact={isMobile} title="Total Transactions" value={String(txData.length)} hint="Direct and linked payments" icon={<Wallet size={isMobile ? 14 : 16} color="#00D4AA" />} T={T} />
-                    <OverviewCard compact={isMobile} title="Pending Review" value={String(txStats.pendingCount)} hint="Waiting for completion" icon={<RefreshCw size={isMobile ? 14 : 16} color="#F59E0B" />} T={T} />
-                    <OverviewCard compact={isMobile} title="Linked Payments" value={String(txStats.linkedCount)} hint="Created from pay pages" icon={<Link2 size={isMobile ? 14 : 16} color="#818CF8" />} T={T} />
-                    <OverviewCard compact={isMobile} title="Recorded Volume" value={fmtMoney(txStats.totalAmount)} hint="Visible transaction amount" icon={<TrendingUp size={isMobile ? 14 : 16} color="#00D4AA" />} T={T} />
+                    <OverviewCard compact={isMobile} title="Total Transactions" value={String(txData.length)} hint="Direct and linked payments" icon={<Wallet size={isMobile ? 14 : 16} color="var(--success)" />} T={T} />
+                    <OverviewCard compact={isMobile} title="Pending Review" value={String(txStats.pendingCount)} hint="Waiting for completion" icon={<RefreshCw size={isMobile ? 14 : 16} color="var(--gold)" />} T={T} />
+                    <OverviewCard compact={isMobile} title="Linked Payments" value={String(txStats.linkedCount)} hint="Created from pay pages" icon={<Link2 size={isMobile ? 14 : 16} color="var(--secondary)" />} T={T} />
+                    <OverviewCard compact={isMobile} title="Recorded Volume" value={fmtMoney(txStats.totalAmount)} hint="Visible transaction amount" icon={<TrendingUp size={isMobile ? 14 : 16} color="var(--success)" />} T={T} />
                   </>
                 )}
                 {activeTab === 'links' && (
                   <>
-                    <OverviewCard compact={isMobile} title="Active Pages" value={String(linkStats.activeCount)} hint="Ready to receive payments" icon={<Link2 size={isMobile ? 14 : 16} color="#00D4AA" />} T={T} />
+                    <OverviewCard compact={isMobile} title="Active Pages" value={String(linkStats.activeCount)} hint="Ready to receive payments" icon={<Link2 size={isMobile ? 14 : 16} color="var(--success)" />} T={T} />
                     <OverviewCard compact={isMobile} title="Inactive Pages" value={String(linkStats.inactiveCount)} hint="Saved but unavailable" icon={<Settings size={isMobile ? 14 : 16} color={T.muted} />} T={T} />
-                    <OverviewCard compact={isMobile} title="Total Clicks" value={String(linkStats.totalClicks)} hint="Open events across all links" icon={<ExternalLink size={isMobile ? 14 : 16} color="#818CF8" />} T={T} />
-                    <OverviewCard compact={isMobile} title="Quick Action" value="Create Page" hint="Generate a customer payment page" icon={<Plus size={isMobile ? 14 : 16} color="#00D4AA" />} T={T} action={canManage ? <button onClick={() => openLinkModal()} style={actionButton('primary')}><Plus size={13} /> {isMobile ? 'New' : 'New page'}</button> : undefined} />
+                    <OverviewCard compact={isMobile} title="Total Clicks" value={String(linkStats.totalClicks)} hint="Open events across all links" icon={<ExternalLink size={isMobile ? 14 : 16} color="var(--secondary)" />} T={T} />
+                    <OverviewCard compact={isMobile} title="Quick Action" value="Create Page" hint="Generate a customer payment page" icon={<Plus size={isMobile ? 14 : 16} color="var(--success)" />} T={T} action={canManage ? <button onClick={() => openLinkModal()} style={actionButton('primary')}><Plus size={13} /> {isMobile ? 'New' : 'New page'}</button> : undefined} />
                   </>
                 )}
                 {activeTab === 'methods' && (
                   <>
-                    <OverviewCard compact={isMobile} title="Enabled Methods" value={String(methodStats.enabledMethods)} hint={`${payMethods.length} methods in total`} icon={<CreditCard size={isMobile ? 14 : 16} color="#00D4AA" />} T={T} />
-                    <OverviewCard compact={isMobile} title="Providers" value={String(methodStats.providerCount)} hint="Operator and bank setups" icon={<Building2 size={isMobile ? 14 : 16} color="#818CF8" />} T={T} />
-                    <OverviewCard compact={isMobile} title="Networks" value={String(methodStats.networkCount)} hint="Network options exposed at checkout" icon={<Smartphone size={isMobile ? 14 : 16} color="#F59E0B" />} T={T} />
-                    <OverviewCard compact={isMobile} title="Quick Action" value="Add Method" hint="Create a new checkout method" icon={<Plus size={isMobile ? 14 : 16} color="#00D4AA" />} T={T} action={canManage ? <button onClick={() => openMethodModal()} style={actionButton('primary')}><Plus size={13} /> {isMobile ? 'Add' : 'Add method'}</button> : undefined} />
+                    <OverviewCard compact={isMobile} title="Enabled Methods" value={String(methodStats.enabledMethods)} hint={`${payMethods.length} methods in total`} icon={<CreditCard size={isMobile ? 14 : 16} color="var(--success)" />} T={T} />
+                    <OverviewCard compact={isMobile} title="Providers" value={String(methodStats.providerCount)} hint="Operator and bank setups" icon={<Building2 size={isMobile ? 14 : 16} color="var(--secondary)" />} T={T} />
+                    <OverviewCard compact={isMobile} title="Networks" value={String(methodStats.networkCount)} hint="Network options exposed at checkout" icon={<Smartphone size={isMobile ? 14 : 16} color="var(--gold)" />} T={T} />
+                    <OverviewCard compact={isMobile} title="Quick Action" value="Add Method" hint="Create a new checkout method" icon={<Plus size={isMobile ? 14 : 16} color="var(--success)" />} T={T} action={canManage ? <button onClick={() => openMethodModal()} style={actionButton('primary')}><Plus size={13} /> {isMobile ? 'Add' : 'Add method'}</button> : undefined} />
                   </>
                 )}
               </div>
@@ -786,7 +786,7 @@ function WalletPaymentsContent() {
                             <div style={{ fontWeight: 900, color: T.text, fontSize: '0.9rem', flexShrink: 0 }}>{fmtMoney(t.amount, t.currency)}</div>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem' }}>
-                            <span style={pillStyle('#818CF8', 'rgba(129,140,248,0.1)')}>{t.method}</span>
+                            <span style={pillStyle('var(--secondary)', 'rgba(129,140,248,0.1)')}>{t.method}</span>
                             <span style={{ color: T.muted, fontSize: '0.72rem', whiteSpace: 'nowrap' }}>{fmtDate(t.date)} {fmtTime(t.date)}</span>
                           </div>
                           {t.linkName && <div style={{ fontSize: '0.72rem', color: T.muted }}>Via: {t.linkName}</div>}
@@ -831,7 +831,7 @@ function WalletPaymentsContent() {
                                 </td>
                                 <td style={{ ...tableCellMuted(T), whiteSpace: 'nowrap' }}>{fmtDate(t.date)}</td>
                                 <td style={tableCell(T)}>
-                                  <span style={pillStyle('#818CF8', 'rgba(129,140,248,0.1)')}>{t.method}</span>
+                                  <span style={pillStyle('var(--secondary)', 'rgba(129,140,248,0.1)')}>{t.method}</span>
                                 </td>
                                 <td style={{ ...tableCellStrong(T), whiteSpace: 'nowrap' }}>{fmtMoney(t.amount, t.currency)}</td>
                                 <td style={tableCell(T)}>
@@ -860,7 +860,7 @@ function WalletPaymentsContent() {
                     <div key={link.id} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: '14px', padding: '1.15rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem' }}>
                         <div style={{ display: 'flex', gap: '0.75rem', minWidth: 0 }}>
-                          <div style={{ background: 'rgba(0,212,170,0.1)', color: '#00D4AA', width: '40px', height: '40px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                          <div style={{ background: 'rgba(0,212,170,0.1)', color: 'var(--success)', width: '40px', height: '40px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                             <Link2 size={18} />
                           </div>
                           <div style={{ minWidth: 0 }}>
@@ -868,10 +868,10 @@ function WalletPaymentsContent() {
                             <div style={{ fontSize: '0.74rem', color: T.muted }}>{fmtDate(link.createdAt)}</div>
                           </div>
                         </div>
-                        <span style={pillStyle(STATUS_CFG[link.status]?.color || '#00D4AA', STATUS_CFG[link.status]?.bg || 'rgba(0,212,170,0.1)')}>{STATUS_CFG[link.status]?.label || link.currency}</span>
+                        <span style={pillStyle(STATUS_CFG[link.status]?.color || 'var(--success)', STATUS_CFG[link.status]?.bg || 'rgba(0,212,170,0.1)')}>{STATUS_CFG[link.status]?.label || link.currency}</span>
                       </div>
 
-                      <div style={{ fontSize: '1.15rem', fontWeight: 900, color: '#00D4AA' }}>{fmtMoney(link.amount, link.currency)}</div>
+                      <div style={{ fontSize: '1.15rem', fontWeight: 900, color: 'var(--success)' }}>{fmtMoney(link.amount, link.currency)}</div>
                       {link.note && <div style={{ color: T.muted, fontSize: '0.78rem', lineHeight: 1.5 }}>{link.note}</div>}
 
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '0.75rem', padding: '0.9rem', background: T.surface, borderRadius: '12px' }}>
@@ -931,21 +931,21 @@ function WalletPaymentsContent() {
 
                           <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: T.surface, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                             {method.type === 'mobile_wallet'
-                              ? <Smartphone size={20} color="#00D4AA" />
+                              ? <Smartphone size={20} color="var(--success)" />
                               : method.type === 'card'
-                                ? <CreditCard size={20} color="#3B82F6" />
+                                ? <CreditCard size={20} color="var(--link)" />
                                 : method.type === 'whatsapp'
-                                  ? <MessageCircle size={20} color="#22C55E" />
-                                  : <Building2 size={20} color="#818CF8" />}
+                                  ? <MessageCircle size={20} color="var(--success)" />
+                                  : <Building2 size={20} color="var(--secondary)" />}
                           </div>
 
                           <div style={{ minWidth: 0, flex: 1 }}>
                             <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center', flexWrap: 'wrap' }}>
                               <div style={{ fontSize: '1rem', fontWeight: 800, color: T.text }}>{method.name}</div>
-                              <span style={pillStyle(method.isEnabled ? '#00D4AA' : T.muted, method.isEnabled ? 'rgba(0,212,170,0.12)' : 'rgba(100,116,139,0.12)')}>
+                              <span style={pillStyle(method.isEnabled ? 'var(--success)' : T.muted, method.isEnabled ? 'rgba(0,212,170,0.12)' : 'rgba(83,83,87,0.12)')}>
                                 {method.isEnabled ? 'Enabled' : 'Disabled'}
                               </span>
-                              <span style={pillStyle('#818CF8', 'rgba(129,140,248,0.1)')}>
+                              <span style={pillStyle('var(--secondary)', 'rgba(129,140,248,0.1)')}>
                                 {METHOD_TYPES.find((item) => item.value === method.type)?.label || method.type}
                               </span>
                             </div>
@@ -981,7 +981,7 @@ function WalletPaymentsContent() {
                                 <div style={{ fontWeight: 800, color: T.text, fontSize: '0.9rem' }}>{provider.name}</div>
                                 {provider.description && <div style={{ fontSize: '0.76rem', color: T.muted, marginTop: '0.2rem', lineHeight: 1.45 }}>{provider.description}</div>}
                               </div>
-                              <span style={pillStyle(provider.isEnabled ? '#00D4AA' : T.muted, provider.isEnabled ? 'rgba(0,212,170,0.12)' : 'rgba(100,116,139,0.12)')}>
+                              <span style={pillStyle(provider.isEnabled ? 'var(--success)' : T.muted, provider.isEnabled ? 'rgba(0,212,170,0.12)' : 'rgba(83,83,87,0.12)')}>
                                 {provider.isEnabled ? 'Enabled' : 'Disabled'}
                               </span>
                             </div>
@@ -1000,7 +1000,7 @@ function WalletPaymentsContent() {
                               <div style={{ display: 'flex', gap: '0.45rem', flexWrap: 'wrap' }}>
                                 {provider.networks.map((network) => (
                                   <div key={network.id} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', padding: '0.35rem 0.55rem', borderRadius: '999px', border: `1px solid ${network.isEnabled ? 'rgba(0,212,170,0.22)' : T.border}`, background: network.isEnabled ? 'rgba(0,212,170,0.08)' : T.card }}>
-                                    <span style={{ fontSize: '0.72rem', fontWeight: 700, color: network.isEnabled ? '#00D4AA' : T.text }}>{network.name}</span>
+                                    <span style={{ fontSize: '0.72rem', fontWeight: 700, color: network.isEnabled ? 'var(--success)' : T.text }}>{network.name}</span>
                                     {canManage && (
                                       <>
                                         <button onClick={() => handleToggleNetwork(network, !network.isEnabled)} style={chipIconButton(T)}>
@@ -1074,9 +1074,9 @@ function WalletPaymentsContent() {
               <div style={{ flex: 1, overflowY: 'auto', padding: '1.3rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 <div style={{ background: T.surface, borderRadius: '14px', padding: '1.35rem', textAlign: 'center' }}>
                   <div style={{ fontSize: '0.7rem', color: T.muted, textTransform: 'uppercase', fontWeight: 800, letterSpacing: '0.1em', marginBottom: '0.45rem' }}>Amount Received</div>
-                  <div style={{ fontSize: '2rem', fontWeight: 900, color: '#00D4AA' }}>{fmtMoney(detail.amount, detail.currency)}</div>
+                  <div style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--success)' }}>{fmtMoney(detail.amount, detail.currency)}</div>
                   <div style={{ marginTop: '0.75rem' }}>
-                    <span style={pillStyle(STATUS_CFG[detail.status?.toUpperCase()]?.color || T.muted, STATUS_CFG[detail.status?.toUpperCase()]?.bg || 'rgba(100,116,139,0.12)')}>
+                    <span style={pillStyle(STATUS_CFG[detail.status?.toUpperCase()]?.color || T.muted, STATUS_CFG[detail.status?.toUpperCase()]?.bg || 'rgba(83,83,87,0.12)')}>
                       {STATUS_CFG[detail.status?.toUpperCase()]?.label || detail.status}
                     </span>
                   </div>
@@ -1359,7 +1359,7 @@ function chipDangerButton() {
     borderRadius: '999px',
     border: '1px solid rgba(248,113,113,0.22)',
     background: 'rgba(248,113,113,0.08)',
-    color: '#F87171',
+    color: 'var(--danger)',
     cursor: 'pointer',
     display: 'inline-flex',
     alignItems: 'center',
@@ -1486,7 +1486,7 @@ function ToggleField({
       </div>
       <button
         onClick={() => onChange(!checked)}
-        style={{ width: '42px', height: '24px', borderRadius: '999px', border: 'none', background: checked ? '#00D4AA' : T.border, position: 'relative', cursor: 'pointer', flexShrink: 0 }}
+        style={{ width: '42px', height: '24px', borderRadius: '999px', border: 'none', background: checked ? 'var(--success)' : T.border, position: 'relative', cursor: 'pointer', flexShrink: 0 }}
       >
         <span style={{ position: 'absolute', top: '3px', left: checked ? '21px' : '3px', width: '18px', height: '18px', borderRadius: '50%', background: '#fff', transition: 'left 0.2s' }} />
       </button>
@@ -1516,8 +1516,8 @@ function modalButton(T: Record<string, string>, variant: 'primary' | 'default') 
     padding: '0.75rem 1rem',
     borderRadius: '10px',
     border: variant === 'primary' ? 'none' : `1px solid ${T.border}`,
-    background: variant === 'primary' ? '#00D4AA' : T.surface,
-    color: variant === 'primary' ? '#04130F' : T.text,
+    background: variant === 'primary' ? 'var(--success)' : T.surface,
+    color: variant === 'primary' ? 'var(--text-white)' : T.text,
     fontWeight: 800,
     cursor: 'pointer',
     whiteSpace: 'nowrap' as const,

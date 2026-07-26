@@ -1,6 +1,5 @@
 'use client';
 import { useState } from 'react';
-import { useTheme } from '@/contexts/theme-context';
 import { Search, ChevronLeft, ChevronRight, Edit, Trash2, Eye } from 'lucide-react';
 
 export interface Column {
@@ -42,15 +41,12 @@ interface DataTableProps {
 export default function DataTable({
   columns, data, searchPlaceholder = 'Search...', onEdit, onDelete, onView, pageSize = 10, filterNode, actionNode
 }: DataTableProps) {
-  const { theme } = useTheme();
-  const isDark = theme === 'dark';
-  // Use CSS variables — always in sync with globals.css (dark/light handled by .dark class)
   const card    = 'var(--card)';
   const border  = 'var(--border)';
   const textMain  = 'var(--text-main)';
   const textMuted = 'var(--text-muted)';
   const surface = 'var(--surface)';
-  const rowHover = isDark ? 'rgba(255,255,255,0.03)' : 'rgba(31,168,154,0.04)';
+  const rowHover = 'rgba(192,21,27,0.04)';
 
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
@@ -115,9 +111,9 @@ export default function DataTable({
                 {hasActions && (
                   <td style={{ padding: '12px 16px', textAlign: 'right' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '4px' }}>
-                      {onView && <ActionBtn icon={Eye} color="#6366f1" onClick={() => onView(row)} />}
-                      {onEdit && <ActionBtn icon={Edit} color="#1FA89A" onClick={() => onEdit(row)} />}
-                      {onDelete && <ActionBtn icon={Trash2} color="#ef4444" onClick={() => onDelete(row)} />}
+                      {onView && <ActionBtn icon={Eye} color="var(--secondary)" onClick={() => onView(row)} />}
+                      {onEdit && <ActionBtn icon={Edit} color="var(--btn-primary)" onClick={() => onEdit(row)} />}
+                      {onDelete && <ActionBtn icon={Trash2} color="var(--danger)" onClick={() => onDelete(row)} />}
                     </div>
                   </td>
                 )}
@@ -138,9 +134,9 @@ export default function DataTable({
               return (
                 <button key={p} onClick={() => setPage(p)} style={{
                   width: '32px', height: '32px', borderRadius: '7px',
-                  background: p === page ? '#1FA89A' : surface,
+                  background: p === page ? 'var(--btn-primary)' : surface,
                   border: `1px solid ${p === page ? 'transparent' : border}`,
-                  color: p === page ? 'white' : textMain,
+                  color: p === page ? 'var(--text-white)' : textMain,
                   fontSize: '13px', fontWeight: p === page ? 600 : 400, cursor: 'pointer',
                   fontFamily: 'var(--font-inter)',
                 }}>{p}</button>
