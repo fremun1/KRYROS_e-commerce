@@ -5,7 +5,6 @@ import DataTable, { Column } from '@/components/admin/data-table';
 import PageHeader from '@/components/admin/page-header';
 import { Modal, ConfirmDialog, FormField, ModalFooter } from '@/components/admin/modal';
 import CloudinaryUpload from '@/components/ui/file-upload';
-import { useTheme } from '@/contexts/theme-context';
 import { Award } from 'lucide-react';
 import { createBrand, updateBrand, deleteBrand, getBrands } from '@/lib/api';
 import toast from 'react-hot-toast';
@@ -19,13 +18,11 @@ const EMPTY_FORM = { name: '', slug: '', country: '', status: 'Active', website:
 const toSlug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 
 export default function BrandsPage() {
-  const { theme } = useTheme();
-  const isDark   = theme === 'dark';
-  const bg       = isDark ? '#070E1A' : '#F8FAFC';
-  const surface  = isDark ? '#101826' : '#F1F5F9';
-  const border   = isDark ? '#1E293B' : '#E2E8F0';
-  const textMain = isDark ? '#FFFFFF' : '#0F172A';
-  const textMuted= isDark ? '#8E9AAF' : '#64748B';
+  const bg       = 'var(--bg)';
+  const surface  = 'var(--surface)';
+  const border   = 'var(--border)';
+  const textMain = 'var(--text-main)';
+  const textMuted= 'var(--text-muted)';
   const accent   = '#1FA89A';
 
   const [brands,    setBrands]   = useState<Brand[]>([]);
@@ -102,7 +99,7 @@ export default function BrandsPage() {
       const r = row as any;
       return (
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{ width: '32px', height: '32px', background: isDark ? '#1e2a35' : '#f0f9ff', border: `1px solid ${border}`, borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <div style={{ width: '32px', height: '32px', background: surface, border: `1px solid ${border}`, borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <Award size={14} color={accent} />
           </div>
           <div>
@@ -115,7 +112,7 @@ export default function BrandsPage() {
     { key: 'logo', label: 'Logo', render: (v, row) => {
       const r = row as Brand;
       return r.logo ? (
-        <div style={{ width: '56px', height: '36px', borderRadius: '8px', border: `1px solid ${border}`, background: isDark ? '#0f172a' : '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '4px' }}>
+        <div style={{ width: '56px', height: '36px', borderRadius: '8px', border: `1px solid ${border}`, background: 'var(--card)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '4px' }}>
           <img
             src={r.logo}
             alt={`${r.name} logo`}
@@ -127,15 +124,15 @@ export default function BrandsPage() {
       );
     }},
     { key: 'products', label: 'Products', render: (v) => (
-      <span style={{ background: isDark ? '#1e2a35' : '#f0f9ff', color: accent, fontWeight: 700, fontSize: '12px', padding: '2px 10px', borderRadius: '20px' }}>{String(v ?? 0)}</span>
+      <span style={{ background: surface, color: accent, fontWeight: 700, fontSize: '12px', padding: '2px 10px', borderRadius: '20px' }}>{String(v ?? 0)}</span>
     )},
     { key: 'country', label: 'Country', render: (v) => <span style={{ color: textMuted, fontSize: '12px' }}>{String(v || '—')}</span> },
     { key: 'status', label: 'Status', render: (v) => {
       const active = v === 'Active';
-      return <span style={{ background: active ? (isDark ? '#0d2e1a' : '#dcfce7') : (isDark ? '#2e1515' : '#fee2e2'), color: active ? '#16a34a' : '#dc2626', fontWeight: 600, fontSize: '11px', padding: '2px 10px', borderRadius: '20px' }}>{String(v)}</span>;
+      return <span style={{ background: active ? 'rgba(22,163,74,0.15)' : 'rgba(220,38,38,0.15)', color: active ? '#16a34a' : '#dc2626', fontWeight: 600, fontSize: '11px', padding: '2px 10px', borderRadius: '20px' }}>{String(v)}</span>;
     }},
     { key: 'slug', label: 'Shop Anchor', render: (v) => (
-      <span style={{ fontFamily: 'monospace', fontSize: '11px', color: accent, background: isDark ? '#0d1a2e' : '#eff6ff', padding: '2px 8px', borderRadius: '6px' }}>#{String(v)}</span>
+      <span style={{ fontFamily: 'monospace', fontSize: '11px', color: accent, background: surface, padding: '2px 8px', borderRadius: '6px' }}>#{String(v)}</span>
     )},
   ];
 
@@ -158,9 +155,9 @@ export default function BrandsPage() {
         />
 
         <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editRow ? 'Edit Brand' : 'Add Brand'}>
-          <FormField label="Brand Name *" value={form.name} onChange={(v) => f('name', v)} placeholder="e.g. Samsung" isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+          <FormField label="Brand Name *" value={form.name} onChange={(v) => f('name', v)} placeholder="e.g. Samsung" border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
           <div style={{ marginBottom: '14px' }}>
-            <FormField label="Shop Scroll Anchor" value={form.slug} onChange={(v) => f('slug', v)} placeholder="e.g. samsung" isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="Shop Scroll Anchor" value={form.slug} onChange={(v) => f('slug', v)} placeholder="e.g. samsung" border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
             <p style={{ fontSize: '11px', color: textMuted, marginTop: '4px', marginBottom: 0 }}>Auto-generated from name — scrolls to this brand section in the shop.</p>
           </div>
           <div style={{ marginBottom: '14px' }}>
@@ -170,16 +167,16 @@ export default function BrandsPage() {
               onChange={(url) => setForm(p => ({ ...p, logo: url }))}
               folder="kryros/brands"
               accept="image/*"
-              isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
+              isDark={false} border={border} textMain={textMain} textMuted={textMuted} surface={surface}
             />
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-            <FormField label="Country" value={form.country} onChange={(v) => f('country', v)} placeholder="e.g. South Korea" isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-            <FormField label="Status" type="select" value={form.status} onChange={(v) => f('status', v)} options={['Active', 'Inactive']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="Country" value={form.country} onChange={(v) => f('country', v)} placeholder="e.g. South Korea" border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="Status" type="select" value={form.status} onChange={(v) => f('status', v)} options={['Active', 'Inactive']} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
           </div>
-          <FormField label="Website" value={form.website} onChange={(v) => f('website', v)} placeholder="https://samsung.com" isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-          <FormField label="Description" type="textarea" value={form.description} onChange={(v) => f('description', v)} placeholder="Short description of this brand" isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-          <ModalFooter onClose={() => setModalOpen(false)} onSubmit={handleSave} loading={saving} submitLabel={editRow ? 'Save Changes' : 'Add Brand'} isDark={isDark} border={border} textMain={textMain} />
+          <FormField label="Website" value={form.website} onChange={(v) => f('website', v)} placeholder="https://samsung.com" border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+          <FormField label="Description" type="textarea" value={form.description} onChange={(v) => f('description', v)} placeholder="Short description of this brand" border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+          <ModalFooter onClose={() => setModalOpen(false)} onSubmit={handleSave} loading={saving} submitLabel={editRow ? 'Save Changes' : 'Add Brand'} border={border} textMain={textMain} />
         </Modal>
 
         <ConfirmDialog open={!!deleteRow} onClose={() => setDeleteRow(null)} onConfirm={handleDelete} loading={deleting} title="Delete Brand" message={deleteRow ? `Delete "${deleteRow.name}" permanently?` : 'Delete this brand?'} />
