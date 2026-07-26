@@ -65,6 +65,7 @@
   /* RGB versions for opacity use */
   --kryros-primary-rgb: 192, 21, 27;
   --kryros-secondary-rgb: 52, 74, 100;
+  --kryros-header-navy: #001529;
 
   /* BUTTON HOVER / ACTIVE STATES */
   --kryros-primary-active: #8A0F13;

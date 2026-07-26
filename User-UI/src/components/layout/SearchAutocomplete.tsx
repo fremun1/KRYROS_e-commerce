@@ -103,7 +103,7 @@ export default function SearchAutocomplete({
     <div ref={containerRef} className={`relative flex-1 ${wrapperClassName}`}>
       <form
         onSubmit={handleSubmit}
-        className="flex items-center bg-muted rounded-xl border border-border overflow-hidden"
+        className="flex items-center bg-white rounded-xl border border-white/20 overflow-hidden"
       >
         <Search className="w-4 h-4 ml-3 text-muted-foreground flex-shrink-0" />
         <input
@@ -123,7 +123,7 @@ export default function SearchAutocomplete({
           }}
           onKeyDown={handleKeyDown}
           autoComplete="off"
-          className={`flex-1 px-3 py-2.5 bg-transparent text-sm outline-none ${inputClassName}`}
+          className={`flex-1 px-3 py-2.5 bg-transparent text-sm outline-none text-black ${inputClassName}`}
           data-testid="header-search-input"
         />
         {loading && (
@@ -133,7 +133,7 @@ export default function SearchAutocomplete({
         {showSearchButton && (
           <button
             type="submit"
-            className="px-4 py-2.5 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors text-sm font-medium"
+            className="px-4 py-2.5 bg-[#C0151B] text-white hover:bg-[#A01015] transition-colors text-sm font-medium"
           >
             <Search className="w-4 h-4" />
           </button>

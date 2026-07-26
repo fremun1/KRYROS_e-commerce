@@ -80,7 +80,7 @@ export default function AnnouncementBar({
 
   return (
     <div
-      className="bg-background text-foreground text-[10px] md:text-xs border-b border-border"
+      className="bg-white text-[#333333] text-[10px] md:text-xs border-b border-border"
       style={{
         ...(config?.bgColor ? { backgroundColor: config.bgColor } : {}),
         ...(config?.textColor ? { color: config.textColor } : {}),

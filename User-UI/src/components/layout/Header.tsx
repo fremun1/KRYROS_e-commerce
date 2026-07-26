@@ -110,14 +110,14 @@ export default function Header() {
       <div ref={headerRef} className="fixed top-0 left-0 right-0 z-40">
         <AnnouncementBar />
 
-        <header className="bg-background/95 backdrop-blur-xl border-b border-border shadow-sm">
+        <header className="bg-[var(--kryros-header-navy)] border-b border-white/10 shadow-sm">
           {/* Main header row — lg: max-width centered so content doesn't stretch on ultrawide */}
         <div className="flex items-center gap-2 px-3 md:px-6 h-[52px] md:h-[68px] lg:max-w-screen-xl lg:mx-auto lg:px-8">
           {/* Hamburger */}
           <button
             data-testid="header-menu-btn"
             onClick={() => setSidebarOpen(true)}
-            className="p-1.5 md:p-2 rounded-xl hover:bg-muted transition-colors flex-shrink-0 md:hidden"
+            className="p-1.5 md:p-2 rounded-xl hover:bg-white/10 transition-colors flex-shrink-0 md:hidden text-white"
           >
             <Menu className="w-5 h-5" />
           </button>
@@ -132,7 +132,7 @@ export default function Header() {
                 loading="eager"
                 decoding="async"
               />
-              <span className="text-xl md:text-2xl font-black text-foreground tracking-tight uppercase">KRYROS</span>
+              <span className="text-xl md:text-2xl font-black text-white tracking-tight uppercase">KRYROS</span>
             </span>
           </Link>
 
@@ -200,7 +200,7 @@ export default function Header() {
             <div className="relative">
               <button
                 onClick={() => { setCurrencyOpen(!currencyOpen); setUserMenuOpen(false); }}
-                className="flex items-center gap-1 px-2 py-2 rounded-xl hover:bg-muted transition-colors text-sm text-muted-foreground"
+                className="flex items-center gap-1 px-2 py-2 rounded-xl hover:bg-white/10 transition-colors text-sm text-white/80"
               >
                 <span>{selected.flag} {selected.code}</span>
                 <ChevronDown className="w-3 h-3" />
@@ -225,7 +225,7 @@ export default function Header() {
               )}
             </div>
 
-            <button className="flex items-center gap-1 px-2 py-2 rounded-xl hover:bg-muted transition-colors text-sm text-muted-foreground">
+            <button className="flex items-center gap-1 px-2 py-2 rounded-xl hover:bg-white/10 transition-colors text-sm text-white/80">
               <Globe className="w-4 h-4" /><span>EN</span><ChevronDown className="w-3 h-3" />
             </button>
 
@@ -235,12 +235,12 @@ export default function Header() {
                 <>
                   <button
                     onClick={() => { setUserMenuOpen(!userMenuOpen); setCurrencyOpen(false); }}
-                    className="flex items-center gap-1.5 p-2 rounded-xl hover:bg-muted transition-colors"
+                    className="flex items-center gap-1.5 p-2 rounded-xl hover:bg-white/10 transition-colors"
                   >
                     <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-[10px] font-black">
                       {user.firstName?.[0]?.toUpperCase() ?? "U"}
                     </div>
-                    <ChevronDown className="w-3 h-3 text-muted-foreground" />
+                    <ChevronDown className="w-3 h-3 text-white/60" />
                   </button>
                   {userMenuOpen && (
                     <>
@@ -269,7 +269,7 @@ export default function Header() {
                 </>
               ) : (
                 <Link href="/login">
-                  <button className="p-2 rounded-xl hover:bg-muted transition-colors">
+                  <button className="p-2 rounded-xl hover:bg-white/10 transition-colors text-white">
                     <User className="w-5 h-5" />
                   </button>
                 </Link>
@@ -277,7 +277,7 @@ export default function Header() {
             </div>
 
             <Link href="/wishlist">
-              <button className="relative p-2 rounded-xl hover:bg-muted transition-colors">
+              <button className="relative p-2 rounded-xl hover:bg-white/10 transition-colors text-white">
                 <Heart className="w-5 h-5" />
                 {wishlist.length > 0 && (
                   <span className="absolute -top-0.5 -right-0.5 bg-primary text-primary-foreground text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
@@ -287,7 +287,7 @@ export default function Header() {
               </button>
             </Link>
             <Link href="/cart">
-              <button className="relative p-2 rounded-xl hover:bg-muted transition-colors" data-testid="cart-icon">
+              <button className="relative p-2 rounded-xl hover:bg-white/10 transition-colors text-white" data-testid="cart-icon">
                 <ShoppingBag className="w-5 h-5" />
                 {cartCount > 0 && (
                   <span className="absolute -top-0.5 -right-0.5 bg-primary text-primary-foreground text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
@@ -302,7 +302,7 @@ export default function Header() {
           <div className="flex md:hidden items-center gap-0.5">
             {isLoggedIn ? (
               <Link href="/dashboard">
-                <button className="p-1.5 rounded-xl hover:bg-muted transition-colors">
+                <button className="p-1.5 rounded-xl hover:bg-white/10 transition-colors">
                   <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center text-white text-[10px] font-black">
                     {user.firstName?.[0]?.toUpperCase() ?? "U"}
                   </div>
@@ -310,11 +310,11 @@ export default function Header() {
               </Link>
             ) : (
               <Link href="/login">
-                <button className="p-1.5 rounded-xl hover:bg-muted transition-colors"><User className="w-5 h-5" /></button>
+                <button className="p-1.5 rounded-xl hover:bg-white/10 transition-colors text-white"><User className="w-5 h-5" /></button>
               </Link>
             )}
             <Link href="/wishlist">
-              <button className="relative p-1.5 rounded-xl hover:bg-muted transition-colors">
+              <button className="relative p-1.5 rounded-xl hover:bg-white/10 transition-colors text-white">
                 <Heart className="w-5 h-5" />
                 {wishlist.length > 0 && (
                   <span className="absolute -top-0.5 -right-0.5 bg-primary text-primary-foreground text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
@@ -324,7 +324,7 @@ export default function Header() {
               </button>
             </Link>
             <Link href="/cart">
-              <button className="relative p-1.5 rounded-xl hover:bg-muted transition-colors">
+              <button className="relative p-1.5 rounded-xl hover:bg-white/10 transition-colors text-white">
                 <ShoppingBag className="w-5 h-5" />
                 {cartCount > 0 && (
                   <span className="absolute -top-0.5 -right-0.5 bg-primary text-primary-foreground text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
@@ -337,7 +337,7 @@ export default function Header() {
         </div>
 
         {/* Mobile: Always-visible search bar */}
-        <div className="md:hidden px-3 pb-2.5">
+        <div className="md:hidden px-3 pb-2.5 bg-[var(--kryros-header-navy)] border-b border-white/10">
           <SearchAutocomplete
             placeholder="Search for products, brands and more..."
             rightSlot={
@@ -349,18 +349,18 @@ export default function Header() {
         </div>
 
         {/* Desktop: Sub nav — lg: extra px so nav links sit inside max-width area */}
-        <div className="hidden md:flex items-center gap-1 px-6 py-1.5 border-t border-border/50 bg-muted/30 lg:px-8 xl:px-14">
+        <div className="hidden md:flex items-center gap-1 px-6 py-1.5 border-t border-[#E5E5E5] bg-[#F5F5F5] lg:px-8 xl:px-14">
           {desktopNav.map(({ label, href }) => {
             const isActive = location === href || (href !== "/" && location.startsWith(href));
             return (
               <Link key={href} href={href}>
-                <button className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${isActive ? "bg-primary text-white" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>
+                <button className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${isActive ? "bg-[#C0151B] text-white" : "text-[#333333] hover:text-[#C0151B] hover:bg-white"}`}>
                   {label}
                 </button>
               </Link>
             );
           })}
-          <span className="ml-auto px-3 py-1.5 rounded-lg text-sm font-semibold text-primary bg-primary/10 cursor-pointer hover:bg-primary/20 transition-colors">
+          <span className="ml-auto px-3 py-1.5 rounded-lg text-sm font-semibold text-white bg-[#C0151B] cursor-pointer hover:bg-[#A01015] transition-colors">
             Hot Deals
           </span>
         </div>
@@ -368,7 +368,7 @@ export default function Header() {
       </div>
 
       {/* Spacer: keeps content below the fixed header */}
-      <div style={{ height: headerHeight }} />
+      <div style={{ height: headerHeight }} className="bg-background" />
     </>
   );
 }
