@@ -169,7 +169,7 @@ export default function UnifiedProductCard({
 
           {/* 2. Condition badge */}
           {!!product.condition && !product.isWholesaleOnly && (
-            <span className="text-[9px] md:text-[10px] font-semibold tracking-[0.01em] text-foreground/90 bg-secondary/75 px-2 md:px-2.5 py-1 rounded-full whitespace-nowrap flex-shrink-0 border border-border/80">
+            <span className="text-[9px] md:text-[10px] font-bold tracking-[0.01em] text-white bg-[#C0151B] px-2.5 md:px-3 py-1 rounded-full whitespace-nowrap flex-shrink-0 shadow-sm">
               {product.condition}
             </span>
           )}
