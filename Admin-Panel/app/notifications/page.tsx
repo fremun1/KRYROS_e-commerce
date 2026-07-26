@@ -19,15 +19,6 @@ type NLSubscriber   = { id: string; email: string; isActive: boolean; createdAt:
 type SmsCountry     = { id: string; name: string; dialCode: string; isoCode: string; isActive: boolean; createdAt: string };
 type EmailContact   = { id: string; email: string; name?: string; source: string; isActive: boolean; createdAt: string };
 
-// ─── Shared theme hook ───────────────────────────────────────────────────────
-function NotificationsContent() {
-  const card = 'var(--card)';
-  const border = 'var(--border)';
-  const textMain = 'var(--text-main)';
-  const textMuted = 'var(--text-muted)';
-  const surface = 'var(--surface)';
-  const primary = '#1FA89A';
-
 // ─── Push Tab ────────────────────────────────────────────────────────────────
 function PushContent() {
   const card = 'var(--card)';
