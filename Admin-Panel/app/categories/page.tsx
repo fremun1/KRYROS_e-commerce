@@ -4,7 +4,6 @@ import AdminShell from '@/components/admin/admin-shell';
 import DataTable, { Column } from '@/components/admin/data-table';
 import PageHeader from '@/components/admin/page-header';
 import { Modal, ConfirmDialog, FormField, ModalFooter } from '@/components/admin/modal';
-import { useTheme } from '@/contexts/theme-context';
 import { Tag } from 'lucide-react';
 import { createCategory, updateCategory, deleteCategory, getCategories } from '@/lib/api';
 import toast from 'react-hot-toast';
@@ -23,11 +22,9 @@ const EMPTY_FORM = { name: '', slug: '', parent: '-', status: 'Active', descript
 function toSlug(s: string) { return s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''); }
 
 function CategoriesContent() {
-  const { theme } = useTheme();
-  const isDark = theme === 'dark';
-  const card = isDark ? '#0D1523' : '#FFFFFF'; const border = isDark ? '#1E293B' : '#E2E8F0';
-  const textMain = isDark ? '#FFFFFF' : '#0F172A'; const textMuted = isDark ? '#8E9AAF' : '#64748B';
-  const surface = isDark ? '#101826' : '#F1F5F9';
+  const card = 'var(--card)'; const border = 'var(--border)';
+  const textMain = 'var(--text-main)'; const textMuted = 'var(--text-muted)';
+  const surface = 'var(--surface)';
 
   const [data, setData] = useState<Category[]>([]);
   useEffect(() => {
@@ -142,10 +139,10 @@ function CategoriesContent() {
 
   const formFields = (
     <>
-      <FormField label="Category Name *" value={form.name} onChange={fp('name')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. Electronics" />
-      <FormField label="Slug (auto-generated)" value={form.slug} onChange={fp('slug')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="auto-generated" />
-      <FormField label="Description" value={form.description} onChange={fp('description')} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Brief description of this category..." type="textarea" />
-      <FormField label="Parent Category" value={form.parent} onChange={fp('parent')} options={PARENT_OPTIONS} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+      <FormField label="Category Name *" value={form.name} onChange={fp('name')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. Electronics" />
+      <FormField label="Slug (auto-generated)" value={form.slug} onChange={fp('slug')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="auto-generated" />
+      <FormField label="Description" value={form.description} onChange={fp('description')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Brief description of this category..." type="textarea" />
+      <FormField label="Parent Category" value={form.parent} onChange={fp('parent')} options={PARENT_OPTIONS} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
       <div style={{marginBottom:'10px'}}>
         <div style={{fontSize:'12px',color:textMuted,fontWeight:500,marginBottom:'6px'}}>Category Image</div>
         <CloudinaryUpload
@@ -153,15 +150,14 @@ function CategoriesContent() {
           onChange={(url) => fp('imageUrl')(url)}
           accept="image/*"
           folder="kryros/categories"
-          isDark={isDark}
-          border={border}
+                   border={border}
           surface={surface}
           textMuted={textMuted}
           textMain={textMain}
         />
       </div>
-      <FormField label="Show on Homepage" value={form.showOnHome} onChange={fp('showOnHome')} options={['Yes', 'No']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-      <FormField label="Status" value={form.status} onChange={fp('status')} options={['Active', 'Inactive']} isDark={isDark} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+      <FormField label="Show on Homepage" value={form.showOnHome} onChange={fp('showOnHome')} options={['Yes', 'No']} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+      <FormField label="Status" value={form.status} onChange={fp('status')} options={['Active', 'Inactive']} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
     </>
   );
 
@@ -172,12 +168,12 @@ function CategoriesContent() {
 
       <Modal open={addOpen} onClose={() => setAddOpen(false)} title="Add New Category">
         {formFields}
-        <ModalFooter onClose={() => setAddOpen(false)} onSubmit={handleAdd} loading={loading} submitLabel="Add Category" isDark={isDark} border={border} textMain={textMain} />
+        <ModalFooter onClose={() => setAddOpen(false)} onSubmit={handleAdd} loading={loading} submitLabel="Add Category" border={border} textMain={textMain} />
       </Modal>
 
       <Modal open={!!editRow} onClose={() => setEditRow(null)} title={`Edit Category: ${editRow?.name ?? ''}`}>
         {formFields}
-        <ModalFooter onClose={() => setEditRow(null)} onSubmit={handleEdit} loading={loading} submitLabel="Save Changes" isDark={isDark} border={border} textMain={textMain} />
+        <ModalFooter onClose={() => setEditRow(null)} onSubmit={handleEdit} loading={loading} submitLabel="Save Changes" border={border} textMain={textMain} />
       </Modal>
 
       <ConfirmDialog open={!!deleteRow} onClose={() => setDeleteRow(null)} onConfirm={handleDelete} loading={loading} title="Delete Category" message={`Delete "${deleteRow?.name}" permanently?`} />
