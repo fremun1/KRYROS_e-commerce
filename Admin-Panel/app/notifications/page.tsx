@@ -1,8 +1,8 @@
 'use client';
 import AdminShell from '@/components/admin/admin-shell';
 import PageHeader from '@/components/admin/page-header';
-import { Bell, Send, Globe, Smartphone, Mail, Users, CheckCircle2, Loader2, Plus, Trash2, MessageSquare, X } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { Bell, Send, Globe, Smartphone, Mail, Users, CheckCircle2, Loader2, Plus, Trash2, MessageSquare, X, Link, Image as ImageIcon, ExternalLink } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
 import {
   getNotifications, getNewsletterSubscribers, sendNewsletterEmail,
@@ -19,6 +19,24 @@ type NLSubscriber   = { id: string; email: string; isActive: boolean; createdAt:
 type SmsCountry     = { id: string; name: string; dialCode: string; isoCode: string; isActive: boolean; createdAt: string };
 type EmailContact   = { id: string; email: string; name?: string; source: string; isActive: boolean; createdAt: string };
 
+// ─── Cloudinary Banner Upload helper ────────────────────────────────────────
+async function uploadBannerToCloudinary(file: File): Promise<string> {
+  const folder = 'kryros/notifications';
+  const sigRes = await fetch(`/api/bff/cloudinary-sign?folder=${encodeURIComponent(folder)}`);
+  if (!sigRes.ok) throw new Error('Could not get upload signature');
+  const { signature, timestamp, cloudName, apiKey, folder: signedFolder } = await sigRes.json();
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('api_key', apiKey);
+  formData.append('timestamp', String(timestamp));
+  formData.append('signature', signature);
+  formData.append('folder', signedFolder);
+  const uploadRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, { method: 'POST', body: formData });
+  if (!uploadRes.ok) throw new Error('Cloudinary upload failed');
+  const result = await uploadRes.json();
+  return result.secure_url as string;
+}
+
 // ─── Push Tab ────────────────────────────────────────────────────────────────
 function PushContent() {
   const card = 'var(--card)';
@@ -33,8 +51,29 @@ function PushContent() {
   const [selectAll, setSelectAll] = useState(false);
   const [pushTitle, setPushTitle] = useState('');
   const [pushMessage, setPushMessage] = useState('');
+  const [pushUrl, setPushUrl] = useState('');
+  const [pushImageUrl, setPushImageUrl] = useState('');
+  const [uploadingBanner, setUploadingBanner] = useState(false);
   const [sending, setSending] = useState(false);
   const [search, setSearch] = useState('');
+  const bannerInputRef = useRef<HTMLInputElement>(null);
+
+  const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { toast.error('Please select an image file'); return; }
+    setUploadingBanner(true);
+    try {
+      const url = await uploadBannerToCloudinary(file);
+      setPushImageUrl(url);
+      toast.success('Banner uploaded successfully');
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to upload banner');
+    } finally {
+      setUploadingBanner(false);
+      if (bannerInputRef.current) bannerInputRef.current.value = '';
+    }
+  };
 
   const loadDevices = () => {
     setLoading(true);
@@ -79,16 +118,20 @@ function PushContent() {
     if (!pushTitle.trim() || !pushMessage.trim()) { toast.error('Title and message are required'); return; }
     setSending(true);
     try {
+      const extras: Record<string, string> = {};
+      if (pushUrl.trim()) extras.url = pushUrl.trim();
+      if (pushImageUrl.trim()) extras.imageUrl = pushImageUrl.trim();
+
       if (selected.length > 0) {
         // Send to specific selected devices
-        await sendToDevices({ deviceIds: selected, title: pushTitle.trim(), body: pushMessage.trim() });
+        await sendToDevices({ deviceIds: selected, title: pushTitle.trim(), body: pushMessage.trim(), ...extras });
         toast.success(`Push sent to ${selected.length} device${selected.length > 1 ? 's' : ''}`);
       } else {
         // Broadcast to all
-        await api.post('/api/notifications/broadcast', { title: pushTitle.trim(), body: pushMessage.trim() });
+        await api.post('/api/notifications/broadcast', { title: pushTitle.trim(), body: pushMessage.trim(), ...extras });
         toast.success(`Push broadcast to all ${devices.length} devices`);
       }
-      setPushTitle(''); setPushMessage(''); setSelected([]); setSelectAll(false);
+      setPushTitle(''); setPushMessage(''); setPushUrl(''); setPushImageUrl(''); setSelected([]); setSelectAll(false);
     } catch {
       toast.error('Failed to send push notification');
     }
@@ -190,7 +233,59 @@ function PushContent() {
             {/* Message */}
             <div>
               <label style={{ fontSize: 11, fontWeight: 600, color: textMuted, display: 'block', marginBottom: 5 }}>Message *</label>
-              <textarea value={pushMessage} onChange={e => setPushMessage(e.target.value)} placeholder="Write your push notification message here..." rows={6} style={{ ...inputStyle, resize: 'vertical', lineHeight: 1.6, display: 'block' }} />
+              <textarea value={pushMessage} onChange={e => setPushMessage(e.target.value)} placeholder="Write your push notification message here..." rows={4} style={{ ...inputStyle, resize: 'vertical', lineHeight: 1.6, display: 'block' }} />
+            </div>
+
+            {/* Deep Link URL */}
+            <div>
+              <label style={{ fontSize: 11, fontWeight: 600, color: textMuted, display: 'block', marginBottom: 5, display: 'flex', alignItems: 'center', gap: 4 }}>
+                <ExternalLink style={{ width: 11, height: 11 }} /> Tap Destination URL <span style={{ fontWeight: 400, color: textMuted }}>(optional)</span>
+              </label>
+              <input
+                value={pushUrl}
+                onChange={e => setPushUrl(e.target.value)}
+                placeholder="e.g. /product/iphone-15 or /shop/category/phones"
+                style={inputStyle}
+              />
+              <p style={{ fontSize: 10, color: textMuted, marginTop: 4 }}>
+                When user taps the notification, the app will open this page. Use relative paths (e.g. <code style={{background: surface, padding: '1px 4px', borderRadius: 3}}>/track?orderNumber=ORD-001</code>) or full URLs.
+              </p>
+            </div>
+
+            {/* Banner Image */}
+            <div>
+              <label style={{ fontSize: 11, fontWeight: 600, color: textMuted, display: 'block', marginBottom: 5, display: 'flex', alignItems: 'center', gap: 4 }}>
+                <ImageIcon style={{ width: 11, height: 11 }} /> Notification Banner Image <span style={{ fontWeight: 400, color: textMuted }}>(optional)</span>
+              </label>
+              {pushImageUrl ? (
+                <div style={{ position: 'relative', marginBottom: 8 }}>
+                  <img src={pushImageUrl} alt="Banner preview" style={{ width: '100%', maxHeight: 120, objectFit: 'cover', borderRadius: 8, border: `1px solid ${border}` }} />
+                  <button
+                    onClick={() => setPushImageUrl('')}
+                    style={{ position: 'absolute', top: 6, right: 6, background: 'rgba(0,0,0,0.6)', border: 'none', borderRadius: '50%', width: 22, height: 22, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}
+                  >
+                    <X style={{ width: 12, height: 12 }} />
+                  </button>
+                </div>
+              ) : null}
+              <div style={{ display: 'flex', gap: 8 }}>
+                <input
+                  value={pushImageUrl}
+                  onChange={e => setPushImageUrl(e.target.value)}
+                  placeholder="Paste image URL or upload below"
+                  style={{ ...inputStyle, flex: 1 }}
+                />
+                <button
+                  onClick={() => bannerInputRef.current?.click()}
+                  disabled={uploadingBanner}
+                  style={{ padding: '9px 14px', borderRadius: 8, border: `1px solid ${border}`, background: surface, color: textMain, fontSize: 12, cursor: uploadingBanner ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap', flexShrink: 0 }}
+                >
+                  {uploadingBanner ? <Loader2 style={{ width: 12, height: 12, animation: 'spin 1s linear infinite' }} /> : <ImageIcon style={{ width: 12, height: 12 }} />}
+                  {uploadingBanner ? 'Uploading...' : 'Upload'}
+                </button>
+              </div>
+              <input ref={bannerInputRef} type="file" accept="image/*" onChange={handleBannerUpload} style={{ display: 'none' }} />
+              <p style={{ fontSize: 10, color: textMuted, marginTop: 4 }}>Displayed as a large image inside the notification on Android and iOS. Recommended: 1200×600px.</p>
             </div>
 
             {/* Send Button */}

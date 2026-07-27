@@ -212,17 +212,32 @@ export class NotificationsService implements OnModuleInit {
     }
 
     try {
+      // FCM requires ALL data values to be strings — convert everything
+      const rawData: Record<string, any> = data || {};
+      const stringifiedData: Record<string, string> = {};
+      for (const [k, v] of Object.entries(rawData)) {
+        if (v !== null && v !== undefined) {
+          stringifiedData[k] = typeof v === 'string' ? v : JSON.stringify(v);
+        }
+      }
+
+      const imageUrl: string | undefined = rawData?.imageUrl || rawData?.image || undefined;
+      const deepLinkUrl: string | undefined = rawData?.url || rawData?.link || undefined;
+
       const message: admin.messaging.MulticastMessage = {
-        notification: { title, body, imageUrl: data?.image || data?.imageUrl },
-        notification: { title, body },
+        notification: {
+          title,
+          body,
+          ...(imageUrl ? { imageUrl } : {}),
+        },
         tokens,
-        data: data || {},
+        data: stringifiedData,
         android: {
           priority: 'high',
           notification: {
             channelId: 'kryros_notifications',
             clickAction: 'FLUTTER_NOTIFICATION_CLICK',
-            imageUrl: data?.image || data?.imageUrl,
+            ...(imageUrl ? { imageUrl } : {}),
             sound: 'default',
           },
         },
@@ -233,14 +248,18 @@ export class NotificationsService implements OnModuleInit {
               badge: 1,
             },
           },
+          ...(imageUrl ? {
+            fcmOptions: { imageUrl },
+          } : {}),
         },
         webpush: {
           notification: {
             icon: '/logo-pwa.png',
             badge: '/favicon.svg',
+            ...(imageUrl ? { image: imageUrl } : {}),
           },
           fcmOptions: {
-            link: data?.url || '/',
+            link: deepLinkUrl || '/',
           },
         },
       };
@@ -561,10 +580,13 @@ export class NotificationsService implements OnModuleInit {
     }
 
     // ── 1. Push notification (logged-in users and guest checkout devices) ──
+    // Build absolute URL so the app can navigate directly when tapped
+    const frontendUrl = (this.configService.get('FRONTEND_URL') || '').replace(/\/$/, '');
     const pushData = {
       orderId,
       status,
-      url: `/dashboard/orders/${orderId}`,
+      type: 'ORDER_STATUS',
+      url: `${frontendUrl}/track?orderNumber=${encodeURIComponent(order.orderNumber)}`,
     };
     if (order.userId) {
       this.sendToUser(order.userId, title, body, pushData)

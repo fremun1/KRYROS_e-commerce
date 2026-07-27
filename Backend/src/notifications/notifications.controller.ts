@@ -7,7 +7,7 @@ import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { UserRole } from '@prisma/client';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
-import { SendNotificationDto, NotificationTargetType } from './dto/notification-payload.dto';
+import { SendNotificationDto, NotificationTargetType, NotificationTargetType as NTT } from './dto/notification-payload.dto';
 import { UpdateTokenDto } from './dto/update-token.dto';
 
 @ApiTags('Notifications')
@@ -38,8 +38,10 @@ export class NotificationsController {
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Send broadcast notification (Admin only)' })
-  async broadcast(@Body() body: { title: string; body: string; data?: any }) {
-    return this.notificationsService.sendToAll(body.title, body.body, body.data);
+  async broadcast(@Body() body: { title: string; body: string; data?: any; url?: string; imageUrl?: string }) {
+    // Merge url and imageUrl into the data payload so the app can navigate on tap
+    const mergedData = { ...(body.data || {}), ...(body.url ? { url: body.url } : {}), ...(body.imageUrl ? { imageUrl: body.imageUrl } : {}) };
+    return this.notificationsService.sendToAll(body.title, body.body, mergedData);
   }
 
   @Post('send')
@@ -48,21 +50,35 @@ export class NotificationsController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Send targeted notification (Admin only)' })
   async sendTargeted(@Body() body: SendNotificationDto) {
+    // Merge url and imageUrl into the data payload so the app can navigate on tap
+    const mergedData = {
+      ...(body.data || {}),
+      ...(body.url ? { url: body.url } : {}),
+      ...(body.imageUrl ? { imageUrl: body.imageUrl } : {}),
+    };
+
     if (body.scheduledAt) {
-      return this.notificationsService.scheduleNotification(body);
+      return this.notificationsService.scheduleNotification({ ...body, data: mergedData });
+    }
+
+    if (body.targetType === NotificationTargetType.ALL) {
+      return this.notificationsService.sendToAll(body.title, body.body, mergedData);
     }
 
     if (body.targetType === NotificationTargetType.SINGLE && body.userId) {
-      return this.notificationsService.sendToUser(body.userId, body.title, body.body, body.data);
+      return this.notificationsService.sendToUser(body.userId, body.title, body.body, mergedData);
     }
 
     if (body.targetType === NotificationTargetType.BULK && body.orderIds) {
-      return this.notificationsService.sendToOrders(body.orderIds, body.title, body.body, body.data);
+      return this.notificationsService.sendToOrders(body.orderIds, body.title, body.body, mergedData);
     }
 
     if (body.targetType === NotificationTargetType.STATUS_BASED && body.orderStatus) {
-      return this.notificationsService.sendByOrderStatus(body.orderStatus, body.title, body.body, body.data);
+      return this.notificationsService.sendByOrderStatus(body.orderStatus, body.title, body.body, mergedData);
     }
+
+    // Fallback: broadcast to all if no specific target
+    return this.notificationsService.sendToAll(body.title, body.body, mergedData);
   }
 
   @Post('sms/send')
@@ -267,8 +283,9 @@ export class NotificationsController {
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Send push to specific device IDs (Admin only)' })
-  async sendToDevices(@Body() body: { deviceIds: string[]; title: string; body: string; data?: any }) {
-    return this.notificationsService.sendToDeviceIds(body.deviceIds, body.title, body.body, body.data);
+  async sendToDevices(@Body() body: { deviceIds: string[]; title: string; body: string; data?: any; url?: string; imageUrl?: string }) {
+    const mergedData = { ...(body.data || {}), ...(body.url ? { url: body.url } : {}), ...(body.imageUrl ? { imageUrl: body.imageUrl } : {}) };
+    return this.notificationsService.sendToDeviceIds(body.deviceIds, body.title, body.body, mergedData);
   }
 
 
