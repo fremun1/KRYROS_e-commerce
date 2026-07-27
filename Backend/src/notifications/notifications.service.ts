@@ -118,16 +118,32 @@ export class NotificationsService implements OnModuleInit {
     });
   }
 
+  private async sendToGuestToken(token: string, title: string, body: string, data?: any) {
+    const invalidTokens = await this.sendToTokens([token], title, body, data);
+    if (invalidTokens.length > 0) {
+      await this.prisma.order.updateMany({
+        where: { guestFcmToken: { in: invalidTokens } },
+        data: { guestFcmToken: null },
+      });
+      this.logger.log(`Cleared ${invalidTokens.length} invalid guest token(s) from orders`);
+    }
+  }
+
   async sendToOrders(orderIds: string[], title: string, body: string, data?: any) {
     const orders = await this.prisma.order.findMany({
       where: { id: { in: orderIds } },
-      select: { userId: true, orderNumber: true },
+      select: { userId: true, guestFcmToken: true },
     });
 
-    const userIds = [...new Set(orders.map(o => o.userId).filter(id => !!id))] as string[];
-    
+    const userIds = [...new Set(orders.map(o => o.userId).filter((id): id is string => !!id))];
+    const guestTokens = [...new Set(orders.map(o => o.guestFcmToken).filter((token): token is string => !!token))];
+
     for (const userId of userIds) {
       await this.sendToUser(userId, title, body, { ...data, orderIds });
+    }
+
+    for (const token of guestTokens) {
+      await this.sendToGuestToken(token, title, body, { ...data, orderIds });
     }
 
     // Log in database
@@ -146,13 +162,18 @@ export class NotificationsService implements OnModuleInit {
   async sendByOrderStatus(status: string, title: string, body: string, data?: any) {
     const orders = await this.prisma.order.findMany({
       where: { status: status as any },
-      select: { userId: true },
+      select: { userId: true, guestFcmToken: true },
     });
 
-    const userIds = [...new Set(orders.map(o => o.userId).filter(id => !!id))] as string[];
-    
+    const userIds = [...new Set(orders.map(o => o.userId).filter((id): id is string => !!id))];
+    const guestTokens = [...new Set(orders.map(o => o.guestFcmToken).filter((token): token is string => !!token))];
+
     for (const userId of userIds) {
       await this.sendToUser(userId, title, body, data);
+    }
+
+    for (const token of guestTokens) {
+      await this.sendToGuestToken(token, title, body, data);
     }
   }
 
@@ -183,8 +204,12 @@ export class NotificationsService implements OnModuleInit {
     });
   }
 
-  private async sendToTokens(tokens: string[], title: string, body: string, data?: any) {
-    if (tokens.length === 0) return;
+  private async sendToTokens(tokens: string[], title: string, body: string, data?: any): Promise<string[]> {
+    if (tokens.length === 0) return [];
+    if (!this.isPushConfigured) {
+      this.logger.warn('Push notification skipped because Firebase Admin is not configured');
+      return [];
+    }
 
     try {
       const message: admin.messaging.MulticastMessage = {
@@ -219,10 +244,10 @@ export class NotificationsService implements OnModuleInit {
       };
 
       const response = await admin.messaging().sendEachForMulticast(message);
-      
+      const failedTokens: string[] = [];
+
       // Handle invalid tokens
       if (response.failureCount > 0) {
-        const failedTokens: string[] = [];
         response.responses.forEach((resp, idx) => {
           if (!resp.success) {
             const errorCode = resp.error?.code;
@@ -244,8 +269,10 @@ export class NotificationsService implements OnModuleInit {
       }
 
       this.logger.log(`Successfully sent to ${response.successCount} devices`);
+      return failedTokens;
     } catch (error) {
       this.logger.error('Error sending multicast notification', error.stack);
+      return [];
     }
   }
 
@@ -531,13 +558,18 @@ export class NotificationsService implements OnModuleInit {
         break;
     }
 
-    // ── 1. Push notification (logged-in users only, non-blocking) ────────
+    // ── 1. Push notification (logged-in users and guest checkout devices) ──
+    const pushData = {
+      orderId,
+      status,
+      url: `/dashboard/orders/${orderId}`,
+    };
     if (order.userId) {
-      this.sendToUser(order.userId, title, body, {
-        orderId,
-        status,
-        url: `/dashboard/orders/${orderId}`,
-      }).catch(e => this.logger.warn(`Push notification failed for order ${order.orderNumber}: ${e.message}`));
+      this.sendToUser(order.userId, title, body, pushData)
+        .catch(e => this.logger.warn(`Push notification failed for order ${order.orderNumber}: ${e.message}`));
+    } else if (order.guestFcmToken) {
+      this.sendToGuestToken(order.guestFcmToken, title, body, pushData)
+        .catch(e => this.logger.warn(`Guest push notification failed for order ${order.orderNumber}: ${e.message}`));
     }
 
     // ── 2. Email notification ─────────────────────────────────────────────
@@ -593,13 +625,21 @@ export class NotificationsService implements OnModuleInit {
           : `KRYROS: Order #${order.orderNumber} received. Track here: ${trackingUrl}`;
 
       // ── 1. Push ──────────────────────────────────────────────────────────
+      const orderPlacedPushData = { orderId, type: 'ORDER_PLACED', url: trackingUrl };
       if (order.userId) {
         this.sendToUser(
           order.userId,
           'Order Placed! 🛍️',
           `Your order #${order.orderNumber} has been received. Total: ${displayAmount}`,
-          { orderId, type: 'ORDER_PLACED' },
+          orderPlacedPushData,
         ).catch(e => this.logger.warn(`Push failed for new order ${order.orderNumber}: ${e.message}`));
+      } else if (order.guestFcmToken) {
+        this.sendToGuestToken(
+          order.guestFcmToken,
+          'Order Placed! 🛍️',
+          `Your order #${order.orderNumber} has been received. Total: ${displayAmount}`,
+          orderPlacedPushData,
+        ).catch(e => this.logger.warn(`Guest push failed for new order ${order.orderNumber}: ${e.message}`));
       }
 
       // ── 2. Email confirmation ────────────────────────────────────────────
@@ -658,13 +698,21 @@ export class NotificationsService implements OnModuleInit {
       const paymentMethod = String(order.paymentMethod || 'Payment').replace(/_/g, ' ');
       const trackingUrl = this.buildTrackingUrl(order.orderNumber, userEmail);
 
+      const paymentReceiptPushData = { orderId, type: 'PAYMENT_RECEIPT', url: trackingUrl };
       if (order.userId) {
         this.sendToUser(
           order.userId,
           'Payment Received ✅',
           `Payment confirmed for order #${order.orderNumber}. Receipt ready.`,
-          { orderId, type: 'PAYMENT_RECEIPT', url: trackingUrl },
+          paymentReceiptPushData,
         ).catch(e => this.logger.warn(`Payment receipt push failed for ${order.orderNumber}: ${e.message}`));
+      } else if (order.guestFcmToken) {
+        this.sendToGuestToken(
+          order.guestFcmToken,
+          'Payment Received ✅',
+          `Payment confirmed for order #${order.orderNumber}. Receipt ready.`,
+          paymentReceiptPushData,
+        ).catch(e => this.logger.warn(`Guest payment receipt push failed for ${order.orderNumber}: ${e.message}`));
       }
 
       if (userEmail) {

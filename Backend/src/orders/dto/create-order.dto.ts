@@ -131,6 +131,11 @@ export class CreateOrderDto {
   @IsOptional()
   notes?: string;
 
+  @Transform(({ value }) => value?.trim())
+  @IsString()
+  @IsOptional()
+  guestFcmToken?: string;
+
   @IsOptional()
   @ValidateNested()
   @Type(() => AddressDetailsDto)

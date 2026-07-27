@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { EFFECTIVE_API_BASE } from '@/lib/api';
 import { initFirebase, requestNotificationPermission } from '@/lib/firebase';
+import { getNativeFcmToken } from '@/lib/notificationTokens';
 
 let messagingInstance: Awaited<ReturnType<typeof initFirebase>>['messaging'] | null = null;
 
@@ -35,7 +36,17 @@ async function registerFcmToken(authToken: string | null, fcmToken: string | nul
 }
 
 export async function hydrateNotifications(authToken: string | null) {
+  // Do not prompt unauthenticated visitors on application start. Guest checkout
+  // requests a token only when the shopper places an order.
+  if (!authToken) return;
+
   try {
+    const nativeToken = getNativeFcmToken();
+    if (nativeToken) {
+      await registerFcmToken(authToken, nativeToken);
+      return;
+    }
+
     const { messaging } = await initFirebase();
     messagingInstance = messaging;
     const fcmToken = await requestNotificationPermission(messagingInstance);
@@ -45,6 +56,13 @@ export async function hydrateNotifications(authToken: string | null) {
   } catch {
     // Notification setup must never block auth flows
   }
+}
+
+export async function registerNativeTokenWithSession(fcmToken: string) {
+  const authToken = useAuthStore.getState().token;
+  if (!authToken || !fcmToken?.trim()) return;
+
+  await registerFcmToken(authToken, fcmToken.trim());
 }
 
 export interface AuthUser {

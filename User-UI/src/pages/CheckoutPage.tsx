@@ -4,6 +4,7 @@ import { useCartStore } from "@/store/cartStore";
 import { useAuthStore } from "@/store/authStore";
 import { useCurrencyStore } from "@/store/currencyStore";
 import { EFFECTIVE_API_BASE, fetchSettings } from "@/lib/api";
+import { getGuestFcmToken } from "@/lib/notificationTokens";
 import { formatDeliveryDuration, formatDeliveryWindow, resolveDeliveryWindowFromItems } from "@/lib/delivery";
 import { toast } from "sonner";
 import {
@@ -399,23 +400,28 @@ export default function CheckoutPage() {
     return Math.round(converted * 100) / 100;
   };
 
-  const buildOrderPayload = (backendPaymentMethod: string) => ({
-    items: cartItems.map((item) => ({ productId: item.id, quantity: item.qty })),
-    paymentMethod: backendPaymentMethod,
-    ...(openMethod === "mobile_wallet" && mmPhone ? { paymentPhone: mmPhone } : {}),
-    totalZMW: calculateGatewayTotal(),
-    currencyCode: selectedCurrency.code,
-    currencySymbol: selectedCurrency.symbol,
-    exchangeRate: selectedCurrency.exchangeRate,
-    ...(openMethod === "mobile_wallet" && selectedMobileOption ? { notes: `Provider: ${selectedMobileOption.providerName} | Network: ${selectedMobileOption.networkName}` } : {}),
-    addressDetails: {
-      email, firstName, lastName, phone: `${dialCode}${phone}`,
-      address: addressLine || `${city}, ${state}, ${country}`,
-      zipCode: zipCode || undefined,
-      countryName: country, stateName: state || undefined, cityName: city || undefined, manual: true,
-      pickupStationId: pickupStationId || undefined,
-    },
-  });
+  const buildOrderPayload = async (backendPaymentMethod: string) => {
+    const guestFcmToken = authToken ? null : await getGuestFcmToken();
+
+    return {
+      items: cartItems.map((item) => ({ productId: item.id, quantity: item.qty })),
+      paymentMethod: backendPaymentMethod,
+      ...(openMethod === "mobile_wallet" && mmPhone ? { paymentPhone: mmPhone } : {}),
+      ...(guestFcmToken ? { guestFcmToken } : {}),
+      totalZMW: calculateGatewayTotal(),
+      currencyCode: selectedCurrency.code,
+      currencySymbol: selectedCurrency.symbol,
+      exchangeRate: selectedCurrency.exchangeRate,
+      ...(openMethod === "mobile_wallet" && selectedMobileOption ? { notes: `Provider: ${selectedMobileOption.providerName} | Network: ${selectedMobileOption.networkName}` } : {}),
+      addressDetails: {
+        email, firstName, lastName, phone: `${dialCode}${phone}`,
+        address: addressLine || `${city}, ${state}, ${country}`,
+        zipCode: zipCode || undefined,
+        countryName: country, stateName: state || undefined, cityName: city || undefined, manual: true,
+        pickupStationId: pickupStationId || undefined,
+      },
+    };
+  };
 
   const validateShippingInfo = () => {
     if (!firstName.trim() || !lastName.trim() || !country || !city.trim() || !addressLine.trim()) {
@@ -434,7 +440,8 @@ export default function CheckoutPage() {
     setIsSubmitting(true); setOrderError(null);
     try {
       const headers = { "Content-Type": "application/json", ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}) };
-      const res = await fetch(`${EFFECTIVE_API_BASE}/api/orders`, { method: "POST", headers, body: JSON.stringify(buildOrderPayload("MOBILE_MONEY")) });
+      const orderPayload = await buildOrderPayload("MOBILE_MONEY");
+      const res = await fetch(`${EFFECTIVE_API_BASE}/api/orders`, { method: "POST", headers, body: JSON.stringify(orderPayload) });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Failed to place order");
       
@@ -482,7 +489,8 @@ export default function CheckoutPage() {
     try {
       const headers = { "Content-Type": "application/json", ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}) };
       
-      const res = await fetch(`${EFFECTIVE_API_BASE}/api/orders`, { method: "POST", headers, body: JSON.stringify(buildOrderPayload(getBackendPaymentMethod(openMethod))) });
+      const orderPayload = await buildOrderPayload(getBackendPaymentMethod(openMethod));
+      const res = await fetch(`${EFFECTIVE_API_BASE}/api/orders`, { method: "POST", headers, body: JSON.stringify(orderPayload) });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Failed");
       

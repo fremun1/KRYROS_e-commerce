@@ -240,7 +240,7 @@ export class OrdersService {
 }
 
   async create(userId: string | undefined, data: CreateOrderDto) {
-    const { items, shippingAddressId: providedShippingAddressId, billingAddressId: providedBillingAddressId, paymentMethod, notes, addressDetails } = data;
+    const { items, shippingAddressId: providedShippingAddressId, billingAddressId: providedBillingAddressId, paymentMethod, notes, addressDetails, guestFcmToken } = data;
     
     if (!items || items.length === 0) {
       throw new BadRequestException('Order items are required');
@@ -486,6 +486,7 @@ export class OrdersService {
           paymentStatus: 'PENDING',
           paymentMethod: paymentMethodEnum,
           paymentPhone: data.paymentPhone,
+          guestFcmToken: userId ? null : guestFcmToken || null,
           totalZMW: new Prisma.Decimal(calculatedTotalLocal),
           currencyCode: currencyCode,
           currencySymbol: currencySymbol,

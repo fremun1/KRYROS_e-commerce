@@ -27,8 +27,9 @@ export class NotificationsController {
   }
 
   @Post('token/public')
+  @Throttle({ default: { ttl: 60000, limit: 10 } })
   @ApiOperation({ summary: 'Register FCM token without authentication' })
-  async registerPublicToken(@Body() body: { token: string; platform?: string }) {
+  async registerPublicToken(@Body() body: UpdateTokenDto) {
     return this.notificationsService.registerPublicToken(body.token, body.platform || 'android');
   }
 

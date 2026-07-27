@@ -398,6 +398,7 @@ model Order {
   currencySymbol    String        @default("$")
   exchangeRate      Decimal       @default(1.0) @db.Decimal(18, 6)
   paymentMethod     String?
+  guestFcmToken     String?
   items             OrderItem[]
   logs              OrderLog[]
   billingAddress    Address?      @relation("OrderBillingAddress", fields: [billingAddressId], references: [id])
@@ -405,6 +406,7 @@ model Order {
   user              User?         @relation(fields: [userId], references: [id])
   directPayments    DirectPayment[]
 
+  @@index([guestFcmToken])
   @@map("orders")
 }
 
