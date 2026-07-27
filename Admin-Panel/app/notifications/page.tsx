@@ -238,7 +238,7 @@ function PushContent() {
 
             {/* Deep Link URL */}
             <div>
-              <label style={{ fontSize: 11, fontWeight: 600, color: textMuted, display: 'block', marginBottom: 5, display: 'flex', alignItems: 'center', gap: 4 }}>
+              <label style={{ fontSize: 11, fontWeight: 600, color: textMuted, marginBottom: 5, display: 'flex', alignItems: 'center', gap: 4 }}>
                 <ExternalLink style={{ width: 11, height: 11 }} /> Tap Destination URL <span style={{ fontWeight: 400, color: textMuted }}>(optional)</span>
               </label>
               <input
@@ -254,7 +254,7 @@ function PushContent() {
 
             {/* Banner Image */}
             <div>
-              <label style={{ fontSize: 11, fontWeight: 600, color: textMuted, display: 'block', marginBottom: 5, display: 'flex', alignItems: 'center', gap: 4 }}>
+              <label style={{ fontSize: 11, fontWeight: 600, color: textMuted, marginBottom: 5, display: 'flex', alignItems: 'center', gap: 4 }}>
                 <ImageIcon style={{ width: 11, height: 11 }} /> Notification Banner Image <span style={{ fontWeight: 400, color: textMuted }}>(optional)</span>
               </label>
               {pushImageUrl ? (
