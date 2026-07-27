@@ -65,10 +65,10 @@
 
   /* ── SIDEBAR ────────────────────────────────────────────────────────────── */
   --sidebar-width:        260px;
-  --sidebar-bg:           #001529;
-  --sidebar-text:         rgba(255, 255, 255, 0.7);
+  --sidebar-bg:           #000000;
+  --sidebar-text:         rgba(255, 255, 255, 0.65);
   --sidebar-text-active:  #FFFFFF;
-  --sidebar-active-bg:    rgba(255, 255, 255, 0.1);
+  --sidebar-active-bg:    rgba(255, 255, 255, 0.12);
 }
 
 *, *::before, *::after { box-sizing: border-box; }
