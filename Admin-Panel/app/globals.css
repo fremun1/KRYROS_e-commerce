@@ -17,6 +17,8 @@
   --card:                 #FFFFFF;
   --surface:              #FAFAFA;
   --footer-bg:            #000000;
+  --header-navy:          #001529;
+  --kryros-primary-rgb:   192, 21, 27;
 
   /* ── NEUTRAL / GRAY SCALE ───────────────────────────────────────────────── */
   --light-gray:           #FFFFFF;
@@ -63,6 +65,10 @@
 
   /* ── SIDEBAR ────────────────────────────────────────────────────────────── */
   --sidebar-width:        260px;
+  --sidebar-bg:           #001529;
+  --sidebar-text:         rgba(255, 255, 255, 0.7);
+  --sidebar-text-active:  #FFFFFF;
+  --sidebar-active-bg:    rgba(255, 255, 255, 0.1);
 }
 
 *, *::before, *::after { box-sizing: border-box; }

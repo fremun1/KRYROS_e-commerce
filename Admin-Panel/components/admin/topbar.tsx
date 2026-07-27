@@ -227,7 +227,7 @@ export default function Topbar({ collapsed, sidebarW, onMenuToggle, onMobileMenu
             ) : notifs.slice(0, 8).map(n => (
               <div key={n.id} style={{
                 padding: "12px 16px", borderBottom: `1px solid ${border}`,
-                background: n.isRead ? "transparent" : "rgba(192,21,27,0.04)",
+                background: n.isRead ? "transparent" : "rgba(var(--kryros-primary-rgb), 0.04)",
                 display: "flex", gap: 10, alignItems: "flex-start",
               }}>
                 <div style={{ width: 8, height: 8, borderRadius: "50%", background: n.isRead ? "transparent" : "var(--primary)", flexShrink: 0, marginTop: 5 }} />

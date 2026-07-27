@@ -44,11 +44,11 @@ export default function Sidebar({ collapsed, mobileOpen, onMobileClose }: Sideba
   const { user, logout } = useAuth();
   const [showUserPopup, setShowUserPopup] = useState(false);
 
-  const bg       = "var(--card)";
-  const border   = "var(--border)";
-  const textMain = "var(--text-main)";
-  const textMuted = "var(--text-muted)";
-  const surface  = "var(--surface)";
+  const bg       = "var(--sidebar-bg)";
+  const border   = "rgba(255, 255, 255, 0.1)";
+  const textMain = "var(--sidebar-text-active)";
+  const textMuted = "var(--sidebar-text)";
+  const surface  = "var(--sidebar-active-bg)";
 
   const handleLogout = () => {
     setShowUserPopup(false);
@@ -79,7 +79,7 @@ export default function Sidebar({ collapsed, mobileOpen, onMobileClose }: Sideba
             style={{ width: 34, height: 34, objectFit: "contain", flexShrink: 0 }}
           />
           {!collapsed && (
-            <span style={{ fontSize: 15, fontWeight: 800, color: textMain, letterSpacing: "-0.3px" }}>
+            <span style={{ fontSize: 15, fontWeight: 800, color: "white", letterSpacing: "-0.3px" }}>
               KR<span style={{ color: "var(--primary)" }}>YROS</span>
             </span>
           )}
@@ -104,13 +104,13 @@ export default function Sidebar({ collapsed, mobileOpen, onMobileClose }: Sideba
                 padding: collapsed ? "10px 0" : "9px 10px",
                 justifyContent: collapsed ? "center" : "flex-start",
                 borderRadius: 8, marginBottom: 1,
-                background: active ? "rgba(192,21,27,0.10)" : "transparent",
-                color: active ? "var(--primary)" : textMuted,
+                background: active ? "var(--sidebar-active-bg)" : "transparent",
+                color: active ? "white" : textMuted,
                 cursor: "pointer",
               }}>
                 <Icon size={16} style={{ flexShrink: 0 }} />
                 {!collapsed && (
-                  <span style={{ fontSize: 13, fontWeight: active ? 600 : 400, color: active ? "var(--primary)" : textMuted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>
+                  <span style={{ fontSize: 13, fontWeight: active ? 600 : 400, color: active ? "white" : textMuted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>
                     {label}
                   </span>
                 )}
@@ -126,14 +126,14 @@ export default function Sidebar({ collapsed, mobileOpen, onMobileClose }: Sideba
       {/* ── User section at bottom ── */}
       {user && (
         <div style={{ position: "relative", flexShrink: 0 }}>
-          {showUserPopup && !collapsed && (
+              {showUserPopup && !collapsed && (
             <div style={{
               position: "absolute", bottom: "100%", left: 0, right: 0,
-              background: "var(--card)",
+              background: "var(--sidebar-bg)",
               border: `1px solid ${border}`,
               borderRadius: "10px 10px 0 0",
               overflow: "hidden",
-              boxShadow: "0 -8px 24px var(--shadow)",
+              boxShadow: "0 -8px 24px rgba(0,0,0,0.3)",
             }}>
               <button onClick={handleProfile} style={{
                 width: "100%", display: "flex", alignItems: "center", gap: 10,
