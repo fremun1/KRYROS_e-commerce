@@ -213,6 +213,7 @@ export class NotificationsService implements OnModuleInit {
 
     try {
       const message: admin.messaging.MulticastMessage = {
+        notification: { title, body, imageUrl: data?.image || data?.imageUrl },
         notification: { title, body },
         tokens,
         data: data || {},
@@ -221,6 +222,7 @@ export class NotificationsService implements OnModuleInit {
           notification: {
             channelId: 'kryros_notifications',
             clickAction: 'FLUTTER_NOTIFICATION_CLICK',
+            imageUrl: data?.image || data?.imageUrl,
             sound: 'default',
           },
         },
