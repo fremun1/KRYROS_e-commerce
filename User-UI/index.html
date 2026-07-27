@@ -24,10 +24,34 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Version Check Script to Force Reloads on New Deployments -->
+    <script>
+      (function() {
+        const CURRENT_VERSION = Date.now().toString(); // Use timestamp as a simple version for now
+        const storedVersion = localStorage.getItem('kryros_app_version');
+        
+        // If the version is old or missing, clear cache and reload
+        if (!storedVersion) {
+          localStorage.setItem('kryros_app_version', CURRENT_VERSION);
+        }
+
+        // Detect if the app is running in a WebView
+        window.isKryrosApp = /KryrosApp/i.test(navigator.userAgent);
+        
+        // Listen for force-refresh signals from the native app
+        window.addEventListener('kryros:force-refresh', function() {
+          localStorage.clear();
+          sessionStorage.clear();
+          window.location.reload(true);
+        });
+      })();
+    </script>
+
     <!-- Zoho SalesIQ Live Chat Widget -->
     <script>
-      window.$zoho = window.$zoho || {};
-      $zoho.salesiq = $zoho.salesiq || { ready: function() {} };
+      window. = window. || {};
+      .salesiq = .salesiq || { ready: function() {} };
     </script>
     <script id="zsiqscript" src="https://salesiq.zohopublic.com/widget?wc=siq35ac1d01a6322adf375247d72b0111bc837e378e079d701078990a9fdac54132" defer></script>
   </head>
