@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useRoute, Link } from "wouter";
+import { useRoute, Link, useLocation } from "wouter";
 import { 
   ChevronLeft, 
   Heart, 
@@ -34,6 +34,7 @@ const SLIDE_INTERVAL = 3500;
 
 export default function ProductPage() {
   const [, params] = useRoute("/product/:slug");
+  const [, setLocation] = useLocation();
   const id = params?.slug;
   
   const [product, setProduct] = useState<Product | null>(null);
@@ -276,7 +277,7 @@ export default function ProductPage() {
       wholesaleMoq: product.wholesaleMoq
     });
     // All products (credit, wholesale, normal) go to regular checkout
-    window.location.href = "/checkout";
+    setLocation("/checkout");
   };
 
   const deliveryWindow = resolveDeliveryWindow({

@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
+import { useLocation } from "wouter";
 import { Heart, Package, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { useCartStore } from "@/store/cartStore";
 import { useWishlistStore } from "@/store/wishlistStore";
 import { useCurrencyStore } from "@/store/currencyStore";
-import { fetchStoreStatus } from "@/lib/api";
+import { useStoreStatus } from "@/hooks/useStoreStatus";
 import type { Product } from "@/lib/api";
 
 interface UnifiedProductCardProps {
@@ -41,22 +42,11 @@ export default function UnifiedProductCard({
   showDiscountBadge = true,
 }: UnifiedProductCardProps) {
   const [imgErr, setImgErr] = useState(false);
-  const [storeStatus, setStoreStatus] = useState<{
-    isStoreClosed: boolean;
-    message: string;
-    openingTime: string;
-    closingTime: string;
-    operatingDays?: string;
-    nextOpeningTime?: string;
-    nextOpeningDay?: string;
-  } | null>(null);
+  const [, setLocation] = useLocation();
+  const storeStatus = useStoreStatus();
   const { toggleWishlist, isWishlisted } = useWishlistStore();
   const format = useCurrencyStore((s) => s.format);
   const wishlisted = isWishlisted(product.id);
-
-  useEffect(() => {
-    fetchStoreStatus().then(setStoreStatus);
-  }, []);
 
   const monthlyText = product.creditMessage || `${format(product.price / 12)}/mo`;
   const specs = validSpecs(product.specs);
@@ -67,7 +57,7 @@ export default function UnifiedProductCard({
   return (
     <div
       className={`${className} bg-card border border-border rounded-2xl overflow-hidden cursor-pointer shadow-sm hover:shadow-md transition-shadow flex flex-col`}
-      onClick={() => (window.location.href = `/product/${product.id}`)}
+      onClick={() => (setLocation(`/product/${product.id}`))}
     >
       {/*
        * ── .product-image-wrapper ──────────────────────────────────────────
@@ -257,7 +247,7 @@ export default function UnifiedProductCard({
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                window.location.href = `/product/${product.id}`;
+                setLocation(`/product/${product.id}`);
               }}
               disabled={!inStock}
               className={`w-full h-9 md:h-10 rounded-lg text-xs md:text-sm font-bold flex items-center justify-center transition-colors ${
@@ -276,7 +266,7 @@ export default function UnifiedProductCard({
              <button
               onClick={(e) => {
                 e.stopPropagation();
-                window.location.href = `/product/${product.id}`;
+                setLocation(`/product/${product.id}`);
               }}
               className="w-full h-7 rounded-lg text-[10px] font-bold flex items-center justify-center bg-muted text-muted-foreground hover:bg-muted/80 transition-colors"
             >

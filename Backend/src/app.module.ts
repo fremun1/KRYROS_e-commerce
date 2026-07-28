@@ -42,7 +42,7 @@ const logger = new Logger('AppModule');
  * multiple instances). Falls back to in-memory storage in development.
  */
 function buildThrottlerConfig() {
-  const throttlers = [{ name: 'default', ttl: 60000, limit: 60 }];
+  const throttlers = [{ name: 'default', ttl: 60000, limit: 300 }];
 
   if (process.env.REDIS_URL) {
     logger.log('ThrottlerGuard: using Redis storage (REDIS_URL detected)');
