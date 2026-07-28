@@ -52,7 +52,16 @@ export default function DynamicSectionRendererV2({
   sections,
   pageSlug = 'homepage'
 }: DynamicSectionRendererV2Props) {
+  // Use the full pageSlug for link generation if it's a specific page, 
+  // but normalize it for general context needs.
   const pageContext = useMemo(() => normalizePageContext(pageSlug), [pageSlug]);
+  const linkContext = useMemo(() => {
+    // If it's a shop-related page, keep the context as 'shop' for links
+    if (pageSlug.startsWith('category-') || pageSlug.startsWith('brand-')) {
+      return 'shop' as const;
+    }
+    return pageContext;
+  }, [pageSlug, pageContext]);
 
   const sortedSections = useMemo(() => {
     return sections
@@ -110,10 +119,10 @@ export default function DynamicSectionRendererV2({
                   
                   // If it's a flash sale, use the specific flash-sale route
                   if (isFlashSaleSection) {
-                    return getScopedSectionPath(pageContext, 'flash-sale');
+                    return getScopedSectionPath(linkContext, 'flash-sale');
                   }
                   
-                  return sectionSlug ? getScopedSectionPath(pageContext, sectionSlug) : getPageContextDisplayPath(pageContext);
+                  return sectionSlug ? getScopedSectionPath(linkContext, sectionSlug) : getPageContextDisplayPath(linkContext);
                 })()}
                 viewAllText={section.config?.viewAllText || section.config?.ctaText || section.config?.button_text || 'See All'}
                 accentColor={section.config?.accentColor}
@@ -143,7 +152,7 @@ export default function DynamicSectionRendererV2({
                 key={section.id}
                 title={section.title}
                 limit={section.config?.limit || 8}
-                pageSlug={pageContext}
+                pageSlug={pageSlug}
               />
             );
 
@@ -313,7 +322,7 @@ export default function DynamicSectionRendererV2({
                 title={section.title}
                 layout={section.config?.layout || 'grid'}
                 limit={section.config?.limit || 8}
-                pageSlug={pageContext}
+                pageSlug={pageSlug}
               />
             );
 

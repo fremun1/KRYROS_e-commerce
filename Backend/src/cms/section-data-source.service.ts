@@ -198,17 +198,26 @@ export class SectionDataSourceService {
   ) {
     const results: Record<string, any> = {};
 
-    for (const req of requests) {
+    const promises = requests.map(async (req) => {
       try {
-        results[req.ruleId] = await this.fetchProductsByRule(
+        const result = await this.fetchProductsByRule(
           req.ruleId,
           req.limit || 8,
           req.skip || 0
         );
+        return { ruleId: req.ruleId, result };
       } catch (error) {
         this.logger.warn(`Failed to fetch products for rule '${req.ruleId}': ${error}`);
-        results[req.ruleId] = { data: [], meta: { total: 0, skip: 0, take: 0, error: true } };
+        return { 
+          ruleId: req.ruleId, 
+          result: { data: [], meta: { total: 0, skip: 0, take: 0, error: true } } 
+        };
       }
+    });
+
+    const resolvedResults = await Promise.all(promises);
+    for (const { ruleId, result } of resolvedResults) {
+      results[ruleId] = result;
     }
 
     return results;
