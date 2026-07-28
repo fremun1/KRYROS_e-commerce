@@ -26,6 +26,7 @@ export default function HomePage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    const controller = new AbortController();
     const fetchSections = async () => {
       setLoading(true);
       setError(null);
@@ -34,7 +35,10 @@ export default function HomePage() {
         // Fetch all sections for the homepage from the CMS API
         const response = await fetch(
           `${EFFECTIVE_API_BASE}/api/cms/sections?pageSlug=homepage`,
-          { cache: "no-store" }
+          { 
+            cache: "no-store",
+            signal: controller.signal 
+          }
         );
 
         if (!response.ok) {
@@ -53,6 +57,7 @@ export default function HomePage() {
 
         setSections(activeSections);
       } catch (err) {
+        if (err instanceof Error && err.name === 'AbortError') return;
         console.error("Error fetching homepage sections:", err);
         setError(err instanceof Error ? err.message : "Failed to load sections");
         setSections([]);
@@ -62,6 +67,7 @@ export default function HomePage() {
     };
 
     fetchSections();
+    return () => controller.abort();
   }, []);
 
   return (

@@ -28,12 +28,20 @@
     <!-- Version Check Script to Force Reloads on New Deployments -->
     <script>
       (function() {
-        const CURRENT_VERSION = Date.now().toString(); // Use timestamp as a simple version for now
+        // In a real deployment, this would be injected by the build process
+        // For now, we use a simple heuristic to detect if we need a refresh
+        const APP_BUILD_ID = "2026.07.28.01"; 
         const storedVersion = localStorage.getItem('kryros_app_version');
         
-        // If the version is old or missing, clear cache and reload
-        if (!storedVersion) {
-          localStorage.setItem('kryros_app_version', CURRENT_VERSION);
+        if (storedVersion && storedVersion !== APP_BUILD_ID) {
+          console.log("New version detected. Clearing storage and reloading...");
+          // Don't clear EVERYTHING, just what might be stale
+          sessionStorage.clear();
+          localStorage.setItem('kryros_app_version', APP_BUILD_ID);
+          window.location.reload(true);
+          return;
+        } else if (!storedVersion) {
+          localStorage.setItem('kryros_app_version', APP_BUILD_ID);
         }
 
         // Detect if the app is running in a WebView
@@ -41,6 +49,7 @@
         
         // Listen for force-refresh signals from the native app
         window.addEventListener('kryros:force-refresh', function() {
+          console.log("Force refresh requested by native app");
           localStorage.clear();
           sessionStorage.clear();
           window.location.reload(true);

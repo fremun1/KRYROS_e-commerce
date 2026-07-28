@@ -84,6 +84,7 @@ export default function ProductShelf({
 
   // Fetch products
   useEffect(() => {
+    const controller = new AbortController();
     const fetchProducts = async () => {
       setLoading(true);
       setError(null);
@@ -92,52 +93,60 @@ export default function ProductShelf({
         // Try products-by-source first
         const apiPath = `${EFFECTIVE_API_BASE}/api/cms/sections/products-by-source`;
         let url: URL;
-        try { url = new URL(apiPath); } catch { url = new URL(apiPath, window.location.origin); }
-        
+        try {
+          url = new URL(apiPath);
+        } catch {
+          url = new URL(apiPath, window.location.origin);
+        }
+
         // If it's a dynamic-query or we have params, ensure we use the right dataSourceId
-        const effectiveSourceId = dataSourceId || 'dynamic-query';
-        url.searchParams.set('dataSourceId', effectiveSourceId);
-        url.searchParams.set('limit', String(limit));
+        const effectiveSourceId = dataSourceId || "dynamic-query";
+        url.searchParams.set("dataSourceId", effectiveSourceId);
+        url.searchParams.set("limit", String(limit));
 
         const normalizedParams = { ...params };
-        if (normalizedParams.sortBy === 'price-asc') {
-          normalizedParams.sortBy = 'price';
-          normalizedParams.order = 'asc';
-        } else if (normalizedParams.sortBy === 'price-desc') {
-          normalizedParams.sortBy = 'price';
-          normalizedParams.order = 'desc';
-        } else if (normalizedParams.sortBy === 'popularity') {
-          normalizedParams.sortBy = 'sales';
-          normalizedParams.order = 'desc';
-        } else if (normalizedParams.sortBy === 'newest') {
-          normalizedParams.sortBy = 'createdAt';
-          normalizedParams.order = 'desc';
+        if (normalizedParams.sortBy === "price-asc") {
+          normalizedParams.sortBy = "price";
+          normalizedParams.order = "asc";
+        } else if (normalizedParams.sortBy === "price-desc") {
+          normalizedParams.sortBy = "price";
+          normalizedParams.order = "desc";
+        } else if (normalizedParams.sortBy === "popularity") {
+          normalizedParams.sortBy = "sales";
+          normalizedParams.order = "desc";
+        } else if (normalizedParams.sortBy === "newest") {
+          normalizedParams.sortBy = "createdAt";
+          normalizedParams.order = "desc";
         }
-        
+
         // Add all params from the config object
         if (normalizedParams) {
           Object.entries(normalizedParams).forEach(([key, value]) => {
-            if (value !== undefined && value !== null && value !== '') {
+            if (value !== undefined && value !== null && value !== "") {
               url.searchParams.set(key, String(value));
             }
           });
         }
 
-        let response = await fetch(url.toString());
+        let response = await fetch(url.toString(), { signal: controller.signal });
 
         // Fallback logic for legacy or empty responses
         if (!response.ok) {
           const fallbackPath = `${EFFECTIVE_API_BASE}/api/products`;
-          try { url = new URL(fallbackPath); } catch { url = new URL(fallbackPath, window.location.origin); }
-          url.searchParams.set('take', String(limit));
+          try {
+            url = new URL(fallbackPath);
+          } catch {
+            url = new URL(fallbackPath, window.location.origin);
+          }
+          url.searchParams.set("take", String(limit));
           if (normalizedParams) {
             Object.entries(normalizedParams).forEach(([key, value]) => {
-              if (value !== undefined && value !== null && value !== '') {
+              if (value !== undefined && value !== null && value !== "") {
                 url.searchParams.set(key, String(value));
               }
             });
           }
-          response = await fetch(url.toString());
+          response = await fetch(url.toString(), { signal: controller.signal });
         }
 
         if (!response.ok) {
@@ -145,13 +154,17 @@ export default function ProductShelf({
         }
 
         const data = await response.json();
-        
+
         // Handle both direct array and { data: [] } response formats
-        const productList = Array.isArray(data) ? data : (data.data || []);
+        const productList = Array.isArray(data) ? data : data.data || [];
         setProducts(productList.map(normalizeProduct).slice(0, limit));
       } catch (err) {
-        console.error(`Error fetching products for data source '${dataSourceId}':`, err);
-        setError(err instanceof Error ? err.message : 'Failed to load products');
+        if (err instanceof Error && err.name === "AbortError") return;
+        console.error(
+          `Error fetching products for data source '${dataSourceId}':`,
+          err
+        );
+        setError(err instanceof Error ? err.message : "Failed to load products");
         setProducts([]);
       } finally {
         setLoading(false);
@@ -159,6 +172,7 @@ export default function ProductShelf({
     };
 
     fetchProducts();
+    return () => controller.abort();
   }, [dataSourceId, limit, JSON.stringify(params)]);
 
   // Timer effect - also before early return

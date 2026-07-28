@@ -27,6 +27,20 @@ export default class ErrorBoundary extends Component<Props, State> {
       error,
       info.componentStack
     );
+
+    // Auto-recover from chunk loading errors at the component level
+    if (
+      error.message.includes("Loading chunk") ||
+      error.message.includes("Loading CSS chunk") ||
+      error.message.includes("Failed to fetch dynamically imported module")
+    ) {
+      const lastReload = sessionStorage.getItem("kryros_last_chunk_reload");
+      const now = Date.now();
+      if (!lastReload || now - parseInt(lastReload) > 10000) {
+        sessionStorage.setItem("kryros_last_chunk_reload", now.toString());
+        window.location.reload();
+      }
+    }
   }
 
   render() {
