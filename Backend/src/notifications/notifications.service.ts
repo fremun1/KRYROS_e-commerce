@@ -231,7 +231,10 @@ export class NotificationsService implements OnModuleInit {
           ...(imageUrl ? { imageUrl } : {}),
         },
         tokens,
-        data: stringifiedData,
+        data: {
+          ...stringifiedData,
+          click_action: 'FLUTTER_NOTIFICATION_CLICK',
+        },
         android: {
           priority: 'high',
           notification: {
