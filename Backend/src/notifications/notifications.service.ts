@@ -344,9 +344,10 @@ export class NotificationsService implements OnModuleInit {
     try {
       const adminDevices = await this.prisma.userDevice.findMany({
         where: {
-          user: {
-            role: { in: ['ADMIN', 'SUPER_ADMIN'] }
-          }
+          OR: [
+            { user: { role: { in: ['ADMIN', 'SUPER_ADMIN'] } } },
+            { isAdmin: true }
+          ]
         },
         select: { fcmToken: true, userId: true },
       });
@@ -383,11 +384,11 @@ export class NotificationsService implements OnModuleInit {
     });
   }
 
-  async registerPublicToken(token: string, platform: string = 'android') {
+  async registerPublicToken(token: string, platform: string = 'android', isAdmin: boolean = false) {
     return this.prisma.userDevice.upsert({
       where: { fcmToken: token },
-      update: { platform, updatedAt: new Date() },
-      create: { fcmToken: token, platform },
+      update: { platform, updatedAt: new Date(), isAdmin },
+      create: { fcmToken: token, platform, isAdmin },
     });
   }
 

@@ -55,11 +55,14 @@ export default function Topbar({ collapsed, sidebarW, onMenuToggle, onMobileMenu
       const raw: any[] = Array.isArray(res.data?.data) ? res.data.data : Array.isArray(res.data) ? res.data : [];
       const mapped: NotifItem[] = raw
         .filter((n: any) => {
-          // Only show if it's explicitly for this user or marked as an admin alert
-          // n.userId check ensures direct messages show up
-          // n.data?.isAdminAlert check ensures system alerts (new order, etc) show up
+          // Separate Admin alerts from Customer announcements
           const data = typeof n.data === 'string' ? JSON.parse(n.data) : n.data;
-          return n.userId || data?.isAdminAlert === 'true';
+          
+          // 1. If it's a broadcast (BULK) and NOT marked as an admin alert, it's for customers. Hide it.
+          if (n.targetType === 'BULK' && data?.isAdminAlert !== 'true') return false;
+          
+          // 2. Show if it's explicitly for this user (userId match) or explicitly marked as an admin alert
+          return n.userId || data?.isAdminAlert === 'true' || data?.type === 'NEW_ORDER';
         })
         .map((n: any) => ({
           id: n.id || String(Math.random()),
