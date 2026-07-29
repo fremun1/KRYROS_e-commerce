@@ -608,10 +608,10 @@ export class OrdersService {
       return updatedOrder;
     });
 
-    // Send notification to ALL customers (including guests) when status changes
+    // Send notification to ALL customers (including guests) when status or payment changes
     const nextStatus = (status || (paymentStatus === 'PAID' && existingOrder.status === 'PENDING' ? 'CONFIRMED' : '')) as string;
-    if (nextStatus) {
-      this.notificationsService.sendOrderStatusNotification(order.id, nextStatus)
+    if (nextStatus || paymentStatus) {
+      this.notificationsService.sendOrderStatusNotification(order.id, nextStatus || existingOrder.status)
         .catch(e => console.warn('Status notification failed:', e?.message));
     }
 

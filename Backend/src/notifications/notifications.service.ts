@@ -257,8 +257,16 @@ export class NotificationsService implements OnModuleInit {
     if (!order) return;
 
     const title = 'Order Update 📦';
-    const body = `Your order #${order.orderNumber} status has changed to ${status}.`;
-    const data = { type: 'ORDER_UPDATE', orderId: order.id, orderNumber: order.orderNumber, status, url: `/orders/${order.id}` };
+    const body = `Your order #${order.orderNumber} status is now ${status}.`;
+    // Ensure the URL is correctly formatted for the mobile app's router
+    const data = { 
+      type: 'ORDER_UPDATE', 
+      orderId: order.id, 
+      orderNumber: order.orderNumber, 
+      status, 
+      url: `/orders?id=${order.id}`,
+      click_action: 'FLUTTER_NOTIFICATION_CLICK'
+    };
 
     if (order.userId) {
       await this.sendToUser(order.userId, title, body, data);
