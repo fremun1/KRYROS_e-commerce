@@ -131,11 +131,11 @@ function PushContent() {
 
       if (selected.length > 0) {
         // Send to specific selected devices
-        await sendToDevices({ deviceIds: selected, title: pushTitle.trim(), body: pushMessage.trim(), ...extras });
+        await sendToDevices({ deviceIds: selected, title: pushTitle.trim(), body: pushMessage.trim(), isAdminAlert: 'true', ...extras });
         toast.success(`Push sent to ${selected.length} device${selected.length > 1 ? 's' : ''}`);
       } else {
         // Broadcast to all
-        await api.post('/api/notifications/broadcast', { title: pushTitle.trim(), body: pushMessage.trim(), ...extras });
+        await api.post('/api/notifications/broadcast', { title: pushTitle.trim(), body: pushMessage.trim(), isAdminAlert: 'true', ...extras });
         toast.success(`Push broadcast to all ${devices.length} devices`);
       }
       setPushTitle(''); setPushMessage(''); setPushUrl(''); setPushImageUrl(''); setSelected([]); setSelectAll(false);

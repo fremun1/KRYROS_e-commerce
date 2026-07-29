@@ -1,5 +1,6 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'next/navigation';
 import AdminShell from '@/components/admin/admin-shell';
 import DataTable, { Column } from '@/components/admin/data-table';
 import PageHeader from '@/components/admin/page-header';
@@ -13,6 +14,8 @@ type Review = { id: string; product: string; customer: string; rating: number; c
 // Review data loaded from API
 
 function ReviewsContent() {
+  const searchParams = useSearchParams();
+  const hasAutoOpened = useRef(false);
   const card = 'var(--card)';
   const border = 'var(--border)';
   const textMain = 'var(--text-main)';
@@ -20,7 +23,9 @@ function ReviewsContent() {
   const surface = 'var(--surface)';
 
   const [data, setData] = useState<Review[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   useEffect(() => {
+    setIsLoading(true);
     getReviews({ limit: 500 }).then((r: any) => {
       const raw: any[] = Array.isArray(r.data?.data) ? r.data.data : Array.isArray(r.data) ? r.data : [];
       const normalized: Review[] = raw.map((r: any) => ({
@@ -33,8 +38,20 @@ function ReviewsContent() {
         status: r.isApproved ? 'Approved' : r.status || 'Pending',
       }));
       setData(normalized);
-    }).catch(() => {});
+    }).catch(() => {}).finally(() => setIsLoading(false));
   }, []);
+
+  // Handle deep link from notification (?id=...)
+  useEffect(() => {
+    const reviewId = searchParams.get('id');
+    if (reviewId && !hasAutoOpened.current && !isLoading && data.length > 0) {
+      const targetReview = data.find(r => r.id === reviewId);
+      if (targetReview) {
+        hasAutoOpened.current = true;
+        setViewRow(targetReview);
+      }
+    }
+  }, [searchParams, isLoading, data]);
   const [viewRow, setViewRow] = useState<Review | null>(null);
   const [editRow, setEditRow] = useState<Review | null>(null);
   const [editStatus, setEditStatus] = useState('');

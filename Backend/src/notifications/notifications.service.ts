@@ -164,6 +164,11 @@ export class NotificationsService implements OnModuleInit {
   async updateToken(userId: string, token: string, platform: string = 'android') {
     const validPlatforms = ['android', 'ios', 'web'];
     let finalPlatform = platform?.toLowerCase() || 'android';
+    
+    // Normalize common legacy or incorrect values
+    if (finalPlatform === 'admin_android') finalPlatform = 'android';
+    if (finalPlatform === 'website') finalPlatform = 'web';
+    
     if (!validPlatforms.includes(finalPlatform)) {
       console.warn(`[PLATFORM_VALIDATION_FAILED] Invalid platform '${platform}' for user ${userId}, defaulting to 'android'`);
       finalPlatform = 'android';
@@ -180,6 +185,11 @@ export class NotificationsService implements OnModuleInit {
   async registerPublicToken(token: string, platform: string = 'android', isAdmin: boolean = false) {
     const validPlatforms = ['android', 'ios', 'web'];
     let finalPlatform = platform?.toLowerCase() || 'android';
+    
+    // Normalize common legacy or incorrect values
+    if (finalPlatform === 'admin_android') finalPlatform = 'android';
+    if (finalPlatform === 'website') finalPlatform = 'web';
+    
     if (!validPlatforms.includes(finalPlatform)) {
       console.warn(`[PLATFORM_VALIDATION_FAILED] Invalid platform '${platform}' received, defaulting to 'android'`);
       finalPlatform = 'android';

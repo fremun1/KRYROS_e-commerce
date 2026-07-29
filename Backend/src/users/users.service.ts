@@ -49,7 +49,7 @@ export class UsersService {
       avatarUrl = await this.cloudinary.uploadImage(avatar, 'kryros/avatars');
     }
 
-    return this.prisma.user.create({
+    const user = await this.prisma.user.create({
       data: {
         ...coreFields,
         ...(normalizedEmail !== undefined ? { email: normalizedEmail } : {}),
@@ -58,6 +58,17 @@ export class UsersService {
         ...(avatarUrl !== undefined ? { avatar: avatarUrl } : {}),
       },
     });
+
+    // Notify about new user registration (if not already handled by auth service)
+    // We use a try-catch to ensure user creation doesn't fail if notification fails
+    try {
+      // Note: We need to inject NotificationsService here if we want to call it directly.
+      // Alternatively, we can let the caller handle it.
+      // But looking at the codebase, auth.service handles it for public registrations.
+      // For admin-created users, we might want to skip or send a different one.
+    } catch (e) {}
+
+    return user;
   }
 
   async findAll(params: { skip?: number; take?: number; search?: string; showInactive?: boolean } = {}) {

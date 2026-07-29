@@ -1,5 +1,6 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'next/navigation';
 import AdminShell from '@/components/admin/admin-shell';
 import DataTable, { Column } from '@/components/admin/data-table';
 import PageHeader from '@/components/admin/page-header';
@@ -92,6 +93,8 @@ const EMPTY_FORM = {
 };
 
 function ProductsContent() {
+  const searchParams = useSearchParams();
+  const hasAutoOpened = useRef(false);
   // CSS variables — single source of truth from globals.css
   const card = 'var(--card)'; const border = 'var(--border)';
   const textMain = 'var(--text-main)'; const textMuted = 'var(--text-muted)';
@@ -169,6 +172,18 @@ function ProductsContent() {
   useEffect(() => {
     loadProducts(currentPage);
   }, [currentPage]);
+
+  // Handle deep link from notification (?id=...)
+  useEffect(() => {
+    const productId = searchParams.get('id');
+    if (productId && !hasAutoOpened.current && !isLoading && data.length > 0) {
+      const targetProduct = data.find(p => p.id === productId);
+      if (targetProduct) {
+        hasAutoOpened.current = true;
+        setViewRow(targetProduct);
+      }
+    }
+  }, [searchParams, isLoading, data]);
 
   useEffect(() => {
     loadConditionSettings();
