@@ -91,65 +91,7 @@ export class NotificationsController {
     return this.notificationsService.sendSMS(body.phoneNumber, body.message);
   }
 
-  @Get()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Get recent notifications (Admin only)' })
-  async getNotifications(@Request() req: any) {
-    return this.notificationsService.getRecentNotifications();
-  }
-
-  @Get(':id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Get notification details (Admin only)' })
-  async getNotification(@Param('id') id: string) {
-    return this.notificationsService.getNotification(id);
-  }
-
-  @Patch(':id/read')
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Mark a notification as read' })
-  async markAsRead(@Param('id') id: string) {
-    return this.notificationsService.markAsRead(id);
-  }
-
-  @Put(':id/read') // Also support PUT for markAsRead as the client might use it
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Mark a notification as read (legacy support)' })
-  async markAsReadLegacy(@Param('id') id: string) {
-    return this.notificationsService.markAsRead(id);
-  }
-
-  @Post('read-all')
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Mark all notifications as read for current user' })
-  async markAllAsRead(@Request() req: any) {
-    return this.notificationsService.markAllAsRead(req.user.id);
-  }
-
-  @Delete(':id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Delete a notification (Admin only)' })
-  async deleteNotification(@Param('id') id: string) {
-    return this.notificationsService.deleteNotification(id);
-  }
-
-  @Delete()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Clear all notifications (Admin only)' })
-  async clearAllNotifications(@Request() req: any) {
-    return this.notificationsService.clearAllNotifications(req.user.id);
-  }
+  // ─── IMPORTANT: All static/named routes MUST come before :id wildcard routes ─
 
   @Get('status')
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -193,6 +135,145 @@ export class NotificationsController {
         note: this.notificationsService.isPushConfigured ? 'Push notifications are active' : 'Configure FIREBASE_SERVICE_ACCOUNT_JSON to enable push notifications',
       },
     };
+  }
+
+  // ─── Device Management ────────────────────────────────────────────────────
+  @Get('devices')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'List all registered devices (Admin only)' })
+  async getDevices() {
+    return this.notificationsService.getDevices();
+  }
+
+  @Delete('devices/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Delete a registered device (Admin only)' })
+  async deleteDevice(@Param('id') id: string) {
+    return this.notificationsService.deleteDevice(id);
+  }
+
+  @Post('devices/send')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Send push to specific device IDs (Admin only)' })
+  async sendToDevices(@Body() body: { deviceIds: string[]; title: string; body: string; data?: any; url?: string; imageUrl?: string }) {
+    const mergedData = { ...(body.data || {}), ...(body.url ? { url: body.url } : {}), ...(body.imageUrl ? { imageUrl: body.imageUrl } : {}) };
+    return this.notificationsService.sendToDeviceIds(body.deviceIds, body.title, body.body, mergedData);
+  }
+
+  // ─── SMS Contacts ─────────────────────────────────────────────────────────
+  @Get('sms/contacts')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'List all SMS contacts (Admin only)' })
+  async getSmsContacts() {
+    return this.notificationsService.getSmsContacts();
+  }
+
+  @Post('sms/contacts')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Manually add an SMS contact (Admin only)' })
+  async addSmsContact(@Body() body: { phone: string; name?: string; source?: string }) {
+    return this.notificationsService.addSmsContact(body.phone, body.name, body.source || 'Manual');
+  }
+
+  @Post('sms/contacts/register')
+  @Throttle({ default: { ttl: 60000, limit: 3 } })
+  @ApiOperation({ summary: 'Auto-register phone from checkout (public, max 3/min per IP)' })
+  async registerSmsContact(@Body() body: { phone: string; name?: string; source?: string }) {
+    return this.notificationsService.addSmsContact(body.phone, body.name, body.source || 'Checkout');
+  }
+
+  @Delete('sms/contacts/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Delete an SMS contact (Admin only)' })
+  async deleteSmsContact(@Param('id') id: string) {
+    return this.notificationsService.deleteSmsContact(id);
+  }
+
+  // ─── SMS Supported Countries ──────────────────────────────────────────────
+  @Get('sms/countries')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'List SMS supported countries (Admin only)' })
+  async getSmsCountries() {
+    return this.notificationsService.getSmsCountries();
+  }
+
+  @Post('sms/countries')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Add a supported SMS country (Admin only)' })
+  async addSmsCountry(@Body() body: { name: string; dialCode: string; isoCode: string }) {
+    return this.notificationsService.addSmsCountry(body.name, body.dialCode, body.isoCode);
+  }
+
+  @Patch('sms/countries/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Toggle SMS country active/inactive (Admin only)' })
+  async toggleSmsCountry(@Param('id') id: string, @Body() body: { isActive: boolean }) {
+    return this.notificationsService.toggleSmsCountry(id, body.isActive);
+  }
+
+  @Delete('sms/countries/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Delete a supported SMS country (Admin only)' })
+  async deleteSmsCountry(@Param('id') id: string) {
+    return this.notificationsService.deleteSmsCountry(id);
+  }
+
+  // ─── Email Contacts ───────────────────────────────────────────────────────────
+  @Get('email/contacts')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'List email contacts (Admin only)' })
+  async getEmailContacts() {
+    return this.notificationsService.getEmailContacts();
+  }
+
+  @Post('email/contacts')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Add an email contact (Admin only)' })
+  async addEmailContact(@Body() body: { email: string; name?: string; source?: string }) {
+    return this.notificationsService.addEmailContact(body.email, body.name, body.source);
+  }
+
+  @Delete('email/contacts/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Delete an email contact (Admin only)' })
+  async deleteEmailContact(@Param('id') id: string) {
+    return this.notificationsService.deleteEmailContact(id);
+  }
+
+  @Post('email/blast')
+  @Throttle({ default: { ttl: 60000, limit: 5 } })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Send email blast to contacts (Admin only) — max 5/min' })
+  async sendEmailBlast(@Body() body: { subject: string; body: string; emailIds?: string[] }) {
+    return this.notificationsService.sendEmailBlast(body.subject, body.body, body.emailIds);
   }
 
   @Post('email/test')
@@ -274,148 +355,6 @@ export class NotificationsController {
     });
   }
 
-  // ─── SMS Contacts ─────────────────────────────────────────────────────────
-  @Get('sms/contacts')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'List all SMS contacts (Admin only)' })
-  async getSmsContacts() {
-    return this.notificationsService.getSmsContacts();
-  }
-
-  @Post('sms/contacts')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Manually add an SMS contact (Admin only)' })
-  async addSmsContact(@Body() body: { phone: string; name?: string; source?: string }) {
-    return this.notificationsService.addSmsContact(body.phone, body.name, body.source || 'Manual');
-  }
-
-  @Post('sms/contacts/register')
-  @Throttle({ default: { ttl: 60000, limit: 3 } })
-  @ApiOperation({ summary: 'Auto-register phone from checkout (public, max 3/min per IP)' })
-  async registerSmsContact(@Body() body: { phone: string; name?: string; source?: string }) {
-    return this.notificationsService.addSmsContact(body.phone, body.name, body.source || 'Checkout');
-  }
-
-  @Delete('sms/contacts/:id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Delete an SMS contact (Admin only)' })
-  async deleteSmsContact(@Param('id') id: string) {
-    return this.notificationsService.deleteSmsContact(id);
-  }
-
-
-  // ─── Device Management ────────────────────────────────────────────────────
-  @Get('devices')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'List all registered devices (Admin only)' })
-  async getDevices() {
-    return this.notificationsService.getDevices();
-  }
-
-  @Delete('devices/:id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Delete a registered device (Admin only)' })
-  async deleteDevice(@Param('id') id: string) {
-    return this.notificationsService.deleteDevice(id);
-  }
-
-  @Post('devices/send')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Send push to specific device IDs (Admin only)' })
-  async sendToDevices(@Body() body: { deviceIds: string[]; title: string; body: string; data?: any; url?: string; imageUrl?: string }) {
-    const mergedData = { ...(body.data || {}), ...(body.url ? { url: body.url } : {}), ...(body.imageUrl ? { imageUrl: body.imageUrl } : {}) };
-    return this.notificationsService.sendToDeviceIds(body.deviceIds, body.title, body.body, mergedData);
-  }
-
-
-  // ─── SMS Supported Countries ──────────────────────────────────────────────
-  @Get('sms/countries')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'List SMS supported countries (Admin only)' })
-  async getSmsCountries() {
-    return this.notificationsService.getSmsCountries();
-  }
-
-  @Post('sms/countries')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Add a supported SMS country (Admin only)' })
-  async addSmsCountry(@Body() body: { name: string; dialCode: string; isoCode: string }) {
-    return this.notificationsService.addSmsCountry(body.name, body.dialCode, body.isoCode);
-  }
-
-  @Patch('sms/countries/:id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Toggle SMS country active/inactive (Admin only)' })
-  async toggleSmsCountry(@Param('id') id: string, @Body() body: { isActive: boolean }) {
-    return this.notificationsService.toggleSmsCountry(id, body.isActive);
-  }
-
-  @Delete('sms/countries/:id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Delete a supported SMS country (Admin only)' })
-  async deleteSmsCountry(@Param('id') id: string) {
-    return this.notificationsService.deleteSmsCountry(id);
-  }
-
-
-  // ─── Email Contacts ───────────────────────────────────────────────────────────
-  @Get('email/contacts')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'List email contacts (Admin only)' })
-  async getEmailContacts() {
-    return this.notificationsService.getEmailContacts();
-  }
-
-  @Post('email/contacts')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Add an email contact (Admin only)' })
-  async addEmailContact(@Body() body: { email: string; name?: string; source?: string }) {
-    return this.notificationsService.addEmailContact(body.email, body.name, body.source);
-  }
-
-  @Delete('email/contacts/:id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Delete an email contact (Admin only)' })
-  async deleteEmailContact(@Param('id') id: string) {
-    return this.notificationsService.deleteEmailContact(id);
-  }
-
-  @Post('email/blast')
-  @Throttle({ default: { ttl: 60000, limit: 5 } })
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Send email blast to contacts (Admin only) — max 5/min' })
-  async sendEmailBlast(@Body() body: { subject: string; body: string; emailIds?: string[] }) {
-    return this.notificationsService.sendEmailBlast(body.subject, body.body, body.emailIds);
-  }
-
   // ─── Public Payment Receipt ───────────────────────────────────────────────
   @Post('receipt')
   @Throttle({ default: { ttl: 60000, limit: 5 } })
@@ -483,4 +422,65 @@ export class NotificationsController {
     return { success: smsSent || emailSent, smsSent, emailSent };
   }
 
+  // ─── Wildcard :id routes MUST come last ───────────────────────────────────
+
+  @Get()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get recent notifications (Admin only)' })
+  async getNotifications(@Request() req: any) {
+    return this.notificationsService.getRecentNotifications();
+  }
+
+  @Post('read-all')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Mark all notifications as read for current user' })
+  async markAllAsRead(@Request() req: any) {
+    return this.notificationsService.markAllAsRead(req.user.id);
+  }
+
+  @Get(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get notification details (Admin only)' })
+  async getNotification(@Param('id') id: string) {
+    return this.notificationsService.getNotification(id);
+  }
+
+  @Patch(':id/read')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Mark a notification as read' })
+  async markAsRead(@Param('id') id: string) {
+    return this.notificationsService.markAsRead(id);
+  }
+
+  @Put(':id/read') // Also support PUT for markAsRead as the client might use it
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Mark a notification as read (legacy support)' })
+  async markAsReadLegacy(@Param('id') id: string) {
+    return this.notificationsService.markAsRead(id);
+  }
+
+  @Delete(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Delete a notification (Admin only)' })
+  async deleteNotification(@Param('id') id: string) {
+    return this.notificationsService.deleteNotification(id);
+  }
+
+  @Delete()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Clear all notifications (Admin only)' })
+  async clearAllNotifications(@Request() req: any) {
+    return this.notificationsService.clearAllNotifications(req.user.id);
+  }
 }

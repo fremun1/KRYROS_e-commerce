@@ -128,7 +128,14 @@ export class NotificationsService implements OnModuleInit {
   }
 
   async updateToken(userId: string, token: string, platform: string = 'android') {
-    await this.prisma.userDevice.upsert({ where: { fcmToken: token }, update: { userId, platform, updatedAt: new Date() }, create: { userId, fcmToken: token, platform } });
+    // Preserve the isAdmin flag when updating an existing device so admin app tokens
+    // are not downgraded to regular user tokens after the first authenticated sync.
+    const existing = await this.prisma.userDevice.findUnique({ where: { fcmToken: token }, select: { isAdmin: true } });
+    await this.prisma.userDevice.upsert({
+      where: { fcmToken: token },
+      update: { userId, platform, updatedAt: new Date() },
+      create: { userId, fcmToken: token, platform, isAdmin: existing?.isAdmin ?? false },
+    });
   }
 
   async registerPublicToken(token: string, platform: string = 'android', isAdmin: boolean = false) {
