@@ -79,7 +79,11 @@ function PushContent() {
     setLoading(true);
     getDevices()
       .then((r: any) => {
-        const raw = Array.isArray(r.data) ? r.data : [];
+        // Backend returns the array directly (not wrapped in a data envelope)
+        const raw = Array.isArray(r.data) ? r.data
+          : Array.isArray(r.data?.data) ? r.data.data
+          : Array.isArray(r) ? r
+          : [];
         setDevices(raw);
       })
       .catch(() => {})
