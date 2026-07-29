@@ -53,14 +53,22 @@ export default function Topbar({ collapsed, sidebarW, onMenuToggle, onMobileMenu
     try {
       const res: any = await getNotifications({ limit: 8 });
       const raw: any[] = Array.isArray(res.data?.data) ? res.data.data : Array.isArray(res.data) ? res.data : [];
-      const mapped: NotifItem[] = raw.map((n: any) => ({
-        id: n.id || String(Math.random()),
-        title: n.title || n.type || "Notification",
-        message: n.message || n.body || "",
-        isRead: n.isRead ?? n.read ?? false,
-        createdAt: n.createdAt ? new Date(n.createdAt).toLocaleDateString() : "",
-        type: n.type || "",
-      }));
+      const mapped: NotifItem[] = raw
+        .filter((n: any) => {
+          // Only show if it's explicitly for this user or marked as an admin alert
+          // n.userId check ensures direct messages show up
+          // n.data?.isAdminAlert check ensures system alerts (new order, etc) show up
+          const data = typeof n.data === 'string' ? JSON.parse(n.data) : n.data;
+          return n.userId || data?.isAdminAlert === 'true';
+        })
+        .map((n: any) => ({
+          id: n.id || String(Math.random()),
+          title: n.title || n.type || "Notification",
+          message: n.message || n.body || "",
+          isRead: n.isRead ?? n.read ?? false,
+          createdAt: n.createdAt ? new Date(n.createdAt).toLocaleDateString() : "",
+          type: n.type || "",
+        }));
       setNotifs(mapped);
     } catch {
       // silently fail — keep empty

@@ -17,6 +17,7 @@ import { CreateUserDto } from '../users/dto/create-user.dto';
 import { LoginDto } from './dto/login.dto';
 import { EmailService } from '../common/email/email.service';
 import { JwtPayload } from './interfaces/jwt-payload.interface';
+import { NotificationsService } from '../notifications/notifications.service';
 
 const BCRYPT_ROUNDS = 12;
 const REFRESH_TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000;
@@ -39,6 +40,7 @@ export class AuthService {
     private prisma: PrismaService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private emailService: EmailService,
+    private notificationsService: NotificationsService,
   ) {
     // ── Redis health check ────────────────────────────────────────────────────
     // The failed-login lockout counter is stored via cacheManager. If REDIS_URL
@@ -181,6 +183,15 @@ export class AuthService {
       data: { lastLoginAt: new Date() },
     });
 
+    // Notify Admin of User Login (if not an admin logging in)
+    if (user.role === 'CUSTOMER') {
+      this.notificationsService.sendToAdmins(
+        'User Login 🔐',
+        `${user.firstName} ${user.lastName} (${user.email || user.phone}) has logged in.`,
+        { type: 'USER_LOGIN', userId: user.id, url: `/users?search=${encodeURIComponent(user.email || user.phone || '')}` }
+      ).catch(() => {});
+    }
+
     // Auto-verify users on successful login (no email verification flow exists)
     if (!user.isVerified) {
       await this.prisma.user.update({
@@ -288,6 +299,13 @@ export class AuthService {
       });
       await this.emailService.sendEmailVerification(result.email, verifyRaw);
     }
+
+    // Notify Admin of New User Registration
+    this.notificationsService.sendToAdmins(
+      'New User Registered! 🆕',
+      `${result.firstName} ${result.lastName} (${result.email || result.phone}) just joined KRYROS.`,
+      { type: 'USER_REGISTER', userId: result.id, url: `/users?search=${encodeURIComponent(result.email || result.phone || '')}` }
+    ).catch(() => {});
 
     return { user: result, accessToken, refreshToken };
   }

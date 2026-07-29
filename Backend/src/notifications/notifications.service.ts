@@ -302,7 +302,14 @@ export class NotificationsService implements OnModuleInit {
 
   async sendToAll(title: string, body: string, data?: any) {
     try {
+      // Broadcast only to CUSTOMERS (exclude ADMIN/SUPER_ADMIN)
       const devices = await this.prisma.userDevice.findMany({
+        where: {
+          OR: [
+            { user: { role: 'CUSTOMER' } },
+            { userId: null } // Guest devices
+          ]
+        },
         select: { fcmToken: true },
       });
 
@@ -330,6 +337,41 @@ export class NotificationsService implements OnModuleInit {
       this.logger.log(`Broadcast notification sent to ${tokens.length} tokens`);
     } catch (error) {
       this.logger.error('Error sending broadcast notification', error.stack);
+    }
+  }
+
+  async sendToAdmins(title: string, body: string, data?: any) {
+    try {
+      const adminDevices = await this.prisma.userDevice.findMany({
+        where: {
+          user: {
+            role: { in: ['ADMIN', 'SUPER_ADMIN'] }
+          }
+        },
+        select: { fcmToken: true, userId: true },
+      });
+
+      const tokens = adminDevices.map(d => d.fcmToken);
+      if (tokens.length === 0) return;
+
+      await this.sendToTokens(tokens, title, body, { ...data, isAdminAlert: 'true' });
+
+      // Log for each admin to see in their bell icon
+      const adminIds = [...new Set(adminDevices.map(d => d.userId).filter(Boolean))];
+      for (const adminId of adminIds) {
+        await this.prisma.notification.create({
+          data: {
+            userId: adminId,
+            title,
+            message: body,
+            data: { ...data, isAdminAlert: 'true' },
+            targetType: 'SINGLE',
+            sent: true,
+          },
+        });
+      }
+    } catch (error) {
+      this.logger.error('Error sending admin notification', error.stack);
     }
   }
 
