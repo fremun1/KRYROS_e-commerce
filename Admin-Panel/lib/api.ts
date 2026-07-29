@@ -490,7 +490,7 @@ export const getDevices = () =>
 export const deleteDevice = (id: string) =>
   api.delete(`/api/notifications/devices/${id}`);
 
-export const sendToDevices = (payload: { deviceIds: string[]; title: string; body: string; data?: any; url?: string; imageUrl?: string }) =>
+export const sendToDevices = (payload: { deviceIds: string[]; title: string; body: string; data?: any; url?: string; imageUrl?: string; isAdminAlert?: string }) =>
   api.post('/api/notifications/devices/send', payload);
 
 // ─── Email Contacts ────────────────────────────────────────────────────────────
