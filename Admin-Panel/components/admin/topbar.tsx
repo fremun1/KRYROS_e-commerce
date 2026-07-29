@@ -22,7 +22,7 @@ interface TopbarProps {
   onMobileMenuToggle: () => void;
 }
 
-type NotifItem = { id: string; title: string; message: string; isRead: boolean; createdAt: string; type?: string };
+type NotifItem = { id: string; title: string; message: string; isRead: boolean; createdAt: string; type?: string; url?: string };
 
 export default function Topbar({ collapsed, sidebarW, onMenuToggle, onMobileMenuToggle }: TopbarProps) {
   const { user, logout } = useAuth();
