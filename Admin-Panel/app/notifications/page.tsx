@@ -84,6 +84,7 @@ function PushContent() {
         if (Array.isArray(r)) raw = r;
         else if (Array.isArray(r.data)) raw = r.data;
         else if (Array.isArray(r.data?.data)) raw = r.data.data;
+        else if (r && typeof r === 'object' && !Array.isArray(r) && !r.data) raw = [];
         
         setDevices(raw);
       })

@@ -212,7 +212,7 @@ function OrdersContent() {
       hasAutoOpened.current = true;
       openDetail(orderId);
     }
-  }, [searchParams, ordersLoading]);
+  }, [searchParams, ordersLoading, openDetail]);
 
   // Open order detail panel
   const openDetail = useCallback(async (orderId: string) => {

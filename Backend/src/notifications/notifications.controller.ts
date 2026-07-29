@@ -42,9 +42,14 @@ export class NotificationsController {
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Send broadcast notification (Admin only)' })
-  async broadcast(@Body() body: { title: string; body: string; data?: any; url?: string; imageUrl?: string }) {
+  async broadcast(@Body() body: { title: string; body: string; data?: any; url?: string; imageUrl?: string; isAdminAlert?: string }) {
     // Merge url and imageUrl into the data payload so the app can navigate on tap
-    const mergedData = { ...(body.data || {}), ...(body.url ? { url: body.url } : {}), ...(body.imageUrl ? { imageUrl: body.imageUrl } : {}) };
+    const mergedData = { 
+      ...(body.data || {}), 
+      ...(body.url ? { url: body.url } : {}), 
+      ...(body.imageUrl ? { imageUrl: body.imageUrl } : {}),
+      ...(body.isAdminAlert ? { isAdminAlert: body.isAdminAlert } : {})
+    };
     return this.notificationsService.sendToAll(body.title, body.body, mergedData);
   }
 
@@ -53,12 +58,13 @@ export class NotificationsController {
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Send targeted notification (Admin only)' })
-  async sendTargeted(@Body() body: SendNotificationDto) {
+  async sendTargeted(@Body() body: SendNotificationDto & { isAdminAlert?: string }) {
     // Merge url and imageUrl into the data payload so the app can navigate on tap
     const mergedData = {
       ...(body.data || {}),
       ...(body.url ? { url: body.url } : {}),
       ...(body.imageUrl ? { imageUrl: body.imageUrl } : {}),
+      ...(body.isAdminAlert ? { isAdminAlert: body.isAdminAlert } : {})
     };
 
     if (body.scheduledAt) {

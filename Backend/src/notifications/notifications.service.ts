@@ -130,7 +130,7 @@ export class NotificationsService implements OnModuleInit {
         android: { 
           priority: 'high', 
           notification: { 
-            channelId: data?.isAdminAlert === 'true' ? 'kryros_admin_notifications' : 'kryros_notifications', 
+            channelId: 'kryros_notifications', 
             clickAction: 'FLUTTER_NOTIFICATION_CLICK', 
             sound: 'default',
             title,
@@ -163,11 +163,11 @@ export class NotificationsService implements OnModuleInit {
 
   async updateToken(userId: string, token: string, platform: string = 'android') {
     const validPlatforms = ['android', 'ios', 'web'];
-    let finalPlatform = platform?.toLowerCase() || 'android';
+    let finalPlatform = String(platform || '').toLowerCase() || 'android';
     
     // Normalize common legacy or incorrect values
     if (finalPlatform === 'admin_android') finalPlatform = 'android';
-    if (finalPlatform === 'website') finalPlatform = 'web';
+    if (finalPlatform === 'website' || finalPlatform === 'web_view') finalPlatform = 'web';
     
     if (!validPlatforms.includes(finalPlatform)) {
       console.warn(`[PLATFORM_VALIDATION_FAILED] Invalid platform '${platform}' for user ${userId}, defaulting to 'android'`);
@@ -184,11 +184,11 @@ export class NotificationsService implements OnModuleInit {
 
   async registerPublicToken(token: string, platform: string = 'android', isAdmin: boolean = false) {
     const validPlatforms = ['android', 'ios', 'web'];
-    let finalPlatform = platform?.toLowerCase() || 'android';
+    let finalPlatform = String(platform || '').toLowerCase() || 'android';
     
     // Normalize common legacy or incorrect values
     if (finalPlatform === 'admin_android') finalPlatform = 'android';
-    if (finalPlatform === 'website') finalPlatform = 'web';
+    if (finalPlatform === 'website' || finalPlatform === 'web_view') finalPlatform = 'web';
     
     if (!validPlatforms.includes(finalPlatform)) {
       console.warn(`[PLATFORM_VALIDATION_FAILED] Invalid platform '${platform}' received, defaulting to 'android'`);
