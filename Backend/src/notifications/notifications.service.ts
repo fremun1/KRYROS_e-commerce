@@ -162,18 +162,30 @@ export class NotificationsService implements OnModuleInit {
   }
 
   async updateToken(userId: string, token: string, platform: string = 'android') {
-    // Preserve the isAdmin flag when updating an existing device so admin app tokens
-    // are not downgraded to regular user tokens after the first authenticated sync.
+    const validPlatforms = ['android', 'ios', 'web'];
+    let finalPlatform = platform?.toLowerCase() || 'android';
+    if (!validPlatforms.includes(finalPlatform)) {
+      console.warn(`[PLATFORM_VALIDATION_FAILED] Invalid platform '${platform}' for user ${userId}, defaulting to 'android'`);
+      finalPlatform = 'android';
+    }
     const existing = await this.prisma.userDevice.findUnique({ where: { fcmToken: token }, select: { isAdmin: true } });
-    await this.prisma.userDevice.upsert({
+    const result = await this.prisma.userDevice.upsert({
       where: { fcmToken: token },
-      update: { userId, platform, updatedAt: new Date() },
-      create: { userId, fcmToken: token, platform, isAdmin: existing?.isAdmin ?? false },
+      update: { userId, platform: finalPlatform, updatedAt: new Date() },
+      create: { userId, fcmToken: token, platform: finalPlatform, isAdmin: existing?.isAdmin ?? false },
     });
+    return result;
   }
 
   async registerPublicToken(token: string, platform: string = 'android', isAdmin: boolean = false) {
-    return this.prisma.userDevice.upsert({ where: { fcmToken: token }, update: { platform, updatedAt: new Date(), isAdmin }, create: { fcmToken: token, platform, isAdmin } });
+    const validPlatforms = ['android', 'ios', 'web'];
+    let finalPlatform = platform?.toLowerCase() || 'android';
+    if (!validPlatforms.includes(finalPlatform)) {
+      console.warn(`[PLATFORM_VALIDATION_FAILED] Invalid platform '${platform}' received, defaulting to 'android'`);
+      finalPlatform = 'android';
+    }
+    const result = await this.prisma.userDevice.upsert({ where: { fcmToken: token }, update: { platform: finalPlatform, updatedAt: new Date(), isAdmin }, create: { fcmToken: token, platform: finalPlatform, isAdmin } });
+    return result;
   }
 
   async sendOrderPlacedNotification(orderId: string) {

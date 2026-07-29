@@ -307,6 +307,10 @@ export class AuthService {
       { type: 'USER_REGISTER', userId: result.id, url: `/users?search=${encodeURIComponent(result.email || result.phone || '')}` }
     ).catch(() => {});
 
+    // Send Welcome Notification to New User
+    this.notificationsService.sendUserRegisteredNotification(result.id)
+      .catch(e => console.warn('User registration notification failed:', e?.message));
+
     return { user: result, accessToken, refreshToken };
   }
 

@@ -23,6 +23,7 @@ export class NotificationsController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update user FCM token (authenticated)' })
   async updateToken(@Request() req: any, @Body() body: UpdateTokenDto) {
+    console.log(`[TOKEN_UPDATE] User: ${req.user.id}, Platform: ${body.platform || 'android'}, Token: ${body.token?.substring(0, 20)}...`);
     return this.notificationsService.updateToken(req.user.id, body.token, body.platform || 'android');
   }
 
@@ -30,7 +31,10 @@ export class NotificationsController {
   @Throttle({ default: { ttl: 60000, limit: 10 } })
   @ApiOperation({ summary: 'Register FCM token without authentication' })
   async registerPublicToken(@Body() body: UpdateTokenDto & { isAdmin?: boolean }) {
-    return this.notificationsService.registerPublicToken(body.token, body.platform || 'android', body.isAdmin);
+    console.log(`[TOKEN_PUBLIC_REGISTER] Platform: ${body.platform || 'android'}, IsAdmin: ${body.isAdmin}, Token: ${body.token?.substring(0, 20)}...`);
+    const result = await this.notificationsService.registerPublicToken(body.token, body.platform || 'android', body.isAdmin);
+    console.log(`[TOKEN_REGISTERED_SUCCESS] Platform stored: ${result.platform}, IsAdmin: ${result.isAdmin}`);
+    return result;
   }
 
   @Post('broadcast')
