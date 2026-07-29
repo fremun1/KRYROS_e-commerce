@@ -79,14 +79,17 @@ function PushContent() {
     setLoading(true);
     getDevices()
       .then((r: any) => {
-        // Backend returns the array directly (not wrapped in a data envelope)
-        const raw = Array.isArray(r.data) ? r.data
-          : Array.isArray(r.data?.data) ? r.data.data
-          : Array.isArray(r) ? r
-          : [];
+        // Handle multiple response shapes: r, r.data, or r.data.data
+        let raw = [];
+        if (Array.isArray(r)) raw = r;
+        else if (Array.isArray(r.data)) raw = r.data;
+        else if (Array.isArray(r.data?.data)) raw = r.data.data;
+        
         setDevices(raw);
       })
-      .catch(() => {})
+      .catch(() => {
+        toast.error('Failed to load registered devices');
+      })
       .finally(() => setLoading(false));
   };
 

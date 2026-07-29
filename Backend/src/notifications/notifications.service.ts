@@ -130,7 +130,7 @@ export class NotificationsService implements OnModuleInit {
         android: { 
           priority: 'high', 
           notification: { 
-            channelId: 'kryros_notifications', 
+            channelId: data?.isAdminAlert === 'true' ? 'kryros_admin_notifications' : 'kryros_notifications', 
             clickAction: 'FLUTTER_NOTIFICATION_CLICK', 
             sound: 'default',
             title,
