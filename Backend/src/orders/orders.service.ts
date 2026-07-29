@@ -555,11 +555,13 @@ export class OrdersService {
       .catch(e => console.warn('Order placed notification failed:', e?.message));
 
     // Notify Admin of New Order
-    this.notificationsService.sendToAdmins(
-      'New Order Received! 🛒',
-      `Order #${order.orderNumber} placed by ${order.user?.firstName || 'Customer'}. Total: ${order.total} ${order.currencyCode}`,
-      { type: 'NEW_ORDER', orderId: order.id, orderNumber: order.orderNumber, url: `/orders/${order.id}` }
-    ).catch(() => {});
+    this.findById(order.id).then(fullOrder => {
+      this.notificationsService.sendToAdmins(
+        'New Order Received! 🛒',
+        `Order #${fullOrder.orderNumber} placed by ${fullOrder.user?.firstName || 'Customer'}. Total: ${fullOrder.total} ${fullOrder.currencyCode}`,
+        { type: 'NEW_ORDER', orderId: fullOrder.id, orderNumber: fullOrder.orderNumber, url: `/orders/${fullOrder.id}` }
+      ).catch(() => {});
+    }).catch(() => {});
 
     return order;
   }
