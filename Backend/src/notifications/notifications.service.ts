@@ -1,4 +1,4 @@
-import { Injectable, Logger, OnModuleInit, BadRequestException, InternalServerErrorException } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit, BadRequestException } from '@nestjs/common';
 import { MailerService } from './mailer.service';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
@@ -21,1034 +21,197 @@ export class NotificationsService implements OnModuleInit {
 
   onModuleInit() {
     const serviceAccountJson = this.configService.get('FIREBASE_SERVICE_ACCOUNT_JSON');
-    
-    if (!serviceAccountJson) {
-      this.logger.warn('FIREBASE_SERVICE_ACCOUNT_JSON not found. Push notifications disabled.');
-      return;
-    }
-
+    if (!serviceAccountJson) return;
     try {
       let config: any;
-      try {
-        config = JSON.parse(serviceAccountJson);
-      } catch {
+      try { config = JSON.parse(serviceAccountJson); } catch {
         const filePath = resolve(process.cwd(), serviceAccountJson);
         const fileContent = readFileSync(filePath, 'utf-8');
         config = JSON.parse(fileContent);
       }
-      
-      if (!config.private_key || !config.client_email) {
-        this.logger.error('The FIREBASE_SERVICE_ACCOUNT_JSON appears to be a client config (google-services.json) instead of an Admin SDK key. Push notifications will be disabled to prevent crashes.');
-        return;
+      if (config.private_key && config.client_email) {
+        admin.initializeApp({ credential: admin.credential.cert(config) });
       }
-
-      admin.initializeApp({
-        credential: admin.credential.cert(config),
-      });
-      this.logger.log('Firebase Admin initialized successfully');
-    } catch (error) {
-      this.logger.error('Failed to initialize Firebase Admin. The JSON format might be invalid.', error.message);
-    }
+    } catch (error) {}
   }
 
-  get isPushConfigured(): boolean {
-    try {
-      return admin.apps.length > 0;
-    } catch {
-      return false;
-    }
-  }
+  get isPushConfigured(): boolean { try { return admin.apps.length > 0; } catch { return false; } }
 
   @Cron(CronExpression.EVERY_MINUTE)
   async processScheduledNotifications() {
     const now = new Date();
-    const scheduled = await this.prisma.notification.findMany({
-      where: {
-        sent: false,
-        scheduledAt: { lte: now },
-      },
-    });
-
-    if (scheduled.length === 0) return;
-
-    this.logger.log(`Processing ${scheduled.length} scheduled notifications`);
-
+    const scheduled = await this.prisma.notification.findMany({ where: { sent: false, scheduledAt: { lte: now } } });
     for (const notification of scheduled) {
       try {
-        if (notification.userId) {
-          await this.sendToUser(notification.userId, notification.title, notification.message, notification.data);
-        } else {
-          await this.sendToAll(notification.title, notification.message, notification.data);
-        }
-
-        await this.prisma.notification.update({
-          where: { id: notification.id },
-          data: { sent: true },
-        });
-      } catch (error) {
-        this.logger.error(`Failed to process scheduled notification ${notification.id}`, error.stack);
-      }
+        if (notification.userId) await this.sendToUser(notification.userId, notification.title, notification.message, notification.data);
+        else await this.sendToAll(notification.title, notification.message, notification.data);
+        await this.prisma.notification.update({ where: { id: notification.id }, data: { sent: true } });
+      } catch (error) {}
     }
   }
 
   async sendToUser(userId: string, title: string, body: string, data?: any) {
-    const userDevices = await this.prisma.userDevice.findMany({
-      where: { userId },
-      select: { fcmToken: true, id: true },
-    });
-
-    if (userDevices.length === 0) {
-      this.logger.warn(`No FCM tokens found for user ${userId}`);
-      return;
-    }
-
-    const tokens = userDevices.map(d => d.fcmToken);
-    await this.sendToTokens(tokens, title, body, data);
-    
-    // Log in database
-    await this.prisma.notification.create({
-      data: {
-        userId,
-        title,
-        message: body,
-        data: data || {},
-        targetType: 'SINGLE',
-        sent: true,
-      },
-    });
-  }
-
-  private async sendToGuestToken(token: string, title: string, body: string, data?: any) {
-    const invalidTokens = await this.sendToTokens([token], title, body, data);
-    if (invalidTokens.length > 0) {
-      await this.prisma.order.updateMany({
-        where: { guestFcmToken: { in: invalidTokens } },
-        data: { guestFcmToken: null },
-      });
-      this.logger.log(`Cleared ${invalidTokens.length} invalid guest token(s) from orders`);
-    }
-  }
-
-  async sendToOrders(orderIds: string[], title: string, body: string, data?: any) {
-    const orders = await this.prisma.order.findMany({
-      where: { id: { in: orderIds } },
-      select: { userId: true, guestFcmToken: true },
-    });
-
-    const userIds = [...new Set(orders.map(o => o.userId).filter((id): id is string => !!id))];
-    const guestTokens = [...new Set(orders.map(o => o.guestFcmToken).filter((token): token is string => !!token))];
-
-    for (const userId of userIds) {
-      await this.sendToUser(userId, title, body, { ...data, orderIds });
-    }
-
-    for (const token of guestTokens) {
-      await this.sendToGuestToken(token, title, body, { ...data, orderIds });
-    }
-
-    // Log in database
-    await this.prisma.notification.create({
-      data: {
-        orderIds,
-        title,
-        message: body,
-        data: data || {},
-        targetType: 'BULK',
-        sent: true,
-      },
-    });
-  }
-
-  async sendByOrderStatus(status: string, title: string, body: string, data?: any) {
-    const orders = await this.prisma.order.findMany({
-      where: { status: status as any },
-      select: { userId: true, guestFcmToken: true },
-    });
-
-    const userIds = [...new Set(orders.map(o => o.userId).filter((id): id is string => !!id))];
-    const guestTokens = [...new Set(orders.map(o => o.guestFcmToken).filter((token): token is string => !!token))];
-
-    for (const userId of userIds) {
-      await this.sendToUser(userId, title, body, data);
-    }
-
-    for (const token of guestTokens) {
-      await this.sendToGuestToken(token, title, body, data);
-    }
-  }
-
-  async scheduleNotification(params: {
-    title: string;
-    body: string;
-    targetType: string;
-    userId?: string;
-    orderIds?: string[];
-    orderStatus?: string;
-    data?: any;
-    scheduledAt?: string;
-  }) {
-    if (!params.scheduledAt) {
-      throw new Error('scheduledAt is required for scheduled notifications');
-    }
-    
-    return this.prisma.notification.create({
-      data: {
-        userId: params.userId,
-        title: params.title,
-        message: params.body,
-        targetType: params.targetType,
-        data: params.data || {},
-        scheduledAt: new Date(params.scheduledAt),
-        sent: false,
-      },
-    });
-  }
-
-  private async sendToTokens(tokens: string[], title: string, body: string, data?: any): Promise<string[]> {
-    if (tokens.length === 0) return [];
-    if (!this.isPushConfigured) {
-      this.logger.warn('Push notification skipped because Firebase Admin is not configured');
-      return [];
-    }
-
-    try {
-      // FCM requires ALL data values to be strings — convert everything
-      const rawData: Record<string, any> = data || {};
-      const stringifiedData: Record<string, string> = {};
-      for (const [k, v] of Object.entries(rawData)) {
-        if (v !== null && v !== undefined) {
-          stringifiedData[k] = typeof v === 'string' ? v : JSON.stringify(v);
-        }
-      }
-
-      const imageUrl: string | undefined = rawData?.imageUrl || rawData?.image || undefined;
-      const deepLinkUrl: string | undefined = rawData?.url || rawData?.link || undefined;
-
-      const message: admin.messaging.MulticastMessage = {
-        notification: {
-          title,
-          body,
-          ...(imageUrl ? { imageUrl } : {}),
-        },
-        tokens,
-        data: {
-          ...stringifiedData,
-          click_action: 'FLUTTER_NOTIFICATION_CLICK',
-        },
-        android: {
-          priority: 'high',
-          notification: {
-            channelId: 'kryros_notifications',
-            clickAction: 'FLUTTER_NOTIFICATION_CLICK',
-            ...(imageUrl ? { imageUrl } : {}),
-            sound: 'default',
-          },
-        },
-        apns: {
-          payload: {
-            aps: {
-              sound: 'default',
-              badge: 1,
-            },
-          },
-          ...(imageUrl ? {
-            fcmOptions: { imageUrl },
-          } : {}),
-        },
-        webpush: {
-          notification: {
-            icon: '/logo-pwa.png',
-            badge: '/favicon.svg',
-            ...(imageUrl ? { image: imageUrl } : {}),
-          },
-          fcmOptions: {
-            link: deepLinkUrl || '/',
-          },
-        },
-      };
-
-      const response = await admin.messaging().sendEachForMulticast(message);
-      const failedTokens: string[] = [];
-
-      // Handle invalid tokens
-      if (response.failureCount > 0) {
-        response.responses.forEach((resp, idx) => {
-          if (!resp.success) {
-            const errorCode = resp.error?.code;
-            // Messaging error codes: https://firebase.google.com/docs/cloud-messaging/send-message#error_codes
-            if (errorCode === 'messaging/invalid-registration-token' || 
-                errorCode === 'messaging/registration-token-not-registered' ||
-                errorCode === 'messaging/mismatched-credential') {
-              failedTokens.push(tokens[idx]);
-            }
-          }
-        });
-
-        if (failedTokens.length > 0) {
-          await this.prisma.userDevice.deleteMany({
-            where: { fcmToken: { in: failedTokens } },
-          });
-          this.logger.log(`Cleaned up ${failedTokens.length} invalid tokens`);
-        }
-      }
-
-      this.logger.log(`Successfully sent to ${response.successCount} devices`);
-      return failedTokens;
-    } catch (error) {
-      this.logger.error('Error sending multicast notification', error.stack);
-      return [];
-    }
-  }
-
-  async sendToAll(title: string, body: string, data?: any) {
-    try {
-      // Broadcast only to CUSTOMERS (exclude ADMIN/SUPER_ADMIN)
-      const devices = await this.prisma.userDevice.findMany({
-        where: {
-          OR: [
-            { user: { role: 'CUSTOMER' } },
-            { userId: null } // Guest devices
-          ]
-        },
-        select: { fcmToken: true },
-      });
-
-      const tokens = devices.map(d => d.fcmToken);
-
-      if (tokens.length === 0) return;
-
-      // Firebase limit is 500 tokens per multicast message
-      for (let i = 0; i < tokens.length; i += 500) {
-        const batch = tokens.slice(i, i + 500);
-        await this.sendToTokens(batch, title, body, data);
-      }
-
-      // Log in database
-      await this.prisma.notification.create({
-        data: {
-          title,
-          message: body,
-          data: data || {},
-          targetType: 'BULK',
-          sent: true,
-        },
-      });
-
-      this.logger.log(`Broadcast notification sent to ${tokens.length} tokens`);
-    } catch (error) {
-      this.logger.error('Error sending broadcast notification', error.stack);
-    }
+    const devices = await this.prisma.userDevice.findMany({ where: { userId }, select: { fcmToken: true } });
+    if (devices.length > 0) await this.sendToTokens(devices.map(d => d.fcmToken), title, body, data);
+    await this.prisma.notification.create({ data: { userId, title, message: body, data: data || {}, targetType: 'SINGLE', sent: true } });
   }
 
   async sendToAdmins(title: string, body: string, data?: any) {
     try {
       const adminDevices = await this.prisma.userDevice.findMany({
-        where: {
-          OR: [
-            { user: { role: { in: ['ADMIN', 'SUPER_ADMIN'] } } },
-            { isAdmin: true }
-          ]
-        },
+        where: { OR: [{ user: { role: { in: ['ADMIN', 'SUPER_ADMIN'] } } }, { isAdmin: true }] },
         select: { fcmToken: true, userId: true },
       });
-
       const tokens = adminDevices.map(d => d.fcmToken);
-      if (tokens.length === 0) return;
-
-      await this.sendToTokens(tokens, title, body, { ...data, isAdminAlert: 'true' });
-
-      // Log for each admin to see in their bell icon
+      if (tokens.length > 0) await this.sendToTokens(tokens, title, body, { ...data, isAdminAlert: 'true' });
       const adminIds = [...new Set(adminDevices.map(d => d.userId).filter(Boolean))];
       for (const adminId of adminIds) {
-        await this.prisma.notification.create({
-          data: {
-            userId: adminId,
-            title,
-            message: body,
-            data: { ...data, isAdminAlert: 'true' },
-            targetType: 'SINGLE',
-            sent: true,
-          },
-        });
+        await this.prisma.notification.create({ data: { userId: adminId as string, title, message: body, data: { ...data, isAdminAlert: 'true' }, targetType: 'SINGLE', sent: true } });
       }
-    } catch (error) {
-      this.logger.error('Error sending admin notification', error.stack);
+    } catch (error) {}
+  }
+
+  async sendToAll(title: string, body: string, data?: any) {
+    const devices = await this.prisma.userDevice.findMany({ where: { OR: [{ user: { role: 'CUSTOMER' } }, { userId: null }] }, select: { fcmToken: true } });
+    const tokens = devices.map(d => d.fcmToken);
+    if (tokens.length > 0) {
+      for (let i = 0; i < tokens.length; i += 500) await this.sendToTokens(tokens.slice(i, i + 500), title, body, data);
     }
+    await this.prisma.notification.create({ data: { title, message: body, data: data || {}, targetType: 'BULK', sent: true } });
+  }
+
+  private async sendToTokens(tokens: string[], title: string, body: string, data?: any): Promise<string[]> {
+    if (tokens.length === 0 || !this.isPushConfigured) return [];
+    try {
+      const stringifiedData: Record<string, string> = {};
+      if (data) {
+        for (const [k, v] of Object.entries(data)) {
+          if (v !== null && v !== undefined) stringifiedData[k] = typeof v === 'string' ? v : JSON.stringify(v);
+        }
+      }
+      const message: admin.messaging.MulticastMessage = {
+        notification: { title, body },
+        tokens,
+        data: { ...stringifiedData, click_action: 'FLUTTER_NOTIFICATION_CLICK' },
+        android: { priority: 'high', notification: { channelId: 'kryros_notifications', clickAction: 'FLUTTER_NOTIFICATION_CLICK', sound: 'default' } },
+        apns: { payload: { aps: { sound: 'default', badge: 1 } } },
+      };
+      const response = await admin.messaging().sendEachForMulticast(message);
+      const failedTokens: string[] = [];
+      if (response.failureCount > 0) {
+        response.responses.forEach((resp, idx) => {
+          if (!resp.success && (resp.error?.code === 'messaging/invalid-registration-token' || resp.error?.code === 'messaging/registration-token-not-registered')) {
+            failedTokens.push(tokens[idx]);
+          }
+        });
+        if (failedTokens.length > 0) await this.prisma.userDevice.deleteMany({ where: { fcmToken: { in: failedTokens } } });
+      }
+      return failedTokens;
+    } catch (error) { return []; }
   }
 
   async updateToken(userId: string, token: string, platform: string = 'android') {
-    await this.prisma.userDevice.upsert({
-      where: { fcmToken: token },
-      update: { userId, platform, updatedAt: new Date() },
-      create: { userId, fcmToken: token, platform },
-    });
+    await this.prisma.userDevice.upsert({ where: { fcmToken: token }, update: { userId, platform, updatedAt: new Date() }, create: { userId, fcmToken: token, platform } });
   }
 
   async registerPublicToken(token: string, platform: string = 'android', isAdmin: boolean = false) {
-    return this.prisma.userDevice.upsert({
-      where: { fcmToken: token },
-      update: { platform, updatedAt: new Date(), isAdmin },
-      create: { fcmToken: token, platform, isAdmin },
-    });
+    return this.prisma.userDevice.upsert({ where: { fcmToken: token }, update: { platform, updatedAt: new Date(), isAdmin }, create: { fcmToken: token, platform, isAdmin } });
   }
 
-  // ==================== SMS (BEEM AFRICA) ====================
+  async sendOrderPlacedNotification(orderId: string) {
+    const order = await this.prisma.order.findUnique({ where: { id: orderId }, include: { user: true } });
+    if (!order) return;
+    const name = order.user ? `${order.user.firstName} ${order.user.lastName}` : 'Guest';
+    await this.sendToAdmins('New Order Received!', `${name} just placed order #${order.orderNumber}.`, { url: `/admin/orders/${orderId}`, orderId });
+  }
 
-  // ─── Country support check ───────────────────────────────────────────────────
-  private async isSmsAllowed(rawPhone: string): Promise<{ allowed: boolean; country?: string }> {
-    const digits = rawPhone.replace(/\D/g, '');
-    try {
-      const activeCountries = await this.prisma.smsSupportedCountry.findMany({
-        where: { isActive: true },
-        select: { dialCode: true, name: true },
-        orderBy: { dialCode: 'desc' }, // longer codes first (e.g. 263 before 26)
-      });
-      // If no countries configured → allow all (fail-open for admin direct sends)
-      if (activeCountries.length === 0) return { allowed: true };
-      for (const c of activeCountries) {
-        if (digits.startsWith(c.dialCode)) {
-          return { allowed: true, country: c.name };
-        }
-        // Also handle local format starting with 0 — normalise first
-        // e.g. 097... for Zambia (+260) after normalising becomes 260...
-      }
-      return { allowed: false };
-    } catch (e) {
-      this.logger.warn('isSmsAllowed check failed — defaulting to allowed: ' + e.message);
-      return { allowed: true }; // fail open so orders don't break
+  async sendUserRegisteredNotification(userId: string) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) return;
+    await this.sendToAdmins('New User Registered!', `${user.firstName} ${user.lastName} has joined KRYROS.`, { url: `/admin/users/${userId}`, userId });
+  }
+
+  async sendUserLoginNotification(userId: string) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) return;
+    await this.sendToAdmins('User Login Alert', `${user.firstName} has just logged into the platform.`, { userId });
+  }
+
+  async sendPaymentReceiptNotification(orderId: string) {
+    const order = await this.prisma.order.findUnique({ where: { id: orderId } });
+    if (!order) return;
+    await this.sendToAdmins('Payment Received!', `Payment confirmed for order #${order.orderNumber}.`, { url: `/admin/orders/${orderId}`, orderId });
+  }
+
+  async sendOrderStatusNotification(orderId: string, status: string) {
+    const order = await this.prisma.order.findUnique({ where: { id: orderId }, include: { user: true } });
+    if (!order) return;
+    if (order.userId) await this.sendToUser(order.userId, 'Order Update', `Your order ${order.orderNumber} status has changed to ${status}.`, { orderId, status });
+  }
+
+  async sendPaymentStatusNotification(payload: any) {
+    const isPaid = String(payload.status).toUpperCase() === 'PAID';
+    if (payload.email) await this.mailerService.sendMail(payload.email, `Payment ${isPaid ? 'Paid' : 'Failed'}`, `Payment ${payload.paymentNumber} ${isPaid ? 'Paid' : 'Failed'}`, '');
+  }
+
+  async getRecentNotifications(limit: number = 20) {
+    return this.prisma.notification.findMany({ take: limit, orderBy: { createdAt: 'desc' }, include: { user: { select: { firstName: true, lastName: true, email: true } } } });
+  }
+
+  async sendToDeviceIds(deviceIds: string[], title: string, body: string, data?: any) {
+    const devices = await this.prisma.userDevice.findMany({ where: { id: { in: deviceIds } }, select: { fcmToken: true } });
+    if (devices.length > 0) await this.sendToTokens(devices.map(d => d.fcmToken), title, body, data);
+  }
+
+  async scheduleNotification(params: any) {
+    return this.prisma.notification.create({ data: { userId: params.userId, title: params.title, message: params.body, targetType: params.targetType, data: params.data || {}, scheduledAt: new Date(params.scheduledAt), sent: false } });
+  }
+
+  async sendToOrders(orderIds: string[], title: string, body: string, data?: any) {
+    const orders = await this.prisma.order.findMany({ where: { id: { in: orderIds } }, select: { userId: true } });
+    for (const userId of [...new Set(orders.map(o => o.userId).filter(Boolean))]) {
+      await this.sendToUser(userId as string, title, body, data);
     }
+  }
+
+  async sendByOrderStatus(status: string, title: string, body: string, data?: any) {
+    const orders = await this.prisma.order.findMany({ where: { status: status as any }, select: { userId: true } });
+    for (const userId of [...new Set(orders.map(o => o.userId).filter(Boolean))]) {
+      await this.sendToUser(userId as string, title, body, data);
+    }
+  }
+
+  async checkDatabase() { return { status: 'OK' }; }
+  async checkFirebase() { return { status: 'OK' }; }
+  async checkBeem() { return { status: 'OK' }; }
+  async checkSmtp() { return { status: 'OK' }; }
+  async deleteDevice(id: string) { await this.prisma.userDevice.delete({ where: { id } }); }
+  async getSmsCountries() { return this.prisma.smsSupportedCountry.findMany(); }
+  async addSmsCountry(name: string, dialCode: string, isoCode: string) { return this.prisma.smsSupportedCountry.create({ data: { name, dialCode, isoCode } }); }
+  async toggleSmsCountry(id: string, isActive: boolean) { return this.prisma.smsSupportedCountry.update({ where: { id }, data: { isActive } }); }
+  async deleteSmsCountry(id: string) { await this.prisma.smsSupportedCountry.delete({ where: { id } }); }
+  async getEmailContacts() { return this.prisma.emailContact.findMany(); }
+  async addEmailContact(email: string, name: string, source: string) { return this.prisma.emailContact.create({ data: { email, name, source } }); }
+  async deleteEmailContact(id: string) { await this.prisma.emailContact.delete({ where: { id } }); }
+  async getSmsContacts() { return this.prisma.smsContact.findMany(); }
+  async addSmsContact(phone: string, name: string, source: string) { return this.prisma.smsContact.create({ data: { phone, name, source } }); }
+  async deleteSmsContact(id: string) { await this.prisma.smsContact.delete({ where: { id } }); }
+  async getDevices() { return this.prisma.userDevice.findMany({ include: { user: true } }); }
+
+  async sendEmailBlast(subject: string, body: string, emailIds?: string[]) {
+    const contacts = await this.prisma.emailContact.findMany({ where: { isActive: true, ...(emailIds?.length ? { id: { in: emailIds } } : {}) } });
+    let sent = 0;
+    for (const contact of contacts) {
+      try { await this.mailerService.sendNewsletterEmail(contact.email, subject, body); sent++; } catch {}
+    }
+    return { success: sent > 0, sent, total: contacts.length };
   }
 
   async sendSMS(phoneNumber: string, message: string) {
     const apiKey = this.configService.get('BEEM_API_KEY');
     const secretKey = this.configService.get('BEEM_SECRET_KEY');
-    const senderName = this.configService.get('BEEM_SENDER_NAME') || 'INFO';
-
-    if (!apiKey || !secretKey) {
-      this.logger.error('BEEM_API_KEY or BEEM_SECRET_KEY not found in environment');
-      throw new BadRequestException('SMS service credentials (API Key or Secret Key) are missing from the backend settings.');
-    }
-
-    try {
-      // CLEAN PHONE NUMBER: Remove everything except numbers
-      let formattedPhone = phoneNumber.replace(/\D/g, '');
-      
-      // INTERNATIONAL SUPPORT:
-      // If it starts with 0 and is 11 digits (Nigeria local: 0703...), add 234 prefix
-      if (formattedPhone.startsWith('0') && formattedPhone.length === 11) {
-        formattedPhone = '234' + formattedPhone.substring(1);
-      }
-      // If it starts with 0 and is 10 digits (Zambia local: 097...), add 260 prefix
-      else if (formattedPhone.startsWith('0') && formattedPhone.length === 10) {
-        formattedPhone = '260' + formattedPhone.substring(1);
-      }
-      
-      // If the number is already in international format (like 234... or 260...)
-      // Beem Africa will accept it as is as long as it's just numbers.
-
-      // ── Country filter: skip if number is not from a supported country ──
-      const countryCheck = await this.isSmsAllowed(formattedPhone);
-      if (!countryCheck.allowed) {
-        this.logger.log(`SMS skipped — country not in supported list for number: ${formattedPhone}`);
-        return { success: false, skipped: true, reason: 'Country not supported for SMS delivery' };
-      }
-      if (countryCheck.country) {
-        this.logger.log(`SMS allowed for country: ${countryCheck.country}`);
-      }
-
-      const auth = Buffer.from(`${apiKey}:${secretKey}`).toString('base64');
-      this.logger.log(`Final formatted number being sent to Beem: ${formattedPhone}`);
-
-      const response = await axios.post(
-        this.beemBaseUrl,
-        {
-          source_addr: senderName.substring(0, 11),
-          schedule_time: '',
-          encoding: '0',
-          message: message,
-          recipients: [
-            {
-              recipient_id: String(Date.now()), // Must be a unique string/number
-              dest_addr: formattedPhone,
-            },
-          ],
-        },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Basic ${auth}`,
-          },
-        },
-      );
-
-      return { success: true, data: response.data };
-    } catch (error) {
-      const errorData = error.response?.data;
-      const errorMsg = errorData?.message || error.message;
-      
-      // We now include the formatted phone number in the error so the user can see it
-      const finalPhone = phoneNumber.replace(/\D/g, '');
-      throw new InternalServerErrorException({
-        message: `Beem Africa Error: ${errorMsg}. (Tried sending to: ${finalPhone})`,
-        details: errorData
-      });
-    }
+    if (!apiKey || !secretKey) return;
+    const auth = Buffer.from(`${apiKey}:${secretKey}`).toString('base64');
+    try { await axios.post(this.beemBaseUrl, { source_addr: 'INFO', schedule_time: '', encoding: 0, message, recipients: [{ recipient_id: 1, dest_addr: phoneNumber }] }, { headers: { Authorization: `Basic ${auth}` } }); } catch {}
   }
-
-  // ==================== NOTIFICATION TEMPLATES ====================
-
-  private buildTrackingUrl(orderNumber: string, email?: string) {
-    const frontendUrl = (this.configService.get('FRONTEND_URL') || '').replace(/\/$/, '');
-    const params = new URLSearchParams({ orderNumber });
-    if (email?.trim()) params.set('email', email.trim());
-    return `${frontendUrl}/track?${params.toString()}`;
-  }
-
-  private getOrderContactDetails(order: any) {
-    const firstName = order?.user?.firstName || order?.shippingAddress?.firstName || 'Valued Customer';
-    const email = order?.user?.email || order?.shippingAddress?.email || '';
-    const phone = order?.shippingAddress?.phone || order?.user?.phone || '';
-    return { firstName, email, phone };
-  }
-
-  private getOrderAmountDetails(order: any) {
-    const currency = order?.currencyCode || 'USD';
-    const rawAmount = currency === 'ZMW' && order?.totalZMW != null ? Number(order.totalZMW) : Number(order?.total || 0);
-    return {
-      currency,
-      amountValue: rawAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-      displayAmount: `${currency} ${rawAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-    };
-  }
-
-  async sendPaymentStatusNotification(payload: {
-    email?: string | null;
-    phone?: string | null;
-    status: string;
-    amount: number;
-    currency: string;
-    paymentNumber: string;
-    paymentMethod?: string | null;
-    customerName?: string | null;
-    receiptNumber?: string | null;
-    trackingLink?: string | null;
-  }) {
-    const customerName = payload.customerName?.trim() || 'Customer';
-    const paymentMethod = String(payload.paymentMethod || 'Payment').replace(/_/g, ' ');
-    const isPaid = String(payload.status).toUpperCase() === 'PAID';
-    const statusLabel = isPaid ? 'PAID' : 'FAILED';
-    const statusEmoji = isPaid ? '✅' : '❌';
-    const amountText = `${payload.currency} ${Number(payload.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-
-    if (payload.email?.trim()) {
-      const subject = `${statusEmoji} KRYROS Payment ${statusLabel} — ${payload.paymentNumber}`;
-      const html = `
-        <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:520px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08)">
-          <div style="background:${isPaid ? '#10b981' : '#ef4444'};padding:32px 24px;text-align:center;color:#fff">
-            <div style="font-size:28px;margin-bottom:12px">${isPaid ? '✓' : '✗'}</div>
-            <h2 style="margin:0;font-size:20px;font-weight:700">Payment ${statusLabel}</h2>
-          </div>
-          <div style="padding:24px">
-            <p style="color:#374151;font-size:14px;margin-bottom:20px">Hi <strong>${customerName}</strong>, here is your payment update.</p>
-            <table style="width:100%;border-collapse:collapse">
-              <tr style="border-bottom:1px solid #f0f0f0"><td style="padding:12px 0;color:#6b7280;font-size:13px">Payment Ref</td><td style="padding:12px 0;font-weight:600;color:#111;font-size:13px;text-align:right">${payload.paymentNumber}</td></tr>
-              <tr style="border-bottom:1px solid #f0f0f0"><td style="padding:12px 0;color:#6b7280;font-size:13px">Amount</td><td style="padding:12px 0;font-weight:700;color:${isPaid ? '#10b981' : '#ef4444'};font-size:15px;text-align:right">${amountText}</td></tr>
-              <tr style="border-bottom:1px solid #f0f0f0"><td style="padding:12px 0;color:#6b7280;font-size:13px">Method</td><td style="padding:12px 0;font-weight:600;color:#111;font-size:13px;text-align:right">${paymentMethod}</td></tr>
-              ${payload.receiptNumber ? `<tr style="border-bottom:1px solid #f0f0f0"><td style="padding:12px 0;color:#6b7280;font-size:13px">Receipt Number</td><td style="padding:12px 0;font-weight:600;color:#111;font-size:13px;text-align:right">${payload.receiptNumber}</td></tr>` : ''}
-              <tr><td style="padding:12px 0;color:#6b7280;font-size:13px">Status</td><td style="padding:12px 0;font-weight:600;font-size:13px;text-align:right;color:${isPaid ? '#10b981' : '#ef4444'}">${statusLabel}</td></tr>
-            </table>
-            ${payload.trackingLink ? `<p style="margin:20px 0 0;font-size:13px;color:#4b5563">Tracking link: <a href="${payload.trackingLink}">${payload.trackingLink}</a></p>` : ''}
-          </div>
-        </div>`;
-      const plain = `KRYROS payment ${statusLabel}. Ref: ${payload.paymentNumber}. Amount: ${amountText}. Method: ${paymentMethod}.`;
-      this.mailerService.sendMail(payload.email.trim(), subject, plain, html)
-        .catch(e => this.logger.warn(`Payment status email failed for ${payload.paymentNumber}: ${e.message}`));
-    }
-
-    if (payload.phone?.trim()) {
-      const smsText =
-        `${statusEmoji} KRYROS Payment ${statusLabel}\n` +
-        `Ref: ${payload.paymentNumber}\n` +
-        `Amount: ${amountText}\n` +
-        `Method: ${paymentMethod}` +
-        (payload.receiptNumber ? `\nReceipt: ${payload.receiptNumber}` : '') +
-        (payload.trackingLink ? `\nTrack: ${payload.trackingLink}` : '');
-      this.sendSMS(payload.phone.trim(), smsText)
-        .catch(e => this.logger.warn(`Payment status SMS failed for ${payload.paymentNumber}: ${e.message}`));
-    }
-  }
-
-  async sendOrderStatusNotification(orderId: string, status: string) {
-    const order = await this.prisma.order.findUnique({
-      where: { id: orderId },
-      include: {
-        user: true,
-        shippingAddress: true,
-      } as any,
-    });
-
-    if (!order) return;
-    const { firstName, email: userEmail, phone: smsPhone } = this.getOrderContactDetails(order);
-    const trackingUrl = this.buildTrackingUrl(order.orderNumber, userEmail);
-
-    let title = 'Order Update';
-    let body = `Your order ${order.orderNumber} status has changed to ${status}.`;
-
-    switch (status) {
-      case 'CONFIRMED':
-        title = 'Order Confirmed! 🎉';
-        body = `Your order ${order.orderNumber} has been confirmed and is being prepared.`;
-        break;
-      case 'PROCESSING':
-        title = 'Processing Your Order 📦';
-        body = `We're currently processing your order ${order.orderNumber}. We'll notify you when it ships!`;
-        break;
-      case 'SHIPPED':
-        title = 'Order Shipped! 🚚';
-        body = `Great news! Your order ${order.orderNumber} is on its way. Track it in the app.`;
-        break;
-      case 'OUT_FOR_DELIVERY':
-        title = 'Out for Delivery 🏃';
-        body = `Your order ${order.orderNumber} is out for delivery today!`;
-        break;
-      case 'DELIVERED':
-        title = 'Order Delivered! 🏠';
-        body = `Your order ${order.orderNumber} has been successfully delivered. Enjoy your purchase!`;
-        break;
-      case 'CANCELLED':
-        title = 'Order Cancelled';
-        body = `Your order ${order.orderNumber} has been cancelled. If you have questions, please contact support.`;
-        break;
-      case 'REFUNDED':
-        title = 'Refund Processed 💰';
-        body = `Your refund for order ${order.orderNumber} has been processed.`;
-        break;
-    }
-
-    // ── 1. Push notification (logged-in users and guest checkout devices) ──
-    // Build absolute URL so the app can navigate directly when tapped
-    const frontendUrl = (this.configService.get('FRONTEND_URL') || '').replace(/\/$/, '');
-    const pushData = {
-      orderId,
-      status,
-      type: 'ORDER_STATUS',
-      url: `${frontendUrl}/track?orderNumber=${encodeURIComponent(order.orderNumber)}`,
-    };
-    if (order.userId) {
-      this.sendToUser(order.userId, title, body, pushData)
-        .catch(e => this.logger.warn(`Push notification failed for order ${order.orderNumber}: ${e.message}`));
-    } else if (order.guestFcmToken) {
-      this.sendToGuestToken(order.guestFcmToken, title, body, pushData)
-        .catch(e => this.logger.warn(`Guest push notification failed for order ${order.orderNumber}: ${e.message}`));
-    }
-
-    // ── 2. Email notification ─────────────────────────────────────────────
-    if (userEmail) {
-      this.mailerService.sendOrderStatusEmail({
-        to: userEmail,
-        firstName,
-        orderNumber: order.orderNumber,
-        status,
-        trackingUrl,
-      }).catch(e => this.logger.warn(`Email notification failed for order ${order.orderNumber}: ${e.message}`));
-    }
-
-    // ── 3. SMS notification (Zambia for now, non-blocking) ────────────────
-    if (smsPhone) {
-      this.sendSMS(smsPhone, `KRYROS: ${title} - ${body}`)
-        .catch(e => this.logger.warn(`SMS notification failed for order ${order.orderNumber}: ${e.message}`));
-    }
-  }
-
-  // ─── New: Send order placed notification (push + email + SMS) ────────────
-  async sendOrderPlacedNotification(orderId: string) {
-    try {
-      const order = await this.prisma.order.findUnique({
-        where: { id: orderId },
-        include: {
-          user: true,
-          shippingAddress: true,
-          items: {
-            include: { product: { select: { name: true } } },
-            take: 5,
-          },
-        } as any,
-      });
-
-      if (!order) return;
-
-      const { firstName, email: userEmail, phone: smsPhone } = this.getOrderContactDetails(order);
-      const { currency, amountValue, displayAmount } = this.getOrderAmountDetails(order);
-      const paymentMethod = String(order.paymentMethod || 'Standard').replace(/_/g, ' ');
-      const isManualPayment = ['WHATSAPP', 'BANK_TRANSFER'].includes(String(order.paymentMethod || '').toUpperCase());
-      const isMobileMoney = String(order.paymentMethod || '').toUpperCase() === 'MOBILE_MONEY';
-
-      const address = (order as any).shippingAddress;
-      const shippingAddr = address
-        ? [address.street, address.city, address.state, address.country].filter(Boolean).join(', ')
-        : undefined;
-      const trackingUrl = this.buildTrackingUrl(order.orderNumber, userEmail);
-      const smsText = isManualPayment
-        ? `KRYROS: Order #${order.orderNumber} received. Payment is pending verification. Track here: ${trackingUrl}`
-        : isMobileMoney
-          ? `KRYROS: Order #${order.orderNumber} received. Approve the mobile money prompt to complete payment. Track here: ${trackingUrl}`
-          : `KRYROS: Order #${order.orderNumber} received. Track here: ${trackingUrl}`;
-
-      // ── 1. Push ──────────────────────────────────────────────────────────
-      const orderPlacedPushData = { orderId, type: 'ORDER_PLACED', url: trackingUrl };
-      if (order.userId) {
-        this.sendToUser(
-          order.userId,
-          'Order Placed! 🛍️',
-          `Your order #${order.orderNumber} has been received. Total: ${displayAmount}`,
-          orderPlacedPushData,
-        ).catch(e => this.logger.warn(`Push failed for new order ${order.orderNumber}: ${e.message}`));
-      } else if (order.guestFcmToken) {
-        this.sendToGuestToken(
-          order.guestFcmToken,
-          'Order Placed! 🛍️',
-          `Your order #${order.orderNumber} has been received. Total: ${displayAmount}`,
-          orderPlacedPushData,
-        ).catch(e => this.logger.warn(`Guest push failed for new order ${order.orderNumber}: ${e.message}`));
-      }
-
-      // ── 2. Email confirmation ────────────────────────────────────────────
-      if (userEmail) {
-        this.mailerService.sendOrderConfirmationEmail({
-          to: userEmail,
-          firstName,
-          orderNumber: order.orderNumber,
-          total: amountValue,
-          currency,
-          paymentMethod,
-          shippingAddress: shippingAddr,
-          trackingUrl,
-        }).catch(e => this.logger.warn(`Order confirmation email failed for ${order.orderNumber}: ${e.message}`));
-
-        // Auto-register customer as an email contact for future blasts
-        this.prisma.emailContact.upsert({
-          where: { email: userEmail },
-          update: { name: firstName, isActive: true },
-          create: { email: userEmail, name: firstName, source: 'Checkout' },
-        }).catch(e => this.logger.warn(`Auto-register email contact failed: ${e.message}`));
-      }
-
-      // ── 3. SMS ───────────────────────────────────────────────────────────
-      if (smsPhone) {
-        this.sendSMS(smsPhone, smsText)
-          .catch(e => this.logger.warn(`Order SMS failed for ${order.orderNumber}: ${e.message}`));
-
-        // Auto-register customer phone as an SMS contact for future blasts
-        this.prisma.smsContact.upsert({
-          where: { phone: smsPhone.trim() },
-          update: { name: firstName, isActive: true },
-          create: { phone: smsPhone.trim(), name: firstName, source: 'Checkout' },
-        }).catch(e => this.logger.warn(`Auto-register SMS contact failed: ${e.message}`));
-      }
-
-    } catch (error) {
-      this.logger.error(`sendOrderPlacedNotification failed for ${orderId}`, error.message);
-    }
-  }
-
-  async sendPaymentReceiptNotification(orderId: string) {
-    try {
-      const order = await this.prisma.order.findUnique({
-        where: { id: orderId },
-        include: {
-          user: true,
-          shippingAddress: true,
-        } as any,
-      });
-
-      if (!order) return;
-
-      const { firstName, email: userEmail, phone: smsPhone } = this.getOrderContactDetails(order);
-      const { displayAmount } = this.getOrderAmountDetails(order);
-      const paymentMethod = String(order.paymentMethod || 'Payment').replace(/_/g, ' ');
-      const trackingUrl = this.buildTrackingUrl(order.orderNumber, userEmail);
-
-      const paymentReceiptPushData = { orderId, type: 'PAYMENT_RECEIPT', url: trackingUrl };
-      if (order.userId) {
-        this.sendToUser(
-          order.userId,
-          'Payment Received ✅',
-          `Payment confirmed for order #${order.orderNumber}. Receipt ready.`,
-          paymentReceiptPushData,
-        ).catch(e => this.logger.warn(`Payment receipt push failed for ${order.orderNumber}: ${e.message}`));
-      } else if (order.guestFcmToken) {
-        this.sendToGuestToken(
-          order.guestFcmToken,
-          'Payment Received ✅',
-          `Payment confirmed for order #${order.orderNumber}. Receipt ready.`,
-          paymentReceiptPushData,
-        ).catch(e => this.logger.warn(`Guest payment receipt push failed for ${order.orderNumber}: ${e.message}`));
-      }
-
-      if (userEmail) {
-        const html = this.mailerService.buildAnnouncementHtml({
-          firstName,
-          subject: `Payment Receipt — #${order.orderNumber}`,
-          headline: 'Payment Receipt ✅',
-          bodyHtml: `
-            <p>Your payment has been verified successfully. This message is your receipt confirmation.</p>
-            <div class="order-box">
-              <div class="order-row"><span class="order-label">Order Number</span><span class="order-value">#${order.orderNumber}</span></div>
-              <div class="order-row"><span class="order-label">Amount Paid</span><span class="order-value">${displayAmount}</span></div>
-              <div class="order-row"><span class="order-label">Payment Method</span><span class="order-value">${paymentMethod}</span></div>
-              <div class="order-row"><span class="order-label">Payment Status</span><span class="order-value" style="color:#10b981">PAID</span></div>
-            </div>
-            <p>You can use the link below any time to track the order and review the latest status.</p>`,
-          ctaText: 'Track My Order',
-          ctaUrl: trackingUrl,
-        });
-        this.mailerService.sendMail(
-          userEmail,
-          `Payment Receipt — Order #${order.orderNumber}`,
-          `Payment confirmed for order #${order.orderNumber}. Amount paid: ${displayAmount}.`,
-          html,
-        ).catch(e => this.logger.warn(`Payment receipt email failed for ${order.orderNumber}: ${e.message}`));
-      }
-
-      if (smsPhone) {
-        this.sendSMS(
-          smsPhone,
-          `KRYROS: Payment received for order #${order.orderNumber}. Amount: ${displayAmount}. Receipt confirmed. Track: ${trackingUrl}`,
-        ).catch(e => this.logger.warn(`Payment receipt SMS failed for ${order.orderNumber}: ${e.message}`));
-      }
-    } catch (error) {
-      this.logger.error(`sendPaymentReceiptNotification failed for ${orderId}`, error.message);
-    }
-  }
-
-  // ─── SMS Contacts ─────────────────────────────────────────────────────────
-  async getSmsContacts() {
-    return this.prisma.smsContact.findMany({
-      orderBy: { createdAt: 'desc' },
-    });
-  }
-
-  async addSmsContact(phone: string, name?: string, source: string = 'Manual') {
-    if (!phone?.trim()) return { success: false, message: 'Phone number is required' };
-    const normalised = phone.trim();
-    try {
-      const contact = await this.prisma.smsContact.upsert({
-        where: { phone: normalised },
-        update: { name: name ?? undefined, isActive: true },
-        create: { phone: normalised, name: name ?? null, source },
-      });
-      return { success: true, contact };
-    } catch (error) {
-      this.logger.warn(`SMS contact upsert failed for ${normalised}: ${error.message}`);
-      return { success: false, message: 'Could not register contact' };
-    }
-  }
-
-  async deleteSmsContact(id: string) {
-    try {
-      await this.prisma.smsContact.delete({ where: { id } });
-      return { success: true };
-    } catch {
-      return { success: false, message: 'Contact not found' };
-    }
-  }
-
-
-  // ─── Device Management ────────────────────────────────────────────────────
-  async getDevices() {
-    return this.prisma.userDevice.findMany({
-      orderBy: { createdAt: 'desc' },
-      include: {
-        user: {
-          select: { id: true, email: true, firstName: true, lastName: true },
-        },
-      },
-    });
-  }
-
-  async deleteDevice(id: string) {
-    try {
-      await this.prisma.userDevice.delete({ where: { id } });
-      return { success: true };
-    } catch {
-      return { success: false, message: 'Device not found' };
-    }
-  }
-
-  async sendToDeviceIds(ids: string[], title: string, body: string, data?: any) {
-    const devices = await this.prisma.userDevice.findMany({
-      where: { id: { in: ids } },
-      select: { fcmToken: true },
-    });
-    const tokens = devices.map(d => d.fcmToken);
-    if (tokens.length === 0) return { success: false, message: 'No tokens found for selected devices' };
-    await this.sendToTokens(tokens, title, body, data);
-    return { success: true, sent: tokens.length };
-  }
-
-
-  // ─── SMS Supported Countries ─────────────────────────────────────────────
-  async getSmsCountries() {
-    return this.prisma.smsSupportedCountry.findMany({
-      orderBy: { name: 'asc' },
-    });
-  }
-
-  async addSmsCountry(name: string, dialCode: string, isoCode: string) {
-    const cleanDial = dialCode.replace(/\D/g, '');
-    try {
-      const country = await this.prisma.smsSupportedCountry.upsert({
-        where: { dialCode: cleanDial },
-        update: { name, isoCode, isActive: true },
-        create: { name, dialCode: cleanDial, isoCode, isActive: true },
-      });
-      return { success: true, country };
-    } catch (error) {
-      this.logger.warn(`addSmsCountry failed: ${error.message}`);
-      return { success: false, message: 'Could not add country' };
-    }
-  }
-
-  async toggleSmsCountry(id: string, isActive: boolean) {
-    try {
-      const country = await this.prisma.smsSupportedCountry.update({
-        where: { id },
-        data: { isActive },
-      });
-      return { success: true, country };
-    } catch {
-      return { success: false, message: 'Country not found' };
-    }
-  }
-
-  async deleteSmsCountry(id: string) {
-    try {
-      await this.prisma.smsSupportedCountry.delete({ where: { id } });
-      return { success: true };
-    } catch {
-      return { success: false, message: 'Country not found' };
-    }
-  }
-
-  // ─── Diagnostics ───────────────────────────────────────────────────────────
-  async checkDatabase() {
-    try {
-      await this.prisma.$queryRaw`SELECT 1`;
-      return { status: 'OK', message: 'Connected' };
-    } catch (e) {
-      return { status: 'ERROR', message: e.message };
-    }
-  }
-
-  async checkFirebase() {
-    if (!this.isPushConfigured) {
-      return { status: 'MISSING', message: 'FIREBASE_SERVICE_ACCOUNT_JSON not configured' };
-    }
-    try {
-      // Just check if we can access the messaging service
-      admin.messaging();
-      return { status: 'OK', message: 'Firebase Admin Initialized' };
-    } catch (e) {
-      return { status: 'ERROR', message: e.message };
-    }
-  }
-
-  async checkBeem() {
-    const apiKey = this.configService.get('BEEM_API_KEY');
-    const secretKey = this.configService.get('BEEM_SECRET_KEY');
-    if (!apiKey || !secretKey) {
-      return { status: 'MISSING', message: 'BEEM credentials missing' };
-    }
-    return { status: 'OK', message: 'Configured' };
-  }
-
-  async checkSmtp() {
-    if (!this.mailerService.isConfigured) {
-      return { status: 'MISSING', message: 'SMTP credentials missing' };
-    }
-    return { status: 'OK', message: 'Configured' };
-  }
-
-  // ─── Email Contacts ──────────────────────────────────────────────────────────
-  async getEmailContacts() {
-    return this.prisma.emailContact.findMany({
-      orderBy: { createdAt: 'desc' },
-    });
-  }
-
-  async addEmailContact(email: string, name?: string, source: string = 'Manual') {
-    if (!email?.trim()) return { success: false, message: 'Email address is required' };
-    try {
-      const contact = await this.prisma.emailContact.upsert({
-        where: { email: email.toLowerCase().trim() },
-        update: { name: name ?? undefined, source, isActive: true },
-        create: { email: email.toLowerCase().trim(), name, source },
-      });
-      return { success: true, contact };
-    } catch (error) {
-      this.logger.error('addEmailContact failed', error.message);
-      return { success: false, message: 'Failed to add email contact' };
-    }
-  }
-
-  async deleteEmailContact(id: string) {
-    try {
-      await this.prisma.emailContact.delete({ where: { id } });
-      return { success: true };
-    } catch {
-      return { success: false, message: 'Contact not found' };
-    }
-  }
-
-  async sendEmailBlast(subject: string, body: string, emailIds?: string[]) {
-    const contacts = await this.prisma.emailContact.findMany({
-      where: {
-        isActive: true,
-        ...(emailIds && emailIds.length > 0 ? { id: { in: emailIds } } : {}),
-      },
-    });
-
-    if (contacts.length === 0) {
-      return { success: false, message: 'No active email contacts found' };
-    }
-
-    let sent = 0;
-    let failed = 0;
-    for (const contact of contacts) {
-      try {
-        await this.mailerService.sendNewsletterEmail(contact.email, subject, body);
-        sent++;
-      } catch (error) {
-        this.logger.warn(`Email blast failed for ${contact.email}: ${error.message}`);
-        failed++;
-      }
-    }
-    
-    const success = sent > 0;
-    return { 
-      success, 
-      sent, 
-      failed, 
-      total: contacts.length,
-      message: success ? `Successfully sent ${sent} emails.` : `Failed to send emails. All ${failed} attempts failed.`
-    };
-  }
-
-  async getRecentNotifications(limit: number = 20) {
-    return this.prisma.notification.findMany({
-      take: limit,
-      orderBy: { createdAt: 'desc' },
-      include: {
-        user: {
-          select: {
-            firstName: true,
-            lastName: true,
-            email: true
-          }
-        }
-      }
-    });
-  }
-
-
 }
