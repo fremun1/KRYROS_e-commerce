@@ -121,14 +121,53 @@ export class NotificationsService implements OnModuleInit {
   async sendOrderPlacedNotification(orderId: string) {
     const order = await this.prisma.order.findUnique({ where: { id: orderId }, include: { user: true } });
     if (!order) return;
+    
     const name = order.user ? `${order.user.firstName} ${order.user.lastName}` : 'Guest';
-    await this.sendToAdmins('New Order Received!', `${name} just placed order #${order.orderNumber}.`, { url: `/admin/orders/${orderId}`, orderId });
+    
+    // 1. Notify Admins
+    await this.sendToAdmins(
+      'New Order Received! 🛒',
+      `${name} just placed order #${order.orderNumber}.`,
+      { type: 'NEW_ORDER', orderId: order.id, orderNumber: order.orderNumber, url: `/orders/${order.id}` }
+    );
+
+    // 2. Notify User (Customer)
+    if (order.userId) {
+      await this.sendToUser(
+        order.userId,
+        'Order Placed! ✅',
+        `Your order #${order.orderNumber} has been placed successfully.`,
+        { type: 'ORDER_PLACED', orderId: order.id, orderNumber: order.orderNumber, url: `/orders/${order.id}` }
+      );
+    } else if (order.guestFcmToken) {
+      // Handle guest push if token exists
+      await this.sendToTokens(
+        [order.guestFcmToken],
+        'Order Placed! ✅',
+        `Your order #${order.orderNumber} has been placed successfully.`,
+        { type: 'ORDER_PLACED', orderId: order.id, orderNumber: order.orderNumber, url: `/track?orderNumber=${order.orderNumber}` }
+      );
+    }
   }
 
   async sendUserRegisteredNotification(userId: string) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) return;
-    await this.sendToAdmins('New User Registered!', `${user.firstName} ${user.lastName} has joined KRYROS.`, { url: `/admin/users/${userId}`, userId });
+
+    // 1. Notify Admins
+    await this.sendToAdmins(
+      'New User Registered! 🆕',
+      `${user.firstName} ${user.lastName} has joined KRYROS.`,
+      { type: 'USER_REGISTER', userId: user.id, url: `/users/${user.id}` }
+    );
+
+    // 2. Welcome Notification to User
+    await this.sendToUser(
+      user.id,
+      'Welcome to KRYROS! 🎉',
+      `Hi ${user.firstName}, thank you for joining us. Start exploring our products today!`,
+      { type: 'WELCOME', userId: user.id }
+    );
   }
 
   async sendUserLoginNotification(userId: string) {
@@ -146,7 +185,16 @@ export class NotificationsService implements OnModuleInit {
   async sendOrderStatusNotification(orderId: string, status: string) {
     const order = await this.prisma.order.findUnique({ where: { id: orderId }, include: { user: true } });
     if (!order) return;
-    if (order.userId) await this.sendToUser(order.userId, 'Order Update', `Your order ${order.orderNumber} status has changed to ${status}.`, { orderId, status });
+
+    const title = 'Order Update 📦';
+    const body = `Your order #${order.orderNumber} status has changed to ${status}.`;
+    const data = { type: 'ORDER_UPDATE', orderId: order.id, orderNumber: order.orderNumber, status, url: `/orders/${order.id}` };
+
+    if (order.userId) {
+      await this.sendToUser(order.userId, title, body, data);
+    } else if (order.guestFcmToken) {
+      await this.sendToTokens([order.guestFcmToken], title, body, { ...data, url: `/track?orderNumber=${order.orderNumber}` });
+    }
   }
 
   async sendPaymentStatusNotification(payload: any) {
@@ -193,6 +241,27 @@ export class NotificationsService implements OnModuleInit {
   async getEmailContacts() { return this.prisma.emailContact.findMany(); }
   async addEmailContact(email: string, name: string, source: string) { return this.prisma.emailContact.create({ data: { email, name, source } }); }
   async deleteEmailContact(id: string) { await this.prisma.emailContact.delete({ where: { id } }); }
+
+  async markAsRead(id: string) {
+    return this.prisma.notification.update({ where: { id }, data: { isRead: true } });
+  }
+
+  async markAllAsRead(userId: string) {
+    return this.prisma.notification.updateMany({ where: { userId, isRead: false }, data: { isRead: true } });
+  }
+
+  async deleteNotification(id: string) {
+    return this.prisma.notification.delete({ where: { id } });
+  }
+
+  async clearAllNotifications(userId: string) {
+    return this.prisma.notification.deleteMany({ where: { userId } });
+  }
+
+  async getNotification(id: string) {
+    return this.prisma.notification.findUnique({ where: { id }, include: { user: { select: { firstName: true, lastName: true, email: true } } } });
+  }
+
   async getSmsContacts() { return this.prisma.smsContact.findMany(); }
   async addSmsContact(phone: string, name: string, source: string) { return this.prisma.smsContact.create({ data: { phone, name, source } }); }
   async deleteSmsContact(id: string) { await this.prisma.smsContact.delete({ where: { id } }); }

@@ -308,8 +308,16 @@ export const getWishlists = (params?: Record<string, unknown>) =>
 // ── Notifications ─────────────────────────────────────────
 export const getNotifications = (params?: Record<string, unknown>) =>
   api.get("/api/notifications", { params });
+export const getNotification = (id: string) =>
+  api.get(`/api/notifications/${id}`);
 export const markNotificationRead = (id: string) =>
-  api.put(`/api/notifications/${id}/read`, {});
+  api.patch(`/api/notifications/${id}/read`);
+export const markAllNotificationsRead = () =>
+  api.post("/api/notifications/read-all");
+export const deleteNotification = (id: string) =>
+  api.delete(`/api/notifications/${id}`);
+export const clearAllNotifications = () =>
+  api.delete("/api/notifications");
 
 // ── Newsletter ────────────────────────────────────────────
 export const getNewsletterSubscribers = (params?: Record<string, unknown>) =>

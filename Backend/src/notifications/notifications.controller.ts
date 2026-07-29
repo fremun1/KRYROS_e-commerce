@@ -100,6 +100,57 @@ export class NotificationsController {
     return this.notificationsService.getRecentNotifications();
   }
 
+  @Get(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get notification details (Admin only)' })
+  async getNotification(@Param('id') id: string) {
+    return this.notificationsService.getNotification(id);
+  }
+
+  @Patch(':id/read')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Mark a notification as read' })
+  async markAsRead(@Param('id') id: string) {
+    return this.notificationsService.markAsRead(id);
+  }
+
+  @Put(':id/read') // Also support PUT for markAsRead as the client might use it
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Mark a notification as read (legacy support)' })
+  async markAsReadLegacy(@Param('id') id: string) {
+    return this.notificationsService.markAsRead(id);
+  }
+
+  @Post('read-all')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Mark all notifications as read for current user' })
+  async markAllAsRead(@Request() req: any) {
+    return this.notificationsService.markAllAsRead(req.user.id);
+  }
+
+  @Delete(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Delete a notification (Admin only)' })
+  async deleteNotification(@Param('id') id: string) {
+    return this.notificationsService.deleteNotification(id);
+  }
+
+  @Delete()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Clear all notifications (Admin only)' })
+  async clearAllNotifications(@Request() req: any) {
+    return this.notificationsService.clearAllNotifications(req.user.id);
+  }
+
   @Get('status')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER)

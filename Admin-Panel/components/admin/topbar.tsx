@@ -62,16 +62,20 @@ export default function Topbar({ collapsed, sidebarW, onMenuToggle, onMobileMenu
           if (n.targetType === 'BULK' && data?.isAdminAlert !== 'true') return false;
           
           // 2. Show if it's explicitly for this user (userId match) or explicitly marked as an admin alert
-          return n.userId || data?.isAdminAlert === 'true' || data?.type === 'NEW_ORDER';
+          return n.userId || data?.isAdminAlert === 'true' || data?.type === 'NEW_ORDER' || data?.type === 'USER_REGISTER';
         })
-        .map((n: any) => ({
-          id: n.id || String(Math.random()),
-          title: n.title || n.type || "Notification",
-          message: n.message || n.body || "",
-          isRead: n.isRead ?? n.read ?? false,
-          createdAt: n.createdAt ? new Date(n.createdAt).toLocaleDateString() : "",
-          type: n.type || "",
-        }));
+        .map((n: any) => {
+          const data = typeof n.data === 'string' ? JSON.parse(n.data) : n.data;
+          return {
+            id: n.id || String(Math.random()),
+            title: n.title || n.type || "Notification",
+            message: n.message || n.body || "",
+            isRead: n.isRead ?? n.read ?? false,
+            createdAt: n.createdAt ? new Date(n.createdAt).toLocaleDateString() : "",
+            type: data?.type || n.type || "",
+            url: data?.url || "",
+          };
+        });
       setNotifs(mapped);
     } catch {
       // silently fail — keep empty
@@ -106,6 +110,20 @@ export default function Topbar({ collapsed, sidebarW, onMenuToggle, onMobileMenu
   const handleMarkOne = async (id: string) => {
     try { await markNotificationRead(id); } catch {}
     setNotifs(d => d.map(n => n.id === id ? { ...n, isRead: true } : n));
+  };
+
+  const handleNotifClick = async (n: NotifItem) => {
+    if (!n.isRead) handleMarkOne(n.id);
+    setShowNotifMenu(false);
+    if (n.url) {
+      router.push(n.url);
+    } else if (n.type === 'NEW_ORDER') {
+      router.push('/orders');
+    } else if (n.type === 'USER_REGISTER') {
+      router.push('/users');
+    } else {
+      router.push('/notifications');
+    }
   };
 
   const handleLogout = () => { setShowUserMenu(false); logout(); };
@@ -236,11 +254,14 @@ export default function Topbar({ collapsed, sidebarW, onMenuToggle, onMobileMenu
                 <div style={{ fontSize: 13, color: textMuted }}>No notifications yet</div>
               </div>
             ) : notifs.slice(0, 8).map(n => (
-              <div key={n.id} style={{
-                padding: "12px 16px", borderBottom: `1px solid ${border}`,
-                background: n.isRead ? "transparent" : "rgba(var(--kryros-primary-rgb), 0.04)",
-                display: "flex", gap: 10, alignItems: "flex-start",
-              }}>
+              <div key={n.id} 
+                onClick={() => handleNotifClick(n)}
+                style={{
+                  padding: "12px 16px", borderBottom: `1px solid ${border}`,
+                  background: n.isRead ? "transparent" : "rgba(var(--kryros-primary-rgb), 0.04)",
+                  display: "flex", gap: 10, alignItems: "flex-start",
+                  cursor: "pointer",
+                }}>
                 <div style={{ width: 8, height: 8, borderRadius: "50%", background: n.isRead ? "transparent" : "var(--primary)", flexShrink: 0, marginTop: 5 }} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 12.5, fontWeight: n.isRead ? 500 : 700, color: textMain, marginBottom: 2 }}>{n.title}</div>
@@ -248,7 +269,7 @@ export default function Topbar({ collapsed, sidebarW, onMenuToggle, onMobileMenu
                   {n.createdAt && <div style={{ fontSize: 10.5, color: textMuted, marginTop: 3 }}>{n.createdAt}</div>}
                 </div>
                 {!n.isRead && (
-                  <button onClick={() => handleMarkOne(n.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--primary)", padding: 2, flexShrink: 0 }} title="Mark as read">
+                  <button onClick={(e) => { e.stopPropagation(); handleMarkOne(n.id); }} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--primary)", padding: 2, flexShrink: 0 }} title="Mark as read">
                     <Check size={13} />
                   </button>
                 )}

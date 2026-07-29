@@ -428,6 +428,14 @@ export class AuthService {
       },
     });
 
+    // Notify User of Password Change
+    this.notificationsService.sendToUser(
+      user.id,
+      'Password Changed 🔐',
+      'Your account password has been successfully updated.',
+      { type: 'PASSWORD_CHANGED' }
+    ).catch(() => {});
+
     await this.prisma.refreshToken.deleteMany({ where: { userId: user.id } });
   }
 
