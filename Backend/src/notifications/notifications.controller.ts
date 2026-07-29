@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Delete, Patch, Body, Param, UseGuards, Request } from '@nestjs/common';
+import { Controller, Post, Get, Delete, Patch, Put, Body, Param, UseGuards, Request } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { NotificationsService } from './notifications.service';
 import { MailerService } from './mailer.service';
