@@ -205,15 +205,6 @@ function OrdersContent() {
 
   useEffect(() => { loadOrders(); }, [loadOrders]);
 
-  // Handle deep link from notification (?id=...)
-  useEffect(() => {
-    const orderId = searchParams.get('id');
-    if (orderId && !hasAutoOpened.current && !ordersLoading) {
-      hasAutoOpened.current = true;
-      openDetail(orderId);
-    }
-  }, [searchParams, ordersLoading, openDetail]);
-
   // Open order detail panel
   const openDetail = useCallback(async (orderId: string) => {
     setDetailLoading(true);
@@ -276,6 +267,15 @@ function OrdersContent() {
       setDetailLoading(false);
     }
   }, []);
+
+  // Handle deep link from notification (?id=...)
+  useEffect(() => {
+    const orderId = searchParams.get('id');
+    if (orderId && !hasAutoOpened.current && !ordersLoading) {
+      hasAutoOpened.current = true;
+      openDetail(orderId);
+    }
+  }, [searchParams, ordersLoading, openDetail]);
 
   // Execute status update
   const doAction = useCallback(async () => {
@@ -347,702 +347,467 @@ function OrdersContent() {
     setBulkLoading(true);
     try {
       const res: any = await (bulkUpdateOrderStatus as any)([...selectedIds], status);
-      const { succeeded, failed } = res.data;
-      toast.success(`Updated ${succeeded} order${succeeded !== 1 ? 's' : ''}${failed ? `, ${failed} failed` : ''}`);
+      const { succeeded, failed } = res.data || res;
+      if (succeeded > 0) toast.success(`Updated ${succeeded} orders to ${status}`);
+      if (failed > 0) toast.error(`Failed to update ${failed} orders`);
       setSelectedIds(new Set());
       loadOrders();
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message || 'Bulk update failed');
+    } catch {
+      toast.error('Failed to perform bulk update');
     } finally {
       setBulkLoading(false);
     }
   }, [selectedIds, loadOrders]);
 
-  // Bulk delete orders
+  // Bulk delete
   const doBulkDelete = useCallback(async () => {
     if (!selectedIds.size) return;
     setBulkLoading(true);
     try {
       const res: any = await (bulkDeleteOrders as any)([...selectedIds]);
-      const { succeeded, failed } = res.data;
-      toast.success(`Deleted ${succeeded} order${succeeded !== 1 ? 's' : ''}${failed ? `, ${failed} failed` : ''}`);
+      const { succeeded, failed } = res.data || res;
+      if (succeeded > 0) toast.success(`Deleted ${succeeded} orders`);
+      if (failed > 0) toast.error(`Failed to delete ${failed} orders`);
       setSelectedIds(new Set());
-      setDeleteTarget(null);
       setDeleteConfirm(null);
       loadOrders();
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message || 'Bulk delete failed');
+    } catch {
+      toast.error('Failed to perform bulk delete');
     } finally {
       setBulkLoading(false);
     }
   }, [selectedIds, loadOrders]);
 
-  // Filtered + searched list
-  const activeDef = TABS.find(t => t.key === tab) || TABS[0];
-  const shown = useMemo(() => {
-    let list = orders.filter(activeDef.filter);
+  const toggleSelectAll = useCallback(() => {
+    if (selectedIds.size === orders.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(orders.map(o => o.id)));
+    }
+  }, [orders, selectedIds]);
+
+  const toggleSelectOne = useCallback((id: string) => {
+    const next = new Set(selectedIds);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setSelectedIds(next);
+  }, [selectedIds]);
+
+  // Filter and Search
+  const filteredOrders = useMemo(() => {
+    let list = orders;
+    const currentTab = TABS.find(t => t.key === tab);
+    if (currentTab) list = list.filter(currentTab.filter);
+    
     if (search.trim()) {
-      const q = search.toLowerCase();
+      const s = search.toLowerCase();
       list = list.filter(o =>
-        o.orderNumber.toLowerCase().includes(q) ||
-        (o.user ? `${o.user.firstName} ${o.user.lastName} ${o.user.email}`.toLowerCase() : '').includes(q)
+        o.orderNumber.toLowerCase().includes(s) ||
+        o.user?.email.toLowerCase().includes(s) ||
+        o.user?.firstName.toLowerCase().includes(s) ||
+        o.user?.lastName.toLowerCase().includes(s)
       );
     }
     return list;
-  }, [orders, activeDef, search]);
-
-  // Tab counts
-  const counts = useMemo(() =>
-    Object.fromEntries(TABS.map(t => [t.key, orders.filter(t.filter).length])),
-  [orders]);
+  }, [orders, tab, search]);
 
   return (
-    <AdminShell>
-      <div style={{ paddingBottom: '2rem' }}>
-
-        {/* ── Page header ── */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
-          <div>
-            <h1 style={{ color: T.text, fontSize: '1.3rem', fontWeight: 700, margin: 0 }}>Order Management</h1>
-            <p style={{ color: T.muted, fontSize: '0.8rem', marginTop: '0.2rem' }}>
-              {orders.length} total &middot; {counts['pending'] || 0} awaiting payment
-            </p>
-          </div>
-          <button
-            onClick={() => loadOrders()}
-            disabled={loading}
-            style={{
-              display: 'flex', alignItems: 'center', gap: '0.4rem',
-              padding: '0.5rem 1rem', borderRadius: '8px', border: 'none',
-              background: 'var(--success)', color: '#000', fontWeight: 600, fontSize: '0.8rem',
-              cursor: loading ? 'wait' : 'pointer', opacity: loading ? 0.6 : 1,
-            }}
-          >
-            <RefreshCw size={13} /> Refresh
-          </button>
+    <div className="orders-page" style={{ padding: '24px', maxWidth: '1600px', margin: '0 auto' }}>
+      <div className="header" style={{ marginBottom: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+        <div>
+          <h1 style={{ fontSize: '28px', fontWeight: '800', color: T.text, marginBottom: '8px' }}>Orders</h1>
+          <p style={{ color: T.muted, fontSize: '14px' }}>Manage and track all customer orders</p>
         </div>
-
-        {/* ── Tabs ── */}
-        <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', overflowX: 'auto', paddingBottom: '0.5rem' }}>
-          {TABS.map((t) => (
-            <button
-              key={t.key}
-              onClick={() => setTab(t.key)}
-              style={{
-                padding: '0.5rem 1rem', borderRadius: '8px', border: 'none',
-                background: tab === t.key ? t.color : T.surface,
-                color: tab === t.key ? '#fff' : T.muted,
-                fontWeight: tab === t.key ? 700 : 500, fontSize: '0.8rem',
-                cursor: 'pointer', whiteSpace: 'nowrap',
-              }}
-            >
-              {t.label} <span style={{ fontSize: '0.7rem', opacity: 0.8 }}>({counts[t.key] || 0})</span>
-            </button>
-          ))}
-        </div>
-
-        {/* ── Search + Bulk Actions ── */}
-        <div style={{ display: 'flex', gap: '0.8rem', marginBottom: '1.2rem', flexWrap: 'wrap', alignItems: 'center' }}>
-          <div style={{ flex: 1, minWidth: '200px', position: 'relative' }}>
-            <Search size={14} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: T.muted }} />
-            <input
-              value={search} onChange={e => setSearch(e.target.value)}
-              placeholder="Search by order # or customer…"
-              style={{
-                width: '100%', padding: '0.6rem 0.75rem 0.6rem 2.2rem', boxSizing: 'border-box',
-                background: T.input, border: `1px solid ${T.border}`, borderRadius: '8px',
-                color: T.text, fontSize: '0.8rem', outline: 'none',
-              }}
-            />
-          </div>
-          {selectedIds.size > 0 && canDelete && (
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          {selectedIds.size > 0 && (
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', background: 'rgba(192,21,27,0.05)', padding: '6px 12px', borderRadius: '8px', border: '1px solid rgba(192,21,27,0.1)' }}>
+              <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--primary)', marginRight: '8px' }}>{selectedIds.size} selected</span>
               <button
-                onClick={() => {
-                  setDeleteTarget(null);
-                  setDeleteConfirm('bulk');
-                }}
-                disabled={bulkLoading}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: '0.3rem',
-                  padding: '0.5rem 0.8rem', borderRadius: '8px', border: 'none',
-                  background: 'rgba(214,48,49,0.10)', color: 'var(--danger)',
-                  fontWeight: 600, fontSize: '0.75rem', cursor: bulkLoading ? 'wait' : 'pointer',
-                }}
+                onClick={() => setDeleteConfirm('bulk')}
+                disabled={bulkLoading || !canDelete}
+                style={{ padding: '8px', borderRadius: '6px', background: 'white', border: '1px solid var(--border)', color: 'var(--danger)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
               >
-                <Trash2 size={12} /> Delete ({selectedIds.size})
+                <Trash2 size={16} />
               </button>
-              <span style={{ color: T.muted, fontSize: '0.8rem' }}>{selectedIds.size} selected</span>
             </div>
           )}
         </div>
-
-        {/* ── Desktop Table View ── */}
-        {!ordersLoading && orders.length > 0 && (
-          <div className="desktop-only" style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: '12px', overflow: 'hidden', overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ borderBottom: `1px solid ${T.border}`, background: T.surface }}>
-                  <th style={{ padding: '0.75rem 1rem', width: '30px' }}>
-                    {canDelete && (
-                      <input
-                        type="checkbox"
-                        checked={selectedIds.size === shown.length && shown.length > 0}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setSelectedIds(new Set(shown.map(o => o.id)));
-                          } else {
-                            setSelectedIds(new Set());
-                          }
-                        }}
-                        style={{ cursor: 'pointer' }}
-                      />
-                    )}
-                  </th>
-                  <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontSize: '0.7rem', fontWeight: 700, color: T.muted, textTransform: 'uppercase' }}>Order</th>
-                  <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontSize: '0.7rem', fontWeight: 700, color: T.muted, textTransform: 'uppercase' }}>Customer</th>
-                  <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontSize: '0.7rem', fontWeight: 700, color: T.muted, textTransform: 'uppercase' }}>Date</th>
-                  <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontSize: '0.7rem', fontWeight: 700, color: T.muted, textTransform: 'uppercase' }}>Items</th>
-                  <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontSize: '0.7rem', fontWeight: 700, color: T.muted, textTransform: 'uppercase' }}>Method</th>
-                  <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontSize: '0.7rem', fontWeight: 700, color: T.muted, textTransform: 'uppercase' }}>Total</th>
-                  <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontSize: '0.7rem', fontWeight: 700, color: T.muted, textTransform: 'uppercase' }}>Payment</th>
-                  <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontSize: '0.7rem', fontWeight: 700, color: T.muted, textTransform: 'uppercase' }}>Status</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
-                {shown.map((o) => {
-                  const sc  = STATUS_CFG[o.status]       || STATUS_CFG.PENDING;
-                  const psc = PAY_CFG[o.paymentStatus]   || PAY_CFG.PENDING;
-                  const isManual = MANUAL_METHODS.includes(o.paymentMethod?.toUpperCase());
-                  const customer = o.user ? `${o.user.firstName} ${o.user.lastName}` : 'Guest';
-                  return (
-                    <tr
-                      key={o.id}
-                      onClick={() => openDetail(o.id)}
-                      style={{
-                        borderBottom: `1px solid ${T.border}`, cursor: 'pointer',
-                        background: selectedIds.has(o.id) ? 'rgba(0,212,170,0.08)' : 'transparent',
-                        transition: 'background 0.2s',
-                      }}
-                      onMouseEnter={(e) => { if (!selectedIds.has(o.id)) (e.currentTarget as any).style.background = T.hover; }}
-                      onMouseLeave={(e) => { (e.currentTarget as any).style.background = selectedIds.has(o.id) ? 'rgba(0,212,170,0.08)' : 'transparent'; }}
-                    >
-                      <td style={{ padding: '0.75rem 1rem' }} onClick={(e) => e.stopPropagation()}>
-                        {canDelete && (
-                          <input
-                            type="checkbox"
-                            checked={selectedIds.has(o.id)}
-                            onChange={(e) => {
-                              const newIds = new Set(selectedIds);
-                              if (e.target.checked) {
-                                newIds.add(o.id);
-                              } else {
-                                newIds.delete(o.id);
-                              }
-                              setSelectedIds(newIds);
-                            }}
-                            style={{ cursor: 'pointer' }}
-                          />
-                        )}
-                      </td>
-                      <td style={{ padding: '0.75rem 1rem', color: T.text, fontWeight: 600, fontSize: '0.8rem' }}>{o.orderNumber}</td>
-                      <td style={{ padding: '0.75rem 1rem' }}>
-                        <div style={{ fontWeight: 600, color: T.text }}>{customer}</div>
-                        {o.user?.email && <div style={{ color: T.muted, fontSize: '0.7rem' }}>{o.user.email}</div>}
-                      </td>
-                      <td style={{ padding: '0.75rem 1rem', color: T.muted, whiteSpace: 'nowrap' as const }}>{fmtDate(o.createdAt)}</td>
-                      <td style={{ padding: '0.75rem 1rem', color: T.muted }}>{o._count.items}</td>
-                      <td style={{ padding: '0.75rem 1rem' }}>
-                        <span style={{
-                          fontSize: '0.7rem', fontWeight: 600, padding: '2px 7px', borderRadius: '4px',
-                          background: isManual ? 'rgba(245,158,11,0.1)' : 'rgba(52,74,100,0.10)',
-                          color: isManual ? 'var(--gold)' : 'var(--secondary)',
-                        }}>
-                          {METHOD_LABEL[o.paymentMethod?.toUpperCase()] || o.paymentMethod || 'N/A'}
-                        </span>
-                      </td>
-                      <td style={{ padding: '0.75rem 1rem', fontWeight: 700, color: T.text, whiteSpace: 'nowrap' as const }}>
-                        {fmtMoney(o.total, o.currencySymbol)}
-                      </td>
-                      <td style={{ padding: '0.75rem 1rem' }}>
-                        <span style={{ background: psc.bg, color: psc.color, fontSize: '0.68rem', fontWeight: 700, padding: '2px 7px', borderRadius: '4px', whiteSpace: 'nowrap' as const }}>{psc.label}</span>
-                      </td>
-                      <td style={{ padding: '0.75rem 1rem' }}>
-                        <span style={{ background: sc.bg, color: sc.color, fontSize: '0.68rem', fontWeight: 700, padding: '2px 7px', borderRadius: '4px', whiteSpace: 'nowrap' as const }}>{sc.label}</span>
-                      </td>
-                      <td style={{ padding: '0.75rem 1rem' }} onClick={(e) => e.stopPropagation()}>
-                        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                          {canDelete && (
-                            <button
-                              onClick={() => openSingleDeleteConfirm(o)}
-                              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--danger)', padding: '0.25rem' }}
-                              title="Delete Order"
-                            >
-                              <Trash2 size={14} />
-                            </button>
-                          )}
-                          <ChevronRight size={13} color={T.muted} />
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {/* ── Mobile List View ── */}
-        {!ordersLoading && orders.length > 0 && (
-          <div className="mobile-only" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            {shown.map((o) => {
-              const sc  = STATUS_CFG[o.status]       || STATUS_CFG.PENDING;
-              const psc = PAY_CFG[o.paymentStatus]   || PAY_CFG.PENDING;
-              const customer = o.user ? `${o.user.firstName} ${o.user.lastName}` : 'Guest';
-              return (
-                <div
-                  key={o.id}
-                  onClick={() => openDetail(o.id)}
-                  style={{
-                    background: T.card, border: `1px solid ${selectedIds.has(o.id) ? 'var(--success)' : T.border}`,
-                    borderRadius: '12px', padding: '1rem', cursor: 'pointer', position: 'relative'
-                  }}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                      {canDelete && (
-                        <div onClick={(e) => e.stopPropagation()}>
-                          <input
-                            type="checkbox"
-                            checked={selectedIds.has(o.id)}
-                            onChange={(e) => {
-                              const newIds = new Set(selectedIds);
-                              if (e.target.checked) newIds.add(o.id);
-                              else newIds.delete(o.id);
-                              setSelectedIds(newIds);
-                            }}
-                          />
-                        </div>
-                      )}
-                      <span style={{ fontWeight: 700, color: T.text, fontSize: '0.9rem' }}>#{o.orderNumber}</span>
-                    </div>
-                    <span style={{ color: T.muted, fontSize: '0.75rem', fontWeight: 600 }}>{fmtDate(o.createdAt)}</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontWeight: 700, color: T.text, fontSize: '0.95rem', marginBottom: '4px' }}>{customer}</div>
-                      <div style={{ color: T.muted, fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <Package size={12} /> {o._count.items} items • {METHOD_LABEL[o.paymentMethod?.toUpperCase()] || o.paymentMethod}
-                      </div>
-                    </div>
-                    <div style={{ textAlign: 'right' }}>
-                      <div style={{ fontWeight: 800, color: T.text, fontSize: '1.05rem', marginBottom: '0.5rem' }}>{fmtMoney(o.total, o.currencySymbol)}</div>
-                      <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', alignItems: 'center' }}>
-                        <div style={{ display: 'flex', gap: '4px' }}>
-                          <span style={{ background: psc.bg, color: psc.color, fontSize: '0.65rem', fontWeight: 800, padding: '3px 7px', borderRadius: '5px' }}>{psc.label}</span>
-                          <span style={{ background: sc.bg, color: sc.color, fontSize: '0.65rem', fontWeight: 800, padding: '3px 7px', borderRadius: '5px' }}>{sc.label}</span>
-                        </div>
-                        {canDelete && (
-                          <button
-                            onClick={(e) => { e.stopPropagation(); openSingleDeleteConfirm(o); }}
-                            style={{ background: 'rgba(214,48,49,0.10)', border: 'none', cursor: 'pointer', color: 'var(--danger)', padding: '5px', borderRadius: '6px' }}
-                          >
-                            <Trash2 size={14} />
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-
-        <style jsx>{`
-          @media (max-width: 768px) {
-            .desktop-only { display: none !important; }
-            .mobile-only { display: flex !important; }
-          }
-          @media (min-width: 769px) {
-            .desktop-only { display: block !important; }
-            .mobile-only { display: none !important; }
-          }
-        `}</style>
-
-        {/* ── Delete Confirmation Modal ── */}
-        {deleteConfirm && (
-          <>
-            <div
-              onClick={closeDeleteConfirm}
-              style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 100, backdropFilter: 'blur(4px)' }}
-            />
-            <div style={{
-              position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-              width: '320px', background: T.panel, border: `1px solid ${T.border}`, borderRadius: '16px',
-              padding: '1.5rem', zIndex: 101, textAlign: 'center'
-            }}>
-              <div style={{ background: 'rgba(214,48,49,0.10)', color: 'var(--danger)', width: '48px', height: '48px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem' }}>
-                <Trash2 size={24} />
-              </div>
-              <h3 style={{ color: T.text, margin: '0 0 0.5rem', fontSize: '1.1rem' }}>Permanently Delete?</h3>
-              <p style={{ color: T.muted, fontSize: '0.85rem', margin: '0 0 1.5rem', lineHeight: 1.5 }}>
-                {deleteConfirm === 'single'
-                  ? `Are you sure you want to delete order #${formatOrderRef(deleteTarget?.orderNumber, deleteTarget?.id || detail?.id)}? This action cannot be undone.`
-                  : `Are you sure you want to delete ${selectedIds.size} selected orders? This action cannot be undone.`}
-              </p>
-              <div style={{ display: 'flex', gap: '0.75rem' }}>
-                <button
-                  onClick={closeDeleteConfirm}
-                  style={{ flex: 1, padding: '0.6rem', borderRadius: '8px', border: `1px solid ${T.border}`, background: 'transparent', color: T.text, fontWeight: 600, cursor: 'pointer' }}
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={deleteConfirm === 'single' ? doDeleteOrder : doBulkDelete}
-                  disabled={actionLoading || bulkLoading}
-                  style={{ flex: 1, padding: '0.6rem', borderRadius: '8px', border: 'none', background: 'var(--danger)', color: '#fff', fontWeight: 600, cursor: 'pointer', opacity: (actionLoading || bulkLoading) ? 0.6 : 1 }}
-                >
-                  {(actionLoading || bulkLoading) ? 'Deleting…' : 'Delete Now'}
-                </button>
-              </div>
-            </div>
-          </>
-        )}
-
-        {/* ── Detail Panel ── */}
-        {(detail || detailLoading) && (
-          <>
-            {/* Backdrop */}
-            <div
-              onClick={() => { setDetail(null); setDetailLoading(false); }}
-              style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.52)', zIndex: 40, backdropFilter: 'blur(2px)' }}
-            />
-            {/* Slide-in panel */}
-            <div style={{
-              position: 'fixed', top: 0, right: 0, bottom: 0, width: 510, maxWidth: '96vw',
-              background: T.panel, borderLeft: `1px solid ${T.border}`,
-              zIndex: 50, overflowY: 'auto', display: 'flex', flexDirection: 'column',
-            }}>
-              {/* Panel header */}
-              <div style={{
-                padding: '1rem 1.2rem', borderBottom: `1px solid ${T.border}`,
-                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                position: 'sticky', top: 0, background: T.panel, zIndex: 1,
-              }}>
-                <div>
-                  <h2 style={{ color: T.text, fontWeight: 700, fontSize: '0.98rem', margin: 0 }}>
-                    {detail ? `Order #${detail.orderNumber}` : 'Loading…'}
-                  </h2>
-                  {detail && (
-                    <p style={{ color: T.muted, fontSize: '0.72rem', margin: '0.1rem 0 0 0' }}>
-                      {fmtDate(detail.createdAt)} at {fmtTime(detail.createdAt)}
-                    </p>
-                  )}
-                </div>
-                <button onClick={() => { setDetail(null); setDetailLoading(false); }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: T.muted, display: 'flex', padding: '0.25rem' }}>
-                  <X size={17} />
-                </button>
-              </div>
-
-              {detailLoading && !detail ? (
-                <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: T.muted, fontSize: '0.84rem' }}>
-                  Loading details…
-                </div>
-              ) : detail ? (
-                <div style={{ flex: 1, padding: '1.2rem', display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>
-
-                  {/* Status badges row */}
-                  <div style={{ display: 'flex', gap: '0.45rem', flexWrap: 'wrap' }}>
-                    {(() => {
-                      const sc  = STATUS_CFG[detail.status]       || STATUS_CFG.PENDING;
-                      const psc = PAY_CFG[detail.paymentStatus]   || PAY_CFG.PENDING;
-                      const isManual = MANUAL_METHODS.includes(detail.paymentMethod?.toUpperCase());
-                      return (
-                        <>
-                          <span style={{ background: sc.bg, color: sc.color, fontSize: '0.73rem', fontWeight: 700, padding: '3px 10px', borderRadius: '6px' }}>Order: {sc.label}</span>
-                          <span style={{ background: psc.bg, color: psc.color, fontSize: '0.73rem', fontWeight: 700, padding: '3px 10px', borderRadius: '6px' }}>Payment: {psc.label}</span>
-                          <span style={{
-                            background: isManual ? 'rgba(245,158,11,0.1)' : 'rgba(52,74,100,0.10)',
-                            color: isManual ? 'var(--gold)' : 'var(--secondary)',
-                            fontSize: '0.73rem', fontWeight: 600, padding: '3px 10px', borderRadius: '6px',
-                          }}>{METHOD_LABEL[detail.paymentMethod?.toUpperCase()] || detail.paymentMethod}</span>
-                        </>
-                      );
-                    })()}
-                  </div>
-
-                  {/* Customer */}
-                  <Section title="Customer" T={T}>
-                    {detail.user ? (
-                      <>
-                        <Row icon={<User size={13} color={T.muted} />} T={T}>
-                          <span style={{ color: T.text, fontWeight: 600 }}>{detail.user.firstName} {detail.user.lastName}</span>
-                        </Row>
-                        <Row icon={<Mail size={13} color={T.muted} />} T={T}>
-                          <span style={{ color: T.muted, fontSize: '0.79rem' }}>{detail.user.email}</span>
-                        </Row>
-                      </>
-                    ) : (
-                      <span style={{ color: T.muted, fontSize: '0.8rem' }}>Guest order</span>
-                    )}
-                  </Section>
-
-                  {/* Shipping */}
-                  {detail.shippingAddress && (
-                    <Section title="Delivery Address" T={T}>
-                      <Row icon={<MapPin size={13} color={T.muted} />} T={T}>
-                        <div style={{ color: T.muted, fontSize: '0.79rem', lineHeight: 1.55 }}>
-                          <strong style={{ color: T.text }}>{detail.shippingAddress.firstName} {detail.shippingAddress.lastName}</strong><br />
-                          {detail.shippingAddress.street}, {detail.shippingAddress.city}<br />
-                          {detail.shippingAddress.state}, {detail.shippingAddress.country}
-                        </div>
-                      </Row>
-                      <Row icon={<Phone size={13} color={T.muted} />} T={T}>
-                        <span style={{ color: T.muted, fontSize: '0.79rem' }}>{detail.shippingAddress.phone}</span>
-                      </Row>
-                      {detail.trackingNumber && (
-                        <div style={{ marginTop: '0.6rem', padding: '0.45rem 0.75rem', background: 'rgba(52,74,100,0.08)', borderRadius: '6px', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <Truck size={13} color="var(--secondary)" />
-                          <span style={{ color: 'var(--secondary)', fontSize: '0.77rem', fontWeight: 600 }}>Tracking: {detail.trackingNumber}</span>
-                        </div>
-                      )}
-                    </Section>
-                  )}
-
-                  {/* Items */}
-                  <Section title={`Items (${detail._count.items})`} T={T}>
-                    {detail.items.map((item, i) => {
-                      const img = item.product.images?.find(im => im.isPrimary)?.url || item.product.images?.[0]?.url;
-                      return (
-                        <div key={item.id} style={{ display: 'flex', gap: '0.7rem', alignItems: 'center', paddingTop: i > 0 ? '0.7rem' : 0, borderTop: i > 0 ? `1px solid ${T.border}` : 'none', marginTop: i > 0 ? '0.7rem' : 0 }}>
-                          {img
-                            ? <img src={img} alt={item.product.name} style={{ width: 42, height: 42, borderRadius: '6px', objectFit: 'cover', flexShrink: 0, border: `1px solid ${T.border}` }} />
-                            : <div style={{ width: 42, height: 42, borderRadius: '6px', background: T.border, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Package size={15} color={T.muted} /></div>
-                          }
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ color: T.text, fontWeight: 600, fontSize: '0.8rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.product.name}</div>
-                            {item.variant && <div style={{ color: T.muted, fontSize: '0.7rem' }}>{item.variant.value || item.variant.name}</div>}
-                            <div style={{ color: T.muted, fontSize: '0.7rem' }}>&times;{item.quantity}</div>
-                          </div>
-                          <div style={{ color: T.text, fontWeight: 700, fontSize: '0.8rem', whiteSpace: 'nowrap' }}>{fmtMoney(item.total, detail.currencySymbol)}</div>
-                        </div>
-                      );
-                    })}
-                  </Section>
-
-                  {/* Summary */}
-                  <Section title="Order Summary" T={T}>
-                    {([['Subtotal', detail.subtotal], ['Shipping', detail.shipping], ['Processing Fees', detail.tax], ...(detail.discount > 0 ? [['Discount', -detail.discount]] : [])] as [string, number][]).map(([lbl, val]) => (
-                      <div key={lbl} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.79rem', color: T.muted, marginBottom: '0.3rem' }}>
-                        <span>{lbl}</span>
-                        <span>{val < 0 ? '-' : ''}{fmtMoney(Math.abs(val), detail.currencySymbol)}</span>
-                      </div>
-                    ))}
-                    <div style={{ borderTop: `1px solid ${T.border}`, marginTop: '0.5rem', paddingTop: '0.5rem', display: 'flex', justifyContent: 'space-between', fontWeight: 700, fontSize: '0.88rem', color: T.text }}>
-                      <span>Total</span>
-                      <span>{fmtMoney(detail.total, detail.currencySymbol)}</span>
-                    </div>
-                  </Section>
-
-                  {/* Status History */}
-                  {detail.logs.length > 0 && (
-                    <Section title="Status History" T={T}>
-                      {detail.logs.map((log, i) => {
-                        const sc = STATUS_CFG[log.status] || STATUS_CFG.PENDING;
-                        return (
-                          <div key={log.id} style={{ display: 'flex', gap: '0.7rem', marginBottom: i < detail.logs.length - 1 ? '0.7rem' : 0 }}>
-                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
-                              <div style={{ width: 7, height: 7, borderRadius: '50%', background: sc.color, marginTop: 4 }} />
-                              {i < detail.logs.length - 1 && <div style={{ flex: 1, width: 1, background: T.border, marginTop: 4 }} />}
-                            </div>
-                            <div style={{ flex: 1, paddingBottom: i < detail.logs.length - 1 ? '0.7rem' : 0 }}>
-                              <div style={{ display: 'flex', gap: '0.45rem', alignItems: 'center', flexWrap: 'wrap' }}>
-                                <span style={{ color: sc.color, fontWeight: 700, fontSize: '0.73rem' }}>{sc.label}</span>
-                                <span style={{ color: T.muted, fontSize: '0.68rem' }}>{fmtDate(log.createdAt)} {fmtTime(log.createdAt)}</span>
-                              </div>
-                              {log.notes && <div style={{ color: T.muted, fontSize: '0.7rem', marginTop: '0.12rem' }}>{log.notes}</div>}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </Section>
-                  )}
-
-                  {/* Status Update Section */}
-                  <Section title="Update Status" T={T}>
-                    {/* Order Status Dropdown */}
-                    <div style={{ marginBottom: '0.8rem' }}>
-                      <label style={{ display: 'block', fontSize: '0.72rem', color: T.muted, marginBottom: '0.3rem', fontWeight: 600 }}>
-                        Order Status
-                      </label>
-                      <div style={{ position: 'relative' }}>
-                        <button
-                          onClick={() => setShowStatusDropdown(!showStatusDropdown)}
-                          style={{
-                            width: '100%', padding: '0.55rem 0.75rem', boxSizing: 'border-box',
-                            background: T.input, border: `1px solid ${T.border}`, borderRadius: '7px',
-                            color: T.text, fontSize: '0.81rem', textAlign: 'left', cursor: 'pointer',
-                            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                          }}
-                        >
-                          <span>{selectedOrderStatus ? STATUS_CFG[selectedOrderStatus]?.label : 'Select status'}</span>
-                          <span style={{ fontSize: '0.6rem' }}>▼</span>
-                        </button>
-                        {showStatusDropdown && (
-                          <div style={{
-                            position: 'absolute', top: '100%', left: 0, right: 0, marginTop: '0.3rem',
-                            background: T.input, border: `1px solid ${T.border}`, borderRadius: '7px',
-                            zIndex: 10, maxHeight: '200px', overflowY: 'auto',
-                          }}>
-                            {ALL_ORDER_STATUSES.map((status) => (
-                              <button
-                                key={status}
-                                onClick={() => {
-                                  setSelectedOrderStatus(status);
-                                  setShowStatusDropdown(false);
-                                }}
-                                style={{
-                                  width: '100%', padding: '0.5rem 0.75rem', textAlign: 'left',
-                                  background: selectedOrderStatus === status ? 'rgba(0,212,170,0.1)' : 'transparent',
-                                  border: 'none', color: T.text, fontSize: '0.8rem', cursor: 'pointer',
-                                  borderBottom: `1px solid ${T.border}`,
-                                }}
-                              >
-                                {STATUS_CFG[status]?.label || status}
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Payment Status Dropdown */}
-                    <div style={{ marginBottom: '0.8rem' }}>
-                      <label style={{ display: 'block', fontSize: '0.72rem', color: T.muted, marginBottom: '0.3rem', fontWeight: 600 }}>
-                        Payment Status
-                      </label>
-                      <div style={{ position: 'relative' }}>
-                        <button
-                          onClick={() => setShowPaymentDropdown(!showPaymentDropdown)}
-                          style={{
-                            width: '100%', padding: '0.55rem 0.75rem', boxSizing: 'border-box',
-                            background: T.input, border: `1px solid ${T.border}`, borderRadius: '7px',
-                            color: T.text, fontSize: '0.81rem', textAlign: 'left', cursor: 'pointer',
-                            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                          }}
-                        >
-                          <span>{selectedPaymentStatus ? PAY_CFG[selectedPaymentStatus]?.label : 'Select status'}</span>
-                          <span style={{ fontSize: '0.6rem' }}>▼</span>
-                        </button>
-                        {showPaymentDropdown && (
-                          <div style={{
-                            position: 'absolute', top: '100%', left: 0, right: 0, marginTop: '0.3rem',
-                            background: T.input, border: `1px solid ${T.border}`, borderRadius: '7px',
-                            zIndex: 10, maxHeight: '200px', overflowY: 'auto',
-                          }}>
-                            {ALL_PAYMENT_STATUSES.map((status) => (
-                              <button
-                                key={status}
-                                onClick={() => {
-                                  setSelectedPaymentStatus(status);
-                                  setShowPaymentDropdown(false);
-                                }}
-                                style={{
-                                  width: '100%', padding: '0.5rem 0.75rem', textAlign: 'left',
-                                  background: selectedPaymentStatus === status ? 'rgba(0,212,170,0.1)' : 'transparent',
-                                  border: 'none', color: T.text, fontSize: '0.8rem', cursor: 'pointer',
-                                  borderBottom: `1px solid ${T.border}`,
-                                }}
-                              >
-                                {PAY_CFG[status]?.label || status}
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Tracking input */}
-                    <div style={{ marginBottom: '0.8rem' }}>
-                      <label style={{ display: 'block', fontSize: '0.72rem', color: T.muted, marginBottom: '0.3rem' }}>
-                        Tracking Number <span style={{ color: T.muted, fontWeight: 400 }}>(optional)</span>
-                      </label>
-                      <input
-                        value={tracking} onChange={e => setTracking(e.target.value)}
-                        placeholder="e.g. TRK-2024-001"
-                        style={{
-                          width: '100%', padding: '0.55rem 0.75rem', boxSizing: 'border-box',
-                          background: T.input, border: `1px solid ${T.border}`, borderRadius: '7px',
-                          color: T.text, fontSize: '0.81rem', outline: 'none', fontFamily: 'inherit',
-                        }}
-                      />
-                    </div>
-
-                    {/* Action buttons */}
-                    <div style={{ display: 'flex', gap: '0.6rem' }}>
-                      <button
-                        onClick={doAction}
-                        disabled={actionLoading}
-                        style={{
-                          flex: 1, padding: '0.6rem 1rem', borderRadius: '8px', border: 'none',
-                          cursor: actionLoading ? 'wait' : 'pointer', fontFamily: 'inherit',
-                          background: 'var(--success)', color: '#000',
-                          fontWeight: 700, fontSize: '0.82rem',
-                          opacity: actionLoading ? 0.65 : 1,
-                        }}
-                      >
-                        {actionLoading ? 'Updating…' : 'Update Status'}
-                      </button>
-                      {canDelete && (
-                        <button
-                          onClick={() => openSingleDeleteConfirm(detail)}
-                          disabled={actionLoading}
-                          style={{
-                            padding: '0.6rem 1rem', borderRadius: '8px', border: 'none',
-                            cursor: actionLoading ? 'wait' : 'pointer', fontFamily: 'inherit',
-                            background: 'rgba(214,48,49,0.10)', color: 'var(--danger)',
-                            fontWeight: 700, fontSize: '0.82rem',
-                            display: 'flex', alignItems: 'center', gap: '0.3rem',
-                          }}
-                        >
-                          <Trash2 size={14} /> Delete
-                        </button>
-                      )}
-                    </div>
-                  </Section>
-
-                </div>
-              ) : null}
-            </div>
-          </>
-        )}
-
       </div>
-    </AdminShell>
-  );
-}
 
-// ─── Small reusable sub-components ────────────────────────
-function Section({ title, children, T }: { title: string; children: React.ReactNode; T: Record<string, string> }) {
-  return (
-    <div style={{ background: T.surface, borderRadius: '10px', padding: '0.9rem 1rem' }}>
-      <div style={{ fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: T.muted, marginBottom: '0.7rem' }}>{title}</div>
-      {children}
-    </div>
-  );
-}
+      <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px', marginBottom: '32px' }}>
+        {[
+          { label: 'Total Orders', value: orders.length, icon: ShoppingBag, color: 'var(--primary)' },
+          { label: 'Pending Payment', value: orders.filter(o => o.paymentStatus === 'PENDING').length, icon: Clock, color: 'var(--gold)' },
+          { label: 'To Ship', value: orders.filter(o => o.status === 'CONFIRMED' || o.status === 'PROCESSING').length, icon: Package, color: 'var(--secondary)' },
+          { label: 'Completed', value: orders.filter(o => o.status === 'DELIVERED' || o.status === 'COLLECTED').length, icon: CheckCircle, color: 'var(--success)' },
+        ].map((s, i) => (
+          <div key={i} style={{ background: T.card, padding: '20px', borderRadius: '16px', border: `1px solid ${T.border}`, display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: `${s.color}10`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: s.color }}>
+              <s.icon size={24} />
+            </div>
+            <div>
+              <p style={{ fontSize: '13px', color: T.muted, marginBottom: '4px' }}>{s.label}</p>
+              <p style={{ fontSize: '20px', fontWeight: '700', color: T.text }}>{s.value}</p>
+            </div>
+          </div>
+        ))}
+      </div>
 
-function Row({ icon, children, T }: { icon: React.ReactNode; children: React.ReactNode; T: Record<string, string> }) {
-  return (
-    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', marginBottom: '0.35rem' }}>
-      <span style={{ marginTop: '2px', flexShrink: 0 }}>{icon}</span>
-      <span style={{ flex: 1 }}>{children}</span>
+      <div className="main-card" style={{ background: T.card, borderRadius: '20px', border: `1px solid ${T.border}`, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
+        <div className="card-toolbar" style={{ padding: '20px', borderBottom: `1px solid ${T.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+          <div className="tabs" style={{ display: 'flex', gap: '4px', background: 'var(--surface)', padding: '4px', borderRadius: '10px' }}>
+            {TABS.map(t => (
+              <button
+                key={t.key}
+                onClick={() => setTab(t.key)}
+                style={{
+                  padding: '8px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: '600', border: 'none', cursor: 'pointer',
+                  background: tab === t.key ? 'white' : 'transparent',
+                  color: tab === t.key ? 'var(--primary)' : T.muted,
+                  boxShadow: tab === t.key ? '0 2px 8px rgba(0,0,0,0.05)' : 'none',
+                  transition: 'all 0.2s'
+                }}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+          <div className="search" style={{ position: 'relative', width: '300px' }}>
+            <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: T.muted }} />
+            <input
+              type="text"
+              placeholder="Search by order #, email, name..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              style={{ width: '100%', padding: '10px 12px 10px 40px', borderRadius: '10px', border: `1px solid ${T.border}`, background: 'var(--surface)', fontSize: '14px', outline: 'none' }}
+            />
+          </div>
+        </div>
+
+        <div className="table-container" style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+            <thead>
+              <tr style={{ background: 'var(--surface)', borderBottom: `1px solid ${T.border}` }}>
+                <th style={{ padding: '16px 20px', width: '40px' }}>
+                  <input type="checkbox" checked={selectedIds.size === orders.length && orders.length > 0} onChange={toggleSelectAll} />
+                </th>
+                <th style={{ padding: '16px 20px', fontSize: '12px', fontWeight: '700', color: T.muted, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Order</th>
+                <th style={{ padding: '16px 20px', fontSize: '12px', fontWeight: '700', color: T.muted, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Customer</th>
+                <th style={{ padding: '16px 20px', fontSize: '12px', fontWeight: '700', color: T.muted, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Date</th>
+                <th style={{ padding: '16px 20px', fontSize: '12px', fontWeight: '700', color: T.muted, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Total</th>
+                <th style={{ padding: '16px 20px', fontSize: '12px', fontWeight: '700', color: T.muted, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Payment</th>
+                <th style={{ padding: '16px 20px', fontSize: '12px', fontWeight: '700', color: T.muted, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Status</th>
+                <th style={{ padding: '16px 20px', width: '60px' }}></th>
+              </tr>
+            </thead>
+            <tbody>
+              {ordersLoading ? (
+                <tr><td colSpan={8} style={{ padding: '100px', textAlign: 'center', color: T.muted }}>Loading orders...</td></tr>
+              ) : filteredOrders.length === 0 ? (
+                <tr><td colSpan={8} style={{ padding: '100px', textAlign: 'center', color: T.muted }}>No orders found</td></tr>
+              ) : (
+                filteredOrders.map(o => (
+                  <tr key={o.id} onClick={() => openDetail(o.id)} style={{ borderBottom: `1px solid ${T.border}`, cursor: 'pointer', transition: 'background 0.2s' }} className="table-row-hover">
+                    <td style={{ padding: '16px 20px' }} onClick={(e) => e.stopPropagation()}>
+                      <input type="checkbox" checked={selectedIds.has(o.id)} onChange={() => toggleSelectOne(o.id)} />
+                    </td>
+                    <td style={{ padding: '16px 20px' }}>
+                      <p style={{ fontWeight: '700', color: T.text, fontSize: '14px', marginBottom: '2px' }}>#{o.orderNumber}</p>
+                      <p style={{ fontSize: '12px', color: T.muted }}>{o._count.items} items</p>
+                    </td>
+                    <td style={{ padding: '16px 20px' }}>
+                      <p style={{ fontWeight: '600', color: T.text, fontSize: '14px', marginBottom: '2px' }}>{o.user ? `${o.user.firstName} ${o.user.lastName}` : 'Guest'}</p>
+                      <p style={{ fontSize: '12px', color: T.muted }}>{o.user?.email || 'No email'}</p>
+                    </td>
+                    <td style={{ padding: '16px 20px' }}>
+                      <p style={{ fontSize: '14px', color: T.text }}>{fmtDate(o.createdAt)}</p>
+                      <p style={{ fontSize: '12px', color: T.muted }}>{fmtTime(o.createdAt)}</p>
+                    </td>
+                    <td style={{ padding: '16px 20px' }}>
+                      <p style={{ fontWeight: '700', color: T.text, fontSize: '14px' }}>{fmtMoney(o.total, o.currencySymbol)}</p>
+                      {o.totalZMW && <p style={{ fontSize: '11px', color: T.muted }}>≈ ZMW {o.totalZMW.toLocaleString()}</p>}
+                    </td>
+                    <td style={{ padding: '16px 20px' }}>
+                      <div style={{ display: 'inline-flex', padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: '700', color: PAY_CFG[o.paymentStatus]?.color, background: PAY_CFG[o.paymentStatus]?.bg }}>
+                        {PAY_CFG[o.paymentStatus]?.label}
+                      </div>
+                    </td>
+                    <td style={{ padding: '16px 20px' }}>
+                      <div style={{ display: 'inline-flex', padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: '700', color: STATUS_CFG[o.status]?.color, background: STATUS_CFG[o.status]?.bg }}>
+                        {STATUS_CFG[o.status]?.label}
+                      </div>
+                    </td>
+                    <td style={{ padding: '16px 20px', textAlign: 'right' }}>
+                      <ChevronRight size={18} color={T.muted} />
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* ─── Detail Panel ─────────────────────────────────── */}
+      {detail && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', justifyContent: 'flex-end' }}>
+          <div onClick={() => setDetail(null)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(4px)' }} />
+          <div style={{ position: 'relative', width: '600px', height: '100%', background: 'white', boxShadow: '-10px 0 40px rgba(0,0,0,0.1)', display: 'flex', flexDirection: 'column', animation: 'slideIn 0.3s ease-out' }}>
+            <div style={{ padding: '24px', borderBottom: `1px solid ${T.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <h2 style={{ fontSize: '20px', fontWeight: '800', color: T.text }}>Order Details</h2>
+                <p style={{ fontSize: '13px', color: T.muted }}>#{detail.orderNumber} • {fmtDate(detail.createdAt)}</p>
+              </div>
+              <button onClick={() => setDetail(null)} style={{ width: '36px', height: '36px', borderRadius: '50%', border: 'none', background: 'var(--surface)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <X size={20} />
+              </button>
+            </div>
+
+            <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '32px' }}>
+                <div style={{ background: 'var(--surface)', padding: '16px', borderRadius: '12px' }}>
+                  <p style={{ fontSize: '11px', fontWeight: '700', color: T.muted, textTransform: 'uppercase', marginBottom: '12px' }}>Customer</p>
+                  <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                    <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)', border: `1px solid ${T.border}` }}>
+                      <User size={20} />
+                    </div>
+                    <div>
+                      <p style={{ fontSize: '14px', fontWeight: '700' }}>{detail.user ? `${detail.user.firstName} ${detail.user.lastName}` : 'Guest'}</p>
+                      <p style={{ fontSize: '12px', color: T.muted }}>{detail.user?.email || 'No email'}</p>
+                    </div>
+                  </div>
+                </div>
+                <div style={{ background: 'var(--surface)', padding: '16px', borderRadius: '12px' }}>
+                  <p style={{ fontSize: '11px', fontWeight: '700', color: T.muted, textTransform: 'uppercase', marginBottom: '12px' }}>Payment</p>
+                  <p style={{ fontSize: '14px', fontWeight: '700', marginBottom: '4px' }}>{METHOD_LABEL[detail.paymentMethod] || detail.paymentMethod}</p>
+                  <div style={{ display: 'inline-flex', padding: '2px 8px', borderRadius: '4px', fontSize: '10px', fontWeight: '800', color: PAY_CFG[detail.paymentStatus]?.color, background: 'white', border: `1px solid ${PAY_CFG[detail.paymentStatus]?.color}20` }}>
+                    {PAY_CFG[detail.paymentStatus]?.label}
+                  </div>
+                </div>
+              </div>
+
+              {detail.shippingAddress && (
+                <div style={{ marginBottom: '32px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                    <MapPin size={16} color="var(--primary)" />
+                    <h3 style={{ fontSize: '14px', fontWeight: '700' }}>Shipping Address</h3>
+                  </div>
+                  <div style={{ padding: '16px', border: `1px solid ${T.border}`, borderRadius: '12px' }}>
+                    <p style={{ fontSize: '14px', fontWeight: '600', marginBottom: '4px' }}>{detail.shippingAddress.firstName} {detail.shippingAddress.lastName}</p>
+                    <p style={{ fontSize: '13px', color: T.muted, lineHeight: '1.5' }}>
+                      {detail.shippingAddress.street}<br />
+                      {detail.shippingAddress.city}, {detail.shippingAddress.state}<br />
+                      {detail.shippingAddress.country}
+                    </p>
+                    <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: `1px dashed ${T.border}`, display: 'flex', gap: '16px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: T.muted }}>
+                        <Phone size={14} /> {detail.shippingAddress.phone}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div style={{ marginBottom: '32px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                  <Package size={16} color="var(--primary)" />
+                  <h3 style={{ fontSize: '14px', fontWeight: '700' }}>Items ({detail.items.length})</h3>
+                </div>
+                <div style={{ border: `1px solid ${T.border}`, borderRadius: '12px', overflow: 'hidden' }}>
+                  {detail.items.map((item, idx) => (
+                    <div key={item.id} style={{ padding: '12px', display: 'flex', gap: '12px', borderBottom: idx === detail.items.length - 1 ? 'none' : `1px solid ${T.border}`, background: idx % 2 === 0 ? 'white' : 'var(--surface)' }}>
+                      <div style={{ width: '50px', height: '50px', borderRadius: '8px', overflow: 'hidden', background: 'white', border: `1px solid ${T.border}` }}>
+                        {item.product.images[0] ? (
+                          <img src={item.product.images[0].url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        ) : (
+                          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: T.muted }}><ShoppingBag size={20} /></div>
+                        )}
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <p style={{ fontSize: '13px', fontWeight: '700', color: T.text, marginBottom: '2px' }}>{item.product.name}</p>
+                        <p style={{ fontSize: '11px', color: T.muted }}>{item.variant?.name}: {item.variant?.value} • Qty: {item.quantity}</p>
+                      </div>
+                      <div style={{ textAlign: 'right' }}>
+                        <p style={{ fontSize: '13px', fontWeight: '700' }}>{fmtMoney(item.total, detail.currencySymbol)}</p>
+                        <p style={{ fontSize: '11px', color: T.muted }}>{fmtMoney(item.price, detail.currencySymbol)} ea</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ background: 'var(--surface)', padding: '20px', borderRadius: '16px', marginBottom: '32px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '13px', color: T.muted }}>
+                  <span>Subtotal</span>
+                  <span>{fmtMoney(detail.subtotal, detail.currencySymbol)}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '13px', color: T.muted }}>
+                  <span>Shipping</span>
+                  <span>{fmtMoney(detail.shipping, detail.currencySymbol)}</span>
+                </div>
+                {detail.tax > 0 && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '13px', color: T.muted }}>
+                    <span>Tax</span>
+                    <span>{fmtMoney(detail.tax, detail.currencySymbol)}</span>
+                  </div>
+                )}
+                {detail.discount > 0 && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '13px', color: 'var(--danger)' }}>
+                    <span>Discount</span>
+                    <span>-{fmtMoney(detail.discount, detail.currencySymbol)}</span>
+                  </div>
+                )}
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '12px', paddingTop: '12px', borderTop: `1px solid ${T.border}`, fontSize: '16px', fontWeight: '800', color: T.text }}>
+                  <span>Total</span>
+                  <span>{fmtMoney(detail.total, detail.currencySymbol)}</span>
+                </div>
+              </div>
+
+              <div style={{ marginBottom: '20px' }}>
+                <h3 style={{ fontSize: '14px', fontWeight: '700', marginBottom: '16px' }}>Manage Order</h3>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+                  <div style={{ position: 'relative' }}>
+                    <label style={{ fontSize: '11px', fontWeight: '700', color: T.muted, textTransform: 'uppercase', display: 'block', marginBottom: '6px' }}>Order Status</label>
+                    <button
+                      onClick={() => { setShowStatusDropdown(!showStatusDropdown); setShowPaymentDropdown(false); }}
+                      style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: `1px solid ${T.border}`, background: 'white', textAlign: 'left', fontSize: '13px', fontWeight: '600', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                    >
+                      <span style={{ color: STATUS_CFG[selectedOrderStatus || detail.status]?.color }}>{STATUS_CFG[selectedOrderStatus || detail.status]?.label}</span>
+                      <ChevronRight size={16} style={{ transform: showStatusDropdown ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s' }} />
+                    </button>
+                    {showStatusDropdown && (
+                      <div style={{ position: 'absolute', bottom: '100%', left: 0, right: 0, marginBottom: '8px', background: 'white', border: `1px solid ${T.border}`, borderRadius: '12px', boxShadow: '0 10px 30px rgba(0,0,0,0.1)', zIndex: 60, padding: '6px', maxHeight: '200px', overflowY: 'auto' }}>
+                        {ALL_ORDER_STATUSES.map(s => (
+                          <button key={s} onClick={() => { setSelectedOrderStatus(s); setShowStatusDropdown(false); }} style={{ width: '100%', padding: '8px 12px', textAlign: 'left', border: 'none', background: selectedOrderStatus === s ? 'var(--surface)' : 'transparent', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: '600', color: STATUS_CFG[s].color }}>
+                            {STATUS_CFG[s].label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <div style={{ position: 'relative' }}>
+                    <label style={{ fontSize: '11px', fontWeight: '700', color: T.muted, textTransform: 'uppercase', display: 'block', marginBottom: '6px' }}>Payment Status</label>
+                    <button
+                      onClick={() => { setShowPaymentDropdown(!showPaymentDropdown); setShowStatusDropdown(false); }}
+                      style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: `1px solid ${T.border}`, background: 'white', textAlign: 'left', fontSize: '13px', fontWeight: '600', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                    >
+                      <span style={{ color: PAY_CFG[selectedPaymentStatus || detail.paymentStatus]?.color }}>{PAY_CFG[selectedPaymentStatus || detail.paymentStatus]?.label}</span>
+                      <ChevronRight size={16} style={{ transform: showPaymentDropdown ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s' }} />
+                    </button>
+                    {showPaymentDropdown && (
+                      <div style={{ position: 'absolute', bottom: '100%', left: 0, right: 0, marginBottom: '8px', background: 'white', border: `1px solid ${T.border}`, borderRadius: '12px', boxShadow: '0 10px 30px rgba(0,0,0,0.1)', zIndex: 60, padding: '6px' }}>
+                        {ALL_PAYMENT_STATUSES.map(s => (
+                          <button key={s} onClick={() => { setSelectedPaymentStatus(s); setShowPaymentDropdown(false); }} style={{ width: '100%', padding: '8px 12px', textAlign: 'left', border: 'none', background: selectedPaymentStatus === s ? 'var(--surface)' : 'transparent', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: '600', color: PAY_CFG[s].color }}>
+                            {PAY_CFG[s].label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{ fontSize: '11px', fontWeight: '700', color: T.muted, textTransform: 'uppercase', display: 'block', marginBottom: '6px' }}>Tracking Number</label>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <div style={{ flex: 1, position: 'relative' }}>
+                      <Truck size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: T.muted }} />
+                      <input
+                        type="text"
+                        placeholder="Enter tracking number..."
+                        value={tracking}
+                        onChange={(e) => setTracking(e.target.value)}
+                        style={{ width: '100%', padding: '10px 12px 10px 36px', borderRadius: '10px', border: `1px solid ${T.border}`, background: 'white', fontSize: '13px', outline: 'none' }}
+                      />
+                    </div>
+                  </div>
+                </div>
+                <button
+                  onClick={doAction}
+                  disabled={actionLoading}
+                  style={{ width: '100%', padding: '14px', borderRadius: '12px', background: 'var(--primary)', color: 'white', border: 'none', fontWeight: '700', fontSize: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', opacity: actionLoading ? 0.7 : 1 }}
+                >
+                  {actionLoading ? <RefreshCw size={18} className="animate-spin" /> : <CheckCircle size={18} />}
+                  Save Changes
+                </button>
+              </div>
+
+              <div style={{ paddingTop: '20px', borderTop: `1px solid ${T.border}` }}>
+                <h3 style={{ fontSize: '14px', fontWeight: '700', marginBottom: '16px' }}>Order Timeline</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  {detail.logs.map((log, i) => (
+                    <div key={log.id} style={{ display: 'flex', gap: '12px' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: i === 0 ? 'var(--primary)' : T.border, marginTop: '4px' }} />
+                        {i < detail.logs.length - 1 && <div style={{ width: '2px', flex: 1, background: T.border, margin: '4px 0' }} />}
+                      </div>
+                      <div style={{ paddingBottom: i < detail.logs.length - 1 ? '16px' : '0' }}>
+                        <p style={{ fontSize: '13px', fontWeight: '700', color: T.text }}>{STATUS_CFG[log.status]?.label || log.status}</p>
+                        <p style={{ fontSize: '12px', color: T.muted, marginBottom: '4px' }}>{log.notes}</p>
+                        <p style={{ fontSize: '11px', color: T.muted }}>{fmtDate(log.createdAt)} • {fmtTime(log.createdAt)}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div style={{ padding: '20px', borderTop: `1px solid ${T.border}`, background: 'var(--surface)', display: 'flex', justifyContent: 'space-between' }}>
+              <button
+                onClick={() => openSingleDeleteConfirm({ id: detail.id, orderNumber: detail.orderNumber })}
+                disabled={actionLoading || !canDelete}
+                style={{ padding: '10px 16px', borderRadius: '8px', background: 'white', border: '1px solid var(--danger)', color: 'var(--danger)', fontWeight: '600', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
+              >
+                <Trash2 size={16} /> Delete Order
+              </button>
+              <button onClick={() => setDetail(null)} style={{ padding: '10px 20px', borderRadius: '8px', background: 'white', border: `1px solid ${T.border}`, fontWeight: '600', fontSize: '13px', cursor: 'pointer' }}>Close</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── Modals ───────────────────────────────────────── */}
+      {deleteConfirm && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+          <div onClick={closeDeleteConfirm} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)' }} />
+          <div style={{ position: 'relative', background: 'white', width: '100%', maxWidth: '400px', borderRadius: '20px', padding: '32px', textAlign: 'center', boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}>
+            <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'rgba(214,48,49,0.1)', color: 'var(--danger)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+              <AlertCircle size={32} />
+            </div>
+            <h2 style={{ fontSize: '20px', fontWeight: '800', marginBottom: '12px' }}>
+              {deleteConfirm === 'single' ? 'Delete Order?' : `Delete ${selectedIds.size} Orders?`}
+            </h2>
+            <p style={{ color: T.muted, fontSize: '14px', lineHeight: '1.6', marginBottom: '32px' }}>
+              {deleteConfirm === 'single' 
+                ? `Are you sure you want to delete order #${deleteTarget?.orderNumber}? This action cannot be undone.`
+                : `Are you sure you want to delete all selected orders? This will permanently remove them from the system.`}
+            </p>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button onClick={closeDeleteConfirm} style={{ flex: 1, padding: '12px', borderRadius: '12px', border: `1px solid ${T.border}`, background: 'white', fontWeight: '700', fontSize: '14px', cursor: 'pointer' }}>Cancel</button>
+              <button
+                onClick={deleteConfirm === 'single' ? doDeleteOrder : doBulkDelete}
+                disabled={actionLoading || bulkLoading}
+                style={{ flex: 1, padding: '12px', borderRadius: '12px', border: 'none', background: 'var(--danger)', color: 'white', fontWeight: '700', fontSize: '14px', cursor: 'pointer' }}
+              >
+                {actionLoading || bulkLoading ? 'Deleting...' : 'Delete Now'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <style jsx>{`
+        .table-row-hover:hover { background: var(--surface) !important; }
+        .animate-spin { animation: spin 1s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+      `}</style>
     </div>
   );
 }
 
 export default function OrdersPage() {
-  return <OrdersContent />;
+  return (
+    <AdminShell>
+      <OrdersContent />
+    </AdminShell>
+  );
 }
