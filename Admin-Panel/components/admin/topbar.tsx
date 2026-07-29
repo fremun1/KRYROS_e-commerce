@@ -115,15 +115,26 @@ export default function Topbar({ collapsed, sidebarW, onMenuToggle, onMobileMenu
   const handleNotifClick = async (n: NotifItem) => {
     if (!n.isRead) handleMarkOne(n.id);
     setShowNotifMenu(false);
+    
+    // 1. If the notification has a specific URL (like /orders?id=...), use it.
     if (n.url) {
       router.push(n.url);
-    } else if (n.type === 'NEW_ORDER') {
-      router.push('/orders');
-    } else if (n.type === 'USER_REGISTER') {
-      router.push('/users');
-    } else {
-      router.push('/notifications');
+      return;
     }
+
+    // 2. If it's a known type but no URL, use fallback paths
+    if (n.type === 'NEW_ORDER') {
+      router.push('/orders');
+      return;
+    } 
+    
+    if (n.type === 'USER_REGISTER') {
+      router.push('/users');
+      return;
+    }
+
+    // 3. Otherwise, go to the notification detail page
+    router.push(`/notifications/${n.id}`);
   };
 
   const handleLogout = () => { setShowUserMenu(false); logout(); };

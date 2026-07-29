@@ -559,7 +559,7 @@ export class OrdersService {
       this.notificationsService.sendToAdmins(
         'New Order Received! 🛒',
         `Order #${fullOrder.orderNumber} placed by ${fullOrder.user?.firstName || 'Customer'}. Total: ${fullOrder.total} ${fullOrder.currencyCode}`,
-        { type: 'NEW_ORDER', orderId: fullOrder.id, orderNumber: fullOrder.orderNumber, url: `/orders/${fullOrder.id}` }
+        { type: 'NEW_ORDER', orderId: fullOrder.id, orderNumber: fullOrder.orderNumber, url: `/orders?id=${fullOrder.id}` }
       ).catch(() => {});
     }).catch(() => {});
 
@@ -623,7 +623,7 @@ export class OrdersService {
       this.notificationsService.sendToAdmins(
         'Payment Received! 💰',
         `Payment for Order #${order.orderNumber} has been confirmed.`,
-        { type: 'PAYMENT_RECEIVED', orderId: order.id, orderNumber: order.orderNumber, url: `/orders/${order.id}` }
+        { type: 'PAYMENT_RECEIVED', orderId: order.id, orderNumber: order.orderNumber, url: `/orders?id=${order.id}` }
       ).catch(() => {});
     }
 

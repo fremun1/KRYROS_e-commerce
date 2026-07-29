@@ -58,17 +58,51 @@ export class NotificationsService implements OnModuleInit {
 
   async sendToAdmins(title: string, body: string, data?: any) {
     try {
+      // 1. Find all devices that are explicitly marked as isAdmin OR belong to an Admin/SuperAdmin/Manager user
       const adminDevices = await this.prisma.userDevice.findMany({
-        where: { OR: [{ user: { role: { in: ['ADMIN', 'SUPER_ADMIN'] } } }, { isAdmin: true }] },
+        where: { 
+          OR: [
+            { isAdmin: true }, 
+            { user: { role: { in: ['ADMIN', 'SUPER_ADMIN', 'MANAGER'] } } }
+          ] 
+        },
         select: { fcmToken: true, userId: true },
       });
-      const tokens = adminDevices.map(d => d.fcmToken);
-      if (tokens.length > 0) await this.sendToTokens(tokens, title, body, { ...data, isAdminAlert: 'true' });
-      const adminIds = [...new Set(adminDevices.map(d => d.userId).filter(Boolean))];
-      for (const adminId of adminIds) {
-        await this.prisma.notification.create({ data: { userId: adminId as string, title, message: body, data: { ...data, isAdminAlert: 'true' }, targetType: 'SINGLE', sent: true } });
+
+      // 2. Also find all users with admin roles who might NOT have a device registered yet
+      // so we can still create the in-app notification for their dashboard.
+      const adminUsers = await this.prisma.user.findMany({
+        where: { role: { in: ['ADMIN', 'SUPER_ADMIN', 'MANAGER'] } },
+        select: { id: true }
+      });
+
+      const tokens = [...new Set(adminDevices.map(d => d.fcmToken))];
+      const adminIds = [...new Set([
+        ...adminDevices.map(d => d.userId).filter(Boolean),
+        ...adminUsers.map(u => u.id)
+      ])];
+
+      // Send push to all admin devices
+      if (tokens.length > 0) {
+        await this.sendToTokens(tokens, title, body, { ...data, isAdminAlert: 'true' });
       }
-    } catch (error) {}
+
+      // Create in-app notification records for all admin users
+      for (const adminId of adminIds) {
+        await this.prisma.notification.create({ 
+          data: { 
+            userId: adminId as string, 
+            title, 
+            message: body, 
+            data: { ...data, isAdminAlert: 'true' }, 
+            targetType: 'SINGLE', 
+            sent: true 
+          } 
+        });
+      }
+    } catch (error) {
+      this.logger.error(`Failed to send notifications to admins: ${error.message}`);
+    }
   }
 
   async sendToAll(title: string, body: string, data?: any) {
@@ -152,7 +186,7 @@ export class NotificationsService implements OnModuleInit {
     await this.sendToAdmins(
       'New Order Received! 🛒',
       `${name} just placed order #${order.orderNumber}.`,
-      { type: 'NEW_ORDER', orderId: order.id, orderNumber: order.orderNumber, url: `/orders/${order.id}` }
+      { type: 'NEW_ORDER', orderId: order.id, orderNumber: order.orderNumber, url: `/orders?id=${order.id}` }
     );
 
     // 2. Notify User (Customer)
@@ -182,7 +216,7 @@ export class NotificationsService implements OnModuleInit {
     await this.sendToAdmins(
       'New User Registered! 🆕',
       `${user.firstName} ${user.lastName} has joined KRYROS.`,
-      { type: 'USER_REGISTER', userId: user.id, url: `/users/${user.id}` }
+      { type: 'USER_REGISTER', userId: user.id, url: `/users?id=${user.id}` }
     );
 
     // 2. Welcome Notification to User
@@ -203,7 +237,7 @@ export class NotificationsService implements OnModuleInit {
   async sendPaymentReceiptNotification(orderId: string) {
     const order = await this.prisma.order.findUnique({ where: { id: orderId } });
     if (!order) return;
-    await this.sendToAdmins('Payment Received!', `Payment confirmed for order #${order.orderNumber}.`, { url: `/admin/orders/${orderId}`, orderId });
+    await this.sendToAdmins('Payment Received!', `Payment confirmed for order #${order.orderNumber}.`, { url: `/orders?id=${orderId}`, orderId });
   }
 
   async sendOrderStatusNotification(orderId: string, status: string) {

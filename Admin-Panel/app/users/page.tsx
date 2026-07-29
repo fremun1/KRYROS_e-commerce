@@ -1,5 +1,6 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'next/navigation';
 import AdminShell from '@/components/admin/admin-shell';
 import DataTable, { Column } from '@/components/admin/data-table';
 import PageHeader from '@/components/admin/page-header';
@@ -32,6 +33,8 @@ function formatUserDisplayId(id?: string, email?: string) {
 
 function UsersContent() {
   const { user: currentUser, loading: authLoading } = useAuth();
+  const searchParams = useSearchParams();
+  const hasAutoOpened = useRef(false);
   const isSuperAdmin = (currentUser?.role || '').toUpperCase().replace(/[\s_]+/g, '') === 'SUPERADMIN';
   const currentUserRoleNorm = (currentUser?.role || '').toUpperCase().replace(/[\s_]+/g, '');
   const canDeleteUsers = currentUserRoleNorm === 'SUPERADMIN' || currentUserRoleNorm === 'ADMIN' || currentUserRoleNorm === 'MANAGER';
@@ -72,6 +75,18 @@ function UsersContent() {
       setData(normalized);
     }).catch(() => {}).finally(() => setIsLoading(false));
   }, []);
+
+  // Handle deep link from notification (?id=...)
+  useEffect(() => {
+    const userId = searchParams.get('id');
+    if (userId && !hasAutoOpened.current && !isLoading && data.length > 0) {
+      const targetUser = data.find(u => u.id === userId);
+      if (targetUser) {
+        hasAutoOpened.current = true;
+        setViewRow(targetUser);
+      }
+    }
+  }, [searchParams, isLoading, data]);
 
   const [addOpen, setAddOpen] = useState(false);
   const [editRow, setEditRow] = useState<User | null>(null);

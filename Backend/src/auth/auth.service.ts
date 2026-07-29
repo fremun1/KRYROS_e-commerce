@@ -188,7 +188,7 @@ export class AuthService {
       this.notificationsService.sendToAdmins(
         'User Login 🔐',
         `${user.firstName} ${user.lastName} (${user.email || user.phone}) has logged in.`,
-        { type: 'USER_LOGIN', userId: user.id, url: `/users?search=${encodeURIComponent(user.email || user.phone || '')}` }
+        { type: 'USER_LOGIN', userId: user.id, url: `/users?id=${user.id}` }
       ).catch(() => {});
     }
 

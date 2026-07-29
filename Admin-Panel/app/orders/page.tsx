@@ -1,5 +1,6 @@
 'use client';
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { useSearchParams } from 'next/navigation';
 import AdminShell from '@/components/admin/admin-shell';
 import { useAuth } from '@/contexts/auth-context';
 import {
@@ -143,6 +144,8 @@ const fmtMoney = (amount: number, symbol = '$') =>
 // ─── Main Content ─────────────────────────────────────────
 function OrdersContent() {
   const { user, loading } = useAuth();
+  const searchParams = useSearchParams();
+  const hasAutoOpened = useRef(false);
   const T = {
     card:    'var(--card)',
     border:  'var(--border)',
@@ -201,6 +204,15 @@ function OrdersContent() {
   }, []);
 
   useEffect(() => { loadOrders(); }, [loadOrders]);
+
+  // Handle deep link from notification (?id=...)
+  useEffect(() => {
+    const orderId = searchParams.get('id');
+    if (orderId && !hasAutoOpened.current && !ordersLoading) {
+      hasAutoOpened.current = true;
+      openDetail(orderId);
+    }
+  }, [searchParams, ordersLoading]);
 
   // Open order detail panel
   const openDetail = useCallback(async (orderId: string) => {
