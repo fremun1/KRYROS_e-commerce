@@ -93,8 +93,25 @@ export class NotificationsService implements OnModuleInit {
         notification: { title, body },
         tokens,
         data: { ...stringifiedData, click_action: 'FLUTTER_NOTIFICATION_CLICK' },
-        android: { priority: 'high', notification: { channelId: 'kryros_notifications', clickAction: 'FLUTTER_NOTIFICATION_CLICK', sound: 'default' } },
-        apns: { payload: { aps: { sound: 'default', badge: 1 } } },
+        android: { 
+          priority: 'high', 
+          notification: { 
+            channelId: 'kryros_notifications', 
+            clickAction: 'FLUTTER_NOTIFICATION_CLICK', 
+            sound: 'default',
+            title,
+            body
+          } 
+        },
+        apns: { 
+          payload: { 
+            aps: { 
+              sound: 'default', 
+              badge: 1,
+              alert: { title, body }
+            } 
+          } 
+        },
       };
       const response = await admin.messaging().sendEachForMulticast(message);
       const failedTokens: string[] = [];
