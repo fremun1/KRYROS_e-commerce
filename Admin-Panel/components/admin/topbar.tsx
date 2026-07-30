@@ -62,7 +62,8 @@ export default function Topbar({ collapsed, sidebarW, onMenuToggle, onMobileMenu
           if (n.targetType === 'BULK' && data?.isAdminAlert !== 'true') return false;
           
           // 2. Show if it's explicitly for this user (userId match) or explicitly marked as an admin alert
-          return n.userId || data?.isAdminAlert === 'true' || data?.type === 'NEW_ORDER' || data?.type === 'USER_REGISTER';
+          // We check n.userId === user.id to avoid showing customer welcome messages to admins
+          return (n.userId === user?.id) || data?.isAdminAlert === 'true' || data?.type === 'NEW_ORDER' || data?.type === 'USER_REGISTER';
         })
         .map((n: any) => {
           const data = typeof n.data === 'string' ? JSON.parse(n.data) : n.data;

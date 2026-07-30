@@ -135,7 +135,7 @@ export default function DashboardPage() {
   const [, setLocation] = useLocation();
   const addressesRef = useRef<HTMLDivElement>(null);
 
-  const { user, token, logout } = useAuthStore();
+  const { user, token, logout, notifications, unreadCount, fetchNotifications, markAsRead, markAllAsRead } = useAuthStore();
   const format = useCurrencyStore((s) => s.format);
   const selectedCurrency = useCurrencyStore((s) => s.selected);
   const displayName = user ? `${user.firstName} ${user.lastName}` : "Guest";
@@ -147,6 +147,12 @@ export default function DashboardPage() {
   const [recentOrders, setRecentOrders] = useState<OrderItem[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
   const liveTimeline = getOrderTimeline(recentOrders[0]?.status ?? "Pending");
+
+  useEffect(() => {
+    if (user) {
+      fetchNotifications();
+    }
+  }, [user]);
 
   const [wishlist, setWishlist] = useState<WishlistItem[]>([]);
   const [wishlistLoading, setWishlistLoading] = useState(false);
@@ -758,53 +764,77 @@ export default function DashboardPage() {
             <div className="relative">
               <button
                 onClick={() => setNotifOpen((o) => !o)}
-                className="relative w-8 h-8 flex items-center justify-center rounded-xl hover:bg-muted transition-colors"
+                className={`relative w-8 h-8 flex items-center justify-center rounded-xl hover:bg-muted transition-colors ${notifOpen ? 'bg-muted' : ''}`}
               >
                 <Bell style={{ width: 18, height: 18 }} className="text-foreground" />
-                {recentOrders.length > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-primary text-white text-[8px] font-black flex items-center justify-center">
-                    {recentOrders.length > 9 ? "9+" : recentOrders.length}
+                {unreadCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-primary text-white text-[8px] font-black flex items-center justify-center border-2 border-background">
+                    {unreadCount > 9 ? "9+" : unreadCount}
                   </span>
                 )}
               </button>
 
-              {/* Notification dropdown — shows recent orders as activity */}
+              {/* Notification dropdown */}
               {notifOpen && (
                 <>
                   <div className="fixed inset-0 z-30" onClick={() => setNotifOpen(false)} />
-                  <div className="absolute right-0 top-10 z-40 w-80 bg-card border border-border rounded-2xl shadow-2xl overflow-hidden">
-                    <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-                      <h3 className="text-sm font-bold text-foreground">Recent Activity</h3>
-                      <button className="text-[10px] text-primary font-semibold hover:underline" onClick={() => setNotifOpen(false)}>Close</button>
+                  <div className="absolute right-0 mt-2 w-80 bg-card border border-border rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                    <div className="p-4 border-b border-border flex items-center justify-between">
+                      <h3 className="text-sm font-bold flex items-center gap-2">
+                        <Bell className="w-3.5 h-3.5 text-primary" />
+                        Notifications
+                      </h3>
+                      {unreadCount > 0 && (
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); markAllAsRead(); }}
+                          className="text-[10px] font-bold text-primary hover:underline"
+                        >
+                          Mark all read
+                        </button>
+                      )}
                     </div>
-                    <div className="max-h-80 overflow-y-auto divide-y divide-border">
-                      {recentOrders.length === 0 ? (
-                        <div className="flex flex-col items-center py-6">
-                          <Bell className="w-8 h-8 text-muted-foreground/30 mb-2" />
-                          <p className="text-xs text-muted-foreground">No recent activity</p>
+                    <div className="max-h-[360px] overflow-y-auto">
+                      {notifications.length === 0 ? (
+                        <div className="py-10 px-4 text-center">
+                          <Bell className="w-8 h-8 text-muted-foreground/20 mx-auto mb-2" />
+                          <p className="text-xs text-muted-foreground">No notifications yet</p>
                         </div>
                       ) : (
-                        recentOrders.map((order) => (
-                          <div key={order.id} className="flex items-start gap-3 px-4 py-3 hover:bg-muted/50 transition-colors cursor-pointer">
-                            <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                              <Truck className="w-3.5 h-3.5 text-primary" />
-                            </div>
+                        notifications.map((n) => (
+                          <div 
+                            key={n.id}
+                            onClick={() => {
+                              if (!n.isRead) markAsRead(n.id);
+                              if (n.data?.url) setLocation(n.data.url);
+                              setNotifOpen(false);
+                            }}
+                            className={`p-4 border-b border-border last:border-0 cursor-pointer hover:bg-muted transition-colors flex gap-3 items-start ${!n.isRead ? 'bg-primary/[0.03]' : ''}`}
+                          >
+                            <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${!n.isRead ? 'bg-primary' : 'bg-transparent'}`} />
                             <div className="flex-1 min-w-0">
-                              <p className="text-xs font-semibold text-foreground truncate">{order.name}</p>
-                              <p className="text-[10px] text-muted-foreground leading-snug mt-0.5">{order.orderId} · {order.status}</p>
+                              <p className={`text-xs mb-0.5 truncate ${!n.isRead ? 'font-bold text-foreground' : 'font-medium text-muted-foreground'}`}>
+                                {n.title}
+                              </p>
+                              <p className="text-[11px] text-muted-foreground line-clamp-2 leading-relaxed">
+                                {n.message}
+                              </p>
+                              <div className="flex items-center gap-1 mt-2 text-[9px] text-muted-foreground/60">
+                                <Clock className="w-2.5 h-2.5" />
+                                {new Date(n.createdAt).toLocaleDateString()}
+                              </div>
                             </div>
-                            <span className="text-[9px] text-muted-foreground flex-shrink-0 mt-0.5 whitespace-nowrap">{order.date}</span>
                           </div>
                         ))
                       )}
                     </div>
-                    <div className="px-4 py-2.5 border-t border-border">
-                      <Link href="/track">
-                        <button className="w-full text-xs text-primary font-semibold text-center hover:underline" onClick={() => setNotifOpen(false)}>
-                          View all orders
-                        </button>
-                      </Link>
-                    </div>
+                    <Link href="/track">
+                      <div 
+                        onClick={() => setNotifOpen(false)}
+                        className="p-3 bg-muted/30 text-center border-t border-border cursor-pointer hover:bg-muted transition-colors"
+                      >
+                        <span className="text-[11px] font-bold text-primary">View All History</span>
+                      </div>
+                    </Link>
                   </div>
                 </>
               )}

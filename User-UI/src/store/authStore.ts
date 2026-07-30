@@ -83,6 +83,11 @@ interface AuthState {
   user: AuthUser | null;
   isLoading: boolean;
   error: string | null;
+  notifications: any[];
+  unreadCount: number;
+  fetchNotifications: () => Promise<void>;
+  markAsRead: (id: string) => Promise<void>;
+  markAllAsRead: () => Promise<void>;
   login: (identifier: string, password: string, captchaToken?: string) => Promise<{ success: boolean; error?: string }>;
   register: (data: {
     identifier: string; // email or phone
@@ -107,6 +112,61 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       isLoading: false,
       error: null,
+      notifications: [],
+      unreadCount: 0,
+
+      fetchNotifications: async () => {
+        const { token } = get();
+        if (!token) return;
+        try {
+          const res = await fetch(`${EFFECTIVE_API_BASE}/api/notifications?limit=20`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (res.ok) {
+            const data = await res.json();
+            const list = Array.isArray(data) ? data : data.data ?? [];
+            set({ notifications: list });
+            
+            const countRes = await fetch(`${EFFECTIVE_API_BASE}/api/notifications/unread-count`, {
+              headers: { Authorization: `Bearer ${token}` },
+            });
+            if (countRes.ok) {
+              const countData = await countRes.json();
+              set({ unreadCount: countData.count });
+            }
+          }
+        } catch {}
+      },
+
+      markAsRead: async (id) => {
+        const { token, notifications, unreadCount } = get();
+        if (!token) return;
+        try {
+          await fetch(`${EFFECTIVE_API_BASE}/api/notifications/${id}/read`, {
+            method: 'PATCH',
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          set({
+            notifications: notifications.map(n => n.id === id ? { ...n, isRead: true } : n),
+            unreadCount: Math.max(0, unreadCount - 1)
+          });
+        } catch {}
+      },
+
+      markAllAsRead: async () => {
+        const { token, notifications } = get();
+        if (!token) return;
+        try {
+          await fetch(`${EFFECTIVE_API_BASE}/api/notifications/read-all`, {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          set({
+            notifications: notifications.map(n => ({ ...n, isRead: true })),
+            unreadCount: 0
+          });
+        } catch {}
+      },
 
       login: async (identifier, password, captchaToken?: string) => {
         set({ isLoading: true, error: null });

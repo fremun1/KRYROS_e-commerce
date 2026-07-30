@@ -621,3 +621,55 @@ export async function fetchSettings(): Promise<any[]> {
     return [];
   }
 }
+
+// ─── Notifications ───────────────────────────────────────────────────────────
+export interface ApiNotification {
+  id: string;
+  title: string;
+  message: string;
+  isRead: boolean;
+  createdAt: string;
+  data?: any;
+}
+
+export async function fetchNotifications(token: string, limit: number = 20): Promise<ApiNotification[]> {
+  const result = await apiFetch<any>(`/api/notifications?limit=${limit}`, token);
+  if (!result) return [];
+  const list = Array.isArray(result) ? result : result.data ?? [];
+  return list as ApiNotification[];
+}
+
+export async function fetchUnreadNotificationCount(token: string): Promise<number> {
+  const result = await apiFetch<{ count: number }>("/api/notifications/unread-count", token);
+  return result?.count ?? 0;
+}
+
+export async function markNotificationRead(id: string, token: string): Promise<void> {
+  try {
+    const url = `${EFFECTIVE_API_BASE}/api/notifications/${id}/read`;
+    await fetch(url, {
+      method: "PATCH",
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      }
+    });
+  } catch (err) {
+    console.error("Failed to mark notification as read:", err);
+  }
+}
+
+export async function markAllNotificationsRead(token: string): Promise<void> {
+  try {
+    const url = `${EFFECTIVE_API_BASE}/api/notifications/read-all`;
+    await fetch(url, {
+      method: "POST",
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      }
+    });
+  } catch (err) {
+    console.error("Failed to mark all notifications as read:", err);
+  }
+}

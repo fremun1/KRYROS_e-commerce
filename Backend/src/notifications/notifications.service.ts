@@ -290,8 +290,23 @@ export class NotificationsService implements OnModuleInit {
     if (payload.email) await this.mailerService.sendMail(payload.email, `Payment ${isPaid ? 'Paid' : 'Failed'}`, `Payment ${payload.paymentNumber} ${isPaid ? 'Paid' : 'Failed'}`, '');
   }
 
-  async getRecentNotifications(limit: number = 20) {
-    return this.prisma.notification.findMany({ take: limit, orderBy: { createdAt: 'desc' }, include: { user: { select: { firstName: true, lastName: true, email: true } } } });
+  async getRecentNotifications(userId?: string, limit: number = 20) {
+    const where: any = {};
+    if (userId) {
+      where.userId = userId;
+    }
+    return this.prisma.notification.findMany({ 
+      where,
+      take: limit, 
+      orderBy: { createdAt: 'desc' }, 
+      include: { user: { select: { firstName: true, lastName: true, email: true } } } 
+    });
+  }
+
+  async getUnreadCount(userId: string) {
+    return this.prisma.notification.count({
+      where: { userId, isRead: false }
+    });
   }
 
   async sendToDeviceIds(deviceIds: string[], title: string, body: string, data?: any) {

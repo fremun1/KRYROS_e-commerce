@@ -1,11 +1,11 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { Link, useLocation } from "wouter";
 import { inferPageContext, getPageContextDisplayPath } from "@/lib/pageContext";
 import {
   LayoutDashboard, Package, Heart, MapPin, CreditCard, Zap,
   MessageCircle, RefreshCcw, Star, Settings, X, Menu,
   Globe, DollarSign, ChevronDown, Search, ShoppingBag,
-  Bell, LogOut, ChevronRight,
+  Bell, LogOut, ChevronRight, Check, Clock
 } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import { useCurrencyStore } from "@/store/currencyStore";
@@ -46,8 +46,32 @@ export default function AccountLayout({ children, showTopBar = true }: AccountLa
   const pageContext = useMemo(() => inferPageContext(location), [location]);
   const displayBasePath = useMemo(() => getPageContextDisplayPath(pageContext), [pageContext]);
 
-  const { user, logout } = useAuthStore();
+  const { user, logout, notifications, unreadCount, fetchNotifications, markAsRead, markAllAsRead } = useAuthStore();
   const selectedCurrency = useCurrencyStore((s) => s.selected) || { code: 'USD', name: 'US Dollar', symbol: '$', symbolPosition: 'BEFORE' as const, exchangeRate: 1, flag: '🇺🇸', id: 'usd' };
+  
+  const [notifOpen, setNotifOpen] = useState(false);
+  const notifRef = useRef<HTMLDivElement>(null);
+  const bellRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (user) {
+      fetchNotifications();
+      // Poll every 2 minutes for new notifications
+      const timer = setInterval(fetchNotifications, 120000);
+      return () => clearInterval(timer);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (notifRef.current && !notifRef.current.contains(event.target as Node) &&
+          bellRef.current && !bellRef.current.contains(event.target as Node)) {
+        setNotifOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const displayName = user ? `${user.firstName} ${user.lastName}` : "Guest";
   const initials = user
@@ -172,11 +196,84 @@ export default function AccountLayout({ children, showTopBar = true }: AccountLa
                 </button>
               </Link>
 
-              <Link href="/track">
-                <button className="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-muted transition-colors">
+              <div className="relative">
+                <button 
+                  ref={bellRef}
+                  onClick={() => setNotifOpen(!notifOpen)}
+                  className={`w-8 h-8 flex items-center justify-center rounded-xl hover:bg-muted transition-colors relative ${notifOpen ? 'bg-muted' : ''}`}
+                >
                   <Bell style={{ width: 18, height: 18 }} className="text-foreground" />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-primary text-white text-[10px] font-bold flex items-center justify-center rounded-full border-2 border-background">
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
+                  )}
                 </button>
-              </Link>
+
+                {notifOpen && (
+                  <div 
+                    ref={notifRef}
+                    className="absolute right-0 mt-2 w-80 bg-card border border-border rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200"
+                  >
+                    <div className="p-4 border-b border-border flex items-center justify-between">
+                      <h3 className="text-sm font-bold flex items-center gap-2">
+                        <Bell className="w-3.5 h-3.5 text-primary" />
+                        Notifications
+                      </h3>
+                      {unreadCount > 0 && (
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); markAllAsRead(); }}
+                          className="text-[10px] font-bold text-primary hover:underline"
+                        >
+                          Mark all read
+                        </button>
+                      )}
+                    </div>
+                    <div className="max-h-[360px] overflow-y-auto">
+                      {notifications.length === 0 ? (
+                        <div className="py-10 px-4 text-center">
+                          <Bell className="w-8 h-8 text-muted-foreground/20 mx-auto mb-2" />
+                          <p className="text-xs text-muted-foreground">No notifications yet</p>
+                        </div>
+                      ) : (
+                        notifications.map((n) => (
+                          <div 
+                            key={n.id}
+                            onClick={() => {
+                              if (!n.isRead) markAsRead(n.id);
+                              if (n.data?.url) setLocation(n.data.url);
+                              setNotifOpen(false);
+                            }}
+                            className={`p-4 border-b border-border last:border-0 cursor-pointer hover:bg-muted transition-colors flex gap-3 items-start ${!n.isRead ? 'bg-primary/[0.03]' : ''}`}
+                          >
+                            <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${!n.isRead ? 'bg-primary' : 'bg-transparent'}`} />
+                            <div className="flex-1 min-w-0">
+                              <p className={`text-xs mb-0.5 truncate ${!n.isRead ? 'font-bold text-foreground' : 'font-medium text-muted-foreground'}`}>
+                                {n.title}
+                              </p>
+                              <p className="text-[11px] text-muted-foreground line-clamp-2 leading-relaxed">
+                                {n.message}
+                              </p>
+                              <div className="flex items-center gap-1 mt-2 text-[9px] text-muted-foreground/60">
+                                <Clock className="w-2.5 h-2.5" />
+                                {new Date(n.createdAt).toLocaleDateString()}
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                    <Link href="/track">
+                      <div 
+                        onClick={() => setNotifOpen(false)}
+                        className="p-3 bg-muted/30 text-center border-t border-border cursor-pointer hover:bg-muted transition-colors"
+                      >
+                        <span className="text-[11px] font-bold text-primary">View All History</span>
+                      </div>
+                    </Link>
+                  </div>
+                )}
+              </div>
 
               <div className="flex items-center gap-1.5">
                 <Link href="/dashboard">

@@ -435,12 +435,22 @@ export class NotificationsController {
   // ─── Wildcard :id routes MUST come last ───────────────────────────────────
 
   @Get()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER)
+  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Get recent notifications (Admin only)' })
+  @ApiOperation({ summary: 'Get recent notifications for the current user' })
   async getNotifications(@Request() req: any) {
-    return this.notificationsService.getRecentNotifications();
+    const isAdmin = [UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER].includes(req.user.role);
+    // If admin, show all (for dashboard activity), if customer, show only theirs
+    return this.notificationsService.getRecentNotifications(isAdmin ? undefined : req.user.id);
+  }
+
+  @Get('unread-count')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get unread notification count for the current user' })
+  async getUnreadCount(@Request() req: any) {
+    const count = await this.notificationsService.getUnreadCount(req.user.id);
+    return { count };
   }
 
   @Post('read-all')
