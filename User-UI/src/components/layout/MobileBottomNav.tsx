@@ -2,167 +2,60 @@ import { Link, useLocation } from "wouter";
 import { Home, Grid, CreditCard, PackageSearch, ShoppingCart } from "lucide-react";
 import { useCartStore } from "@/store/cartStore";
 import { useSidebarStore } from "@/store/sidebarStore";
-import { useEffect, useRef, useState } from "react";
 
 export default function MobileBottomNav() {
   const [location] = useLocation();
   const cartCount = useCartStore((s) => s.items.reduce((acc, i) => acc + i.qty, 0));
   const sidebarOpen = useSidebarStore((s) => s.open);
-  const [visible, setVisible] = useState(true);
-  const lastScrollY = useRef<number>(0);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const currentY = window.scrollY;
-      if (currentY < 60) setVisible(true);
-      else if (currentY > lastScrollY.current + 4) setVisible(false);
-      else if (currentY < lastScrollY.current - 4) setVisible(true);
-      lastScrollY.current = currentY;
-    };
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
 
   const active = (path: string) => location === path;
 
+  const navItems = [
+    { label: "Home", href: "/", icon: Home },
+    { label: "Shop", href: "/shop", icon: Grid },
+    { label: "Pay", href: "/pay", icon: CreditCard },
+    { label: "Track", href: "/track", icon: PackageSearch },
+    { label: "Cart", href: "/cart", icon: ShoppingCart, count: cartCount },
+  ];
+
+  if (sidebarOpen) return null;
+
   return (
-    <nav
-      className="fixed bottom-0 left-0 right-0 z-50 md:hidden"
-      style={{
-        transition: "transform 0.3s ease",
-        transform:
-          visible && !sidebarOpen
-            ? "translateY(0)"
-            : "translateY(calc(100% + env(safe-area-inset-bottom)))",
-      }}
-    >
-      <div
-        className="px-[14px]"
-        style={{
-          paddingBottom: "env(safe-area-inset-bottom)",
-        }}
+    <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-white border-t border-gray-100 shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
+      <div 
+        className="flex items-center justify-around h-16"
+        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
-        {/* Wrapper — tall enough so the floating Pay circle has room above the bar */}
-        <div
-          className="relative mb-[10px] h-[76px]"
-        >
-          {/* Glow behind Pay circle */}
-          <div
-            className="absolute top-0 left-1/2 -translate-x-1/2 w-[68px] h-[68px] rounded-full pointer-events-none z-10"
-            style={{
-              background:
-                "radial-gradient(circle, var(--kryros-shadow-primary-lg) 0%, rgba(var(--kryros-primary-rgb),0.12) 50%, transparent 72%)",
-            }}
-          />
-
-          {/* Rectangular bar with gently rounded corners */}
-          <div
-            className="absolute bottom-0 left-0 right-0 h-[54px] bg-card rounded-[16px] shadow-lg flex items-stretch z-0 overflow-visible"
-          >
-            {/* Home */}
-            <Link
-              href="/"
-              className="flex-1 flex flex-col items-center justify-end gap-1 pb-[6px] no-underline"
-            >
-              <Home
-                strokeWidth={1.6}
-                width={24}
-                height={24}
-                className={active("/") ? "text-primary" : "text-muted-foreground"}
-              />
-              <span
-                className={`text-[11px] font-medium leading-none ${active("/") ? "text-primary" : "text-muted-foreground"}`}
-              >
-                Home
-              </span>
-            </Link>
-
-            {/* Shop */}
-            <Link
-              href="/shop"
-              className="flex-1 flex flex-col items-center justify-end gap-1 pb-[6px] no-underline"
-            >
-              <Grid
-                strokeWidth={1.6}
-                width={24}
-                height={24}
-                className={active("/shop") ? "text-primary" : "text-muted-foreground"}
-              />
-              <span
-                className={`text-[11px] font-medium leading-none ${active("/shop") ? "text-primary" : "text-muted-foreground"}`}
-              >
-                Shop
-              </span>
-            </Link>
-
-            {/* Pay — centre slot, only label visible in bar; circle floats above */}
-            <div
-              className="flex-1 flex flex-col items-center justify-end pb-[6px]"
-            >
-              <span
-                className="text-[11px] font-medium leading-none text-primary"
-              >
-                Pay
-              </span>
-            </div>
-
-            {/* Track */}
-            <Link
-              href="/track"
-              className="flex-1 flex flex-col items-center justify-end gap-1 pb-[6px] no-underline"
-            >
-              <PackageSearch
-                strokeWidth={1.6}
-                width={24}
-                height={24}
-                className={active("/track") ? "text-primary" : "text-muted-foreground"}
-              />
-              <span
-                className={`text-[11px] font-medium leading-none ${active("/track") ? "text-primary" : "text-muted-foreground"}`}
-              >
-                Track
-              </span>
-            </Link>
-
-            {/* Cart */}
-            <Link
-              href="/cart"
-              className="flex-1 flex flex-col items-center justify-end gap-1 pb-[6px] no-underline"
+        {navItems.map((item) => {
+          const isActive = active(item.href);
+          const Icon = item.icon;
+          
+          return (
+            <Link 
+              key={item.href} 
+              href={item.href}
+              className="flex-1 flex flex-col items-center justify-center gap-1 no-underline group"
             >
               <div className="relative">
-                <ShoppingCart
-                  strokeWidth={1.6}
-                  width={24}
-                  height={24}
-                  className={active("/cart") ? "text-primary" : "text-muted-foreground"}
+                <Icon 
+                  size={22} 
+                  strokeWidth={isActive ? 2.5 : 2}
+                  className={`transition-colors duration-200 ${isActive ? "text-[#C0151B]" : "text-[#75757A]"}`}
                 />
-                {cartCount > 0 && (
-                  <span
-                    className="absolute -top-[5px] -right-[7px] bg-primary text-white text-[9px] font-bold min-w-[16px] h-[16px] rounded-full flex items-center justify-center px-0.5 border-2 border-card"
-                  >
-                    {cartCount > 9 ? "9+" : cartCount}
+                {item.count !== undefined && item.count > 0 && (
+                  <span className="absolute -top-1.5 -right-2 bg-[#C0151B] text-white text-[9px] font-bold min-w-[15px] h-[15px] rounded-full flex items-center justify-center px-0.5 border border-white">
+                    {item.count > 9 ? "9+" : item.count}
                   </span>
                 )}
               </div>
-              <span
-                className={`text-[11px] font-medium leading-none ${active("/cart") ? "text-primary" : "text-muted-foreground"}`}
+              <span 
+                className={`text-[10px] font-bold transition-colors duration-200 ${isActive ? "text-[#C0151B]" : "text-[#75757A]"}`}
               >
-                Cart
+                {item.label}
               </span>
             </Link>
-          </div>
-
-          {/* Floating Pay circle — 40px, same as WhatsApp button */}
-          <Link
-            href="/pay"
-            className="absolute top-[14px] left-1/2 -translate-x-1/2 w-10 h-10 rounded-full bg-primary flex items-center justify-center shadow-lg z-20 no-underline"
-            style={{
-              boxShadow: "0 4px 14px var(--kryros-shadow-primary-btn), 0 2px 6px var(--kryros-shadow-primary-md)",
-            }}
-          >
-            <CreditCard strokeWidth={2} width={20} height={20} color="var(--kryros-white-text)" />
-          </Link>
-        </div>
+          );
+        })}
       </div>
     </nav>
   );
