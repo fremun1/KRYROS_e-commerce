@@ -94,6 +94,7 @@ interface AuthState {
     password: string;
     firstName: string;
     lastName: string;
+    phone?: string;
   }, captchaToken?: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
   getMe: () => Promise<void>;
@@ -215,6 +216,7 @@ export const useAuthStore = create<AuthState>()(
               password: data.password,
               firstName: data.firstName,
               lastName: data.lastName,
+              ...(data.phone ? { phone: data.phone } : {}),
               ...(captchaToken ? { captchaToken } : {}),
             }),
           });
@@ -227,7 +229,21 @@ export const useAuthStore = create<AuthState>()(
             set({ isLoading: false, error: msg });
             return { success: false, error: msg };
           }
-          set({ isLoading: false, error: null });
+          
+          // Save session if returned
+          if (json.accessToken && json.user) {
+            set({
+              token: json.accessToken,
+              refreshToken: json.refreshToken,
+              user: json.user,
+              isLoading: false,
+              error: null,
+            });
+            void hydrateNotifications(json.accessToken);
+          } else {
+            set({ isLoading: false, error: null });
+          }
+          
           return { success: true };
         } catch {
           const msg = 'Network error. Please check your connection.';

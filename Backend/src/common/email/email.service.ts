@@ -68,6 +68,19 @@ export class EmailService {
     `);
   }
 
+  async sendOtp(to: string, code: string): Promise<void> {
+    await this.send(to, `${code} is your KRYROS verification code`, `
+      <div style="font-family:Arial,sans-serif;max-width:480px;margin:auto;padding:32px;background:#f9f9f9;border-radius:8px;">
+        <h2 style="color:#111;margin-bottom:8px;">Verification Code</h2>
+        <p style="color:#555;">Use the code below to complete your registration or login.</p>
+        <div style="margin:24px 0;padding:16px;background:#fff;border:1px solid #eee;border-radius:6px;text-align:center;">
+          <span style="font-size:32px;font-weight:bold;letter-spacing:8px;color:#C0151B;">${code}</span>
+        </div>
+        <p style="color:#999;font-size:13px;">This code expires in <strong>10 minutes</strong>. If you didn't request this, ignore this email.</p>
+      </div>
+    `);
+  }
+
   private async send(to: string, subject: string, html: string): Promise<void> {
     try {
       const info = await this.transporter.sendMail({

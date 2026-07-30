@@ -21,6 +21,7 @@ import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { SendOtpDto, VerifyOtpDto } from './dto/otp.dto';
 import { TwoFactorEnableDto, TwoFactorValidateDto } from './dto/two-factor.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { JwtPayload } from './interfaces/jwt-payload.interface';
@@ -113,6 +114,30 @@ export class AuthController {
   async resetPassword(@Body() body: ResetPasswordDto) {
     await this.authService.resetPassword(body.token, body.newPassword);
   }
+
+  @Post('check')
+  @Throttle({ default: { ttl: 60000, limit: 20 } })
+  @ApiOperation({ summary: 'Check if an identifier (email/phone) exists' })
+  async check(@Body() body: ForgotPasswordDto) {
+    return this.authService.checkIdentifier(body.identifier);
+  }
+
+  @Post('send-otp')
+  @Throttle({ default: { ttl: 60000, limit: 5 } })
+  @ApiOperation({ summary: 'Send a 6-digit OTP to the provided email' })
+  async sendOtp(@Body() body: SendOtpDto) {
+    await this.authService.sendOtp(body.email);
+    return { message: 'OTP sent successfully' };
+  }
+
+  @Post('verify-otp')
+  @Throttle({ default: { ttl: 60000, limit: 10 } })
+  @ApiOperation({ summary: 'Verify the 6-digit OTP code' })
+  async verifyOtp(@Body() body: VerifyOtpDto) {
+    await this.authService.verifyOtp(body.email, body.code);
+    return { message: 'OTP verified successfully' };
+  }
+
   @Get('verify-email')
   @SkipThrottle()
   @ApiOperation({ summary: 'Verify email address via token from verification email' })

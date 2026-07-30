@@ -399,6 +399,37 @@ export class AuthService {
     }
   }
 
+  async checkIdentifier(identifier: string): Promise<{ exists: boolean }> {
+    const user = await this.usersService.findByIdentifier(identifier);
+    return { exists: !!user };
+  }
+
+  async sendOtp(email: string): Promise<void> {
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const cacheKey = `otp:${email.toLowerCase().trim()}`;
+    
+    // Store OTP in cache for 10 minutes
+    await this.cacheManager.set(cacheKey, code, 10 * 60 * 1000);
+    
+    await this.emailService.sendOtp(email, code);
+    
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`[DEV] OTP for ${email}: ${code}`);
+    }
+  }
+
+  async verifyOtp(email: string, code: string): Promise<void> {
+    const cacheKey = `otp:${email.toLowerCase().trim()}`;
+    const storedCode = await this.cacheManager.get<string>(cacheKey);
+    
+    if (!storedCode || storedCode !== code) {
+      throw new BadRequestException('Invalid or expired verification code');
+    }
+    
+    // Clear OTP after successful verification
+    await this.cacheManager.del(cacheKey);
+  }
+
   async resetPassword(rawToken: string, newPassword: string): Promise<void> {
     const tokenHash = hashToken(rawToken);
 

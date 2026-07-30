@@ -135,7 +135,13 @@ export default function AuthPage() {
     if (!firstName.trim() || !lastName.trim()) { setNotice("Please enter your first and last name."); return; }
     setLocalLoading(true);
     try {
-      const res = await register({ identifier: normalizeIdentifier(identifier), password, firstName: firstName.trim(), lastName: lastName.trim() });
+      const res = await register({ 
+        identifier: normalizeIdentifier(identifier), 
+        password, 
+        firstName: firstName.trim(), 
+        lastName: lastName.trim(),
+        phone: phone.trim() ? `${countryCode}${phone.trim()}` : undefined
+      });
       if (!res.success) { setLocalLoading(false); setNotice(res.error || "Registration failed."); return; }
       if (isEmail) {
         try { await fetch(`${EFFECTIVE_API_BASE}/api/auth/send-otp`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: normalizeIdentifier(identifier) }) }); }
