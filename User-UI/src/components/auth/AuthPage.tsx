@@ -348,10 +348,15 @@ export default function AuthPage() {
       <div className="mb-4"><label className={lc}>Last Name</label><input type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Enter your last name" className={ic} autoComplete="family-name" /></div>
       <div className="mb-5">
         <label className={lc}>Phone Number (Optional)</label>
-        <div className="flex gap-2">
-          <select value={countryCode} onChange={(e) => setCountryCode(e.target.value)} className={`${ic} w-[130px] shrink-0 appearance-none cursor-pointer`}>
-            {COUNTRY_CODES.map((c) => (<option key={c.code} value={c.code}>{c.label}</option>))}
-          </select>
+        <div className="flex gap-2 h-[48px]">
+          <div className="relative w-[100px] shrink-0">
+            <select value={countryCode} onChange={(e) => setCountryCode(e.target.value)} className={`${ic} w-full pr-8 appearance-none cursor-pointer text-center px-2`}>
+              {COUNTRY_CODES.map((c) => (<option key={c.code} value={c.code}>{c.code}</option>))}
+            </select>
+            <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-[#75757A]">
+              <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            </div>
+          </div>
           <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))} placeholder="Phone number" className={`${ic} flex-1`} autoComplete="tel" />
         </div>
       </div>
@@ -402,8 +407,8 @@ export default function AuthPage() {
   );
 
   return (
-    <div className="min-h-[100dvh] bg-[#F5F5F5] flex items-center justify-center p-4">
-      <div className="w-full max-w-[400px] bg-white rounded-[20px] shadow-[0_4px_30px_rgba(0,0,0,0.08)] border border-[#E5E5E5] p-6 pb-7 relative overflow-hidden">
+    <div className="fixed inset-0 bg-[#F5F5F5] flex items-center justify-center p-4 overflow-y-auto">
+      <div className="w-full max-w-[400px] bg-white rounded-[20px] shadow-[0_4px_30px_rgba(0,0,0,0.08)] border border-[#E5E5E5] p-6 pb-7 relative overflow-hidden my-auto">
         <div key={step} style={{ animation: "fadeSlideIn 0.3s ease-out" }}>
           {step === "checking" && renderChecking}
           {step === "identifier" && <><NoticeBanner />{renderIdentifierStep()}</>}

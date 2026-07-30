@@ -23,7 +23,7 @@ export default function MobileBottomNav() {
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-white border-t border-gray-100 shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
       <div 
-        className="flex items-center justify-around h-16"
+        className="flex items-center justify-around h-14"
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
         {navItems.map((item) => {
@@ -38,7 +38,7 @@ export default function MobileBottomNav() {
             >
               <div className="relative">
                 <Icon 
-                  size={22} 
+                  size={20} 
                   strokeWidth={isActive ? 2.5 : 2}
                   className={`transition-colors duration-200 ${isActive ? "text-[#C0151B]" : "text-[#75757A]"}`}
                 />

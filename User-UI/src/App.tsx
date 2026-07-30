@@ -390,6 +390,9 @@ function AppRoutes() {
       "/wholesale-checkout",
       "/track",
       "/track-order",
+      "/login",
+      "/register",
+      "/forgot-password",
     ].includes(location);
 
   return (
@@ -452,6 +455,7 @@ function AppRoutes() {
         </Switch>
         </div>
       </Suspense>
+      <div className="md:hidden h-14" /> {/* Spacer for Bottom Nav */}
       {!hideShell && <Footer />}
       <MobileBottomNav />
       <SupportFloatingButtons />
