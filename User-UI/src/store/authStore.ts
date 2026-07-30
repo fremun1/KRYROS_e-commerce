@@ -230,12 +230,12 @@ export const useAuthStore = create<AuthState>()(
             return { success: false, error: msg };
           }
           
-          // Save session if returned
-          if (json.accessToken && json.user) {
+          // Always save session when tokens are returned (registration returns tokens)
+          if (json.accessToken) {
             set({
               token: json.accessToken,
-              refreshToken: json.refreshToken,
-              user: json.user,
+              refreshToken: json.refreshToken ?? null,
+              user: json.user ?? null,
               isLoading: false,
               error: null,
             });

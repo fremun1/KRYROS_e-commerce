@@ -21,10 +21,9 @@ export default function MobileBottomNav() {
   if (sidebarOpen) return null;
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-white border-t border-gray-100 shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-white border-t border-gray-100 shadow-[0_-4px_12px_rgba(0,0,0,0.05)]" style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
       <div 
         className="flex items-center justify-around h-14"
-        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
         {navItems.map((item) => {
           const isActive = active(item.href);

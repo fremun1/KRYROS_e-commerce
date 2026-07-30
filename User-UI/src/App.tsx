@@ -455,7 +455,7 @@ function AppRoutes() {
         </Switch>
         </div>
       </Suspense>
-      <div className="md:hidden h-14" /> {/* Spacer for Bottom Nav */}
+      <div className="md:hidden" style={{ height: "calc(56px + env(safe-area-inset-bottom, 0px))" }} /> {/* Spacer for Bottom Nav */}
       {!hideShell && <Footer />}
       <MobileBottomNav />
       <SupportFloatingButtons />

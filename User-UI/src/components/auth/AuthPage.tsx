@@ -389,26 +389,33 @@ export default function AuthPage() {
     </div>
   );
 
-  const renderSuccessStep = () => {
-    useEffect(() => { const t = setTimeout(() => setLocation("/dashboard"), 3000); return () => clearTimeout(t); }, []);
-    return (
-      <div className="flex flex-col items-center text-center">
-        <Logo />
-        <div className="w-[72px] h-[72px] bg-[#2DBE60] rounded-full flex items-center justify-center mb-5 mt-2"><Check className="w-9 h-9 text-white" strokeWidth={3} /></div>
-        <h2 className="text-[18px] font-bold text-[#313133] mb-1 font-['Roboto']">{firstName ? `${firstName}, your account has been created!` : "Account created successfully!"}</h2>
-        <p className="text-[13px] text-[#75757A] mb-6 font-['Roboto']">Redirecting you to your dashboard...</p>
-        <button type="button" onClick={() => setLocation("/dashboard")} className={bp}>Continue Shopping</button>
-      </div>
-    );
-  };
+  // Success redirect effect at component level (not inside render function)
+  const successRedirected = useRef(false);
+  useEffect(() => {
+    if (step === "success" && !successRedirected.current) {
+      successRedirected.current = true;
+      const t = setTimeout(() => setLocation("/dashboard"), 3000);
+      return () => clearTimeout(t);
+    }
+  }, [step]);
+
+  const renderSuccessStep = () => (
+    <div className="flex flex-col items-center text-center">
+      <Logo />
+      <div className="w-[72px] h-[72px] bg-[#2DBE60] rounded-full flex items-center justify-center mb-5 mt-2"><Check className="w-9 h-9 text-white" strokeWidth={3} /></div>
+      <h2 className="text-[18px] font-bold text-[#313133] mb-1 font-['Roboto']">{firstName ? `${firstName}, your account has been created!` : "Account created successfully!"}</h2>
+      <p className="text-[13px] text-[#75757A] mb-6 font-['Roboto']">Redirecting you to your dashboard...</p>
+      <button type="button" onClick={() => setLocation("/dashboard")} className={bp}>Continue Shopping</button>
+    </div>
+  );
 
   const renderChecking = () => (
     <div className="flex flex-col items-center justify-center py-8"><Logo /><Spinner /><p className="text-[14px] text-[#75757A] mt-4 font-['Roboto']">Checking your account...</p></div>
   );
 
   return (
-    <div className="fixed inset-0 bg-[#F5F5F5] flex items-center justify-center p-4 overflow-y-auto">
-      <div className="w-full max-w-[400px] bg-white rounded-[20px] shadow-[0_4px_30px_rgba(0,0,0,0.08)] border border-[#E5E5E5] p-6 pb-7 relative overflow-hidden my-auto">
+    <div className="fixed inset-0 bg-[#F5F5F5] flex items-center justify-center p-4" style={{ overflow: "hidden" }}>
+      <div className="w-full max-w-[400px] bg-white rounded-[20px] shadow-[0_4px_30px_rgba(0,0,0,0.08)] border border-[#E5E5E5] p-6 pb-7 relative overflow-hidden">
         <div key={step} style={{ animation: "fadeSlideIn 0.3s ease-out" }}>
           {step === "checking" && renderChecking}
           {step === "identifier" && <><NoticeBanner />{renderIdentifierStep()}</>}

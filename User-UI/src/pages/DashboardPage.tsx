@@ -5,7 +5,7 @@ import {
   MessageCircle, Bell, RefreshCcw, Star, Settings, ChevronRight, Check,
   Truck, MoreVertical, Plus, Globe, Sun, DollarSign, X, Search,
   ChevronDown, Menu, ShoppingBag, Info, Tag, AlertCircle, LogOut,
-  UserCircle, Phone, Mail, Edit2, Save, Loader2, Home, Building2,
+  UserCircle, Phone, Mail, Edit2, Save, Loader2, Home, Building2, Clock,
 } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import { useCurrencyStore } from "@/store/currencyStore";
@@ -129,44 +129,46 @@ function formatOrderReference(orderNumber?: string | null, fallbackId?: string |
 }
 
 export default function DashboardPage() {
+  const { user, token, logout, notifications, unreadCount, fetchNotifications, markAsRead, markAllAsRead } = useAuthStore();
+  const [, setLocation] = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [activeSection, setActiveSection] = useState<ActiveSection>("overview");
-  const [, setLocation] = useLocation();
   const addressesRef = useRef<HTMLDivElement>(null);
-
-  const { user, token, logout, notifications, unreadCount, fetchNotifications, markAsRead, markAllAsRead } = useAuthStore();
-  const format = useCurrencyStore((s) => s.format);
-  const selectedCurrency = useCurrencyStore((s) => s.selected);
-  const displayName = user ? `${user.firstName} ${user.lastName}` : "Guest";
-  const firstName = user?.firstName ?? "there";
-  const initials = user
-    ? `${user.firstName?.[0] ?? ""}${user.lastName?.[0] ?? ""}`.toUpperCase()
-    : "?";
-
   const [recentOrders, setRecentOrders] = useState<OrderItem[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
-  const liveTimeline = getOrderTimeline(recentOrders[0]?.status ?? "Pending");
-
-  useEffect(() => {
-    if (user) {
-      fetchNotifications();
-    }
-  }, [user]);
-
   const [wishlist, setWishlist] = useState<WishlistItem[]>([]);
   const [wishlistLoading, setWishlistLoading] = useState(false);
-
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [profileLoading, setProfileLoading] = useState(false);
-
   const [editMode, setEditMode] = useState(false);
   const [editForm, setEditForm] = useState({ firstName: "", lastName: "", phone: "" });
   const [editSaving, setEditSaving] = useState(false);
   const [editError, setEditError] = useState("");
+  const format = useCurrencyStore((s) => s.format);
+  const selectedCurrency = useCurrencyStore((s) => s.selected);
+
+  // Auth guard: redirect to login if not authenticated
+  useEffect(() => {
+    if (!token || !user) {
+      setLocation("/login");
+    }
+  }, [token, user]);
+
+  // Show nothing while redirecting (all hooks already declared)
+  if (!token || !user) return null;
+
+  const displayName = `${user.firstName} ${user.lastName}`;
+  const firstName = user.firstName ?? "there";
+  const initials = `${user.firstName?.[0] ?? ""}${user.lastName?.[0] ?? ""}`.toUpperCase();
+
+  const liveTimeline = getOrderTimeline(recentOrders[0]?.status ?? "Pending");
 
   useEffect(() => {
-    if (!token) return;
+    fetchNotifications();
+  }, []);
+
+  useEffect(() => {
     setOrdersLoading(true);
     fetch(`${EFFECTIVE_API_BASE}/api/orders/my-orders`, {
       headers: { Authorization: `Bearer ${token}` },
