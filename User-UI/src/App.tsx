@@ -320,15 +320,15 @@ function PageLoader() {
 }
 
 function LoginRoute() {
-  return <AuthPage initialTab="login" />;
+  return <AuthPage />;
 }
 
 function RegisterRoute() {
-  return <AuthPage initialTab="register" />;
+  return <AuthPage />;
 }
 
 function ForgotPasswordRoute() {
-  return <AuthPage initialTab="forgot" />;
+  return <AuthPage />;
 }
 
 // ── AppRoutes — handles both splash and page transitions ──────────────────────
