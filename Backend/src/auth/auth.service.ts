@@ -300,14 +300,7 @@ export class AuthService {
       await this.emailService.sendEmailVerification(result.email, verifyRaw);
     }
 
-    // Notify Admin of New User Registration
-    this.notificationsService.sendToAdmins(
-      'New User Registered! 🆕',
-      `${result.firstName} ${result.lastName} (${result.email || result.phone}) just joined KRYROS.`,
-      { type: 'USER_REGISTER', userId: result.id, url: `/users?search=${encodeURIComponent(result.email || result.phone || '')}` }
-    ).catch(() => {});
-
-    // Send Welcome Notification to New User
+    // Send User Registered Notification (This handles both Admin alert and User welcome)
     this.notificationsService.sendUserRegisteredNotification(result.id)
       .catch(e => console.warn('User registration notification failed:', e?.message));
 

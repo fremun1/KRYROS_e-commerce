@@ -173,11 +173,26 @@ export class NotificationsService implements OnModuleInit {
       console.warn(`[PLATFORM_VALIDATION_FAILED] Invalid platform '${platform}' for user ${userId}, defaulting to 'android'`);
       finalPlatform = 'android';
     }
-    const existing = await this.prisma.userDevice.findUnique({ where: { fcmToken: token }, select: { isAdmin: true } });
+
+    // Check if the user is an admin to set the isAdmin flag correctly
+    const user = await this.prisma.user.findUnique({ where: { id: userId }, select: { role: true } });
+    const isUserAdmin = user && ['ADMIN', 'SUPER_ADMIN', 'MANAGER'].includes(user.role);
+
     const result = await this.prisma.userDevice.upsert({
       where: { fcmToken: token },
-      update: { userId, platform: finalPlatform, updatedAt: new Date() },
-      create: { userId, fcmToken: token, platform: finalPlatform, isAdmin: existing?.isAdmin ?? false },
+      update: { 
+        userId, 
+        platform: finalPlatform, 
+        updatedAt: new Date(),
+        // If the logging in user is an admin, ensure the device is marked as admin
+        ...(isUserAdmin ? { isAdmin: true } : {})
+      },
+      create: { 
+        userId, 
+        fcmToken: token, 
+        platform: finalPlatform, 
+        isAdmin: isUserAdmin || false 
+      },
     });
     return result;
   }
@@ -290,11 +305,20 @@ export class NotificationsService implements OnModuleInit {
     if (payload.email) await this.mailerService.sendMail(payload.email, `Payment ${isPaid ? 'Paid' : 'Failed'}`, `Payment ${payload.paymentNumber} ${isPaid ? 'Paid' : 'Failed'}`, '');
   }
 
-  async getRecentNotifications(userId?: string, limit: number = 20) {
+  async getRecentNotifications(userId?: string, limit: number = 20, isAdmin: boolean = false) {
     const where: any = {};
-    if (userId) {
+    
+    if (isAdmin && userId) {
+      // For admins, show their own notifications OR any notification marked as an admin alert
+      where.OR = [
+        { userId: userId },
+        { data: { path: ['isAdminAlert'], equals: 'true' } }
+      ];
+    } else if (userId) {
+      // For regular users, only show their own
       where.userId = userId;
     }
+
     return this.prisma.notification.findMany({ 
       where,
       take: limit, 

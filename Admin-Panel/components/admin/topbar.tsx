@@ -54,17 +54,8 @@ export default function Topbar({ collapsed, sidebarW, onMenuToggle, onMobileMenu
       const res: any = await getNotifications({ limit: 8 });
       const raw: any[] = Array.isArray(res.data?.data) ? res.data.data : Array.isArray(res.data) ? res.data : [];
       const mapped: NotifItem[] = raw
-        .filter((n: any) => {
-          // Separate Admin alerts from Customer announcements
-          const data = typeof n.data === 'string' ? JSON.parse(n.data) : n.data;
-          
-          // 1. If it's a broadcast (BULK) and NOT marked as an admin alert, it's for customers. Hide it.
-          if (n.targetType === 'BULK' && data?.isAdminAlert !== 'true') return false;
-          
-          // 2. Show if it's explicitly for this user (userId match) or explicitly marked as an admin alert
-          // We check n.userId === user.id to avoid showing customer welcome messages to admins
-          return (n.userId === user?.id) || data?.isAdminAlert === 'true' || data?.type === 'NEW_ORDER' || data?.type === 'USER_REGISTER';
-        })
+        // The backend now correctly filters notifications for admins to only show 
+        // their own messages and system-wide admin alerts (isAdminAlert: 'true').
         .map((n: any) => {
           const data = typeof n.data === 'string' ? JSON.parse(n.data) : n.data;
           return {

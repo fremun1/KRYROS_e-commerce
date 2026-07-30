@@ -550,18 +550,9 @@ export class OrdersService {
       return createdOrder;
     });
 
-    // Send "Order Placed" Notification / invoice summary (push + email + SMS — all non-blocking)
+    // Send "Order Placed" Notification (This handles both Admin alert and User/Guest notification)
     this.notificationsService.sendOrderPlacedNotification(order.id)
       .catch(e => console.warn('Order placed notification failed:', e?.message));
-
-    // Notify Admin of New Order
-    this.findById(order.id).then(fullOrder => {
-      this.notificationsService.sendToAdmins(
-        'New Order Received! 🛒',
-        `Order #${fullOrder.orderNumber} placed by ${fullOrder.user?.firstName || 'Customer'}. Total: ${fullOrder.total} ${fullOrder.currencyCode}`,
-        { type: 'NEW_ORDER', orderId: fullOrder.id, orderNumber: fullOrder.orderNumber, url: `/orders?id=${fullOrder.id}` }
-      ).catch(() => {});
-    }).catch(() => {});
 
     return order;
   }
@@ -616,15 +607,9 @@ export class OrdersService {
     }
 
     if (paymentStatus === 'PAID' && existingOrder.paymentStatus !== 'PAID') {
+      // Send Payment Receipt Notification (This handles both Admin alert and User notification)
       this.notificationsService.sendPaymentReceiptNotification(order.id)
         .catch(e => console.warn('Receipt notification failed:', e?.message));
-
-      // Notify Admin of Payment
-      this.notificationsService.sendToAdmins(
-        'Payment Received! 💰',
-        `Payment for Order #${order.orderNumber} has been confirmed.`,
-        { type: 'PAYMENT_RECEIVED', orderId: order.id, orderNumber: order.orderNumber, url: `/orders?id=${order.id}` }
-      ).catch(() => {});
     }
 
     return order;

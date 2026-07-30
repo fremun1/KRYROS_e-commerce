@@ -440,8 +440,8 @@ export class NotificationsController {
   @ApiOperation({ summary: 'Get recent notifications for the current user' })
   async getNotifications(@Request() req: any) {
     const isAdmin = [UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER].includes(req.user.role);
-    // If admin, show all (for dashboard activity), if customer, show only theirs
-    return this.notificationsService.getRecentNotifications(isAdmin ? undefined : req.user.id);
+    // Pass isAdmin flag so the service can filter appropriately
+    return this.notificationsService.getRecentNotifications(req.user.id, 20, isAdmin);
   }
 
   @Get('unread-count')
