@@ -187,7 +187,7 @@ function WholesaleContent() {
   }, []);
 
   const loadWholesaleProducts = () => {
-    getProducts({ isWholesaleOnly: 'true', take: 100 }).then(r => {
+    getProducts({ isWholesaleOnly: 'true', includeWholesale: 'true', take: 100 }).then(r => {
       const raw = Array.isArray(r.data?.data) ? r.data.data : (Array.isArray(r.data) ? r.data : []);
       setInventory(raw.map((p: any) => ({
         id: p.id,

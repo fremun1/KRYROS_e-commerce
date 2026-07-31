@@ -145,7 +145,7 @@ function CreditContent() {
   };
 
   const loadCreditProducts = () => {
-    getProducts({ allowCredit: 'true', take: 100 }).then(r => {
+    getProducts({ allowCredit: 'true', includeCredit: 'true', take: 100 }).then(r => {
       const raw = Array.isArray(r.data?.data) ? r.data.data : (Array.isArray(r.data) ? r.data : []);
       setInstProducts(raw.map((p: any) => ({
         id: p.id,

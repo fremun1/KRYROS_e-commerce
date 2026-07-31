@@ -45,6 +45,8 @@ export class ProductsController {
     @Query('featured') featured?: string,
     @Query('allowCredit') allowCredit?: string,
     @Query('isWholesaleOnly') isWholesaleOnly?: string,
+    @Query('includeCredit') includeCredit?: string,
+    @Query('includeWholesale') includeWholesale?: string,
     @Query('isFlashSale') isFlashSale?: string,
     @Query('showInactive') showInactive?: string,
     @Query('popularity') popularity?: string,
@@ -72,6 +74,8 @@ export class ProductsController {
       isFeatured: featured === 'true' ? true : featured === 'false' ? false : undefined,
       allowCredit: allowCredit === 'true' ? true : allowCredit === 'false' ? false : undefined,
       isWholesaleOnly: isWholesaleOnly === 'true' ? true : isWholesaleOnly === 'false' ? false : undefined,
+      includeCredit: includeCredit === 'true' ? true : includeCredit === 'false' ? false : undefined,
+      includeWholesale: includeWholesale === 'true' ? true : includeWholesale === 'false' ? false : undefined,
       isFlashSale: isFlashSale === 'true' ? true : isFlashSale === 'false' ? false : undefined,
       showInactive: resolvedShowInactive,
       popularity,
@@ -96,6 +100,7 @@ export class ProductsController {
       skip: skip ? Number(skip) : undefined,
       take: take ? Number(take) : undefined,
       allowCredit: true,
+      includeCredit: true,
     });
   }
 

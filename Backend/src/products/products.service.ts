@@ -83,9 +83,12 @@ export class ProductsService {
       andFilters.push({ brand: { slug: { equals: brandSlug, mode: 'insensitive' } } });
     }
     
-    // Exclude credit and wholesale products from general queries unless explicitly requested
-    if (!includeCredit) andFilters.push({ allowCredit: false });
-    if (!includeWholesale) andFilters.push({ isWholesaleOnly: false });
+    // Exclude credit and wholesale products from general queries unless they are
+    // explicitly requested by the caller or directly targeted by a filter.
+    const shouldIncludeCredit = includeCredit === true || allowCredit === true;
+    const shouldIncludeWholesale = includeWholesale === true || isWholesaleOnly === true;
+    if (!shouldIncludeCredit) andFilters.push({ allowCredit: false });
+    if (!shouldIncludeWholesale) andFilters.push({ isWholesaleOnly: false });
     
     const normalizedSearch = search?.trim();
     const normalizedSearchSlug = normalizedSearch

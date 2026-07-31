@@ -6,13 +6,13 @@ import DataTable, { Column } from '@/components/admin/data-table';
 import PageHeader from '@/components/admin/page-header';
 import { Modal, ConfirmDialog, FormField, ModalFooter } from '@/components/admin/modal';
 import { Package, Settings2 } from 'lucide-react';
-import { createProduct, updateProduct, deleteProduct, getProducts, getBrands, getSettings, updateSettings } from '@/lib/api';
+import { createProduct, updateProduct, deleteProduct, getProducts, getBrands, getCategories, getSettings, updateSettings } from '@/lib/api';
 import toast from 'react-hot-toast';
 import CloudinaryUpload from '@/components/ui/file-upload';
 
 type Product = {
   id: string; name: string; slug: string; sku: string; description: string;
-  brand: string; price: string; salePrice: string;
+  category: string; brand: string; price: string; salePrice: string;
   stock: number; weight: string; sold: number; status: string;
   featured: boolean;
   isNew: boolean;
@@ -70,7 +70,7 @@ const parseConditionOptions = (raw?: string | null): string[] => {
 };
 
 const EMPTY_FORM = {
-  name: '', slug: '', sku: '', description: '', brand: 'Apple',
+  name: '', slug: '', sku: '', description: '', category: 'General', brand: 'Apple',
   price: '', salePrice: '', stock: '0', weight: '', status: 'Active',
   featured: 'No',
   isNew: 'No',
@@ -116,6 +116,7 @@ function ProductsContent() {
         slug: p.slug || '',
         sku: p.sku || '',
         description: p.description || '',
+        category: p.category?.name || 'General',
         brand: p.brand?.name || '',
         price: p.price != null ? String(Number(p.price)) : '',
         salePrice: p.salePrice != null && p.salePrice !== 0 ? String(Number(p.salePrice)) : '',
@@ -192,6 +193,13 @@ function ProductsContent() {
       const names = data.map((b: any) => b.name || b).filter(Boolean);
       if (names.length > 0) setBrands(names);
     }).catch(() => {});
+    getCategories().then(r => {
+      const data = r?.data ?? r ?? [];
+      const options = data
+        .map((c: any) => ({ name: c?.name || '', slug: c?.slug || toSlug(c?.name || '') }))
+        .filter((c: { name: string; slug: string }) => c.name && c.slug);
+      if (options.length > 0) setCategories(options);
+    }).catch(() => {});
   }, []);
   const [addOpen, setAddOpen] = useState(false);
   const [editRow, setEditRow] = useState<Product | null>(null);
@@ -201,6 +209,7 @@ function ProductsContent() {
   const [loading, setLoading] = useState(false);
   const [productImages, setProductImages] = useState<string[]>([]);
   const [brands, setBrands] = useState<string[]>([]);
+  const [categories, setCategories] = useState<{ name: string; slug: string }[]>([]);
   const [conditionOptions, setConditionOptions] = useState<string[]>(DEFAULT_CONDITION_OPTIONS);
   const [conditionSettingsOpen, setConditionSettingsOpen] = useState(false);
   const [conditionDraft, setConditionDraft] = useState(DEFAULT_CONDITION_OPTIONS.join('\n'));
@@ -248,7 +257,7 @@ function ProductsContent() {
     const r = row as unknown as Product;
     setForm({
       name: r.name, slug: r.slug || toSlug(r.name), sku: r.sku, description: r.description || '',
-      brand: r.brand || 'Apple', price: r.price, salePrice: r.salePrice || '',
+      category: r.category || 'General', brand: r.brand || 'Apple', price: r.price, salePrice: r.salePrice || '',
       stock: String(r.stock), weight: r.weight || '',       status: r.status,
       featured: boolToStr(r.featured),
       isNew: boolToStr(r.isNew),
@@ -326,6 +335,7 @@ function ProductsContent() {
 
   // Build the payload that matches the backend UpdateProductDto / CreateProductDto
   const buildProductPayload = (productImages: string[]) => {
+    const selectedCategory = categories.find((category) => category.name === form.category);
     const payload: Record<string, unknown> = {
       name: form.name,
       slug: form.slug || undefined,
@@ -342,6 +352,7 @@ function ProductsContent() {
       isFlashSale: strToBool(form.isFlashSale),
       allowCredit: strToBool(form.allowCredit),
       creditMessage: strToBool(form.allowCredit) ? (form.creditMessage || undefined) : undefined,
+      categorySlug: selectedCategory?.slug || toSlug(form.category || 'general'),
       creditMinimum: strToBool(form.allowCredit)
         ? (form.creditMinimum ? Number(form.creditMinimum) : 0)
         : undefined,
@@ -505,7 +516,7 @@ function ProductsContent() {
     { key: 'name', label: 'Product', render: (v, row) => (
       <div>
         <div style={{ fontWeight: 600, color: textMain }}>{String(v)}</div>
-        <div style={{ fontSize: '11px', color: textMuted, marginTop: '2px' }}>{String((row as unknown as Product).sku)} · {String((row as unknown as Product).brand)}</div>
+        <div style={{ fontSize: '11px', color: textMuted, marginTop: '2px' }}>{String((row as unknown as Product).sku)} · {String((row as unknown as Product).brand)} · {String((row as unknown as Product).category)}</div>
       </div>
     )},
     { key: 'price', label: 'Price', render: (v, row) => {
@@ -541,6 +552,7 @@ function ProductsContent() {
       <FormField label="Weight (KG)" value={form.weight} onChange={fp('weight')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 0.5" />
 
       {sectionLabel('Categorization')}
+      <FormField label="Category" value={form.category} onChange={fp('category')} options={categories.length > 0 ? categories.map((category) => category.name) : ['General']} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
       <FormField label="Brand" value={form.brand} onChange={fp('brand')} options={brands.length > 0 ? brands : ['Apple', 'Samsung', 'Sony', 'Beats', 'Bose', 'Dell', 'LG', 'Huawei', 'Other']} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
 
       {sectionLabel('Product Images')}
@@ -715,6 +727,7 @@ function ProductsContent() {
         <Modal open={!!viewRow} onClose={() => setViewRow(null)} title="Product Details">
           <FormField label="Name" value={viewRow.name} readOnly border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
           <FormField label="SKU" value={viewRow.sku} readOnly border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+          <FormField label="Category" value={viewRow.category || '—'} readOnly border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
           <FormField label="Brand" value={viewRow.brand} readOnly border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
           <FormField label="Price" value={viewRow.price} readOnly border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
           <FormField label="Sale Price" value={viewRow.salePrice || '—'} readOnly border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
