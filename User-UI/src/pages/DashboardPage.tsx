@@ -11,6 +11,27 @@ import { useAuthStore } from "@/store/authStore";
 import { useCurrencyStore } from "@/store/currencyStore";
 import { EFFECTIVE_API_BASE } from "@/lib/api";
 import { formatDeliveryWindow, resolveDeliveryWindowFromItems } from "@/lib/delivery";
+import { useEffect as _useEffectDashboard } from "react";
+
+function DashboardAuthGuard({ children }: { children: React.ReactNode }) {
+  const token = useAuthStore((s) => s.token);
+  const user = useAuthStore((s) => s.user);
+  const getMe = useAuthStore((s) => s.getMe);
+  const [_useEffectDashboard] = _useEffectDashboard;
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (!token) {
+      try { window.sessionStorage.setItem('kryros-post-logout', '1'); } catch {}
+      window.location.replace('/');
+      return;
+    }
+    if (!user) {
+      void getMe();
+    }
+  }, [token, user, getMe]);
+  if (!token) return null;
+  return <>{children}</>;
+}
 
 const footerLinks = [
   { label: "About Us", href: "/about" },

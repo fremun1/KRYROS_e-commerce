@@ -269,6 +269,12 @@ export const useAuthStore = create<AuthState>()(
           }
         }
         set({ token: null, refreshToken: null, user: null, error: null });
+        if (typeof window !== 'undefined') {
+          try {
+            window.sessionStorage?.clear?.();
+          } catch { /* ignore */ }
+          window.location.replace('/');
+        }
       },
 
       getMe: async () => {

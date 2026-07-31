@@ -35,7 +35,7 @@ export class CreateUserDto {
   @Transform(({ value }) => value?.trim())
   lastName!: string;
 
-  @ApiProperty({ example: '+260966423719' })
+  @ApiProperty({ example: '+260966423719', required: false })
   @IsOptional()
   @IsString()
   @MaxLength(30, { message: 'Phone number must not exceed 30 characters' })
@@ -44,6 +44,13 @@ export class CreateUserDto {
   })
   @Transform(({ value }) => value?.trim())
   phone?: string;
+
+  @ApiProperty({ example: 'ZM', required: false, description: 'ISO-3166-1 alpha-2 country code' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(2)
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim().toUpperCase() : value))
+  country?: string;
 
   @ApiProperty({ example: 'CUSTOMER', enum: UserRole })
   @IsOptional()

@@ -56,6 +56,7 @@ export class UsersService {
         ...(normalizedPhone !== undefined ? { phone: normalizedPhone } : {}),
         role,
         ...(avatarUrl !== undefined ? { avatar: avatarUrl } : {}),
+        isVerified: createUserDto.country === 'ZM' ? false : true,
       },
     });
 
