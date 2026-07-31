@@ -62,6 +62,25 @@ model RefreshToken {
   @@map("refresh_tokens")
 }
 
+model PendingRegistration {
+  id           String   @id @default(uuid())
+  email        String?  @unique
+  phone        String?  @unique
+  password     String
+  firstName    String
+  lastName     String
+  countryCode  String?
+  otpCode      String
+  otpChannel   String   // 'email' or 'sms'
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+
+  @@index([email])
+  @@index([phone])
+  @@index([expiresAt])
+  @@map("pending_registrations")
+}
+
 model UserDevice {
   id        String   @id @default(uuid())
   userId    String?
@@ -225,945 +244,366 @@ model Product {
   fiveYearGuaranteeText  String?
   freeReturnsText        String?
   installmentOptionsText String?
-  isWholesaleOnly        Boolean             @default(false)
-  unitsPerPack           Int                 @default(1)
-  wholesaleMoq           Int                 @default(1)
-  fullyTested            Boolean             @default(true)
-  fullyTestedText        String?
   isBestSeller           Boolean             @default(false)
   isHot                  Boolean             @default(false)
   isTrending             Boolean             @default(false)
-  // New fields for this update
-  condition              String?             @default("New") // e.g., New, Used, Refurbished
+  condition              String?             @default("New")
   shippingFee            Decimal?            @db.Decimal(10, 2)
-  estimatedDeliveryDays  Int?                @default(3)
-  estimatedDeliveryMinDays Int?              @default(2)
-  estimatedDeliveryMaxDays Int?              @default(7)
-  popularItemText        String?
-  easyReturnsText        String?
-  freeReturnsDescription String? // Description for returns
-  protectionDescription  String? // Description for protection
-  creditAccounts         CreditAccount[]
-  creditApplications     CreditApplication[]
-  inventory              Inventory?
-  orderItems             OrderItem[]
   images                 ProductImage[]
-  productRelations       ProductRelation[]   @relation("ProductRelation")
-  relatedTo              ProductRelation[]   @relation("RelatedTo")
-  tags                   ProductTag[]
-  variants               ProductVariant[]
-  brand                  Brand?              @relation(fields: [brandId], references: [id])
   category               Category?           @relation(fields: [categoryId], references: [id])
+  brand                  Brand?              @relation(fields: [brandId], references: [id])
   reviews                Review[]
-  wholesalePrices        WholesalePrice[]
-  wishlists              WishlistItem[]
+  wishlistItems          WishlistItem[]
+  orderItems             OrderItem[]
+  creditPlans            CreditPlan[]
+  pickupStocks           PickupStock[]
+  serviceBookings        ServiceBooking[]
 
-  @@index([name])
-  @@index([createdAt])
   @@map("products")
 }
 
 model ProductImage {
-  id        String  @id @default(uuid())
+  id        String   @id @default(uuid())
   productId String
   url       String
   alt       String?
-  isPrimary Boolean @default(false)
-  sortOrder Int     @default(0)
-  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  isDefault Boolean @default(false)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
 
+  @@index([productId])
   @@map("product_images")
 }
 
-model ProductVariant {
-  id         String      @id @default(uuid())
-  productId  String
-  name       String
-  type       VariantType
-  value      String
-  price      Decimal     @db.Decimal(10, 2)
-  stock      Int         @default(0)
-  sku        String      @unique
-  isActive   Boolean     @default(true)
-  orderItems OrderItem[]
-  product    Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
-
-  @@map("product_variants")
-}
-
-model ProductTag {
-  id        String  @id @default(uuid())
-  productId String
-  tag       String
-  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
-
-  @@unique([productId, tag])
-  @@map("product_tags")
-}
-
-model ProductRelation {
-  id           String  @id @default(uuid())
-  productId    String
-  relatedId    String
-  relationType String  @default("related")
-  product      Product @relation("ProductRelation", fields: [productId], references: [id], onDelete: Cascade)
-  related      Product @relation("RelatedTo", fields: [relatedId], references: [id], onDelete: Cascade)
-
-  @@unique([productId, relatedId, relationType])
-  @@map("product_relations")
-}
-
-model Inventory {
-  id             String          @id @default(uuid())
-  productId      String          @unique
-  stock          Int             @default(0)
-  reservedStock  Int             @default(0)
-  reorderLevel   Int             @default(10)
-  isTrackStock   Boolean         @default(true)
-  allowBackorder Boolean         @default(false)
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
-  product        Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
-  movements      StockMovement[]
-
-  @@map("inventory")
-}
-
-model StockMovement {
-  id          String            @id @default(uuid())
-  inventoryId String
-  type        StockMovementType
-  quantity    Int
-  reference   String?
-  notes       String?
-  createdAt   DateTime          @default(now())
-  inventory   Inventory         @relation(fields: [inventoryId], references: [id], onDelete: Cascade)
-
-  @@map("stock_movements")
-}
-
 model Review {
-  id         String   @id @default(uuid())
-  productId  String
-  userId     String?
-  rating     Int
-  title      String?
-  comment    String?
-  isVerified Boolean  @default(false)
-  isApproved Boolean  @default(true)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  imageUrl   String?
-  isFeatured Boolean  @default(false)
-  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  user       User?    @relation(fields: [userId], references: [id])
+  id        String   @id @default(uuid())
+  productId String
+  userId    String
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@unique([productId, userId])
+  @@index([productId])
+  @@index([userId])
   @@map("reviews")
 }
 
 model WishlistItem {
   id        String   @id @default(uuid())
-  userId    String
   productId String
+  userId    String
   createdAt DateTime @default(now())
   product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, productId])
+  @@unique([productId, userId])
+  @@index([userId])
   @@map("wishlist_items")
 }
 
 model Order {
-  id                String        @id @default(uuid())
-  orderNumber       String        @unique
-  userId            String?
-  status            OrderStatus   @default(PENDING)
-  paymentStatus     PaymentStatus @default(PENDING)
-  paymentReference  String?
-  subtotal          Decimal       @db.Decimal(10, 2)
-  discount          Decimal       @default(0) @db.Decimal(10, 2)
-  tax               Decimal       @default(0) @db.Decimal(10, 2)
-  shipping          Decimal       @default(0) @db.Decimal(10, 2)
-  total             Decimal       @db.Decimal(10, 2)
-  notes             String?
-  trackingNumber    String?
-  shippedAt         DateTime?
-  deliveredAt       DateTime?
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
-  shippingAddressId String?
+  id               String    @id @default(uuid())
+  orderNumber      String    @unique
+  userId           String?
+  status           OrderStatus @default(PENDING)
+  paymentStatus    String    @default("pending")
+  paymentMethod    String?
+  subtotal         Decimal   @db.Decimal(10, 2)
+  tax              Decimal   @db.Decimal(10, 2)
+  shipping         Decimal   @db.Decimal(10, 2)
+  total            Decimal   @db.Decimal(10, 2)
+  currency         String    @default("USD")
+  currencyRate     Decimal   @default(1)
+  notes            String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
   billingAddressId  String?
-  paymentPhone      String?
-  totalZMW          Decimal?      @db.Decimal(10, 2)
-  estimatedDays     Int?
-  currencyCode      String        @default("USD")
-  currencySymbol    String        @default("$")
-  exchangeRate      Decimal       @default(1.0) @db.Decimal(18, 6)
-  paymentMethod     String?
+  shippingAddressId String?
   guestFcmToken     String?
-  items             OrderItem[]
-  logs              OrderLog[]
-  billingAddress    Address?      @relation("OrderBillingAddress", fields: [billingAddressId], references: [id])
-  shippingAddress   Address?      @relation("OrderShippingAddress", fields: [shippingAddressId], references: [id])
-  user              User?         @relation(fields: [userId], references: [id])
-  directPayments    DirectPayment[]
+  items            OrderItem[]
+  user             User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  billingAddress   Address?  @relation("OrderBillingAddress", fields: [billingAddressId], references: [id])
+  shippingAddress  Address?  @relation("OrderShippingAddress", fields: [shippingAddressId], references: [id])
+  directPayments   DirectPayment[]
+  notifications    Notification[]
 
-  @@index([guestFcmToken])
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
   @@map("orders")
 }
 
 model OrderItem {
-  id                        String          @id @default(uuid())
-  orderId                   String
-  productId                 String
-  variantId                 String?
-  name                      String?
-  image                     String?
-  specs                     String?
-  shippingFee               Decimal?        @db.Decimal(10, 2)
-  estimatedDeliveryDays     Int?
-  estimatedDeliveryMinDays  Int?
-  estimatedDeliveryMaxDays  Int?
-  quantity                  Int
-  price                     Decimal         @db.Decimal(10, 2)
-  total                     Decimal         @db.Decimal(10, 2)
-  createdAt                 DateTime        @default(now())
-  order                     Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product                   Product         @relation(fields: [productId], references: [id])
-  variant                   ProductVariant? @relation(fields: [variantId], references: [id])
+  id        String   @id @default(uuid())
+  orderId   String
+  productId String
+  quantity  Int
+  price     Decimal  @db.Decimal(10, 2)
+  createdAt DateTime @default(now())
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id])
 
+  @@index([orderId])
+  @@index([productId])
   @@map("order_items")
 }
 
-model OrderLog {
-  id        String      @id @default(uuid())
-  orderId   String
-  status    OrderStatus
-  notes     String?
-  createdAt DateTime    @default(now())
-  order     Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+model DirectPayment {
+  id              String   @id @default(uuid())
+  orderId         String
+  userId          String?
+  paymentNumber   String   @unique
+  amount          Decimal  @db.Decimal(10, 2)
+  currency        String
+  status          String
+  paymentMethod   String?
+  transactionId   String?
+  transactionDate DateTime?
+  metadata        String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  order           Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  user            User?    @relation(fields: [userId], references: [id])
 
-  @@map("order_logs")
+  @@index([orderId])
+  @@index([userId])
+  @@index([paymentNumber])
+  @@map("direct_payments")
 }
 
-model WholesaleAccount {
-  id            String           @id @default(uuid())
-  userId        String           @unique
-  companyName   String
-  taxId         String?
-  address       String?
-  contactPerson String?
-  discountTier  Int              @default(1)
-  status        WholesaleStatus  @default(APPROVED)
-  notes         String?
-  createdAt     DateTime         @default(now())
-  updatedAt     DateTime         @updatedAt
-  city          String?
-  creditLimit   Decimal?         @db.Decimal(10, 2)
-  phone         String?
-  tierName      String?
-  user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  deals         WholesaleDeal[]
-  prices        WholesalePrice[]
-
-  @@map("wholesale_accounts")
-}
-
-model WholesaleApplication {
-  id                    String          @id @default(uuid())
-  userId                String
-  companyName           String
-  businessType          String
-  registrationNumber    String?
-  taxId                 String?
-  website               String?
-  firstName             String
-  lastName              String
-  email                 String
-  phone                 String
-  jobTitle              String
-  address               String
-  city                  String
-  state                 String?
-  country               String
-  zipCode               String?
-  businessPhone         String?
-  businessEmail         String?
-  annualRevenue         Decimal?        @db.Decimal(15, 2)
-  employeeCount         Int?
-  productCategories     String?
-  estimatedMonthlyOrder Decimal?        @db.Decimal(15, 2)
-  description           String?
-  status                WholesaleStatus @default(PENDING)
-  notes                 String?
-  createdAt             DateTime        @default(now())
-  updatedAt             DateTime        @updatedAt
-  user                  User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+model CreditAccount {
+  id                String   @id @default(uuid())
+  userId            String
+  accountNumber     String   @unique
+  creditLimit       Decimal  @db.Decimal(10, 2)
+  availableCredit   Decimal  @db.Decimal(10, 2)
+  currentBalance    Decimal  @db.Decimal(10, 2)
+  interestRate      Decimal  @db.Decimal(5, 2)
+  dueDate           DateTime?
+  status            String   @default("active")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  creditApplications CreditApplication[]
+  orders            Order[]
 
   @@index([userId])
-  @@map("wholesale_applications")
+  @@map("credit_accounts")
 }
 
-model WholesalePrice {
-  id          String            @id @default(uuid())
-  productId   String
-  accountId   String?
-  minQuantity Int
-  price       Decimal           @db.Decimal(10, 2)
-  account     WholesaleAccount? @relation(fields: [accountId], references: [id], onDelete: Cascade)
-  product     Product           @relation(fields: [productId], references: [id], onDelete: Cascade)
+model CreditApplication {
+  id              String   @id @default(uuid())
+  userId          String
+  accountId       String?
+  status          String   @default("pending")
+  amountRequested Decimal  @db.Decimal(10, 2)
+  monthlyIncome   Decimal  @db.Decimal(10, 2)
+  employment      String?
+  employer        String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  account         CreditAccount? @relation(fields: [accountId], references: [id])
 
-  @@unique([productId, accountId, minQuantity])
-  @@map("wholesale_prices")
+  @@index([userId])
+  @@index([accountId])
+  @@map("credit_applications")
 }
 
 model CreditProfile {
-  id              String          @id @default(uuid())
-  userId          String          @unique
-  creditLimit     Decimal         @default(0) @db.Decimal(10, 2)
-  availableCredit Decimal         @default(0) @db.Decimal(10, 2)
-  usedCredit      Decimal         @default(0) @db.Decimal(10, 2)
-  creditScore     Int             @default(500)
-  status          CreditStatus    @default(ACTIVE)
-  notes           String?
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
-  accounts        CreditAccount[]
-  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id               String   @id @default(uuid())
+  userId           String   @unique
+  creditScore      Int?
+  totalDebt        Decimal  @db.Decimal(10, 2)
+  monthlyPayments  Decimal  @db.Decimal(10, 2)
+  employmentStatus String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("credit_profiles")
 }
 
-model CreditApplication {
-  id               String          @id @default(uuid())
-  userId           String
-  productId        String
-  creditPlanId     String
-  amount           Decimal         @db.Decimal(10, 2)
-  status           CreditAppStatus @default(PENDING)
-  firstName        String
-  lastName         String
-  email            String
-  phone            String
-  address          String
-  city             String
-  state            String?
-  country          String
-  zipCode          String?
-  employmentStatus String
-  monthlyIncome    Decimal         @db.Decimal(10, 2)
-  employerName     String?
-  employerPhone    String?
-  createdAt        DateTime        @default(now())
-  updatedAt        DateTime        @updatedAt
-  creditPlan       CreditPlan      @relation(fields: [creditPlanId], references: [id])
-  product          Product         @relation(fields: [productId], references: [id])
-  user             User            @relation(fields: [userId], references: [id])
-
-  @@index([userId])
-  @@index([productId])
-  @@index([creditPlanId])
-  @@map("credit_applications")
-}
-
-model CreditAccount {
-  id              String              @id @default(uuid())
-  userId          String
-  creditProfileId String?
-  productId       String
-  creditPlanId    String
-  amount          Decimal             @db.Decimal(10, 2)
-  totalPayable    Decimal             @db.Decimal(10, 2)
-  monthlyPayment  Decimal             @db.Decimal(10, 2)
-  paidAmount      Decimal             @default(0) @db.Decimal(10, 2)
-  remainingAmount Decimal             @db.Decimal(10, 2)
-  nextPaymentDate DateTime
-  status          CreditAccountStatus @default(ACTIVE)
-  startDate       DateTime            @default(now())
-  endDate         DateTime?
-  createdAt       DateTime            @default(now())
-  updatedAt       DateTime            @updatedAt
-  creditPlan      CreditPlan          @relation(fields: [creditPlanId], references: [id])
-  creditProfile   CreditProfile?      @relation(fields: [creditProfileId], references: [id], onDelete: Cascade)
-  product         Product             @relation(fields: [productId], references: [id])
-  user            User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  payments        CreditPayment[]
-
-  @@map("credit_accounts")
-}
-
 model CreditPlan {
-  id               String              @id @default(uuid())
-  name             String
-  duration         Int
-  interestRate     Decimal             @db.Decimal(5, 2)
-  minimumAmount    Decimal             @db.Decimal(10, 2)
-  maximumAmount    Decimal             @db.Decimal(10, 2)
-  description      String?
-  isActive         Boolean             @default(true)
-  createdAt        DateTime            @default(now())
-  updatedAt        DateTime            @updatedAt
-  targetBrandId    Int?
-  targetCategoryId String?
-  accounts         CreditAccount[]
-  applications     CreditApplication[]
-  brand            Brand?              @relation(fields: [targetBrandId], references: [id])
-  category         Category?           @relation(fields: [targetCategoryId], references: [id])
+  id            String   @id @default(uuid())
+  productId     String
+  name          String
+  months        Int
+  interestRate  Decimal  @db.Decimal(5, 2)
+  minPayment    Decimal  @db.Decimal(10, 2)
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  product       Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  category      Category? @relation(fields: [categoryId], references: [id])
 
+  @@index([productId])
   @@map("credit_plans")
 }
 
-model CreditPayment {
-  id        String              @id @default(uuid())
-  accountId String
-  amount    Decimal             @db.Decimal(10, 2)
-  dueDate   DateTime
-  paidDate  DateTime?
-  status    CreditPaymentStatus @default(PENDING)
-  penalty   Decimal?            @db.Decimal(10, 2)
-  reference String?
+model ServiceBooking {
+  id        String   @id @default(uuid())
+  userId    String
+  serviceId String
+  date      DateTime
+  status    String   @default("pending")
   notes     String?
-  createdAt DateTime            @default(now())
-  updatedAt DateTime            @updatedAt
-  account   CreditAccount       @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@map("credit_payments")
+  @@index([userId])
+  @@index([date])
+  @@map("service_bookings")
+}
+
+model SupportTicket {
+  id        String   @id @default(uuid())
+  userId    String
+  subject   String
+  message   String
+  status    String   @default("open")
+  priority  String   @default("medium")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@map("support_tickets")
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String?
+  title     String
+  message   String
+  data      String   @default("{}")
+  targetType String   @default("SINGLE")
+  sent      Boolean  @default(false)
+  isRead    Boolean  @default(false)
+  scheduledAt DateTime?
+  createdAt DateTime @default(now())
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  order     Order?   @relation(fields: [orderId], references: [id])
+
+  @@index([userId])
+  @@index([sent])
+  @@index([scheduledAt])
+  @@map("notifications")
 }
 
 model Wallet {
-  id             String        @id @default(uuid())
-  userId         String        @unique
-  balance        Decimal       @default(0) @db.Decimal(10, 2)
-  pendingBalance Decimal       @default(0) @db.Decimal(10, 2)
-  currency       String        @default("ZMW")
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
-  transactions   Transaction[]
-  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id         String   @id @default(uuid())
+  userId     String   @unique
+  balance    Decimal  @db.Decimal(10, 2) @default(0)
+  currency   String   @default("USD")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("wallets")
 }
 
-model Transaction {
-  id          String            @id @default(uuid())
-  walletId    String
-  type        TransactionType
-  amount      Decimal           @db.Decimal(10, 2)
-  description String?
-  reference   String            @unique
-  status      TransactionStatus @default(PENDING)
-  metadata    Json?
-  createdAt   DateTime          @default(now())
-  wallet      Wallet            @relation(fields: [walletId], references: [id], onDelete: Cascade)
+model WholesaleAccount {
+  id                String   @id @default(uuid())
+  userId            String   @unique
+  businessName      String
+  businessLicense   String?
+  taxId             String?
+  status            String   @default("pending")
+  minOrderQuantity  Int      @default(10)
+  discountPercent   Decimal  @db.Decimal(5, 2) @default(10)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  applications      WholesaleApplication[]
 
-  @@map("transactions")
+  @@index([userId])
+  @@map("wholesale_accounts")
 }
 
-model Service {
-  id          String           @id @default(uuid())
-  name        String
-  slug        String           @unique
-  description String?
-  price       Decimal          @db.Decimal(10, 2)
-  category    String
-  duration    String
-  image       String?
-  features    String[]
-  isActive    Boolean          @default(true)
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
-  bookings    ServiceBooking[]
-
-  @@map("services")
-}
-
-model ServiceBooking {
-  id            String        @id @default(uuid())
-  userId        String
-  serviceId     String
-  scheduledDate DateTime
-  scheduledTime String
-  status        BookingStatus @default(PENDING)
-  notes         String?
-  completedAt   DateTime?
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-  service       Service       @relation(fields: [serviceId], references: [id])
-  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("service_bookings")
-}
-
-model CMSPage {
-  id              String   @id @default(uuid())
-  title           String
-  slug            String   @unique
-  content         String?
-  metaTitle       String?
-  metaDescription String?
-  isActive        Boolean  @default(true)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  @@map("cms_pages")
-}
-
-model CMSSection {
-  id              String   @id @default(uuid())
-  type            String
-  title           String?
-  subtitle        String?
-  config          Json?
-  isActive        Boolean  @default(true)
-  order           Int      @default(0)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  animation       String?
-  backgroundColor String?
-  description     String?
-  imageUrl        String?
-  link            String?
-  linkText        String?
-  pageName        String?
-  pageSlug        String?
-  textColor       String?
-  dedicatedPageSlug String?
-  // New fields for dynamic section system
-  templateType    String?  @default("ProductShelf") // ProductShelf, BannerSlot, CategoryGrid, etc.
-  dataSourceId    String?  // Rule ID: top-selling, trending-products, flash-sales, etc.
-  slotKey         String?  // For banners: homepage-hero-slider, homepage-mid-page, etc.
-  name            String?  // Internal name for admin use
-
-  @@index([pageSlug])
-  @@index([templateType])
-  @@index([dataSourceId])
-  @@map("cms_sections")
-}
-
-model HomePageSection {
-  id                 String   @id @default(uuid())
-  type               String
-  order              Int      @default(0)
-  isActive           Boolean  @default(true)
-  title              String?
-  subtitle           String?
-  description        String?
-  backgroundColor    String?
-  textColor          String?
-  imageUrl           String?
-  videoUrl           String?
-  link               String?
-  linkText           String?
-  config             Json?
-  animation          String?
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
-  targetCategoryId   String?
-  targetCategorySlug String?
-
-  @@map("homepage_sections")
-}
-
-model FooterSection {
-  id        String       @id @default(uuid())
-  title     String
-  order     Int          @default(0)
-  isActive  Boolean      @default(true)
-  createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
-  links     FooterLink[]
-
-  @@map("footer_sections")
-}
-
-model FooterLink {
-  id        String        @id @default(uuid())
-  sectionId String
-  label     String
-  href      String
-  order     Int           @default(0)
-  isActive  Boolean       @default(true)
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
-  section   FooterSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
-
-  @@map("footer_links")
-}
-
-model FooterConfig {
-  id                       String   @id @default(uuid())
-  logo                     String?
-  description              String?
-  contactPhone             String?
-  contactEmail             String?
-  contactAddress           String?
-  newsletterTitle          String?  @default("Subscribe to our Newsletter")
-  newsletterSubtitle       String?
-  copyrightText            String?
-  socialLinks              Json?
-  paymentMethods           Json?
-  createdAt                DateTime @default(now())
-  updatedAt                DateTime @updatedAt
-  announcementBarBgColor   String?  @default("bg-kryros-dark")
-  announcementBarEnabled   Boolean  @default(true)
-  announcementBarLink      String?
-  announcementBarText      String?  @default("30% discount on all products special for November!")
-  announcementBarTextColor String?  @default("text-kryros-green")
-  newsletterPopupDelay     Int?     @default(3000)
-  newsletterPopupEnabled   Boolean  @default(true)
-  newsletterPopupImage     String?
-  newsletterPopupSubtitle  String?
-  newsletterPopupTitle     String?  @default("Unlock Premium Deals")
-
-  @@map("footer_config")
-}
-
-model CMSSiteConfig {
-  id        String   @id @default(uuid())
-  key       String   @unique
-  value     Json
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@map("cms_site_configs")
-}
-
-model Notification {
-  id          String    @id @default(uuid())
-  userId      String?
-  title       String
-  message     String
-  data        Json?
-  isRead      Boolean   @default(false)
-  createdAt   DateTime  @default(now())
-  orderIds    String[]
-  scheduledAt DateTime?
-  sent        Boolean   @default(false)
-  targetType  String    @default("SINGLE")
-  updatedAt   DateTime  @updatedAt
-  user        User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("notifications")
-}
-
-model SupportTicket {
-  id          String          @id @default(uuid())
-  userId      String
-  subject     String
-  description String
-  status      TicketStatus    @default(OPEN)
-  priority    TicketPriority  @default(MEDIUM)
-  assignedTo  String?
-  resolvedAt  DateTime?
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
-  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  messages    TicketMessage[]
-
-  @@map("support_tickets")
-}
-
-model TicketMessage {
-  id         String        @id @default(uuid())
-  ticketId   String
-  userId     String
-  message    String
-  isInternal Boolean       @default(false)
-  createdAt  DateTime      @default(now())
-  ticket     SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
-
-  @@map("ticket_messages")
-}
-
-model AuditLog {
+model WholesaleApplication {
   id         String   @id @default(uuid())
-  userId     String?
-  action     String
-  resource   String
-  resourceId String?
-  changes    Json?
-  ipAddress  String?
-  userAgent  String?
+  userId     String
+  accountId  String?
+  status     String   @default("pending")
   createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  account    WholesaleAccount? @relation(fields: [accountId], references: [id])
 
-  @@map("audit_logs")
+  @@index([userId])
+  @@index([accountId])
+  @@map("wholesale_applications")
 }
 
-model Setting {
+model PickupStock {
   id        String   @id @default(uuid())
-  key       String   @unique
-  value     String
-  type      String   @default("string")
-  category  String   @default("general")
+  productId String
+  location  String
+  quantity  Int
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
 
-  @@map("settings")
-}
-
-model Newsletter {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@map("newsletter")
-}
-
-model ShippingMethod {
-  id            String   @id @default(uuid())
-  name          String   @unique
-  description   String?
-  fee           Decimal  @db.Decimal(10, 2)
-  minThreshold  Decimal  @default(0) @db.Decimal(10, 2)
-  estimatedDays String?
-  isActive      Boolean  @default(true)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  sortOrder     Int      @default(0)
-
-  @@map("shipping_methods")
+  @@index([productId])
+  @@index([location])
+  @@map("pickup_stocks")
 }
 
 model Country {
-  id              String                 @id @default(uuid())
-  name            String                 @unique
-  code            String                 @unique
-  currencyCode    String
-  currencySymbol  String
-  symbolPosition  SymbolPosition         @default(BEFORE)
-  exchangeRate    Decimal                @default(1.0) @db.Decimal(18, 6)
-  autoRate        Boolean                @default(true)
-  lastRateUpdate  DateTime?
-  flag            String?
-  status          Boolean                @default(true)
-  isDefault       Boolean                @default(false)
-  createdAt       DateTime               @default(now())
-  updatedAt       DateTime               @updatedAt
-  shippingEnabled Boolean                @default(true)
-  paymentMethods  CountryPaymentMethod[]
-  shippingZones   ShippingZone[]
-  states          State[]
-  checkoutMethods CheckoutMethod[]
+  id             String    @id @default(uuid())
+  name           String
+  code           String    @unique
+  currencyCode   String
+  currencySymbol String
+  symbolPosition SymbolPosition
+  exchangeRate   Decimal   @db.Decimal(10, 4)
+  autoRate       Boolean   @default(false)
+  lastRateUpdate DateTime?
+  isDefault      Boolean   @default(false)
+  flag           String?
+  status         Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime @updatedAt
+  paymentMethods CountryPaymentMethod[]
 
   @@map("countries")
 }
 
-model State {
-  id            String         @id @default(uuid())
-  countryId     String
-  name          String
-  code          String?
-  isActive      Boolean        @default(true)
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  cities        City[]
-  shippingZones ShippingZone[]
-  country       Country        @relation(fields: [countryId], references: [id], onDelete: Cascade)
+model PaymentMethod {
+  id        String   @id @default(uuid())
+  name      String
+  code      String   @unique
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  @@unique([countryId, name])
-  @@map("states")
-}
-
-model City {
-  id            String         @id @default(uuid())
-  stateId       String
-  name          String
-  isActive      Boolean        @default(true)
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  state         State          @relation(fields: [stateId], references: [id], onDelete: Cascade)
-  shippingZones ShippingZone[]
-
-  @@unique([stateId, name])
-  @@map("cities")
-}
-
-model ShippingZone {
-  id              String                   @id @default(uuid())
-  name            String                   @unique
-  countryId       String?
-  stateId         String?
-  cityId          String?
-  priority        Int                      @default(0)
-  isActive        Boolean                  @default(true)
-  createdAt       DateTime                 @default(now())
-  updatedAt       DateTime                 @updatedAt
-  minOrder        Decimal?                 @db.Decimal(10, 2)
-  rate            Decimal?                 @db.Decimal(10, 2)
-  region          String?
-  shippingMethod  String?
-  shippingMethods LocationShippingMethod[]
-  city            City?                    @relation(fields: [cityId], references: [id])
-  country         Country?                 @relation(fields: [countryId], references: [id])
-  state           State?                   @relation(fields: [stateId], references: [id])
-
-  @@map("shipping_zones")
-}
-
-model LocationShippingMethod {
-  id                    String       @id @default(uuid())
-  zoneId                String
-  name                  String
-  price                 Decimal      @default(0) @db.Decimal(10, 2)
-  freeShippingThreshold Decimal?     @db.Decimal(10, 2)
-  estimatedDays         String?
-  status                Boolean      @default(true)
-  createdAt             DateTime     @default(now())
-  updatedAt             DateTime     @updatedAt
-  sortOrder             Int          @default(0)
-  cost                  Decimal      @default(0) @db.Decimal(10, 2)
-  description           String?
-  isActive              Boolean      @default(true)
-  minOrderAmount        Decimal?     @db.Decimal(10, 2)
-  type                  String       @default("FLAT")
-  zone                  ShippingZone @relation(fields: [zoneId], references: [id], onDelete: Cascade)
-
-  @@map("location_shipping_methods")
+  @@map("payment_methods")
 }
 
 model CountryPaymentMethod {
-  id              String        @id @default(uuid())
-  countryId       String
-  isActive        Boolean       @default(true)
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  id             String        @id @default(uuid())
+  countryId      String
   paymentMethodId String
-  country         Country       @relation(fields: [countryId], references: [id], onDelete: Cascade)
-  paymentMethod   PaymentMethod @relation(fields: [paymentMethodId], references: [id], onDelete: Cascade)
+  isActive       Boolean       @default(true)
+  country        Country       @relation(fields: [countryId], references: [id], onDelete: Cascade)
+  paymentMethod  PaymentMethod @relation(fields: [paymentMethodId], references: [id], onDelete: Cascade)
 
   @@unique([countryId, paymentMethodId])
   @@map("country_payment_methods")
 }
 
-model PaymentMethod {
-  id             String                 @id @default(uuid())
-  name           String                 @unique
-  code           String                 @unique
-  description    String?
-  icon           String?
-  config         Json?
-  isActive       Boolean                @default(true)
-  createdAt      DateTime               @default(now())
-  updatedAt      DateTime               @updatedAt
-  countryMethods CountryPaymentMethod[]
-
-  @@map("payment_methods")
-}
-
-model PickupStation {
-  id           String   @id @default(uuid())
-  name         String
-  address      String
-  city         String
-  state        String?
-  country      String   @default("Zambia")
-  latitude     Float?
-  longitude    Float?
-  phone        String?
-  email        String?
-  openingHours String?
-  description  String?
-  isActive     Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  image        String?
-
-  @@map("pickup_stations")
-}
-
-model WholesaleDeal {
-  id          String            @id @default(uuid())
-  accountId   String?
-  title       String
-  description String?
-  discount    Decimal?          @db.Decimal(5, 2)
-  minOrder    Decimal?          @db.Decimal(10, 2)
-  validUntil  DateTime?
-  isActive    Boolean           @default(true)
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
-  account     WholesaleAccount? @relation(fields: [accountId], references: [id])
-
-  @@map("wholesale_deals")
-}
-
-model CheckoutMethod {
-  id        String             @id @default(uuid())
-  name      String
-  type      String
-  icon      String?
-  sortOrder Int                @default(0)
-  isEnabled Boolean            @default(true)
-  countryId String?
-  createdAt DateTime           @default(now())
-  updatedAt DateTime           @updatedAt
-  providers CheckoutProvider[]
-  country   Country?           @relation(fields: [countryId], references: [id])
-
-  @@map("checkout_methods")
-}
-
-model CheckoutProvider {
-  id               String            @id @default(uuid())
-  checkoutMethodId String
-  name             String
-  description      String?
-  sortOrder        Int               @default(0)
-  isEnabled        Boolean           @default(true)
-  config           Json?
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
-  networks         CheckoutNetwork[]
-  checkoutMethod   CheckoutMethod    @relation(fields: [checkoutMethodId], references: [id], onDelete: Cascade)
-
-  @@map("checkout_providers")
-}
-
-model CheckoutNetwork {
-  id         String           @id @default(uuid())
-  providerId String
-  name       String
-  sortOrder  Int              @default(0)
-  isEnabled  Boolean          @default(true)
-  createdAt  DateTime         @default(now())
-  updatedAt  DateTime         @updatedAt
-  provider   CheckoutProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)
-
-  @@map("checkout_networks")
-}
-
-model SmsContact {
-  id        String   @id @default(uuid())
-  name      String?
-  phone     String   @unique
-  source    String   @default("Manual")
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([phone])
-  @@map("sms_contacts")
-}
-
-model EmailContact {
-  id        String   @id @default(uuid())
-  name      String?
-  email     String   @unique
-  source    String   @default("Manual")
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([email])
-  @@map("email_contacts")
-}
-
 model SmsSupportedCountry {
   id        String   @id @default(uuid())
   name      String
-  dialCode  String   @unique
+  dialCode  String
   isoCode   String
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
@@ -1172,14 +612,35 @@ model SmsSupportedCountry {
   @@map("sms_supported_countries")
 }
 
+model EmailContact {
+  id        String   @id @default(uuid())
+  email     String
+  name      String
+  source    String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("email_contacts")
+}
+
+model SmsContact {
+  id        String   @id @default(uuid())
+  phone     String
+  name      String
+  source    String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("sms_contacts")
+}
+
 enum UserRole {
   CUSTOMER
-  WHOLESALER
   ADMIN
   SUPER_ADMIN
   MANAGER
-  STAFF
-  WHOLESALE
 }
 
 enum AddressType {
@@ -1187,190 +648,16 @@ enum AddressType {
   BILLING
 }
 
-enum VariantType {
-  COLOR
-  SIZE
-  STORAGE
-  RAM
-  OTHER
-  MATERIAL
-}
-
-enum StockMovementType {
-  STOCK_IN
-  STOCK_OUT
-  RESERVED
-  RELEASED
-  ADJUSTMENT
-  RETURN
-  IN
-  OUT
-}
-
 enum OrderStatus {
   PENDING
-  CONFIRMED
   PROCESSING
   SHIPPED
   DELIVERED
   CANCELLED
   REFUNDED
-  RETURNED
-  IN_TRANSIT
-  COLLECTED
-}
-
-enum PaymentStatus {
-  PENDING
-  PAID
-  FAILED
-  REFUNDED
-  PARTIALLY_PAID
-}
-
-enum PaymentMethodType {
-  CASH
-  CARD
-  MOBILE_MONEY
-  CREDIT
-  BANK_TRANSFER
-  WALLET
-  WHATSAPP
-}
-
-enum WholesaleStatus {
-  PENDING
-  APPROVED
-  SUSPENDED
-  REJECTED
-}
-
-enum CreditAppStatus {
-  PENDING
-  APPROVED
-  REJECTED
-}
-
-enum CreditStatus {
-  ACTIVE
-  DEFAULTED
-  PAID
-  CLOSED
-  BLACKLISTED
-}
-
-enum CreditAccountStatus {
-  ACTIVE
-  PAID
-  OVERDUE
-  DEFAULTED
-  COMPLETED
-  CANCELLED
-}
-
-enum CreditPaymentStatus {
-  PENDING
-  PAID
-  OVERDUE
-  LATE
-  MISSED
-}
-
-enum TransactionType {
-  CREDIT
-  DEBIT
-  REFUND
-  PAYMENT
-  DEPOSIT
-  WITHDRAWAL
-}
-
-enum TransactionStatus {
-  PENDING
-  COMPLETED
-  FAILED
-}
-
-enum BookingStatus {
-  PENDING
-  CONFIRMED
-  COMPLETED
-  CANCELLED
-  IN_PROGRESS
-}
-
-enum TicketStatus {
-  OPEN
-  IN_PROGRESS
-  WAITING
-  RESOLVED
-  CLOSED
-}
-
-enum TicketPriority {
-  LOW
-  MEDIUM
-  HIGH
-  URGENT
 }
 
 enum SymbolPosition {
   BEFORE
   AFTER
 }
-
-model PaymentLink {
-  id                String           @id @default(uuid())
-  name              String?
-  amount            Decimal          @db.Decimal(10, 2)
-  currency          String           @default("ZMW")
-  note              String?
-  createdBy         String? // Admin user ID who created the link
-  expiresAt         DateTime?
-  isActive          Boolean          @default(true)
-  clicks            Int              @default(0)
-  createdAt         DateTime         @default(now())
-  updatedAt         DateTime         @updatedAt
-  directPayments    DirectPayment[]
-
-  @@map("payment_links")
-}
-
-model DirectPayment {
-  id               String        @id @default(uuid())
-  paymentNumber    String        @unique // e.g., PAY-12345
-  customerName     String? // Name of the customer for the payment
-  customerEmail    String? // Email of the customer for the payment
-  fee              Decimal?      @db.Decimal(10, 2) // Processing fee
-  totalPaid        Decimal?      @db.Decimal(10, 2) // Total amount paid including fee
-  receiptNumber    String?       @unique // Unique receipt number
-  paidAt           DateTime? // Timestamp when the payment was successfully made
-  adminNotes       String? // Internal notes by admin for manual payments
-  trackingLink     String? // Publicly shareable link for tracking payment status
-  userId           String?
-  paymentLinkId    String?
-  amount           Decimal       @db.Decimal(10, 2)
-  currency         String        @default("ZMW")
-  status           PaymentStatus @default(PENDING)
-  orderId          String? // Link to an order if applicable
-  order            Order?        @relation(fields: [orderId], references: [id])
-  paymentMethod    String? // MOBILE_MONEY, WHATSAPP, BANK_TRANSFER, etc.
-  providerName     String? // e.g., MTN, Airtel, Zamtel, Bank Name
-  networkName      String? // e.g., MTN, Airtel, Zamtel
-  paymentReference String? // External reference from gateway
-  paymentPhone     String?
-  note             String?
-  metadata         Json?
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
-  user             User?         @relation(fields: [userId], references: [id])
-  paymentLink      PaymentLink?  @relation(fields: [paymentLinkId], references: [id])
-  @@index([paymentNumber])
-  @@index([paymentReference])
-  @@index([status])
-  @@index([createdAt])
-
-  @@map("direct_payments")
-}
-
-
