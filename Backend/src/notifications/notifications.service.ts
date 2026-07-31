@@ -300,15 +300,23 @@ export class NotificationsService implements OnModuleInit {
       await this.sendToTokens([order.guestFcmToken], title, body, { ...data, url: `/track?orderNumber=${order.orderNumber}` });
     }
 
-    // Always send email for order status updates (including Zambia)
-    const email = order.user?.email;
-    if (email) {
-      await this.mailerService.sendMail(
-        email,
-        `Order #${order.orderNumber} Update`,
-        `Your order status is now: ${status}`,
-        ''
-      );
+    const isZambia = order.user?.country === 'ZM' || order.user?.country?.toLowerCase() === 'zambia';
+    const phone = order.user?.phone;
+
+    // For Zambia users, prioritize SMS over Email
+    if (isZambia && phone) {
+      await this.sendSMS(phone, body);
+    } else {
+      // Always send email for non-Zambia users or if phone is missing
+      const email = order.user?.email;
+      if (email) {
+        await this.mailerService.sendMail(
+          email,
+          `Order #${order.orderNumber} Update`,
+          `Your order status is now: ${status}`,
+          ''
+        );
+      }
     }
   }
 
@@ -330,14 +338,14 @@ export class NotificationsService implements OnModuleInit {
       }
     }
 
+    const isZambia = userCountry === 'ZM' || userCountry?.toLowerCase() === 'zambia';
+
     // Zambia: Send SMS for payment status
-    if (userCountry === 'ZM' && payload.phone) {
+    if (isZambia && payload.phone) {
       const message = `Payment ${payload.paymentNumber} ${isPaid ? 'successful' : 'failed'}. ${isPaid ? 'Thank you for your payment!' : 'Please try again or contact support.'}`;
       await this.sendSMS(payload.phone, message);
-    }
-
-    // Always send email for all users (including Zambia for record keeping)
-    if (payload.email) {
+    } else if (payload.email) {
+      // Send email for non-Zambia users or if phone is missing
       await this.mailerService.sendMail(
         payload.email, 
         `Payment ${isPaid ? 'Paid' : 'Failed'}`, 

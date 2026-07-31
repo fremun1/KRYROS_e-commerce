@@ -129,7 +129,10 @@ export class AuthController {
     @Body() body: SendOtpDto,
     @Request() req: AuthenticatedRequest,
   ) {
-    return this.authService.sendOtp(body.identifier, body.countryCode, req);
+    return this.authService.sendOtp(body.identifier, body.countryCode, req, {
+      email: body.email,
+      phone: body.phone,
+    });
   }
 
   @Post('verify-otp')
