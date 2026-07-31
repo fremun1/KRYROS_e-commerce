@@ -37,6 +37,7 @@ export class UsersService {
       avatar,
       role = UserRole.CUSTOMER,
       captchaToken: _captchaToken,
+      country,
       ...coreFields
     } = createUserDto;
     const normalizedEmail =
@@ -56,7 +57,7 @@ export class UsersService {
         ...(normalizedPhone !== undefined ? { phone: normalizedPhone } : {}),
         role,
         ...(avatarUrl !== undefined ? { avatar: avatarUrl } : {}),
-        isVerified: createUserDto.country === 'ZM' ? false : true,
+        ...(country !== undefined ? { country } : {}),
       },
     });
 
