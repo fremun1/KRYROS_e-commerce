@@ -11,6 +11,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { LocalStrategy } from './strategies/local.strategy';
 import { UsersModule } from '../users/users.module';
 import { PrismaModule } from '../prisma/prisma.module';
+import { CountriesModule } from '../countries/countries.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { PrismaModule } from '../prisma/prisma.module';
     PassportModule,
     CloudinaryModule,
     EmailModule,
+    CountriesModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => {
