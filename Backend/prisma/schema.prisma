@@ -432,6 +432,7 @@ model CreditProfile {
 model CreditPlan {
   id            String   @id @default(uuid())
   productId     String
+  categoryId    String?
   name          String
   months        Int
   interestRate  Decimal  @db.Decimal(5, 2)
@@ -443,6 +444,7 @@ model CreditPlan {
   category      Category? @relation(fields: [categoryId], references: [id])
 
   @@index([productId])
+  @@index([categoryId])
   @@map("credit_plans")
 }
 
@@ -481,6 +483,7 @@ model SupportTicket {
 model Notification {
   id        String   @id @default(uuid())
   userId    String?
+  orderId   String?
   title     String
   message   String
   data      String   @default("{}")
@@ -493,6 +496,7 @@ model Notification {
   order     Order?   @relation(fields: [orderId], references: [id])
 
   @@index([userId])
+  @@index([orderId])
   @@index([sent])
   @@index([scheduledAt])
   @@map("notifications")
