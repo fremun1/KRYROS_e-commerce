@@ -28,6 +28,7 @@ model User {
   twoFactorSecret          String?
   emailVerificationExpires DateTime?
   emailVerificationToken   String?
+  country                  String?
   addresses                Address[]
   creditAccounts           CreditAccount[]
   creditApplications       CreditApplication[]

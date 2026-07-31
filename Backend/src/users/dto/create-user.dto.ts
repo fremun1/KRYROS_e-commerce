@@ -67,4 +67,11 @@ export class CreateUserDto {
   @IsOptional()
   @IsString()
   captchaToken?: string;
+
+  @ApiProperty({ example: 'ZM', required: false })
+  @IsOptional()
+  @IsString()
+  @MaxLength(2, { message: 'Country code must be 2 characters' })
+  @Transform(({ value }) => value?.trim().toUpperCase())
+  country?: string;
 }

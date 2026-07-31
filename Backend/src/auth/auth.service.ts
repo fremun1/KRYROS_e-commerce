@@ -18,6 +18,7 @@ import { LoginDto } from './dto/login.dto';
 import { EmailService } from '../common/email/email.service';
 import { JwtPayload } from './interfaces/jwt-payload.interface';
 import { NotificationsService } from '../notifications/notifications.service';
+import { GeolocationService } from '../common/services/geolocation.service';
 
 const BCRYPT_ROUNDS = 12;
 const REFRESH_TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000;
@@ -41,6 +42,7 @@ export class AuthService {
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private emailService: EmailService,
     private notificationsService: NotificationsService,
+    private geolocationService: GeolocationService,
   ) {
     // ── Redis health check ────────────────────────────────────────────────────
     // The failed-login lockout counter is stored via cacheManager. If REDIS_URL
@@ -79,6 +81,57 @@ export class AuthService {
 
   private async clearFailedAttempts(identifier: string): Promise<void> {
     await this.cacheManager.del(this.lockKey(identifier));
+  }
+
+  // ── Country Detection Helper ───────────────────────────────────────────────────
+  private async resolveCountryCode(request: any, countryCode?: string): Promise<string> {
+    // Priority: 1. Explicit country code from request, 2. IP-based detection, 3. Default to 'US'
+    if (countryCode) {
+      return countryCode.toUpperCase();
+    }
+
+    try {
+      const clientIp = this.geolocationService.getClientIp(request);
+      if (clientIp && clientIp !== 'unknown') {
+        const geoData = await this.geolocationService.detectCountryByIp(clientIp);
+        if (geoData && geoData.countryCode) {
+          return geoData.countryCode;
+        }
+      }
+    } catch (error) {
+      console.warn('[AuthService] Geolocation detection failed:', error.message);
+    }
+
+    return 'US'; // Default fallback
+  }
+
+  private isZambiaCountry(countryCode: string): boolean {
+    return countryCode === 'ZM';
+  }
+
+  // ── OTP Helper Methods ───────────────────────────────────────────────────────────
+  private generateOtpCode(): string {
+    return Math.floor(100000 + Math.random() * 900000).toString();
+  }
+
+  private async sendOtpViaEmail(email: string, otpCode: string): Promise<void> {
+    await this.emailService.sendOtp(email, otpCode);
+  }
+
+  private async sendOtpViaSms(phone: string, otpCode: string): Promise<void> {
+    await this.notificationsService.sendSMS(phone, `Your KRYROS verification code is: ${otpCode}. Valid for 10 minutes.`);
+  }
+
+  private normalizeIdentifier(value: string): string {
+    const trimmed = value.trim();
+    if (!trimmed || trimmed.includes('@')) return trimmed.toLowerCase();
+
+    const normalizedPhone = trimmed.replace(/[^\d+]/g, '');
+    if (normalizedPhone.startsWith('+')) {
+      return `+${normalizedPhone.slice(1).replace(/\D/g, '')}`;
+    }
+
+    return normalizedPhone.replace(/\D/g, '');
   }
 
   private buildPayload(user: {
@@ -404,30 +457,184 @@ export class AuthService {
     return { exists: !!user };
   }
 
-  async sendOtp(email: string): Promise<void> {
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
-    const cacheKey = `otp:${email.toLowerCase().trim()}`;
-    
-    // Store OTP in cache for 10 minutes
-    await this.cacheManager.set(cacheKey, code, 10 * 60 * 1000);
-    
-    await this.emailService.sendOtp(email, code);
-    
-    if (process.env.NODE_ENV !== 'production') {
-      console.log(`[DEV] OTP for ${email}: ${code}`);
+  async sendOtp(
+    identifier: string,
+    countryCode?: string,
+    request?: any,
+  ): Promise<{ success: boolean; message: string; otpChannel: string; destination: string }> {
+    const normalizedIdentifier = this.normalizeIdentifier(identifier);
+    const isEmail = normalizedIdentifier.includes('@');
+
+    // Check if user already exists
+    const existingUser = await this.usersService.findByIdentifier(normalizedIdentifier);
+    if (existingUser) {
+      throw new ConflictException('An account with this identifier already exists. Please login instead.');
     }
+
+    // Resolve country code
+    const resolvedCountryCode = await this.resolveCountryCode(request, countryCode);
+    const isZambia = this.isZambiaCountry(resolvedCountryCode);
+
+    // Determine OTP channel based on country and identifier type
+    let otpChannel: 'email' | 'sms';
+    let destination: string;
+
+    if (isZambia) {
+      // Zambia: Always require phone for SMS OTP
+      if (isEmail) {
+        throw new BadRequestException('For Zambia registration, please provide a phone number for SMS verification.');
+      }
+      otpChannel = 'sms';
+      destination = normalizedIdentifier;
+    } else {
+      // Other countries: Use email OTP
+      if (!isEmail) {
+        throw new BadRequestException('For international registration, please provide an email address for verification.');
+      }
+      otpChannel = 'email';
+      destination = normalizedIdentifier;
+    }
+
+    // Generate OTP code
+    const otpCode = this.generateOtpCode();
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+    // Clean up any existing pending registration for this identifier
+    await this.prisma.pendingRegistration.deleteMany({
+      where: {
+        OR: [
+          { email: isEmail ? normalizedIdentifier : undefined },
+          { phone: !isEmail ? normalizedIdentifier : undefined },
+        ],
+      },
+    });
+
+    // Store pending registration with temporary placeholder data
+    await this.prisma.pendingRegistration.create({
+      data: {
+        email: isEmail ? normalizedIdentifier : null,
+        phone: !isEmail ? normalizedIdentifier : null,
+        password: '', // Will be set in verifyOtp
+        firstName: '',
+        lastName: '',
+        countryCode: resolvedCountryCode,
+        otpCode,
+        otpChannel,
+        expiresAt,
+      },
+    });
+
+    // Send OTP
+    if (otpChannel === 'email') {
+      await this.sendOtpViaEmail(destination, otpCode);
+    } else {
+      await this.sendOtpViaSms(destination, otpCode);
+    }
+
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`[DEV] OTP for ${destination}: ${otpCode}`);
+    }
+
+    return {
+      success: true,
+      message: `OTP sent via ${otpChannel === 'email' ? 'email' : 'SMS'}`,
+      otpChannel,
+      destination: this.maskIdentifier(destination, otpChannel),
+    };
   }
 
-  async verifyOtp(email: string, code: string): Promise<void> {
-    const cacheKey = `otp:${email.toLowerCase().trim()}`;
-    const storedCode = await this.cacheManager.get<string>(cacheKey);
-    
-    if (!storedCode || storedCode !== code) {
-      throw new BadRequestException('Invalid or expired verification code');
+  async verifyOtp(
+    identifier: string,
+    otpCode: string,
+    userData: {
+      password: string;
+      firstName: string;
+      lastName: string;
+    },
+  ): Promise<{ success: boolean; message: string; user?: any; accessToken?: string; refreshToken?: string }> {
+    const normalizedIdentifier = this.normalizeIdentifier(identifier);
+    const isEmail = normalizedIdentifier.includes('@');
+
+    // Find pending registration
+    const pending = await this.prisma.pendingRegistration.findFirst({
+      where: {
+        AND: [
+          { email: isEmail ? normalizedIdentifier : null },
+          { phone: !isEmail ? normalizedIdentifier : null },
+          { otpCode },
+          { expiresAt: { gt: new Date() } },
+        ],
+      },
+    });
+
+    if (!pending) {
+      throw new BadRequestException('Invalid or expired OTP code');
     }
-    
-    // Clear OTP after successful verification
-    await this.cacheManager.del(cacheKey);
+
+    // Check if user already exists (double-check)
+    const existingUser = await this.usersService.findByIdentifier(normalizedIdentifier);
+    if (existingUser) {
+      await this.prisma.pendingRegistration.delete({ where: { id: pending.id } });
+      throw new ConflictException('An account with this identifier already exists. Please login instead.');
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(userData.password, BCRYPT_ROUNDS);
+
+    // Create user
+    const user = await this.usersService.create({
+      email: pending.email,
+      phone: pending.phone,
+      password: hashedPassword,
+      firstName: userData.firstName,
+      lastName: userData.lastName,
+      country: pending.countryCode,
+    });
+
+    // Delete pending registration
+    await this.prisma.pendingRegistration.delete({ where: { id: pending.id } });
+
+    // Generate tokens
+    const { password: _pw, ...result } = user;
+    const payload = this.buildPayload(result);
+    const [accessToken, refreshToken] = await Promise.all([
+      Promise.resolve(this.signAccessToken(payload)),
+      this.createRefreshToken(result.id),
+    ]);
+
+    // Notify Admin of New User Registration
+    this.notificationsService.sendToAdmins(
+      'New User Registered! 🆕',
+      `${result.firstName} ${result.lastName} (${result.email || result.phone}) just joined KRYROS.`,
+      { type: 'USER_REGISTER', userId: result.id, url: `/users?search=${encodeURIComponent(result.email || result.phone || '')}` }
+    ).catch(() => {});
+
+    // Send Welcome Notification to New User
+    this.notificationsService.sendUserRegisteredNotification(result.id)
+      .catch(e => console.warn('User registration notification failed:', e?.message));
+
+    return {
+      success: true,
+      message: 'Account created successfully',
+      user: result,
+      accessToken,
+      refreshToken,
+    };
+  }
+
+  private maskIdentifier(identifier: string, channel: 'email' | 'sms'): string {
+    if (channel === 'email') {
+      const [local, domain] = identifier.split('@');
+      const maskedLocal = local.length > 2 
+        ? local.substring(0, 2) + '*'.repeat(local.length - 2) 
+        : local;
+      return `${maskedLocal}@${domain}`;
+    } else {
+      // Mask phone number (show last 4 digits)
+      const cleaned = identifier.replace(/\D/g, '');
+      if (cleaned.length <= 4) return identifier;
+      return '*'.repeat(cleaned.length - 4) + cleaned.substring(cleaned.length - 4);
+    }
   }
 
   async resetPassword(rawToken: string, newPassword: string): Promise<void> {

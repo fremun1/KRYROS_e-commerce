@@ -135,18 +135,25 @@ export default function AuthPage() {
     if (!firstName.trim() || !lastName.trim()) { setNotice("Please enter your first and last name."); return; }
     setLocalLoading(true);
     try {
-      const res = await register({ 
-        identifier: normalizeIdentifier(identifier), 
-        password, 
-        firstName: firstName.trim(), 
-        lastName: lastName.trim(),
-        phone: phone.trim() ? `${countryCode}${phone.trim()}` : undefined
+      // Send OTP with country detection
+      const otpRes = await fetch(`${EFFECTIVE_API_BASE}/api/auth/send-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          identifier: normalizeIdentifier(identifier),
+          countryCode: countryCode.replace('+', '') // Convert +260 to ZM format
+        })
       });
-      if (!res.success) { setLocalLoading(false); setNotice(res.error || "Registration failed."); return; }
-      if (isEmail) {
-        try { await fetch(`${EFFECTIVE_API_BASE}/api/auth/send-otp`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: normalizeIdentifier(identifier) }) }); }
-        catch { goTo("success"); setLocalLoading(false); return; }
+      
+      if (!otpRes.ok) {
+        const data = await otpRes.json().catch(() => ({}));
+        setLocalLoading(false);
+        setNotice(data.message || "Failed to send verification code.");
+        return;
       }
+      
+      const otpData = await otpRes.json();
+      setNotice(`OTP sent via ${otpData.otpChannel === 'email' ? 'email' : 'SMS'} to ${otpData.destination}`);
       goTo("register-otp");
     } catch { setNotice("Network error."); }
     finally { setLocalLoading(false); }
@@ -157,10 +164,28 @@ export default function AuthPage() {
     if (code.length !== OTP_LENGTH) { setNotice("Please enter the complete 6-digit code."); return; }
     setNotice(""); setLocalLoading(true);
     try {
-      const res = await fetch(`${EFFECTIVE_API_BASE}/api/auth/verify-otp`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: normalizeIdentifier(identifier), code }) });
-      if (res.ok) goTo("success");
-      else { const data = await res.json().catch(() => ({})); setNotice(data.message || "Invalid code."); }
-    } catch { goTo("success"); }
+      const res = await fetch(`${EFFECTIVE_API_BASE}/api/auth/verify-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          identifier: normalizeIdentifier(identifier),
+          code,
+          password,
+          firstName: firstName.trim(),
+          lastName: lastName.trim()
+        })
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        // Set session and redirect to dashboard
+        useAuthStore.getState().setSession(data.user, data.accessToken, data.refreshToken);
+        goTo("success");
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setNotice(data.message || "Invalid code.");
+      }
+    } catch { setNotice("Network error."); }
     finally { setLocalLoading(false); }
   };
 
@@ -168,9 +193,24 @@ export default function AuthPage() {
     if (countdown > 0) return;
     setNotice(""); setLocalLoading(true);
     try {
-      await fetch(`${EFFECTIVE_API_BASE}/api/auth/send-otp`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: normalizeIdentifier(identifier) }) });
-      setCountdown(OTP_COUNTDOWN); setNotice("A new code has been sent.");
-    } catch { setNotice("Failed to resend code."); }
+      const res = await fetch(`${EFFECTIVE_API_BASE}/api/auth/send-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          identifier: normalizeIdentifier(identifier),
+          countryCode: countryCode.replace('+', '')
+        })
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        setCountdown(OTP_COUNTDOWN);
+        setNotice(`A new code has been sent via ${data.otpChannel === 'email' ? 'email' : 'SMS'}.`);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setNotice(data.message || "Failed to resend code.");
+      }
+    } catch { setNotice("Network error."); }
     finally { setLocalLoading(false); }
   };
 

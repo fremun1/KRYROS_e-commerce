@@ -124,18 +124,26 @@ export class AuthController {
 
   @Post('send-otp')
   @Throttle({ default: { ttl: 60000, limit: 5 } })
-  @ApiOperation({ summary: 'Send a 6-digit OTP to the provided email' })
-  async sendOtp(@Body() body: SendOtpDto) {
-    await this.authService.sendOtp(body.email);
-    return { message: 'OTP sent successfully' };
+  @ApiOperation({ summary: 'Send OTP for registration' })
+  async sendOtp(
+    @Body() body: SendOtpDto,
+    @Request() req: AuthenticatedRequest,
+  ) {
+    return this.authService.sendOtp(body.identifier, body.countryCode, req);
   }
 
   @Post('verify-otp')
   @Throttle({ default: { ttl: 60000, limit: 10 } })
-  @ApiOperation({ summary: 'Verify the 6-digit OTP code' })
+  @ApiOperation({ summary: 'Verify OTP and complete registration' })
   async verifyOtp(@Body() body: VerifyOtpDto) {
-    await this.authService.verifyOtp(body.email, body.code);
-    return { message: 'OTP verified successfully' };
+    if (!body.password || !body.firstName || !body.lastName) {
+      throw new BadRequestException('Password, first name, and last name are required to complete registration');
+    }
+    return this.authService.verifyOtp(body.identifier, body.code, {
+      password: body.password,
+      firstName: body.firstName,
+      lastName: body.lastName,
+    });
   }
 
   @Get('verify-email')

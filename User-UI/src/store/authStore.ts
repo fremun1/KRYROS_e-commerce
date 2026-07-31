@@ -99,6 +99,7 @@ interface AuthState {
   logout: () => Promise<void>;
   getMe: () => Promise<void>;
   clearError: () => void;
+  setSession: (user: any, accessToken: string, refreshToken: string) => void;
 }
 
 export function isAuthenticated(state: Pick<AuthState, 'token' | 'user'>): boolean {
@@ -323,6 +324,11 @@ export const useAuthStore = create<AuthState>()(
       },
 
       clearError: () => set({ error: null }),
+
+      setSession: (user, accessToken, refreshToken) => {
+        set({ user, token: accessToken, refreshToken, error: null, isLoading: false });
+        void hydrateNotifications(accessToken);
+      },
     }),
     {
       name: 'kryros-auth',
