@@ -378,18 +378,20 @@ export class NotificationsController {
     customerName?: string;
     paymentMethod?: string;
     status?: string;
+    countryCode?: string;  // Optional: ZM for Zambia, otherwise defaults to email
   }) {
     const status = body.status || 'completed';
     const statusEmoji = status === 'failed' ? '❌' : '✅';
     const statusLabel = status === 'failed' ? 'FAILED' : 'SUCCESSFUL';
     const customerName = body.customerName || 'Customer';
     const paymentMethod = body.paymentMethod || 'Payment';
+    const isZambia = body.countryCode === 'ZM';
 
     let smsSent = false;
     let emailSent = false;
 
-    // SMS receipt
-    if (body.phone?.trim()) {
+    // Zambia: SMS for payment receipts
+    if (isZambia && body.phone?.trim()) {
       try {
         const smsText =
           `${statusEmoji} KRYROS Payment ${statusLabel}\n` +
@@ -402,7 +404,7 @@ export class NotificationsController {
       } catch { smsSent = false; }
     }
 
-    // Email receipt
+    // All countries: Email for payment receipts (primary for non-Zambia, secondary for Zambia)
     if (body.email?.trim()) {
       try {
         const subject = `${statusEmoji} KRYROS Payment ${statusLabel} — ${body.orderRef}`;

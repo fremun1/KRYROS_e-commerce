@@ -164,11 +164,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // ── Logout ─────────────────────────────────────────────────────────────────
   // BFF revokes the refresh token server-side and clears httpOnly cookies.
   const logout = async () => {
-    // Fire-and-forget — don't block the UI redirect on network latency
-    axios.post("/api/bff/logout").catch(() => {});
-
+    // Immediately clear local state to prevent blank page flash
     removeToken();          // clears legacy client cookie + user from localStorage
     setUserState(null);
+    
+    // Fire-and-forget server logout — don't block the UI redirect on network latency
+    axios.post("/api/bff/logout").catch(() => {});
+
+    // Redirect to login after clearing state
     window.location.href = "/login";
   };
 

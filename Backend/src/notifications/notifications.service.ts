@@ -300,23 +300,16 @@ export class NotificationsService implements OnModuleInit {
       await this.sendToTokens([order.guestFcmToken], title, body, { ...data, url: `/track?orderNumber=${order.orderNumber}` });
     }
 
-    const isZambia = order.user?.country === 'ZM' || order.user?.country?.toLowerCase() === 'zambia';
-    const phone = order.user?.phone;
-
-    // For Zambia users, prioritize SMS over Email
-    if (isZambia && phone) {
-      await this.sendSMS(phone, body);
-    } else {
-      // Always send email for non-Zambia users or if phone is missing
-      const email = order.user?.email;
-      if (email) {
-        await this.mailerService.sendMail(
-          email,
-          `Order #${order.orderNumber} Update`,
-          `Your order status is now: ${status}`,
-          ''
-        );
-      }
+    // Order/shipping updates use EMAIL for ALL customers, including Zambia
+    // SMS is reserved for payment-result notifications only
+    const email = order.user?.email;
+    if (email) {
+      await this.mailerService.sendMail(
+        email,
+        `Order #${order.orderNumber} Update`,
+        `Your order status is now: ${status}`,
+        ''
+      );
     }
   }
 
@@ -406,10 +399,44 @@ export class NotificationsService implements OnModuleInit {
     }
   }
 
-  async checkDatabase() { return { status: 'OK' }; }
-  async checkFirebase() { return { status: 'OK' }; }
-  async checkBeem() { return { status: 'OK' }; }
-  async checkSmtp() { return { status: 'OK' }; }
+  async checkDatabase() {
+    try {
+      const count = await this.prisma.notification.count();
+      return { status: 'OK', message: `Database connected. ${count} notifications in system.` };
+    } catch (error) {
+      return { status: 'ERROR', message: `Database connection failed: ${(error as any).message}` };
+    }
+  }
+
+  async checkFirebase() {
+    try {
+      if (!this.isPushConfigured) {
+        return { status: 'UNCONFIGURED', message: 'Firebase not configured. Set FIREBASE_SERVICE_ACCOUNT_JSON to enable push notifications.' };
+      }
+      return { status: 'OK', message: 'Firebase FCM is configured and ready.' };
+    } catch (error) {
+      return { status: 'ERROR', message: `Firebase check failed: ${(error as any).message}` };
+    }
+  }
+
+  async checkBeem() {
+    const apiKey = this.configService.get('BEEM_API_KEY');
+    const secretKey = this.configService.get('BEEM_SECRET_KEY');
+    if (!apiKey || !secretKey) {
+      return { status: 'UNCONFIGURED', message: 'SMS provider (Beem Africa) not configured. Set BEEM_API_KEY and BEEM_SECRET_KEY.' };
+    }
+    return { status: 'OK', message: 'SMS provider (Beem Africa) credentials configured. Zambia + International coverage.' };
+  }
+
+  async checkSmtp() {
+    const host = this.configService.get('SMTP_HOST');
+    const user = this.configService.get('SMTP_USER');
+    const pass = this.configService.get('SMTP_PASS');
+    if (!user || !pass) {
+      return { status: 'UNCONFIGURED', message: 'SMTP not configured. Set SMTP_USER and SMTP_PASS to enable email delivery.' };
+    }
+    return { status: 'OK', message: `SMTP configured (${host}). Email delivery ready.` };
+  }
   async deleteDevice(id: string) { await this.prisma.userDevice.delete({ where: { id } }); }
   async getSmsCountries() { return this.prisma.smsSupportedCountry.findMany(); }
   async addSmsCountry(name: string, dialCode: string, isoCode: string) { return this.prisma.smsSupportedCountry.create({ data: { name, dialCode, isoCode } }); }

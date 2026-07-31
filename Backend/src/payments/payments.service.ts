@@ -725,6 +725,7 @@ export class PaymentsService {
           // Send notifications (non-blocking)
           if (newStatus === 'PAID' || newStatus === 'FAILED') {
             this.notificationsService.sendPaymentStatusNotification({
+              userId: updatedPayment.userId,  // Include userId so service can determine country
               email: updatedPayment.customerEmail,
               phone: updatedPayment.paymentPhone,
               status: newStatus,
