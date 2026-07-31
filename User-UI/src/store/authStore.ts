@@ -270,11 +270,12 @@ export const useAuthStore = create<AuthState>()(
           }
         }
         set({ token: null, refreshToken: null, user: null, error: null });
+        // Force redirect to login page to prevent blank screen
         if (typeof window !== 'undefined') {
           try {
             window.sessionStorage?.clear?.();
           } catch { /* ignore */ }
-          window.location.replace('/');
+          window.location.href = '/login';
         }
       },
 

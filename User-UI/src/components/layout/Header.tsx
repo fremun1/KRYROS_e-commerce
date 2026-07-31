@@ -117,6 +117,8 @@ export default function Header() {
   const handleLogout = async () => {
     setUserMenuOpen(false);
     await logout();
+    // Force redirect to login page
+    setLocation('/login');
   };
 
   const navigateTo = (path: string) => {

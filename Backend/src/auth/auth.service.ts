@@ -310,6 +310,12 @@ export class AuthService {
       await this.verifyCaptcha(createUserDto.captchaToken);
     }
 
+    // Direct registration is now restricted to admin-only use
+    // Regular users must use the OTP flow (send-otp -> verify-otp)
+    if (!createUserDto.role || createUserDto.role === 'CUSTOMER') {
+      throw new BadRequestException('Direct registration is disabled. Please use the OTP verification flow (send-otp -> verify-otp).');
+    }
+
     if (!createUserDto.email && !createUserDto.phone) {
       throw new ConflictException('Either email or phone is required');
     }
