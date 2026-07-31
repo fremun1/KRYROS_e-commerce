@@ -122,6 +122,7 @@ const nextConfig: NextConfig = {
       ...proxy("countries"),
       ...proxy("states"),
       ...proxy("cities"),
+      ...proxy("pickup-stations"),
       ...proxy("credit"),
       ...proxy("wallet"),
       ...proxy("wholesale"),

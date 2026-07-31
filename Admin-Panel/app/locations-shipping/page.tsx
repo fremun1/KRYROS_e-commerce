@@ -320,7 +320,7 @@ function ShippingContent() {
       const id=(res as any)?.data?.id||String(Date.now());
       setPickups(d=>[...d,{id,...pickupForm}]);
       toast.success('Pickup station added'); setAddPickupOpen(false); setPickupForm({...EMPTY_PICKUP});
-    }catch{toast.error('Failed to add pickup station');}
+    }catch(e:any){toast.error(e?.response?.data?.message||'Failed to add pickup station');}
     setLoadingPickup(false);
   };
 
@@ -340,7 +340,7 @@ function ShippingContent() {
       });
       setPickups(d=>d.map(p=>p.id===editPickup.id?{...p,...pickupForm}:p));
       toast.success('Pickup station updated'); setEditPickup(null);
-    }catch{toast.error('Failed to update pickup station');}
+    }catch(e:any){toast.error(e?.response?.data?.message||'Failed to update pickup station');}
     setLoadingPickup(false);
   };
 
@@ -360,7 +360,7 @@ function ShippingContent() {
       await deletePickupStation(deletePickup.id);
       setPickups(d=>d.filter(p=>p.id!==deletePickup.id));
       toast.success('Pickup station deleted'); setDeletePickup(null);
-    }catch{toast.error('Failed to delete pickup station');}
+    }catch(e:any){toast.error(e?.response?.data?.message||'Failed to delete pickup station');}
     setLoadingPickup(false);
   };
 
