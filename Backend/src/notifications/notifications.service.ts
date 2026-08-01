@@ -313,12 +313,13 @@ export class NotificationsService implements OnModuleInit {
     // SMS is reserved for payment-result notifications only
     const email = order.user?.email;
     if (email) {
-      await this.mailerService.sendMail(
-        email,
-        `Order #${order.orderNumber} Update`,
-        `Your order status is now: ${status}`,
-        ''
-      );
+      await this.mailerService.sendOrderStatusEmail({
+        to: email,
+        firstName: order.user?.firstName || 'Customer',
+        orderNumber: order.orderNumber,
+        status: status,
+        trackingUrl: `${this.configService.get('FRONTEND_URL')}/orders?id=${order.id}`
+      });
     }
   }
 
@@ -348,12 +349,16 @@ export class NotificationsService implements OnModuleInit {
       await this.sendSMS(payload.phone, message);
     } else if (payload.email) {
       // Send email for non-Zambia users or if phone is missing
-      await this.mailerService.sendMail(
-        payload.email, 
-        `Payment ${isPaid ? 'Paid' : 'Failed'}`, 
-        `Payment ${payload.paymentNumber} ${isPaid ? 'Paid' : 'Failed'}`, 
-        ''
-      );
+      await this.mailerService.sendAnnouncementEmail({
+        to: payload.email,
+        firstName: '',
+        subject: `Payment ${isPaid ? 'Paid' : 'Failed'}`,
+        headline: `Payment ${isPaid ? 'Successful' : 'Failed'}`,
+        bodyHtml: `<p>Payment <strong>${payload.paymentNumber}</strong> for your order has been <strong>${isPaid ? 'successfully processed' : 'failed'}</strong>.</p>
+                   <p>${isPaid ? 'Thank you for your payment! We are now processing your order.' : 'Please try again or contact our support team for assistance.'}</p>`,
+        ctaText: 'View Order Status',
+        ctaUrl: `${this.configService.get('FRONTEND_URL')}/dashboard`
+      });
     }
   }
 

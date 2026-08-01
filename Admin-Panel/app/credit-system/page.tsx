@@ -478,7 +478,8 @@ function CreditContent() {
               name: r.name, sku: r.sku, price: String(r.rawPrice || ''), status: r.status,
               description: r.description, specifications: r.specifications,
               creditMessage: r.creditMessage, creditMinimum: r.creditMinimum,
-              stockTotal: String(r.stockTotal || 0), stockCurrent: String(r.stockCurrent || 0)
+              stockTotal: String(r.stockTotal || 0), stockCurrent: String(r.stockCurrent || 0),
+              condition: r.condition || 'New'
             });
             setProdImages(r.images || []);
             setEditProd(r);

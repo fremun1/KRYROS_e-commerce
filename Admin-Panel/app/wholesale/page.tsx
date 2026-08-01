@@ -173,7 +173,7 @@ function WholesaleContent() {
   const [iForm, setIForm] = useState({ 
     name:'', sku:'', price:'', moq:'', category:'Electronics', status:'Active',
     description: '', imageUrl: '', images: [] as string[], specifications: '',
-    stockTotal: '100', stockCurrent: '100'
+    stockTotal: '100', stockCurrent: '100', condition: 'New'
   });
   const [invImages, setInvImages] = useState<string[]>([]);
   const ifp = (k:string) => (v:string) => setIForm(f=>({...f,[k]:v}));
@@ -298,6 +298,7 @@ function WholesaleContent() {
         stockCurrent: Number(iForm.stockCurrent) || 0,
         replaceImages: invImages.length > 0,
         imageDataUrls: invImages,
+        condition: iForm.condition,
         specifications: iForm.specifications ? [{ key: 'Specifications', value: iForm.specifications }] : undefined
       });
       toast.success('Wholesale product added');
@@ -334,6 +335,7 @@ function WholesaleContent() {
         stockCurrent: Number(iForm.stockCurrent) || 0,
         replaceImages: invImages.length > 0,
         imageDataUrls: invImages,
+        condition: iForm.condition,
         specifications: iForm.specifications ? [{ key: 'Specifications', value: iForm.specifications }] : []
       });
       toast.success('Wholesale product updated');
@@ -380,6 +382,9 @@ function WholesaleContent() {
       <div style={{ display:'grid', gridTemplateColumns:'repeat(2, minmax(0, 1fr))', gap:'12px' }}>
         <FormField label="Total Stock" value={iForm.stockTotal} onChange={ifp('stockTotal')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="100" />
         <FormField label="Current Stock" value={iForm.stockCurrent} onChange={ifp('stockCurrent')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="100" />
+      </div>
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(2, minmax(0, 1fr))', gap:'12px' }}>
+        <FormField label="Product Condition" value={iForm.condition} onChange={ifp('condition')} options={['New', 'Used', 'Refurbished']} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
       </div>
       <FormField label="Description" value={iForm.description} onChange={ifp('description')} type="textarea" border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Describe the wholesale product..." />
       <FormField label="Specifications" value={iForm.specifications} onChange={ifp('specifications')} type="textarea" border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. Color: Black | RAM: 8GB | Storage: 256GB" />
@@ -530,7 +535,8 @@ function WholesaleContent() {
                   images: i.images || [],
                   specifications: i.specifications || '',
                   stockTotal: String(i.stockTotal || 100),
-                  stockCurrent: String(i.stockCurrent || 100)
+                  stockCurrent: String(i.stockCurrent || 100),
+                  condition: i.condition || 'New'
                 }); 
                 setInvImages(i.images || []); 
               }} 
