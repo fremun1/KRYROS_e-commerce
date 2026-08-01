@@ -22,7 +22,7 @@ export default function AboutPage() {
   }, []);
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-5 pb-28">
+    <div className="max-w-2xl mx-auto px-4 py-5 pb-6">
       {/* Header */}
       <div className="flex items-start justify-between mb-5">
         <div className="flex-1">

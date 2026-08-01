@@ -2,7 +2,7 @@ import { ShieldCheck, Lock, AlertTriangle, Eye } from "lucide-react";
 
 export default function SecurityPage() {
   return (
-    <div className="max-w-2xl mx-auto px-4 py-5 pb-28">
+    <div className="max-w-2xl mx-auto px-4 py-5 pb-6">
       <h1 className="text-2xl font-black text-foreground mb-0.5">Security</h1>
       <p className="text-xs font-semibold text-foreground mb-1">Your security is our priority.</p>
       <p className="text-xs text-muted-foreground mb-5">

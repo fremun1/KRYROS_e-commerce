@@ -879,7 +879,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div className="max-w-5xl mx-auto px-4 md:px-6 py-6 pb-28 lg:pb-10">
+        <div className="max-w-5xl mx-auto px-4 md:px-6 py-6 pb-6 lg:pb-10">
 
           {/* Profile Section */}
           {activeSection === "profile" && <ProfileSection />}

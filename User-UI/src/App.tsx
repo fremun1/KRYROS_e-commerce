@@ -402,7 +402,7 @@ function AppRoutes() {
       {/* <PageTransitionLoader visible={transitioning} /> */}
       {!hideShell && <Header />}
       <Suspense fallback={<PageLoader />}>
-        <div className="pb-16 md:pb-0">
+        <div className="pb-0">
           <Switch>
           <Route path="/" component={HomePage} />
           <Route path="/shop" component={ShopPage} />
@@ -458,8 +458,9 @@ function AppRoutes() {
         </Switch>
         </div>
       </Suspense>
-      <div className="md:hidden" style={{ height: "calc(56px + env(safe-area-inset-bottom, 0px))" }} /> {/* Spacer for Bottom Nav */}
       {!hideShell && <Footer />}
+      {/* Spacer for MobileBottomNav — only on mobile, sits after footer */}
+      <div className="md:hidden" style={{ height: "calc(56px + env(safe-area-inset-bottom, 0px))" }} />
       <MobileBottomNav />
       <SupportFloatingButtons />
     </>

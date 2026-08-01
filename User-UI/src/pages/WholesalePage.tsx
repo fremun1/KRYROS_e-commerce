@@ -47,7 +47,7 @@ export default function WholesalePage() {
 
   return (
     <ErrorBoundary pageName="Wholesale">
-      <div className="pb-28 md:pb-10 max-w-7xl mx-auto">
+      <div className="pb-6 md:pb-10 max-w-7xl mx-auto">
         <div className="px-4 md:px-8 py-6 border-b border-border">
           <h1 className="text-2xl font-black text-foreground">Wholesale</h1>
           <p className="text-sm text-muted-foreground mt-2">
