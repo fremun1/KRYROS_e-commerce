@@ -123,8 +123,14 @@ export class NotificationsService implements OnModuleInit {
           if (v !== null && v !== undefined) stringifiedData[k] = typeof v === 'string' ? v : JSON.stringify(v);
         }
       }
+      const imageUrl = data?.imageUrl;
+
       const message: admin.messaging.MulticastMessage = {
-        notification: { title, body },
+        notification: { 
+          title, 
+          body,
+          ...(imageUrl ? { image: imageUrl } : {})
+        },
         tokens,
         data: { ...stringifiedData, click_action: 'FLUTTER_NOTIFICATION_CLICK' },
         android: { 
@@ -134,7 +140,8 @@ export class NotificationsService implements OnModuleInit {
             clickAction: 'FLUTTER_NOTIFICATION_CLICK', 
             sound: 'default',
             title,
-            body
+            body,
+            ...(imageUrl ? { imageUrl } : {})
           } 
         },
         apns: { 
@@ -142,9 +149,11 @@ export class NotificationsService implements OnModuleInit {
             aps: { 
               sound: 'default', 
               badge: 1,
-              alert: { title, body }
+              alert: { title, body },
+              ...(imageUrl ? { 'mutable-content': 1 } : {})
             } 
-          } 
+          },
+          ...(imageUrl ? { fcmOptions: { imageUrl } } : {})
         },
       };
       const response = await admin.messaging().sendEachForMulticast(message);
