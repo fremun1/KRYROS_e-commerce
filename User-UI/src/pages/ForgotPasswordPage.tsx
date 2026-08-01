@@ -33,7 +33,7 @@ function evaluatePassword(pw: string): { score: number; checks: PasswordChecks; 
 }
 
 export default function ForgotPasswordPage() {
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
   const [step, setStep] = useState<ForgotPasswordStep>("request");
   const [identifier, setIdentifier] = useState("");
   const [token, setToken] = useState("");
@@ -56,11 +56,9 @@ export default function ForgotPasswordPage() {
       if (tokenParam) {
         setToken(tokenParam);
         setStep("reset");
-        // Clear query params to keep URL clean but stay on the page
-        // window.history.replaceState({}, '', window.location.pathname);
       }
     }
-  }, [setLocation]); // Re-run if location changes
+  }, [location]); // Re-run if location changes
 
   const handleRequestReset = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,8 +81,7 @@ export default function ForgotPasswordPage() {
       if (res.ok) {
         setNotice("If an account with that identifier exists, a password reset link has been sent to your email.");
         setIdentifier("");
-        // No auto-redirect here, let the user read the notice and check their email
-        setTimeout(() => setLocation("/login"), 8000);
+        // Removed auto-redirect to give user time to read the notice
       } else {
         const data = await res.json().catch(() => ({}));
         setError(data.message || "Failed to send reset link. Please try again.");

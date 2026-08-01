@@ -408,6 +408,17 @@ function AppRoutes() {
           <Route path="/shop" component={ShopPage} />
           <Route path="/wholesale" component={WholesalePage} />
           <Route path="/get-now" component={GetNowPage} />
+
+          {/* Static Routes First */}
+          <Route path="/cart" component={CartPage} />
+          <Route path="/checkout" component={CheckoutPage} />
+          <Route path="/track-order" component={TrackOrderPage} />
+          <Route path="/track" component={TrackOrderPage} />
+          <Route path="/pickup-stations" component={PickupStationsPage} />
+          <Route path="/dashboard" component={DashboardPage} />
+          <Route path="/login" component={LoginRoute} />
+          <Route path="/register" component={RegisterRoute} />
+          <Route path="/forgot-password" component={ForgotPasswordRoute} />
           
           {/* Context-aware Category/Brand routes */}
           <Route path="/homepage/category/:slug" component={BrowsePage} />
@@ -426,15 +437,6 @@ function AppRoutes() {
           <Route path="/get-now/section/:slug" component={ShopSectionPage} />
 
           <Route path="/product/:slug" component={ProductPage} />
-          <Route path="/cart" component={CartPage} />
-          <Route path="/checkout" component={CheckoutPage} />
-          <Route path="/track-order" component={TrackOrderPage} />
-          <Route path="/track" component={TrackOrderPage} />
-          <Route path="/pickup-stations" component={PickupStationsPage} />
-          <Route path="/dashboard" component={DashboardPage} />
-          <Route path="/login" component={LoginRoute} />
-          <Route path="/register" component={RegisterRoute} />
-          <Route path="/forgot-password" component={ForgotPasswordRoute} />
           <Route path="/about" component={AboutPage} />
           <Route path="/contact" component={ContactPage} />
           <Route path="/privacy" component={PrivacyPage} />
