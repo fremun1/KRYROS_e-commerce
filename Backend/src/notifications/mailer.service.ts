@@ -8,9 +8,9 @@ const BASE_STYLES = `
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; background: #f0f4f8; color: #1a202c; }
   .wrapper { max-width: 600px; margin: 0 auto; padding: 32px 16px; }
   .card { background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 16px rgba(0,0,0,0.08); }
-  .header { background: linear-gradient(135deg, #0d1826 0%, #0f2535 100%); padding: 32px 36px; text-align: center; }
+  .header { background: #344a64; padding: 32px 36px; text-align: center; }
   .logo { font-size: 24px; font-weight: 900; color: #ffffff; letter-spacing: -0.5px; }
-  .logo span { color: #1FA89A; }
+  .logo span { color: #C0151B; }
   .tagline { font-size: 11px; color: #6b8da8; margin-top: 4px; text-transform: uppercase; letter-spacing: 2px; }
   .body { padding: 32px 36px; }
   .greeting { font-size: 20px; font-weight: 700; color: #0f172a; margin-bottom: 8px; }
@@ -21,11 +21,11 @@ const BASE_STYLES = `
   .order-row:last-child { border-bottom: none; }
   .order-label { color: #64748b; }
   .order-value { font-weight: 600; color: #0f172a; }
-  .cta-btn { display: block; width: fit-content; margin: 24px auto; padding: 14px 32px; background: linear-gradient(135deg, #1FA89A, #27B9AF); color: #ffffff; text-decoration: none; border-radius: 10px; font-size: 14px; font-weight: 700; text-align: center; }
+  .cta-btn { display: block; width: fit-content; margin: 24px auto; padding: 14px 32px; background: linear-gradient(135deg, #C0151B, #A01015); color: #ffffff; text-decoration: none; border-radius: 10px; font-size: 14px; font-weight: 700; text-align: center; }
   .divider { height: 1px; background: #f1f5f9; margin: 24px 0; }
   .footer { padding: 20px 36px; background: #f8fafc; border-top: 1px solid #f1f5f9; text-align: center; }
   .footer-text { font-size: 11px; color: #94a3b8; line-height: 1.6; }
-  .footer-brand { font-weight: 700; color: #1FA89A; }
+  .footer-brand { font-weight: 700; color: #C0151B; }
 `;
 
 @Injectable()
@@ -205,7 +205,7 @@ export class MailerService {
     trackingUrl?: string;
   }) {
     const statusMap: Record<string, { label: string; message: string; emoji: string; color: string }> = {
-      CONFIRMED:  { label: 'Order Confirmed',      emoji: '✅', color: '#1FA89A', message: 'Your order has been confirmed and our team is preparing it for dispatch.' },
+      CONFIRMED:  { label: 'Order Confirmed',      emoji: '✅', color: '#C0151B', message: 'Your order has been confirmed and our team is preparing it for dispatch.' },
       PROCESSING: { label: 'Processing Your Order', emoji: '📦', color: '#6366f1', message: 'We\'re currently processing your order. You\'ll hear from us as soon as it ships.' },
       SHIPPED:    { label: 'Order Shipped',         emoji: '🚚', color: '#3b82f6', message: 'Great news! Your order is on its way. Expect delivery soon.' },
       OUT_FOR_DELIVERY: { label: 'Out for Delivery', emoji: '🏃', color: '#f59e0b', message: 'Your order is out for delivery today. Please be available to receive it.' },
@@ -256,10 +256,10 @@ export class MailerService {
   async sendNewsletterWelcome(email: string): Promise<void> {
     const appUrl = this.configService.get('FRONTEND_URL');
     const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Welcome to KRYROS Newsletter</title><style>${BASE_STYLES}
-  .nl-highlight { background: linear-gradient(135deg, #1FA89A22, #27B9AF11); border: 1px solid #1FA89A44; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+  .nl-highlight { background: linear-gradient(135deg, #C0151B22, #A0101511); border: 1px solid #C0151B44; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
   .nl-item { display: flex; align-items: center; gap: 10px; font-size: 13px; color: #475569; margin-bottom: 10px; }
   .nl-item:last-child { margin-bottom: 0; }
-  .nl-dot { width: 8px; height: 8px; border-radius: 50%; background: #1FA89A; flex-shrink: 0; }
+  .nl-dot { width: 8px; height: 8px; border-radius: 50%; background: #C0151B; flex-shrink: 0; }
 </style></head>
 <body><div class="wrapper"><div class="card">
   <div class="header">

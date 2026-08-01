@@ -483,8 +483,40 @@ export class NotificationsService implements OnModuleInit {
   async sendSMS(phoneNumber: string, message: string) {
     const apiKey = this.configService.get('BEEM_API_KEY');
     const secretKey = this.configService.get('BEEM_SECRET_KEY');
-    if (!apiKey || !secretKey) return;
+    
+    if (!apiKey || !secretKey) {
+      this.logger.warn(`SMS skipped (Beem Africa not configured): ${phoneNumber}`);
+      return;
+    }
+
+    // Beem Africa expects phone numbers in international format without the '+' sign
+    const cleanPhone = phoneNumber.replace(/\D/g, '');
     const auth = Buffer.from(`${apiKey}:${secretKey}`).toString('base64');
-    try { await axios.post(this.beemBaseUrl, { source_addr: 'INFO', schedule_time: '', encoding: 0, message, recipients: [{ recipient_id: 1, dest_addr: phoneNumber }] }, { headers: { Authorization: `Basic ${auth}` } }); } catch {}
+    
+    try {
+      this.logger.log(`Attempting to send SMS to ${cleanPhone} via Beem...`);
+      const response = await axios.post(
+        this.beemBaseUrl,
+        {
+          source_addr: this.configService.get('BEEM_SOURCE_ADDR', 'INFO'),
+          schedule_time: '',
+          encoding: 0,
+          message,
+          recipients: [{ recipient_id: 1, dest_addr: cleanPhone }]
+        },
+        {
+          headers: { 
+            'Authorization': `Basic ${auth}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      this.logger.log(`SMS sent successfully to ${cleanPhone}. Response: ${JSON.stringify(response.data)}`);
+    } catch (error) {
+      this.logger.error(`SMS failure for ${cleanPhone}: ${error.message}`);
+      if (error.response) {
+        this.logger.error(`Beem API Error Details: ${JSON.stringify(error.response.data)}`);
+      }
+    }
   }
 }
