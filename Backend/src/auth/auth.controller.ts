@@ -9,6 +9,7 @@ import {
   Redirect,
   UnauthorizedException,
   ForbiddenException,
+  BadRequestException,
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';

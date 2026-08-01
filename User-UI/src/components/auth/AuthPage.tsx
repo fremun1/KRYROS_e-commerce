@@ -464,11 +464,14 @@ export default function AuthPage() {
   // Success redirect effect at component level (not inside render function)
   const successRedirected = useRef(false);
   useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
     if (step === "success" && !successRedirected.current) {
       successRedirected.current = true;
-      const t = setTimeout(() => setLocation("/dashboard"), 3000);
-      return () => clearTimeout(t);
+      timer = setTimeout(() => setLocation("/dashboard"), 3000);
     }
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
   }, [step]);
 
   const renderSuccessStep = () => (

@@ -33,6 +33,7 @@ interface ApiCategory {
   slug: string;
   image?: string;
   description?: string;
+  children?: ApiCategory[];
 }
 
 interface ApiBrand {
@@ -51,8 +52,9 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ open, onClose }: SidebarProps) {
-  const [, setLocation] = useLocation();
-  const { currency } = useCurrencyStore();
+  const [location, setLocation] = useLocation();
+  const { selected: currency } = useCurrencyStore();
+  const pageContext = inferPageContext(location);
   const { token, user, logout } = useAuthStore();
   const isLoggedIn = !!(token && user);
 
@@ -88,15 +90,16 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
     fetchData();
   }, [open]);
 
-  // Flatten categories into a single list without hierarchy
+  // Flatten API categories while de-duplicating children returned alongside parents.
   const flatCategories = useMemo(() => {
-    if (!categories.length) return [];
-    return categories.flatMap((cat) => {
-      if (cat.subcategories && cat.subcategories.length > 0) {
-        return [cat, ...cat.subcategories];
+    const categoriesById = new Map<string, ApiCategory>();
+    for (const category of categories) {
+      categoriesById.set(String(category.id), category);
+      for (const child of category.children ?? []) {
+        categoriesById.set(String(child.id), child);
       }
-      return [cat];
-    });
+    }
+    return Array.from(categoriesById.values());
   }, [categories]);
 
   // Track which categories have brands
@@ -205,7 +208,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
               <div className="px-4 pb-4 flex items-center gap-2">
                 <Globe className="w-4 h-4 text-gray-600" />
                 <select
-                  value={currency}
+                  value={currency.code}
                   onChange={(e) => useCurrencyStore.getState().setCurrency(e.target.value)}
                   className="flex-1 px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
                 >
@@ -287,7 +290,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                           <div key={cat.id}>
                             <div className="flex items-center justify-between">
                               <Link
-                                href={getScopedBrowsePath(cat.slug, 'category')}
+                                href={getScopedBrowsePath(pageContext, 'category', cat.slug)}
                                 onClick={onClose}
                                 className="flex-1 px-4 py-2 text-sm text-foreground hover:bg-muted transition-colors cursor-pointer"
                               >
@@ -309,7 +312,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                                   .map((brand) => (
                                     <Link
                                       key={brand.id}
-                                      href={getScopedBrowsePath(brand.slug, 'brand')}
+                                      href={getScopedBrowsePath(pageContext, 'brand', brand.slug)}
                                       onClick={onClose}
                                       className="block px-4 py-2 text-sm text-gray-600 hover:bg-muted transition-colors cursor-pointer"
                                     >
@@ -351,7 +354,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                       {brands.map((brand) => (
                         <Link
                           key={brand.id}
-                          href={getScopedBrowsePath(brand.slug, 'brand')}
+                          href={getScopedBrowsePath(pageContext, 'brand', brand.slug)}
                           onClick={onClose}
                           className="block px-4 py-2 text-sm text-foreground hover:bg-muted transition-colors cursor-pointer"
                         >

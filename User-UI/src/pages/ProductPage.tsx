@@ -246,9 +246,9 @@ export default function ProductPage() {
       estimatedDeliveryMaxDays: product.estimatedDeliveryMaxDays,
       condition: product.condition,
       allowCredit: product.allowCredit,
-      creditMinimum: product.creditMinimum,
+      creditMinimum: product.creditMinimum ?? undefined,
       isWholesaleOnly: product.isWholesaleOnly,
-      wholesalePrice: product.wholesalePrice,
+      wholesalePrice: product.wholesalePrice ?? undefined,
       wholesaleMoq: product.wholesaleMoq
     });
     toast.success(product.isWholesaleOnly ? "Added to wholesale request" : "Added to cart", { description: product.name });
@@ -271,9 +271,9 @@ export default function ProductPage() {
       estimatedDeliveryMaxDays: product.estimatedDeliveryMaxDays,
       condition: product.condition,
       allowCredit: product.allowCredit,
-      creditMinimum: product.creditMinimum,
+      creditMinimum: product.creditMinimum ?? undefined,
       isWholesaleOnly: product.isWholesaleOnly,
-      wholesalePrice: product.wholesalePrice,
+      wholesalePrice: product.wholesalePrice ?? undefined,
       wholesaleMoq: product.wholesaleMoq
     });
     // All products (credit, wholesale, normal) go to regular checkout

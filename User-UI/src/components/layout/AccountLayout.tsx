@@ -54,13 +54,16 @@ export default function AccountLayout({ children, showTopBar = true }: AccountLa
   const bellRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
+    let timer: ReturnType<typeof setInterval> | undefined;
     if (user) {
       fetchNotifications();
       // Poll every 2 minutes for new notifications
-      const timer = setInterval(fetchNotifications, 120000);
-      return () => clearInterval(timer);
+      timer = setInterval(fetchNotifications, 120000);
     }
-  }, [user]);
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [user, fetchNotifications]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

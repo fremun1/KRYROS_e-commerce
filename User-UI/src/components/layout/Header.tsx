@@ -96,12 +96,15 @@ export default function Header() {
   const bellRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
+    let timer: ReturnType<typeof setInterval> | undefined;
     if (isLoggedIn) {
       fetchNotifications();
-      const timer = setInterval(fetchNotifications, 120000);
-      return () => clearInterval(timer);
+      timer = setInterval(fetchNotifications, 120000);
     }
-  }, [isLoggedIn]);
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [isLoggedIn, fetchNotifications]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
