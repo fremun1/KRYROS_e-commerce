@@ -265,7 +265,7 @@ function PushContent() {
               <label style={{ fontSize: 11, fontWeight: 600, color: textMuted, marginBottom: 5, display: 'flex', alignItems: 'center', gap: 4 }}>
                 <ImageIcon style={{ width: 11, height: 11 }} /> Notification Banner Image <span style={{ fontWeight: 400, color: textMuted }}>(optional)</span>
               </label>
-              {pushImageUrl && (pushImageUrl.startsWith('http') || pushImageUrl.startsWith('/')) ? (
+              {pushImageUrl && pushImageUrl.trim().length > 0 ? (
                 <div style={{ position: 'relative', marginBottom: 8 }}>
                   <img 
                     src={pushImageUrl} 

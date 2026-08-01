@@ -570,16 +570,16 @@ function ProductsContent() {
         )}
         <CloudinaryUpload
           multiple
-          onChange={(url) => setProductImages(imgs => [...imgs, url])}
+          onChange={(url) => { if (url) setProductImages(imgs => imgs.includes(url) ? imgs : [...imgs, url]); }}
           accept="image/*"
           folder="kryros/products"
-          showUrlInput={false}
-                   border={border}
+          showUrlInput={true}
+          border={border}
           surface={surface}
           textMuted={textMuted}
           textMain={textMain}
         />
-        <div style={{fontSize:'11px',color:textMuted,marginTop:'4px'}}>First image = main listing image (marked MAIN). Click × to remove. Drag to reorder coming soon.</div>
+        <div style={{fontSize:'11px',color:textMuted,marginTop:'4px'}}>First image = main listing image (marked MAIN). Click × to remove. You can upload a file or paste an image URL above.</div>
       </div>
 
       {sectionLabel('Specifications')}

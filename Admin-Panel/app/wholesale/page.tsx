@@ -401,10 +401,10 @@ function WholesaleContent() {
         )}
         <CloudinaryUpload
           multiple
-          onChange={(url) => setInvImages((imgs) => [...imgs, url])}
+          onChange={(url) => { if (url) setInvImages((imgs) => imgs.includes(url) ? imgs : [...imgs, url]); }}
           accept="image/*"
           folder="kryros/wholesale-products"
-          showUrlInput={false}
+          showUrlInput={true}
           border={border}
           surface={surface}
           textMuted={textMuted}

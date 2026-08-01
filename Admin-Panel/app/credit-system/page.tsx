@@ -539,10 +539,14 @@ function CreditContent() {
         <div style={{ marginBottom: '14px' }}>
           <label style={{ display: 'block', fontSize: '11.5px', fontWeight: 600, color: textMuted, marginBottom: '8px', textTransform: 'uppercase' }}>Product Images</label>
           <CloudinaryUpload
-            value={prodImages[0] || ''}
-            onChange={(url) => appendUploadedImage(url)}
             multiple
-            showUrlInput={false}
+            onChange={(url) => appendUploadedImage(url)}
+            showUrlInput={true}
+            folder="kryros/products"
+            border={border}
+            surface={surface}
+            textMuted={textMuted}
+            textMain={textMain}
           />
         </div>
         <FormField label="Description" value={prodForm.description} onChange={v => setProdForm(f => ({ ...f, description: v }))} type="textarea" border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Detailed product description..." />
@@ -587,7 +591,12 @@ function CreditContent() {
             <CloudinaryUpload
               multiple
               onChange={(url) => appendUploadedImage(url)}
-              showUrlInput={false}
+              showUrlInput={true}
+              folder="kryros/products"
+              border={border}
+              surface={surface}
+              textMuted={textMuted}
+              textMain={textMain}
             />
           </div>
           <FormField label="Description" value={prodForm.description} onChange={v => setProdForm(f => ({ ...f, description: v }))} type="textarea" border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Detailed product description..." />
