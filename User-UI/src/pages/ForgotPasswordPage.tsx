@@ -49,13 +49,18 @@ export default function ForgotPasswordPage() {
 
   // Check if we have a reset token in the URL
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const tokenParam = params.get("token");
-    if (tokenParam) {
-      setToken(tokenParam);
-      setStep("reset");
+    const search = window.location.search;
+    if (search) {
+      const params = new URLSearchParams(search);
+      const tokenParam = params.get("token");
+      if (tokenParam) {
+        setToken(tokenParam);
+        setStep("reset");
+        // Clear query params to keep URL clean but stay on the page
+        // window.history.replaceState({}, '', window.location.pathname);
+      }
     }
-  }, []);
+  }, [setLocation]); // Re-run if location changes
 
   const handleRequestReset = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,7 +83,8 @@ export default function ForgotPasswordPage() {
       if (res.ok) {
         setNotice("If an account with that identifier exists, a password reset link has been sent to your email.");
         setIdentifier("");
-        setTimeout(() => setLocation("/"), 3000);
+        // No auto-redirect here, let the user read the notice and check their email
+        setTimeout(() => setLocation("/login"), 8000);
       } else {
         const data = await res.json().catch(() => ({}));
         setError(data.message || "Failed to send reset link. Please try again.");
@@ -121,7 +127,7 @@ export default function ForgotPasswordPage() {
 
       if (res.ok) {
         setStep("success");
-        setTimeout(() => setLocation("/auth"), 3000);
+        setTimeout(() => setLocation("/login"), 3000);
       } else {
         const data = await res.json().catch(() => ({}));
         setError(data.message || "Failed to reset password. The link may have expired.");
@@ -172,7 +178,7 @@ export default function ForgotPasswordPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#FAFAFA] to-white flex items-center justify-center p-4">
       <div className="w-full max-w-[380px] relative">
-        {step !== "request" && <BackButton onClick={() => setLocation("/auth")} />}
+        {step !== "request" && <BackButton onClick={() => setLocation("/login")} />}
 
         <div className="bg-white rounded-[16px] shadow-[0_4px_16px_rgba(0,0,0,0.08)] p-8">
           <Logo />
@@ -228,7 +234,7 @@ export default function ForgotPasswordPage() {
                   Remember your password?{" "}
                   <button
                     type="button"
-                    onClick={() => setLocation("/auth")}
+                    onClick={() => setLocation("/login")}
                     className="text-[#C0151B] font-medium hover:underline bg-transparent border-none cursor-pointer"
                   >
                     Sign in
@@ -342,7 +348,7 @@ export default function ForgotPasswordPage() {
               </p>
               <button
                 type="button"
-                onClick={() => setLocation("/auth")}
+                onClick={() => setLocation("/login")}
                 className={bp}
               >
                 Sign In
