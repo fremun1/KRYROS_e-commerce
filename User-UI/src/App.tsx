@@ -49,6 +49,7 @@ const NotFound = lazy(() => import("@/pages/not-found"));
 const AllCategoriesPage = lazy(() => import("@/pages/AllCategoriesPage"));
 const BrowsePage = lazy(() => import("@/pages/BrowsePage"));
 const GenericCMSPage = lazy(() => import("@/pages/GenericCMSPage"));
+const ForgotPasswordPage = lazy(() => import("@/pages/ForgotPasswordPage"));
 
 import SplashScreen from "@/components/SplashScreen";
 import PwaInstallPrompt from "@/components/PwaInstallPrompt";
@@ -328,7 +329,7 @@ function RegisterRoute() {
 }
 
 function ForgotPasswordRoute() {
-  return <AuthPage />;
+  return <ForgotPasswordPage />;
 }
 
 // ── AppRoutes — handles both splash and page transitions ──────────────────────
