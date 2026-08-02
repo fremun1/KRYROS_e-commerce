@@ -609,12 +609,12 @@ export default function PayPage() {
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-md mx-auto px-0 pb-10">
-        <div className="flex items-center justify-between px-5 pt-5 pb-4">
-          <button onClick={() => (step === 2 ? setStep(1) : navigate("/"))} className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-muted transition-colors">
-            <ChevronLeft className="w-5 h-5 text-foreground" strokeWidth={2.5} />
+        <div className="flex items-center justify-between px-5 pt-5 pb-4 bg-[var(--kryros-header-navy)] border-b border-white/10">
+          <button onClick={() => (step === 2 ? setStep(1) : navigate("/"))} className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors">
+            <ChevronLeft className="w-5 h-5 text-white" strokeWidth={2.5} />
           </button>
-          <h1 className="text-base font-bold text-foreground">Payment</h1>
-          <div className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: "var(--kryros-primary)" }}>
+          <h1 className="text-base font-bold text-white">Payment</h1>
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-white">
             <Lock className="w-3.5 h-3.5" /> Secure Payment
           </div>
         </div>

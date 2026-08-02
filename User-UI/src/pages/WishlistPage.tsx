@@ -114,7 +114,7 @@ export default function WishlistPage() {
     : _hasHydrated && wishlistIds.length === 0;
 
   return (
-    <AccountLayout>
+    <AccountLayout showTopBar={false}>
       <div className="max-w-7xl">
         <div className="mb-6">
           <h1 className="text-2xl font-black text-foreground">My Wishlist</h1>
