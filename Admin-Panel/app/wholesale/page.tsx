@@ -244,9 +244,9 @@ function WholesaleContent() {
     setConditionSaving(true);
     try {
       const parsed = parseConditionOptions(conditionDraft);
-      await updateSettings([
-        { key: 'product_condition_options', value: JSON.stringify(parsed) }
-      ]);
+      await updateSettings({
+        'product_condition_options': JSON.stringify(parsed)
+      });
       setConditionOptions(parsed);
       setConditionSettingsOpen(false);
       toast.success('Condition options updated successfully');

@@ -1172,30 +1172,6 @@ model SmsSupportedCountry {
   @@map("sms_supported_countries")
 }
 
-model EmailContact {
-  id        String   @id @default(uuid())
-  email     String
-  name      String
-  source    String
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@map("email_contacts")
-}
-
-model SmsContact {
-  id        String   @id @default(uuid())
-  phone     String
-  name      String
-  source    String
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@map("sms_contacts")
-}
-
 model ExchangeRateConfig {
   id              String   @id @default(uuid())
   providerName    String   @default("exchangerate-api")
