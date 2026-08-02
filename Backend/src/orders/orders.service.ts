@@ -334,9 +334,11 @@ export class OrdersService {
       const originalPrice = Number(product.price);
       let price = originalPrice;
 
-      // ... price logic ...
-      if (user?.wholesaleAccount) {
-        // ... (wholesale price logic remains the same)
+      // Credit product pricing - use deposit amount
+      if (product.allowCredit && product.creditMinimum) {
+        price = Number(product.creditMinimum);
+      } else if (user?.wholesaleAccount) {
+        // Wholesale price logic
         let bestWholesalePrice: number | null = null;
         if (product.wholesalePrices?.length) {
           const applicableTier = product.wholesalePrices
