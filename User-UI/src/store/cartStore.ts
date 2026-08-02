@@ -63,7 +63,15 @@ export const useCartStore = create<CartState>()(
       })),
       clearCart: () => set({ items: [] }),
       cartCount: () => get().items.reduce((total, item) => total + item.qty, 0),
-      cartTotal: () => get().items.reduce((total, item) => total + (item.price * item.qty), 0),
+      cartTotal: () => get().items.reduce((total, item) => {
+        if (item.allowCredit && item.creditMinimum) {
+          return total + (item.creditMinimum * item.qty);
+        }
+        if (item.isWholesaleOnly && item.wholesalePrice) {
+          return total + (item.wholesalePrice * item.qty);
+        }
+        return total + (item.price * item.qty);
+      }, 0),
     }),
     {
       name: 'cart-storage',
