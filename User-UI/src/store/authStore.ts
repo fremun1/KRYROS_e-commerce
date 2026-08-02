@@ -18,6 +18,19 @@ function normalizeIdentifier(value: string) {
   return normalizedPhone.replace(/\D/g, '');
 }
 
+function formatPhoneNumberWithCountryCode(phone: string, countryCode: string): string {
+  const cleanedPhone = phone.replace(/\D/g, ""); // Remove all non-digits
+  const cleanedCountryCode = countryCode.replace(/\D/g, ""); // Remove all non-digits from country code
+  
+  // If phone already starts with country code (with or without +), return as is
+  if (cleanedPhone.startsWith(cleanedCountryCode)) {
+    return "+" + cleanedPhone;
+  }
+  
+  // Otherwise, prepend country code
+  return "+" + cleanedCountryCode + cleanedPhone;
+}
+
 async function registerFcmToken(authToken: string | null, fcmToken: string | null) {
   if (!fcmToken) return;
   try {
@@ -95,6 +108,7 @@ interface AuthState {
     firstName: string;
     lastName: string;
     phone?: string;
+    countryCode?: string;
   }, captchaToken?: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
   getMe: () => Promise<void>;
@@ -209,17 +223,32 @@ export const useAuthStore = create<AuthState>()(
         try {
           const identifier = normalizeIdentifier(data.identifier || "");
           const isEmail = identifier.includes("@");
+          
+          // Format phone number with country code if provided separately
+          const formattedPhone = data.phone ? formatPhoneNumberWithCountryCode(data.phone, data.countryCode || '+260') : null;
+          
+          // Build request body
+          const requestBody: any = {
+            password: data.password,
+            firstName: data.firstName,
+            lastName: data.lastName,
+            ...(captchaToken ? { captchaToken } : {}),
+          };
+          
+          if (isEmail) {
+            requestBody.email = identifier;
+            if (formattedPhone) {
+              requestBody.phone = formattedPhone;
+            }
+          } else {
+            // Identifier is a phone number - format it with country code
+            requestBody.phone = formatPhoneNumberWithCountryCode(identifier, data.countryCode || '+260');
+          }
+          
           const res = await fetch(`${EFFECTIVE_API_BASE}/api/auth/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              ...(isEmail ? { email: identifier } : { phone: identifier }),
-              password: data.password,
-              firstName: data.firstName,
-              lastName: data.lastName,
-              ...(data.phone ? { phone: data.phone } : {}),
-              ...(captchaToken ? { captchaToken } : {}),
-            }),
+            body: JSON.stringify(requestBody),
           });
           const json = await res.json().catch(() => ({}));
           if (!res.ok) {

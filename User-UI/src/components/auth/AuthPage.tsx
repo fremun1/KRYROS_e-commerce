@@ -40,6 +40,19 @@ function normalizeIdentifier(value: string): string {
   return np.replace(/\D/g, "");
 }
 
+function formatPhoneNumberWithCountryCode(phone: string, countryCode: string): string {
+  const cleanedPhone = phone.replace(/\D/g, ""); // Remove all non-digits
+  const cleanedCountryCode = countryCode.replace(/\D/g, ""); // Remove all non-digits from country code
+  
+  // If phone already starts with country code (with or without +), return as is
+  if (cleanedPhone.startsWith(cleanedCountryCode)) {
+    return "+" + cleanedPhone;
+  }
+  
+  // Otherwise, prepend country code
+  return "+" + cleanedCountryCode + cleanedPhone;
+}
+
 function evaluatePassword(pw: string): { score: number; checks: PasswordChecks; label: string } {
   const checks: PasswordChecks = {
     length: pw.length >= 8, uppercase: /[A-Z]/.test(pw),
@@ -144,8 +157,23 @@ export default function AuthPage() {
 
     setLocalLoading(true);
     try {
-      // For Zambia, if they started with email, we should use their phone as the primary identifier for OTP
-      const finalIdentifier = (isZambia && isEmail) ? (countryCode + phone) : identifier;
+      // Determine the identifier to use for OTP
+      let finalIdentifier = identifier;
+      let phoneToSend = null;
+      
+      if (!isEmail) {
+        // User registered with phone number - format with country code
+        finalIdentifier = formatPhoneNumberWithCountryCode(identifier, countryCode);
+        phoneToSend = finalIdentifier;
+      } else if (isZambia && phone) {
+        // Zambia user with email - use phone for OTP
+        finalIdentifier = formatPhoneNumberWithCountryCode(phone, countryCode);
+        phoneToSend = finalIdentifier;
+      } else if (phone) {
+        // Non-Zambia user with email - still format phone if provided
+        phoneToSend = formatPhoneNumberWithCountryCode(phone, countryCode);
+      }
+      
       const normalizedFinal = normalizeIdentifier(finalIdentifier);
       
       // Send OTP with country detection
@@ -157,13 +185,13 @@ export default function AuthPage() {
           countryCode: selectedIso,
           // Pass the other identifier so backend can store both in PendingRegistration
           email: isEmail ? normalizeIdentifier(identifier) : null,
-          phone: !isEmail ? normalizeIdentifier(identifier) : (phone ? countryCode + phone : null)
+          phone: phoneToSend
         })
       });
       
       if (otpRes.ok) {
         // If identifier changed (e.g. from email to phone for Zambia), update state
-        if (normalizedFinal !== normalizeIdentifier(identifier)) {
+        if (finalIdentifier !== identifier) {
           setIdentifier(finalIdentifier);
         }
       }
@@ -216,11 +244,16 @@ export default function AuthPage() {
     if (countdown > 0) return;
     setNotice(""); setLocalLoading(true);
     try {
+      // Format identifier with country code if it's a phone number
+      const formattedIdentifier = identifier.includes('@') 
+        ? normalizeIdentifier(identifier) 
+        : formatPhoneNumberWithCountryCode(identifier, countryCode);
+      
       const res = await fetch(`${EFFECTIVE_API_BASE}/api/auth/send-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
-          identifier: normalizeIdentifier(identifier),
+          identifier: normalizeIdentifier(formattedIdentifier),
           countryCode: countryCode.replace('+', '')
         })
       });
