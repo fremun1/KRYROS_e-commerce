@@ -6,7 +6,7 @@ import PageHeader from '@/components/admin/page-header';
 import { Modal, FormField, ModalFooter } from '@/components/admin/modal';
 import { DollarSign } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { createCountry, getCountries, updateCountry } from '@/lib/api';
+import { createCountry, getCountries, updateCountry, api } from '@/lib/api';
 
 type CurrencyRow = {
   code: string;
@@ -48,6 +48,17 @@ function CurrenciesContent() {
   const [curForm, setCurForm] = useState({ code: '', symbol: '', rate: '', autoRate: 'true', symbolPosition: 'BEFORE' });
   const [addForm, setAddForm] = useState(EMPTY_ADD_FORM);
 
+  // Exchange rate config
+  const [exchangeConfig, setExchangeConfig] = useState({
+    providerName: 'exchangerate-api',
+    primaryApiUrl: 'https://api.exchangerate-api.com/v4/latest/USD',
+    fallbackApiUrl: 'https://open.er-api.com/v6/latest/USD',
+    isActive: true,
+    updateInterval: 3600000,
+  });
+  const [exchangeConfigOpen, setExchangeConfigOpen] = useState(false);
+  const [exchangeConfigLoading, setExchangeConfigLoading] = useState(false);
+
   const fetchData = () => {
     getCountries().then((r: any) => {
       const raw: any[] = Array.isArray(r.data?.data) ? r.data.data : Array.isArray(r.data) ? r.data : [];
@@ -81,7 +92,56 @@ function CurrenciesContent() {
     }).catch(() => {});
   };
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => { 
+    fetchData(); 
+    loadExchangeConfig();
+  }, []);
+
+  const loadExchangeConfig = async () => {
+    setExchangeConfigLoading(true);
+    try {
+      const res = await api.get('/api/countries/exchange-rate/config');
+      if (res.data) {
+        setExchangeConfig({
+          providerName: res.data.providerName || 'exchangerate-api',
+          primaryApiUrl: res.data.primaryApiUrl || 'https://api.exchangerate-api.com/v4/latest/USD',
+          fallbackApiUrl: res.data.fallbackApiUrl || 'https://open.er-api.com/v6/latest/USD',
+          isActive: res.data.isActive !== false,
+          updateInterval: res.data.updateInterval || 3600000,
+        });
+      }
+    } catch (error) {
+      console.error('Failed to fetch exchange config:', error);
+    } finally {
+      setExchangeConfigLoading(false);
+    }
+  };
+
+  const handleSaveExchangeConfig = async () => {
+    setExchangeConfigLoading(true);
+    try {
+      await api.patch('/api/countries/exchange-rate/config', exchangeConfig);
+      toast.success('Exchange rate configuration updated');
+      setExchangeConfigOpen(false);
+    } catch (error) {
+      toast.error('Failed to update exchange rate configuration');
+    } finally {
+      setExchangeConfigLoading(false);
+    }
+  };
+
+  const handleRefreshRates = async () => {
+    setExchangeConfigLoading(true);
+    try {
+      const res = await api.post('/api/countries/refresh-rates');
+      toast.success(`Exchange rates refreshed. Updated ${res.data.updated || 0} currencies.`);
+      fetchData();
+    } catch (error) {
+      toast.error('Failed to refresh exchange rates');
+    } finally {
+      setExchangeConfigLoading(false);
+    }
+  };
 
   const openEdit = (row: Record<string, unknown>) => {
     const r = row as unknown as CurrencyRow;
@@ -218,6 +278,48 @@ function CurrenciesContent() {
         >
           🔄 Enable Auto-Rate All
         </button>
+      </div>
+
+      {/* Exchange Rate Configuration Banner */}
+      <div style={{ marginBottom: '16px', padding: '12px 16px', background: 'rgba(192,21,27,0.06)', border: '1px solid rgba(192,21,27,0.15)', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
+        <div style={{ color: textMuted, fontSize: '13px', lineHeight: 1.5 }}>
+          <span style={{ fontWeight: 600, color: textMain }}>Exchange Rate Provider: </span>
+          {exchangeConfig.providerName} · {exchangeConfig.isActive ? 'Auto-update enabled' : 'Auto-update disabled'}
+        </div>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button
+            onClick={() => setExchangeConfigOpen(true)}
+            style={{
+              padding: '8px 16px',
+              borderRadius: '8px',
+              fontSize: '12px',
+              fontWeight: 600,
+              background: 'transparent',
+              color: 'var(--primary)',
+              border: '1px solid var(--primary)',
+              cursor: 'pointer'
+            }}
+          >
+            Configure Provider
+          </button>
+          <button
+            onClick={handleRefreshRates}
+            disabled={exchangeConfigLoading}
+            style={{
+              padding: '8px 16px',
+              borderRadius: '8px',
+              fontSize: '12px',
+              fontWeight: 600,
+              background: 'var(--primary)',
+              color: '#fff',
+              border: 'none',
+              cursor: exchangeConfigLoading ? 'not-allowed' : 'pointer',
+              opacity: exchangeConfigLoading ? 0.6 : 1
+            }}
+          >
+            {exchangeConfigLoading ? 'Refreshing...' : 'Refresh Rates Now'}
+          </button>
+        </div>
       </div>
 
       <DataTable
@@ -359,6 +461,72 @@ function CurrenciesContent() {
           submitLabel="Add Currency"
           border={border} textMain={textMain}
         />
+      </Modal>
+
+      {/* Exchange Rate Configuration Modal */}
+      <Modal open={exchangeConfigOpen} onClose={() => setExchangeConfigOpen(false)} title="Exchange Rate Provider Configuration" maxWidth="680px">
+        <div style={{ padding: '20px' }}>
+          <div style={{ marginBottom: '12px', padding: '10px 14px', background: surface, borderRadius: '8px', border: `1px solid ${border}`, fontSize: '12px', color: textMuted, lineHeight: 1.5 }}>
+            Configure your currency exchange rate provider. Changes will affect how exchange rates are calculated across your system.
+          </div>
+          
+          <div style={{ display: 'grid', gap: '16px' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: '11.5px', fontWeight: 600, color: textMuted, marginBottom: '6px', textTransform: 'uppercase' }}>Provider Name</label>
+              <input 
+                style={{ width: '100%', background: surface, border: `1px solid ${border}`, borderRadius: '9px', color: textMain, fontSize: '13.5px', outline: 'none', padding: '10px 14px' }}
+                value={exchangeConfig.providerName}
+                onChange={(e) => setExchangeConfig({ ...exchangeConfig, providerName: e.target.value })}
+                placeholder="e.g. exchangerate-api"
+              />
+            </div>
+            
+            <div>
+              <label style={{ display: 'block', fontSize: '11.5px', fontWeight: 600, color: textMuted, marginBottom: '6px', textTransform: 'uppercase' }}>Primary API URL</label>
+              <input 
+                style={{ width: '100%', background: surface, border: `1px solid ${border}`, borderRadius: '9px', color: textMain, fontSize: '13.5px', outline: 'none', padding: '10px 14px' }}
+                value={exchangeConfig.primaryApiUrl}
+                onChange={(e) => setExchangeConfig({ ...exchangeConfig, primaryApiUrl: e.target.value })}
+                placeholder="https://api.exchangerate-api.com/v4/latest/USD"
+              />
+              <div style={{ fontSize: '11px', color: textMuted, marginTop: '4px' }}>Main exchange rate API endpoint</div>
+            </div>
+            
+            <div>
+              <label style={{ display: 'block', fontSize: '11.5px', fontWeight: 600, color: textMuted, marginBottom: '6px', textTransform: 'uppercase' }}>Fallback API URL</label>
+              <input 
+                style={{ width: '100%', background: surface, border: `1px solid ${border}`, borderRadius: '9px', color: textMain, fontSize: '13.5px', outline: 'none', padding: '10px 14px' }}
+                value={exchangeConfig.fallbackApiUrl}
+                onChange={(e) => setExchangeConfig({ ...exchangeConfig, fallbackApiUrl: e.target.value })}
+                placeholder="https://open.er-api.com/v6/latest/USD"
+              />
+              <div style={{ fontSize: '11px', color: textMuted, marginTop: '4px' }}>Backup API endpoint if primary fails</div>
+            </div>
+            
+            <div>
+              <label style={{ display: 'block', fontSize: '11.5px', fontWeight: 600, color: textMuted, marginBottom: '6px', textTransform: 'uppercase' }}>Update Interval (milliseconds)</label>
+              <input 
+                style={{ width: '100%', background: surface, border: `1px solid ${border}`, borderRadius: '9px', color: textMain, fontSize: '13.5px', outline: 'none', padding: '10px 14px' }}
+                type="number"
+                value={exchangeConfig.updateInterval}
+                onChange={(e) => setExchangeConfig({ ...exchangeConfig, updateInterval: parseInt(e.target.value) || 3600000 })}
+                placeholder="3600000"
+              />
+              <div style={{ fontSize: '11px', color: textMuted, marginTop: '4px' }}>How often to refresh rates (default: 3600000ms = 1 hour)</div>
+            </div>
+            
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <input 
+                type="checkbox"
+                checked={exchangeConfig.isActive}
+                onChange={(e) => setExchangeConfig({ ...exchangeConfig, isActive: e.target.checked })}
+                style={{ width: '16px', height: '16px' }}
+              />
+              <label style={{ fontSize: '13px', fontWeight: 600, color: textMain }}>Enable automatic rate updates</label>
+            </div>
+          </div>
+        </div>
+        <ModalFooter onClose={() => setExchangeConfigOpen(false)} onSubmit={handleSaveExchangeConfig} loading={exchangeConfigLoading} submitLabel="Save Configuration" border={border} textMain={textMain} />
       </Modal>
     </div>
   );
