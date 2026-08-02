@@ -3,7 +3,7 @@ import { Link, useLocation } from "wouter";
 import {
   LayoutDashboard, Package, Heart, MapPin, CreditCard, Zap,
   MessageCircle, Bell, RefreshCcw, Star, Settings, ChevronRight, Check,
-  Truck, MoreVertical, Plus, Globe, Sun, DollarSign, X, Search,
+  Truck, MoreVertical, Plus, X, Search,
   ChevronDown, Menu, ShoppingBag, Info, Tag, AlertCircle, LogOut,
   UserCircle, Phone, Mail, Edit2, Save, Loader2, Home, Building2, Clock,
 } from "lucide-react";
@@ -32,14 +32,6 @@ function DashboardAuthGuard({ children }: { children: React.ReactNode }) {
   if (!token || !user) return null;
   return <>{children}</>;
 }
-
-const footerLinks = [
-  { label: "About Us", href: "/about" },
-  { label: "Contact Us", href: "/contact" },
-  { label: "Privacy Policy", href: "/privacy" },
-  { label: "Terms & Conditions", href: "/terms" },
-  { label: "Refund Policy", href: "/refund" },
-];
 
 function getOrderTimeline(status: string) {
   const norm = ({
@@ -167,8 +159,6 @@ export default function DashboardPage() {
   const [editSaving, setEditSaving] = useState(false);
   const [editError, setEditError] = useState("");
   const format = useCurrencyStore((s) => s.format);
-  const selectedCurrency = useCurrencyStore((s) => s.selected);
-
   // Auth guard: redirect to login if not authenticated
   useEffect(() => {
     if (!token || !user) {
@@ -362,30 +352,6 @@ export default function DashboardPage() {
           );
         })}
       </nav>
-
-      <div className="border-t border-border p-3 space-y-0.5">
-        {[
-          { icon: DollarSign, label: `${selectedCurrency.code} - ${selectedCurrency.name}` },
-          { icon: Globe, label: "English" },
-        ].map(({ icon: Icon, label }) => (
-          <div key={label} className="flex items-center justify-between px-3 py-2 rounded-xl hover:bg-muted cursor-pointer transition-all">
-            <div className="flex items-center gap-2">
-              <Icon className="w-3.5 h-3.5 text-muted-foreground" />
-              <span className="text-xs text-muted-foreground">{label}</span>
-            </div>
-            <ChevronDown className="w-3 h-3 text-muted-foreground" />
-          </div>
-        ))}
-        <div className="pt-2 space-y-0.5">
-          {footerLinks.map(({ label, href }) => (
-            <Link key={label} href={href}>
-              <p className="px-3 py-1 text-[10px] text-muted-foreground hover:text-primary cursor-pointer transition-colors">{label}</p>
-            </Link>
-          ))}
-          <p className="px-3 pt-1 text-[9px] text-muted-foreground/60">© 2026 KRYROS. All Rights Reserved.</p>
-          <p className="px-3 pb-1 text-[9px] text-muted-foreground/40">Worldwide Shopping</p>
-        </div>
-      </div>
     </div>
   );
 

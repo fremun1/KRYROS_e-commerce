@@ -4,19 +4,10 @@ import { inferPageContext, getPageContextDisplayPath } from "@/lib/pageContext";
 import {
   LayoutDashboard, Package, Heart, MapPin, CreditCard, Zap,
   MessageCircle, RefreshCcw, Star, Settings, X, Menu,
-  Globe, DollarSign, ChevronDown, Search, ShoppingBag,
+  ChevronDown, Search, ShoppingBag,
   Bell, LogOut, ChevronRight, Check, Clock
 } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
-import { useCurrencyStore } from "@/store/currencyStore";
-
-const footerLinks = [
-  { label: "About Us", href: "/about" },
-  { label: "Contact Us", href: "/contact" },
-  { label: "Privacy Policy", href: "/privacy" },
-  { label: "Terms & Conditions", href: "/terms" },
-  { label: "Refund Policy", href: "/refund" },
-];
 
 const sidebarItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
@@ -47,8 +38,6 @@ export default function AccountLayout({ children, showTopBar = true }: AccountLa
   const displayBasePath = useMemo(() => getPageContextDisplayPath(pageContext), [pageContext]);
 
   const { user, logout, notifications, unreadCount, fetchNotifications, markAsRead, markAllAsRead } = useAuthStore();
-  const selectedCurrency = useCurrencyStore((s) => s.selected) || { code: 'USD', name: 'US Dollar', symbol: '$', symbolPosition: 'BEFORE' as const, exchangeRate: 1, flag: '🇺🇸', id: 'usd' };
-  
   const [notifOpen, setNotifOpen] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
   const bellRef = useRef<HTMLButtonElement>(null);
@@ -124,30 +113,6 @@ export default function AccountLayout({ children, showTopBar = true }: AccountLa
           );
         })}
       </nav>
-
-      <div className="border-t border-border p-3 space-y-0.5">
-        {[
-          { icon: DollarSign, label: `${selectedCurrency.code} - ${selectedCurrency.name}` },
-          { icon: Globe, label: "English" },
-        ].map(({ icon: Icon, label }) => (
-          <div key={label} className="flex items-center justify-between px-3 py-2 rounded-xl hover:bg-muted cursor-pointer transition-all">
-            <div className="flex items-center gap-2">
-              <Icon className="w-3.5 h-3.5 text-muted-foreground" />
-              <span className="text-xs text-muted-foreground">{label}</span>
-            </div>
-            <ChevronDown className="w-3 h-3 text-muted-foreground" />
-          </div>
-        ))}
-        <div className="pt-2 space-y-0.5">
-          {footerLinks.map(({ label, href }) => (
-            <Link key={label} href={href}>
-              <p className="px-3 py-1 text-[10px] text-muted-foreground hover:text-primary cursor-pointer transition-colors">{label}</p>
-            </Link>
-          ))}
-          <p className="px-3 pt-1 text-[9px] text-muted-foreground/60">© 2026 KRYROS. All Rights Reserved.</p>
-          <p className="pb-1 text-[9px] text-muted-foreground/40 text-center w-full">Worldwide Shopping</p>
-        </div>
-      </div>
     </div>
   );
 
