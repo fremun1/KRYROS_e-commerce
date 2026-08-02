@@ -13,7 +13,7 @@ import CloudinaryUpload from '@/components/ui/file-upload';
 type Credit = { id:string; customer:string; phone:string; limit:string; used:string; available:string; due:string; status:string; plan:string; outstanding:string };
 type Application = { id:string; user:string; email:string; product:string; plan:string; amount:string; status:string; date:string };
 type Plan = { id:string; name:string; months:number; interest:string; minAmount:string; maxAmount:string; status:string };
-type InstProduct = { id:string; name:string; sku:string; price:string; plans:string; status:string };
+type InstProduct = { id:string; name:string; sku:string; price:string; plans:string; status:string; condition?: string };
 
 // ─── Initial Data ─────────────────────────────────────────
 // Credits loaded from API
@@ -114,7 +114,7 @@ function CreditContent() {
   const [prodForm, setProdForm] = useState({ 
     name:'', sku:'', price:'', status:'Active', 
     description:'', specifications:'', creditMessage:'', creditMinimum:'',
-    stockTotal: '100', stockCurrent: '100'
+    stockTotal: '100', stockCurrent: '100', condition: 'New'
   });
   const [prodImages, setProdImages] = useState<string[]>([]);
 
@@ -404,7 +404,7 @@ function CreditContent() {
         icon={CreditCard}
         onAdd={
           activeTab === 'plans' ? () => { setPlanForm({name:'',months:'3',interest:'0%',minAmount:'',maxAmount:'',status:'Active'}); setAddPlanOpen(true); } : 
-          activeTab === 'products' ? () => { setProdForm({name:'',sku:'',price:'',status:'Active',description:'',specifications:'',creditMessage:'',creditMinimum:'',stockTotal:'100',stockCurrent:'100'}); setProdImages([]); setAddProdOpen(true); } :
+          activeTab === 'products' ? () => { setProdForm({name:'',sku:'',price:'',status:'Active',description:'',specifications:'',creditMessage:'',creditMinimum:'',stockTotal:'100',stockCurrent:'100',condition:'New'}); setProdImages([]); setAddProdOpen(true); } :
           undefined
         }
         addLabel={activeTab === 'plans' ? "Add Plan" : "Add Product"}
@@ -478,7 +478,8 @@ function CreditContent() {
               name: r.name, sku: r.sku, price: String(r.rawPrice || ''), status: r.status,
               description: r.description, specifications: r.specifications,
               creditMessage: r.creditMessage, creditMinimum: r.creditMinimum,
-              stockTotal: String(r.stockTotal || 0), stockCurrent: String(r.stockCurrent || 0)
+              stockTotal: String(r.stockTotal || 0), stockCurrent: String(r.stockCurrent || 0),
+              condition: r.condition || 'New'
             });
             setProdImages(r.images || []);
             setEditProd(r);
@@ -539,10 +540,14 @@ function CreditContent() {
         <div style={{ marginBottom: '14px' }}>
           <label style={{ display: 'block', fontSize: '11.5px', fontWeight: 600, color: textMuted, marginBottom: '8px', textTransform: 'uppercase' }}>Product Images</label>
           <CloudinaryUpload
-            value={prodImages[0] || ''}
-            onChange={(url) => appendUploadedImage(url)}
             multiple
-            showUrlInput={false}
+            onChange={(url) => appendUploadedImage(url)}
+            showUrlInput={true}
+            folder="kryros/products"
+            border={border}
+            surface={surface}
+            textMuted={textMuted}
+            textMain={textMain}
           />
         </div>
         <FormField label="Description" value={prodForm.description} onChange={v => setProdForm(f => ({ ...f, description: v }))} type="textarea" border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Detailed product description..." />
@@ -587,7 +592,12 @@ function CreditContent() {
             <CloudinaryUpload
               multiple
               onChange={(url) => appendUploadedImage(url)}
-              showUrlInput={false}
+              showUrlInput={true}
+              folder="kryros/products"
+              border={border}
+              surface={surface}
+              textMuted={textMuted}
+              textMain={textMain}
             />
           </div>
           <FormField label="Description" value={prodForm.description} onChange={v => setProdForm(f => ({ ...f, description: v }))} type="textarea" border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Detailed product description..." />

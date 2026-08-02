@@ -467,6 +467,7 @@ export class AuthService {
     identifier: string,
     countryCode?: string,
     request?: any,
+    extraData?: { email?: string; phone?: string }
   ): Promise<{ success: boolean; message: string; otpChannel: string; destination: string }> {
     const normalizedIdentifier = this.normalizeIdentifier(identifier);
     const isEmail = normalizedIdentifier.includes('@');
@@ -487,30 +488,36 @@ export class AuthService {
 
     if (isZambia) {
       // Zambia: Always require phone for SMS OTP
-      if (isEmail) {
+      if (isEmail && !extraData?.phone) {
         throw new BadRequestException('For Zambia registration, please provide a phone number for SMS verification.');
       }
       otpChannel = 'sms';
-      destination = normalizedIdentifier;
+      // If Zambia and identifier is email, destination MUST be the phone number
+      destination = !isEmail ? normalizedIdentifier : this.normalizeIdentifier(extraData!.phone!);
     } else {
       // Other countries: Use email OTP
-      if (!isEmail) {
+      if (!isEmail && !extraData?.email) {
         throw new BadRequestException('For international registration, please provide an email address for verification.');
       }
       otpChannel = 'email';
-      destination = normalizedIdentifier;
+      // If international and identifier is phone, destination MUST be the email
+      destination = isEmail ? normalizedIdentifier : this.normalizeIdentifier(extraData!.email!);
     }
 
     // Generate OTP code
     const otpCode = this.generateOtpCode();
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
-    // Clean up any existing pending registration for this identifier
+    // Determine final email/phone to store
+    const finalEmail = isEmail ? normalizedIdentifier : (extraData?.email ? this.normalizeIdentifier(extraData.email) : null);
+    const finalPhone = !isEmail ? normalizedIdentifier : (extraData?.phone ? this.normalizeIdentifier(extraData.phone) : null);
+
+    // Clean up any existing pending registration for these identifiers
     await this.prisma.pendingRegistration.deleteMany({
       where: {
         OR: [
-          { email: isEmail ? normalizedIdentifier : undefined },
-          { phone: !isEmail ? normalizedIdentifier : undefined },
+          ...(finalEmail ? [{ email: finalEmail }] : []),
+          ...(finalPhone ? [{ phone: finalPhone }] : []),
         ],
       },
     });
@@ -518,8 +525,8 @@ export class AuthService {
     // Store pending registration with temporary placeholder data
     await this.prisma.pendingRegistration.create({
       data: {
-        email: isEmail ? normalizedIdentifier : null,
-        phone: !isEmail ? normalizedIdentifier : null,
+        email: finalEmail,
+        phone: finalPhone,
         password: '', // Will be set in verifyOtp
         firstName: '',
         lastName: '',
@@ -607,6 +614,16 @@ export class AuthService {
       Promise.resolve(this.signAccessToken(payload)),
       this.createRefreshToken(result.id),
     ]);
+
+    // Add to SMS contacts if Zambia user
+    const isZambia = pending.countryCode === 'ZM' || pending.countryCode?.toLowerCase() === 'zambia';
+    if (isZambia && result.phone) {
+      this.prisma.smsContact.upsert({
+        where: { phone: result.phone },
+        update: { name: `${result.firstName} ${result.lastName}`, source: 'Registration' },
+        create: { phone: result.phone, name: `${result.firstName} ${result.lastName}`, source: 'Registration' },
+      }).catch(() => {});
+    }
 
     // Notify Admin of New User Registration
     this.notificationsService.sendToAdmins(

@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
-import { Heart, Package, Clock } from "lucide-react";
+import { Heart, Package, Clock, CreditCard } from "lucide-react";
 import { toast } from "sonner";
 import { useCartStore } from "@/store/cartStore";
 import { useWishlistStore } from "@/store/wishlistStore";
 import { useCurrencyStore } from "@/store/currencyStore";
 import { useStoreStatus } from "@/hooks/useStoreStatus";
 import type { Product } from "@/lib/api";
+import { getCreditMessage, getProductDisplayPrice, getProductPurchaseMode } from "@/lib/productPurchaseMode";
 
 interface UnifiedProductCardProps {
   product: Product;
@@ -48,11 +49,14 @@ export default function UnifiedProductCard({
   const format = useCurrencyStore((s) => s.format);
   const wishlisted = isWishlisted(product.id);
 
-  const monthlyText = product.creditMessage || `${format(product.price / 12)}/mo`;
+  const purchaseMode = getProductPurchaseMode(product);
+  const isCreditProduct = purchaseMode === "credit";
+  const isWholesaleProduct = purchaseMode === "wholesale";
+  const displayPrice = getProductDisplayPrice(product);
+  const creditMessage = getCreditMessage(product);
   const specs = validSpecs(product.specs);
   const inStock = product.stock > 0;
   const isStoreClosed = storeStatus?.isStoreClosed ?? false;
-  const canPurchase = inStock && !isStoreClosed;
 
   return (
     <div
@@ -101,9 +105,9 @@ export default function UnifiedProductCard({
             -{product.discount}%
           </span>
         )}
-        {product.isWholesaleOnly && (
+        {(isWholesaleProduct || isCreditProduct) && (
           <span className="absolute top-3 left-3 bg-primary text-primary-foreground text-[9px] font-bold px-1.5 py-0.5 rounded-lg z-10">
-            Wholesale
+            {isWholesaleProduct ? "Wholesale" : "Credit"}
           </span>
         )}
         {badge && (
@@ -141,9 +145,9 @@ export default function UnifiedProductCard({
         {/* Price + old price */}
         <div className="flex items-center flex-wrap gap-x-1 mb-0.5">
           <span className="text-[13px] md:text-[15px] font-bold text-foreground">
-            {product.isWholesaleOnly && product.wholesalePrice ? format(product.wholesalePrice) : format(product.price)}
+            {format(displayPrice)}
           </span>
-          {product.oldPrice > product.price && (
+          {product.oldPrice > displayPrice && (
             <span className="text-[9px] md:text-xs text-muted-foreground line-through">{format(product.oldPrice)}</span>
           )}
         </div>
@@ -151,21 +155,21 @@ export default function UnifiedProductCard({
         {/* Product card labels, condition, then stars/reviews */}
         <div className="flex items-center flex-wrap gap-x-1.5 gap-y-0.5 mb-1">
           {/* 1. Custom promo text from product form */}
-          {!!product.popularItemText && !product.isWholesaleOnly && (
+          {!!product.popularItemText && !isWholesaleProduct && !isCreditProduct && (
             <span className="text-[9px] md:text-[10px] font-semibold tracking-[0.01em] text-primary bg-primary/10 px-2 md:px-2.5 py-1 rounded-full whitespace-nowrap flex-shrink-0 border border-primary/20 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
               {product.popularItemText}
             </span>
           )}
 
           {/* 2. Condition badge */}
-          {!!product.condition && !product.isWholesaleOnly && (
+          {!!product.condition && !isWholesaleProduct && !isCreditProduct && (
             <span className="text-[9px] md:text-[10px] font-bold tracking-[0.01em] text-white bg-[#C0151B] px-2.5 md:px-3 py-1 rounded-full whitespace-nowrap flex-shrink-0 shadow-sm">
               {product.condition}
             </span>
           )}
 
           {/* 3. Stars + review count */}
-          {product.rating > 0 && !product.isWholesaleOnly && (
+          {product.rating > 0 && !isWholesaleProduct && !isCreditProduct && (
             <div className="flex items-center gap-0.5 flex-shrink-0">
               {[1, 2, 3, 4, 5].map((star) => (
                 <svg
@@ -184,22 +188,21 @@ export default function UnifiedProductCard({
             </div>
           )}
 
-          {/* 4. Credit details — Total, Deposit, and Monthly */}
-          {product.allowCredit && !isStoreClosed && (
-            <div className="flex flex-col gap-0.5 mt-1 bg-primary/5 p-1.5 rounded-lg border border-primary/10">
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-[9px] text-muted-foreground">Deposit:</span>
-                <span className="text-[10px] font-bold text-primary">{format(product.creditMinimum || 0)}</span>
-              </div>
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-[9px] text-muted-foreground">Monthly:</span>
-                <span className="text-[10px] font-black text-foreground">{format((product.price - (product.creditMinimum || 0)) / 12)}/mo</span>
-              </div>
-            </div>
+          {/* 4. Credit details — the same compact row pattern used by wholesale cards. */}
+          {isCreditProduct && (
+            <>
+              <span className="max-w-[132px] md:max-w-[180px] truncate text-[10px] text-primary font-semibold whitespace-nowrap" title={creditMessage}>
+                {creditMessage}
+              </span>
+              <span className="text-[9px] text-muted-foreground flex items-center gap-0.5 whitespace-nowrap">
+                <CreditCard className="w-2.5 h-2.5" />
+                Deposit {format(product.creditMinimum || 0)}
+              </span>
+            </>
           )}
 
           {/* 5. Wholesale details */}
-          {product.isWholesaleOnly && (
+          {isWholesaleProduct && (
             <>
               {product.wholesalePrice && (
                 <span className="text-[10px] text-primary font-semibold whitespace-nowrap">

@@ -123,8 +123,14 @@ export class NotificationsService implements OnModuleInit {
           if (v !== null && v !== undefined) stringifiedData[k] = typeof v === 'string' ? v : JSON.stringify(v);
         }
       }
+      const imageUrl = data?.imageUrl;
+
       const message: admin.messaging.MulticastMessage = {
-        notification: { title, body },
+        notification: { 
+          title, 
+          body,
+          ...(imageUrl ? { image: imageUrl } : {})
+        },
         tokens,
         data: { ...stringifiedData, click_action: 'FLUTTER_NOTIFICATION_CLICK' },
         android: { 
@@ -134,7 +140,8 @@ export class NotificationsService implements OnModuleInit {
             clickAction: 'FLUTTER_NOTIFICATION_CLICK', 
             sound: 'default',
             title,
-            body
+            body,
+            ...(imageUrl ? { imageUrl } : {})
           } 
         },
         apns: { 
@@ -142,9 +149,11 @@ export class NotificationsService implements OnModuleInit {
             aps: { 
               sound: 'default', 
               badge: 1,
-              alert: { title, body }
+              alert: { title, body },
+              ...(imageUrl ? { 'mutable-content': 1 } : {})
             } 
-          } 
+          },
+          ...(imageUrl ? { fcmOptions: { imageUrl } } : {})
         },
       };
       const response = await admin.messaging().sendEachForMulticast(message);
@@ -300,15 +309,17 @@ export class NotificationsService implements OnModuleInit {
       await this.sendToTokens([order.guestFcmToken], title, body, { ...data, url: `/track?orderNumber=${order.orderNumber}` });
     }
 
-    // Always send email for order status updates (including Zambia)
+    // Order/shipping updates use EMAIL for ALL customers, including Zambia
+    // SMS is reserved for payment-result notifications only
     const email = order.user?.email;
     if (email) {
-      await this.mailerService.sendMail(
-        email,
-        `Order #${order.orderNumber} Update`,
-        `Your order status is now: ${status}`,
-        ''
-      );
+      await this.mailerService.sendOrderStatusEmail({
+        to: email,
+        firstName: order.user?.firstName || 'Customer',
+        orderNumber: order.orderNumber,
+        status: status,
+        trackingUrl: `${this.configService.get('FRONTEND_URL')}/orders?id=${order.id}`
+      });
     }
   }
 
@@ -330,20 +341,24 @@ export class NotificationsService implements OnModuleInit {
       }
     }
 
+    const isZambia = userCountry === 'ZM' || userCountry?.toLowerCase() === 'zambia';
+
     // Zambia: Send SMS for payment status
-    if (userCountry === 'ZM' && payload.phone) {
+    if (isZambia && payload.phone) {
       const message = `Payment ${payload.paymentNumber} ${isPaid ? 'successful' : 'failed'}. ${isPaid ? 'Thank you for your payment!' : 'Please try again or contact support.'}`;
       await this.sendSMS(payload.phone, message);
-    }
-
-    // Always send email for all users (including Zambia for record keeping)
-    if (payload.email) {
-      await this.mailerService.sendMail(
-        payload.email, 
-        `Payment ${isPaid ? 'Paid' : 'Failed'}`, 
-        `Payment ${payload.paymentNumber} ${isPaid ? 'Paid' : 'Failed'}`, 
-        ''
-      );
+    } else if (payload.email) {
+      // Send email for non-Zambia users or if phone is missing
+      await this.mailerService.sendAnnouncementEmail({
+        to: payload.email,
+        firstName: '',
+        subject: `Payment ${isPaid ? 'Paid' : 'Failed'}`,
+        headline: `Payment ${isPaid ? 'Successful' : 'Failed'}`,
+        bodyHtml: `<p>Payment <strong>${payload.paymentNumber}</strong> for your order has been <strong>${isPaid ? 'successfully processed' : 'failed'}</strong>.</p>
+                   <p>${isPaid ? 'Thank you for your payment! We are now processing your order.' : 'Please try again or contact our support team for assistance.'}</p>`,
+        ctaText: 'View Order Status',
+        ctaUrl: `${this.configService.get('FRONTEND_URL')}/dashboard`
+      });
     }
   }
 
@@ -398,10 +413,44 @@ export class NotificationsService implements OnModuleInit {
     }
   }
 
-  async checkDatabase() { return { status: 'OK' }; }
-  async checkFirebase() { return { status: 'OK' }; }
-  async checkBeem() { return { status: 'OK' }; }
-  async checkSmtp() { return { status: 'OK' }; }
+  async checkDatabase() {
+    try {
+      const count = await this.prisma.notification.count();
+      return { status: 'OK', message: `Database connected. ${count} notifications in system.` };
+    } catch (error) {
+      return { status: 'ERROR', message: `Database connection failed: ${(error as any).message}` };
+    }
+  }
+
+  async checkFirebase() {
+    try {
+      if (!this.isPushConfigured) {
+        return { status: 'UNCONFIGURED', message: 'Firebase not configured. Set FIREBASE_SERVICE_ACCOUNT_JSON to enable push notifications.' };
+      }
+      return { status: 'OK', message: 'Firebase FCM is configured and ready.' };
+    } catch (error) {
+      return { status: 'ERROR', message: `Firebase check failed: ${(error as any).message}` };
+    }
+  }
+
+  async checkBeem() {
+    const apiKey = this.configService.get('BEEM_API_KEY');
+    const secretKey = this.configService.get('BEEM_SECRET_KEY');
+    if (!apiKey || !secretKey) {
+      return { status: 'UNCONFIGURED', message: 'SMS provider (Beem Africa) not configured. Set BEEM_API_KEY and BEEM_SECRET_KEY.' };
+    }
+    return { status: 'OK', message: 'SMS provider (Beem Africa) credentials configured. Zambia + International coverage.' };
+  }
+
+  async checkSmtp() {
+    const host = this.configService.get('SMTP_HOST');
+    const user = this.configService.get('SMTP_USER');
+    const pass = this.configService.get('SMTP_PASS');
+    if (!user || !pass) {
+      return { status: 'UNCONFIGURED', message: 'SMTP not configured. Set SMTP_USER and SMTP_PASS to enable email delivery.' };
+    }
+    return { status: 'OK', message: `SMTP configured (${host}). Email delivery ready.` };
+  }
   async deleteDevice(id: string) { await this.prisma.userDevice.delete({ where: { id } }); }
   async getSmsCountries() { return this.prisma.smsSupportedCountry.findMany(); }
   async addSmsCountry(name: string, dialCode: string, isoCode: string) { return this.prisma.smsSupportedCountry.create({ data: { name, dialCode, isoCode } }); }
@@ -448,8 +497,40 @@ export class NotificationsService implements OnModuleInit {
   async sendSMS(phoneNumber: string, message: string) {
     const apiKey = this.configService.get('BEEM_API_KEY');
     const secretKey = this.configService.get('BEEM_SECRET_KEY');
-    if (!apiKey || !secretKey) return;
+    
+    if (!apiKey || !secretKey) {
+      this.logger.warn(`SMS skipped (Beem Africa not configured): ${phoneNumber}`);
+      return;
+    }
+
+    // Beem Africa expects phone numbers in international format without the '+' sign
+    const cleanPhone = phoneNumber.replace(/\D/g, '');
     const auth = Buffer.from(`${apiKey}:${secretKey}`).toString('base64');
-    try { await axios.post(this.beemBaseUrl, { source_addr: 'INFO', schedule_time: '', encoding: 0, message, recipients: [{ recipient_id: 1, dest_addr: phoneNumber }] }, { headers: { Authorization: `Basic ${auth}` } }); } catch {}
+    
+    try {
+      this.logger.log(`Attempting to send SMS to ${cleanPhone} via Beem...`);
+      const response = await axios.post(
+        this.beemBaseUrl,
+        {
+          source_addr: this.configService.get('BEEM_SOURCE_ADDR', 'INFO'),
+          schedule_time: '',
+          encoding: 0,
+          message,
+          recipients: [{ recipient_id: 1, dest_addr: cleanPhone }]
+        },
+        {
+          headers: { 
+            'Authorization': `Basic ${auth}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      this.logger.log(`SMS sent successfully to ${cleanPhone}. Response: ${JSON.stringify(response.data)}`);
+    } catch (error) {
+      this.logger.error(`SMS failure for ${cleanPhone}: ${error.message}`);
+      if (error.response) {
+        this.logger.error(`Beem API Error Details: ${JSON.stringify(error.response.data)}`);
+      }
+    }
   }
 }

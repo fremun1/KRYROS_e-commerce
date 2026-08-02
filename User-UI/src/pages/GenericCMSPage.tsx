@@ -45,7 +45,7 @@ export default function GenericCMSPage({ slug, title }: { slug: string; title: s
 
   if (loading) {
     return (
-      <div className="max-w-2xl mx-auto px-4 py-5 pb-28">
+      <div className="max-w-2xl mx-auto px-4 py-5 pb-6">
         <div className="w-full h-48 bg-muted rounded-2xl animate-pulse" />
       </div>
     );
@@ -53,7 +53,7 @@ export default function GenericCMSPage({ slug, title }: { slug: string; title: s
 
   if (error) {
     return (
-      <div className="max-w-2xl mx-auto px-4 py-5 pb-28">
+      <div className="max-w-2xl mx-auto px-4 py-5 pb-6">
         <h1 className="text-2xl font-black mb-2">{title}</h1>
         <p className="text-sm text-red-600">{error}</p>
       </div>
@@ -63,7 +63,7 @@ export default function GenericCMSPage({ slug, title }: { slug: string; title: s
   return (
     <div>
       {sections.length === 0 ? (
-        <div className="max-w-2xl mx-auto px-4 py-5 pb-28">
+        <div className="max-w-2xl mx-auto px-4 py-5 pb-6">
           <h1 className="text-2xl font-black mb-2">{title}</h1>
           <p className="text-sm text-muted-foreground">This page has no content configured yet.</p>
         </div>

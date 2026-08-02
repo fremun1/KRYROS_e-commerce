@@ -21,15 +21,15 @@ interface PasswordChecks {
 const OTP_LENGTH = 6;
 const OTP_COUNTDOWN = 60;
 const COUNTRY_CODES = [
-  { code: "+260", label: "Zambia +260" },
-  { code: "+234", label: "Nigeria +234" },
-  { code: "+254", label: "Kenya +254" },
-  { code: "+256", label: "Uganda +256" },
-  { code: "+255", label: "Tanzania +255" },
-  { code: "+27",  label: "South Africa +27" },
-  { code: "+233", label: "Ghana +233" },
-  { code: "+1",   label: "USA/Canada +1" },
-  { code: "+44",  label: "UK +44" },
+  { code: "+260", iso: "ZM", label: "Zambia +260" },
+  { code: "+234", iso: "NG", label: "Nigeria +234" },
+  { code: "+254", iso: "KE", label: "Kenya +254" },
+  { code: "+256", iso: "UG", label: "Uganda +256" },
+  { code: "+255", iso: "TZ", label: "Tanzania +255" },
+  { code: "+27",  iso: "ZA", label: "South Africa +27" },
+  { code: "+233", iso: "GH", label: "Ghana +233" },
+  { code: "+1",   iso: "US", label: "USA/Canada +1" },
+  { code: "+44",  iso: "GB", label: "UK +44" },
 ];
 
 function normalizeIdentifier(value: string): string {
@@ -73,6 +73,7 @@ export default function AuthPage() {
   const [lastName, setLastName] = useState("");
   const [phone, setPhone] = useState("");
   const [countryCode, setCountryCode] = useState("+260");
+  const [selectedIso, setSelectedIso] = useState("ZM");
   const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(""));
   const [countdown, setCountdown] = useState(0);
   const [notice, setNotice] = useState("");
@@ -133,17 +134,39 @@ export default function AuthPage() {
   const handleRegisterAndSendOTP = async () => {
     setNotice("");
     if (!firstName.trim() || !lastName.trim()) { setNotice("Please enter your first and last name."); return; }
+    
+    // Zambia Requirement: Phone is mandatory
+    const isZambia = selectedIso === "ZM";
+    if (isZambia && !phone.trim()) {
+      setNotice("For Zambia registration, a phone number is mandatory for SMS verification.");
+      return;
+    }
+
     setLocalLoading(true);
     try {
+      // For Zambia, if they started with email, we should use their phone as the primary identifier for OTP
+      const finalIdentifier = (isZambia && isEmail) ? (countryCode + phone) : identifier;
+      const normalizedFinal = normalizeIdentifier(finalIdentifier);
+      
       // Send OTP with country detection
       const otpRes = await fetch(`${EFFECTIVE_API_BASE}/api/auth/send-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
-          identifier: normalizeIdentifier(identifier),
-          countryCode: countryCode.replace('+', '') // Convert +260 to ZM format
+          identifier: normalizedFinal,
+          countryCode: selectedIso,
+          // Pass the other identifier so backend can store both in PendingRegistration
+          email: isEmail ? normalizeIdentifier(identifier) : null,
+          phone: !isEmail ? normalizeIdentifier(identifier) : (phone ? countryCode + phone : null)
         })
       });
+      
+      if (otpRes.ok) {
+        // If identifier changed (e.g. from email to phone for Zambia), update state
+        if (normalizedFinal !== normalizeIdentifier(identifier)) {
+          setIdentifier(finalIdentifier);
+        }
+      }
       
       if (!otpRes.ok) {
         const data = await otpRes.json().catch(() => ({}));
@@ -387,10 +410,19 @@ export default function AuthPage() {
       <div className="mb-4"><label className={lc}>First Name</label><input type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="Enter your first name" className={ic} autoFocus autoComplete="given-name" /></div>
       <div className="mb-4"><label className={lc}>Last Name</label><input type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Enter your last name" className={ic} autoComplete="family-name" /></div>
       <div className="mb-5">
-        <label className={lc}>Phone Number (Optional)</label>
+        <label className={lc}>Phone Number {selectedIso === "ZM" ? "(Mandatory)" : "(Optional)"}</label>
         <div className="flex gap-2 h-[48px]">
           <div className="relative w-[100px] shrink-0">
-            <select value={countryCode} onChange={(e) => setCountryCode(e.target.value)} className={`${ic} w-full pr-8 appearance-none cursor-pointer text-center px-2`}>
+            <select 
+              value={countryCode} 
+              onChange={(e) => {
+                const val = e.target.value;
+                setCountryCode(val);
+                const found = COUNTRY_CODES.find(c => c.code === val);
+                if (found) setSelectedIso(found.iso);
+              }} 
+              className={`${ic} w-full pr-8 appearance-none cursor-pointer text-center px-2`}
+            >
               {COUNTRY_CODES.map((c) => (<option key={c.code} value={c.code}>{c.code}</option>))}
             </select>
             <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-[#75757A]">
@@ -432,11 +464,14 @@ export default function AuthPage() {
   // Success redirect effect at component level (not inside render function)
   const successRedirected = useRef(false);
   useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
     if (step === "success" && !successRedirected.current) {
       successRedirected.current = true;
-      const t = setTimeout(() => setLocation("/dashboard"), 3000);
-      return () => clearTimeout(t);
+      timer = setTimeout(() => setLocation("/dashboard"), 3000);
     }
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
   }, [step]);
 
   const renderSuccessStep = () => (
@@ -457,7 +492,7 @@ export default function AuthPage() {
     <div className="fixed inset-0 bg-[#F5F5F5] flex items-center justify-center p-4" style={{ overflow: "hidden" }}>
       <div className="w-full max-w-[400px] bg-white rounded-[20px] shadow-[0_4px_30px_rgba(0,0,0,0.08)] border border-[#E5E5E5] p-6 pb-7 relative overflow-hidden">
         <div key={step} style={{ animation: "fadeSlideIn 0.3s ease-out" }}>
-          {step === "checking" && renderChecking}
+          {step === "checking" && renderChecking()}
           {step === "identifier" && <><NoticeBanner />{renderIdentifierStep()}</>}
           {step === "login" && <><NoticeBanner />{renderLoginStep()}</>}
           {step === "register-password" && <><NoticeBanner />{renderRegisterPasswordStep()}</>}

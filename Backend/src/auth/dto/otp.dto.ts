@@ -15,6 +15,16 @@ export class SendOtpDto {
   @Length(2, 2)
   @Transform(({ value }) => value?.toUpperCase())
   countryCode?: string;
+
+  @ApiProperty({ description: 'Optional email for Zambia dual-identifier registration', required: false })
+  @IsOptional()
+  @IsString()
+  email?: string;
+
+  @ApiProperty({ description: 'Optional phone for Zambia dual-identifier registration', required: false })
+  @IsOptional()
+  @IsString()
+  phone?: string;
 }
 
 export class VerifyOtpDto {

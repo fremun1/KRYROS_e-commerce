@@ -49,6 +49,7 @@ const NotFound = lazy(() => import("@/pages/not-found"));
 const AllCategoriesPage = lazy(() => import("@/pages/AllCategoriesPage"));
 const BrowsePage = lazy(() => import("@/pages/BrowsePage"));
 const GenericCMSPage = lazy(() => import("@/pages/GenericCMSPage"));
+const ForgotPasswordPage = lazy(() => import("@/pages/ForgotPasswordPage"));
 
 import SplashScreen from "@/components/SplashScreen";
 import PwaInstallPrompt from "@/components/PwaInstallPrompt";
@@ -328,7 +329,7 @@ function RegisterRoute() {
 }
 
 function ForgotPasswordRoute() {
-  return <AuthPage />;
+  return <ForgotPasswordPage />;
 }
 
 // ── AppRoutes — handles both splash and page transitions ──────────────────────
@@ -401,12 +402,23 @@ function AppRoutes() {
       {/* <PageTransitionLoader visible={transitioning} /> */}
       {!hideShell && <Header />}
       <Suspense fallback={<PageLoader />}>
-        <div className="pb-16 md:pb-0">
+        <div className="pb-0">
           <Switch>
           <Route path="/" component={HomePage} />
           <Route path="/shop" component={ShopPage} />
           <Route path="/wholesale" component={WholesalePage} />
           <Route path="/get-now" component={GetNowPage} />
+
+          {/* Static Routes First */}
+          <Route path="/cart" component={CartPage} />
+          <Route path="/checkout" component={CheckoutPage} />
+          <Route path="/track-order" component={TrackOrderPage} />
+          <Route path="/track" component={TrackOrderPage} />
+          <Route path="/pickup-stations" component={PickupStationsPage} />
+          <Route path="/dashboard" component={DashboardPage} />
+          <Route path="/login" component={LoginRoute} />
+          <Route path="/register" component={RegisterRoute} />
+          <Route path="/forgot-password" component={ForgotPasswordRoute} />
           
           {/* Context-aware Category/Brand routes */}
           <Route path="/homepage/category/:slug" component={BrowsePage} />
@@ -425,15 +437,6 @@ function AppRoutes() {
           <Route path="/get-now/section/:slug" component={ShopSectionPage} />
 
           <Route path="/product/:slug" component={ProductPage} />
-          <Route path="/cart" component={CartPage} />
-          <Route path="/checkout" component={CheckoutPage} />
-          <Route path="/track-order" component={TrackOrderPage} />
-          <Route path="/track" component={TrackOrderPage} />
-          <Route path="/pickup-stations" component={PickupStationsPage} />
-          <Route path="/dashboard" component={DashboardPage} />
-          <Route path="/login" component={LoginRoute} />
-          <Route path="/register" component={RegisterRoute} />
-          <Route path="/forgot-password" component={ForgotPasswordRoute} />
           <Route path="/about" component={AboutPage} />
           <Route path="/contact" component={ContactPage} />
           <Route path="/privacy" component={PrivacyPage} />
@@ -455,8 +458,9 @@ function AppRoutes() {
         </Switch>
         </div>
       </Suspense>
-      <div className="md:hidden" style={{ height: "calc(56px + env(safe-area-inset-bottom, 0px))" }} /> {/* Spacer for Bottom Nav */}
       {!hideShell && <Footer />}
+      {/* Spacer for MobileBottomNav — only on mobile, sits after footer */}
+      <div className="md:hidden" style={{ height: "calc(56px + env(safe-area-inset-bottom, 0px))" }} />
       <MobileBottomNav />
       <SupportFloatingButtons />
     </>

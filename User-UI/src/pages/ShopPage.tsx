@@ -110,7 +110,7 @@ export default function ShopPage() {
   }, [isSearching, searchQuery]);
 
   return (
-    <div className="pb-24 md:pb-10 max-w-7xl mx-auto">
+    <div className="pb-6 md:pb-10 max-w-7xl mx-auto">
       {isSearching && (
         <div className="px-4 md:px-6 py-6">
           <div className="flex items-center gap-3 mb-4">

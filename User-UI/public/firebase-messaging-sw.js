@@ -21,6 +21,7 @@ if (firebaseConfig.apiKey && firebaseConfig.projectId) {
       body: payload.notification?.body || '',
       icon: '/kryros-logo.png',
       badge: '/favicon.svg',
+      image: payload.notification?.image || payload.data?.imageUrl || '',
       data: payload.data || {},
     };
     self.registration.showNotification(notificationTitle, notificationOptions);

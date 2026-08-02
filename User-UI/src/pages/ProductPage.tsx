@@ -17,8 +17,7 @@ import {
   Package,
   Clock,
   ChevronRight,
-  CreditCard,
-  Info
+  CreditCard
 } from "lucide-react";
 import { toast } from "sonner";
 import { fetchProductById, fetchRelatedProducts, fetchStoreStatus } from "@/lib/api";
@@ -29,6 +28,7 @@ import { useCartStore } from "@/store/cartStore";
 import { useWishlistStore } from "@/store/wishlistStore";
 import { useCurrencyStore } from "@/store/currencyStore";
 import UnifiedProductCard from "@/components/UnifiedProductCard";
+import { getCreditMessage, getProductDisplayPrice, getProductPurchaseMode } from "@/lib/productPurchaseMode";
 
 const SLIDE_INTERVAL = 3500;
 
@@ -229,15 +229,21 @@ export default function ProductPage() {
     </div>
   );
 
+  const purchaseMode = getProductPurchaseMode(product);
+  const isCreditProduct = purchaseMode === "credit";
+  const isWholesaleProduct = purchaseMode === "wholesale";
+  const displayPrice = getProductDisplayPrice(product);
+  const creditMessage = getCreditMessage(product);
+
   const handleAddToCart = () => {
-    if (product.isWholesaleOnly && qty < (product.wholesaleMoq || 1)) {
+    if (isWholesaleProduct && qty < (product.wholesaleMoq || 1)) {
       toast.error(`Minimum order quantity is ${product.wholesaleMoq}`);
       return;
     }
     addToCart({
       id: product.id,
       name: product.name,
-      price: product.isWholesaleOnly ? (product.wholesalePrice || product.price) : product.price,
+      price: displayPrice,
       qty,
       image: product.image,
       shippingFee: product.shippingFee,
@@ -245,24 +251,24 @@ export default function ProductPage() {
       estimatedDeliveryMinDays: product.estimatedDeliveryMinDays,
       estimatedDeliveryMaxDays: product.estimatedDeliveryMaxDays,
       condition: product.condition,
-      allowCredit: product.allowCredit,
-      creditMinimum: product.creditMinimum,
-      isWholesaleOnly: product.isWholesaleOnly,
-      wholesalePrice: product.wholesalePrice,
+      allowCredit: isCreditProduct,
+      creditMinimum: product.creditMinimum ?? undefined,
+      isWholesaleOnly: isWholesaleProduct,
+      wholesalePrice: product.wholesalePrice ?? undefined,
       wholesaleMoq: product.wholesaleMoq
     });
-    toast.success(product.isWholesaleOnly ? "Added to wholesale request" : "Added to cart", { description: product.name });
+    toast.success(isWholesaleProduct ? "Added to wholesale request" : "Added to cart", { description: product.name });
   };
 
   const handleAction = () => {
-    if (product.isWholesaleOnly && qty < (product.wholesaleMoq || 1)) {
+    if (isWholesaleProduct && qty < (product.wholesaleMoq || 1)) {
       toast.error(`Minimum order quantity is ${product.wholesaleMoq}`);
       return;
     }
     addToCart({
       id: product.id,
       name: product.name,
-      price: product.isWholesaleOnly ? (product.wholesalePrice || product.price) : product.price,
+      price: displayPrice,
       qty,
       image: product.image,
       shippingFee: product.shippingFee,
@@ -270,10 +276,10 @@ export default function ProductPage() {
       estimatedDeliveryMinDays: product.estimatedDeliveryMinDays,
       estimatedDeliveryMaxDays: product.estimatedDeliveryMaxDays,
       condition: product.condition,
-      allowCredit: product.allowCredit,
-      creditMinimum: product.creditMinimum,
-      isWholesaleOnly: product.isWholesaleOnly,
-      wholesalePrice: product.wholesalePrice,
+      allowCredit: isCreditProduct,
+      creditMinimum: product.creditMinimum ?? undefined,
+      isWholesaleOnly: isWholesaleProduct,
+      wholesalePrice: product.wholesalePrice ?? undefined,
       wholesaleMoq: product.wholesaleMoq
     });
     // All products (credit, wholesale, normal) go to regular checkout
@@ -380,9 +386,9 @@ export default function ProductPage() {
         {/* Price row */}
         <div className="flex items-center gap-2.5 flex-wrap">
           <span className="text-3xl lg:text-4xl font-black text-foreground">
-            {product.isWholesaleOnly && product.wholesalePrice ? format(product.wholesalePrice) : format(product.price)}
+            {format(displayPrice)}
           </span>
-          {product.oldPrice > product.price && (
+          {product.oldPrice > displayPrice && (
             <span className="text-base text-muted-foreground line-through">
               {format(product.oldPrice)}
             </span>
@@ -393,7 +399,7 @@ export default function ProductPage() {
         </div>
 
         {/* Wholesale Details */}
-        {product.isWholesaleOnly && (
+        {isWholesaleProduct && (
           <div className="bg-primary/5 border border-primary/10 p-3 rounded-2xl flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center flex-shrink-0 shadow-sm">
               <Package className="w-5 h-5 text-primary-foreground" />
@@ -405,36 +411,16 @@ export default function ProductPage() {
           </div>
         )}
 
-        {/* Credit Details */}
-        {product.allowCredit && (
-          <div className="bg-primary/5 border border-primary/10 p-4 rounded-2xl space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center flex-shrink-0 shadow-sm">
-                <CreditCard className="w-5 h-5 text-primary-foreground" />
-              </div>
-              <div>
-                <p className="text-[10px] font-black text-primary uppercase tracking-wider">Payment Breakdown</p>
-                <p className="text-xs font-bold text-foreground">{product.creditMessage || "Get Now, Pay Later"}</p>
-              </div>
+        {/* Credit Details — deliberately mirrors the wholesale information card. */}
+        {isCreditProduct && (
+          <div className="bg-primary/5 border border-primary/10 p-3 rounded-2xl flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center flex-shrink-0 shadow-sm">
+              <CreditCard className="w-5 h-5 text-primary-foreground" />
             </div>
-            <div className="grid grid-cols-1 gap-2 pt-2 border-t border-primary/10">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] text-muted-foreground font-medium">Total Product Price</span>
-                <span className="text-sm font-bold text-foreground">{format(product.price)}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] text-muted-foreground font-medium">Initial Deposit Required</span>
-                <span className="text-sm font-black text-primary">{format(product.creditMinimum || 0)}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] text-muted-foreground font-medium">Monthly Installment (12mo)</span>
-                <span className="text-sm font-bold text-foreground">{format((product.price - (product.creditMinimum || 0)) / 12)}/mo</span>
-              </div>
-            </div>
-            <div className="bg-primary/10 p-2 rounded-xl flex items-start gap-2">
-              <Info className="w-3 h-3 text-primary mt-0.5 flex-shrink-0" />
-              <p className="text-[9px] text-primary/80 leading-tight">
-                This is an estimate based on a 12-month plan. Actual monthly payments may vary based on your selected credit plan during checkout.
+            <div className="min-w-0">
+              <p className="text-[10px] font-black text-primary uppercase tracking-wider">Credit Available</p>
+              <p className="text-xs font-bold text-foreground truncate" title={creditMessage}>
+                Deposit: {format(product.creditMinimum || 0)} · {creditMessage}
               </p>
             </div>
           </div>
@@ -513,11 +499,11 @@ export default function ProductPage() {
           ) : (
             <>
               {/* Buy It Now — solid primary */}
-              <button onClick={handleAction} disabled={product.stock === 0 || (product.isWholesaleOnly && qty < (product.wholesaleMoq || 1))}
+              <button onClick={handleAction} disabled={product.stock === 0 || (isWholesaleProduct && qty < (product.wholesaleMoq || 1))}
                 className="w-full py-3.5 bg-primary text-primary-foreground rounded-full font-bold text-sm hover:bg-primary/90 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2">
-                {product.allowCredit ? (
+                {isCreditProduct ? (
                   <><CreditCard className="w-4 h-4" /> Apply for Credit</>
-                ) : product.isWholesaleOnly ? (
+                ) : isWholesaleProduct ? (
                   <><Package className="w-4 h-4" /> Request Bulk Quote</>
                 ) : (
                   "Shop Now"
@@ -525,10 +511,10 @@ export default function ProductPage() {
               </button>
 
               {/* Add to Cart — outlined */}
-              {!product.allowCredit && (
-                <button onClick={handleAddToCart} disabled={product.stock === 0 || (product.isWholesaleOnly && qty < (product.wholesaleMoq || 1))}
+              {!isCreditProduct && (
+                <button onClick={handleAddToCart} disabled={product.stock === 0 || (isWholesaleProduct && qty < (product.wholesaleMoq || 1))}
                   className="w-full py-3.5 border border-primary text-primary rounded-full font-bold text-sm hover:bg-primary/5 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2">
-                  {product.isWholesaleOnly ? "Add to Bulk Request" : "Add to cart"}
+                  {isWholesaleProduct ? "Add to Bulk Request" : "Add to cart"}
                 </button>
               )}
 
@@ -576,7 +562,7 @@ export default function ProductPage() {
                 {renderSpecs(product.specs)}
                 
                 {/* Dynamically show additional info if it exists but isn't in specs */}
-                {product.isWholesaleOnly && (
+                {isWholesaleProduct && (
                   <div className="pt-2 border-t border-border/50">
                     <p className="font-bold text-foreground mb-1">Wholesale Information</p>
                     <div className="grid grid-cols-2 gap-y-1">
@@ -588,14 +574,14 @@ export default function ProductPage() {
                   </div>
                 )}
                 
-                {product.allowCredit && (
+                {isCreditProduct && (
                   <div className="pt-2 border-t border-border/50">
                     <p className="font-bold text-foreground mb-1">Credit Information</p>
                     <div className="grid grid-cols-2 gap-y-1">
+                      <span>Credit Option:</span>
+                      <span className="font-semibold text-primary">{creditMessage}</span>
                       <span>Initial Deposit:</span>
                       <span className="font-semibold text-primary">{format(product.creditMinimum || 0)}</span>
-                      <span>Credit Plan:</span>
-                      <span className="font-semibold">12 Months</span>
                     </div>
                   </div>
                 )}

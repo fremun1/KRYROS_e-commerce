@@ -40,9 +40,9 @@ export class EmailService {
 
     await this.send(to, 'Reset Your KRYROS Password', `
       <div style="font-family:Arial,sans-serif;max-width:480px;margin:auto;padding:32px;background:#f9f9f9;border-radius:8px;">
-        <h2 style="color:#111;margin-bottom:8px;">Reset your password</h2>
+        <h2 style="color:#313133;margin-bottom:8px;">Reset your password</h2>
         <p style="color:#555;">You requested a password reset for your KRYROS account.</p>
-        <a href="${link}" style="display:inline-block;margin:24px 0;padding:12px 28px;background:#111;color:#fff;border-radius:6px;text-decoration:none;font-weight:bold;">
+        <a href="${link}" style="display:inline-block;margin:24px 0;padding:12px 28px;background:#C0151B;color:#fff;border-radius:6px;text-decoration:none;font-weight:bold;">
           Reset Password
         </a>
         <p style="color:#999;font-size:13px;">This link expires in <strong>1 hour</strong>. If you didn't request this, ignore this email.</p>
@@ -57,9 +57,9 @@ export class EmailService {
 
     await this.send(to, 'Verify Your KRYROS Email Address', `
       <div style="font-family:Arial,sans-serif;max-width:480px;margin:auto;padding:32px;background:#f9f9f9;border-radius:8px;">
-        <h2 style="color:#111;margin-bottom:8px;">Welcome to KRYROS 👋</h2>
+        <h2 style="color:#313133;margin-bottom:8px;">Welcome to KRYROS 👋</h2>
         <p style="color:#555;">Please verify your email address to activate your account.</p>
-        <a href="${link}" style="display:inline-block;margin:24px 0;padding:12px 28px;background:#111;color:#fff;border-radius:6px;text-decoration:none;font-weight:bold;">
+        <a href="${link}" style="display:inline-block;margin:24px 0;padding:12px 28px;background:#C0151B;color:#fff;border-radius:6px;text-decoration:none;font-weight:bold;">
           Verify Email
         </a>
         <p style="color:#999;font-size:13px;">This link expires in <strong>24 hours</strong>. If you didn't create an account, ignore this email.</p>
@@ -71,7 +71,7 @@ export class EmailService {
   async sendOtp(to: string, code: string): Promise<void> {
     await this.send(to, `${code} is your KRYROS verification code`, `
       <div style="font-family:Arial,sans-serif;max-width:480px;margin:auto;padding:32px;background:#f9f9f9;border-radius:8px;">
-        <h2 style="color:#111;margin-bottom:8px;">Verification Code</h2>
+        <h2 style="color:#313133;margin-bottom:8px;">Verification Code</h2>
         <p style="color:#555;">Use the code below to complete your registration or login.</p>
         <div style="margin:24px 0;padding:16px;background:#fff;border:1px solid #eee;border-radius:6px;text-align:center;">
           <span style="font-size:32px;font-weight:bold;letter-spacing:8px;color:#C0151B;">${code}</span>

@@ -87,7 +87,7 @@ export default function CartPage() {
     <div className="min-h-screen bg-background">
       <TopBar />
     {/* lg: extra top padding + wider horizontal padding */}
-    <div className="max-w-7xl mx-auto px-4 md:px-6 py-6 pb-24 md:pb-10 lg:py-10 lg:px-8">
+    <div className="max-w-7xl mx-auto px-4 md:px-6 py-6 pb-6 md:pb-10 lg:py-10 lg:px-8">
       <div className="flex items-center justify-between mb-6">
         {/* lg: larger heading */}
         <h1 className="text-2xl md:text-3xl font-black text-foreground lg:text-4xl">

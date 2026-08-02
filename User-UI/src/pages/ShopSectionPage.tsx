@@ -310,7 +310,7 @@ export default function ShopSectionPage() {
   const showLoadMore = totalLoaded === take;
 
   return (
-    <div className="pb-24 md:pb-10 min-h-screen">
+    <div className="pb-6 md:pb-10 min-h-screen">
       {/* Loading skeleton */}
       {initialLoad && (
         <div className="max-w-7xl mx-auto px-3 md:px-6 py-6">

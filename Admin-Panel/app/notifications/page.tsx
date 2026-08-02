@@ -265,9 +265,19 @@ function PushContent() {
               <label style={{ fontSize: 11, fontWeight: 600, color: textMuted, marginBottom: 5, display: 'flex', alignItems: 'center', gap: 4 }}>
                 <ImageIcon style={{ width: 11, height: 11 }} /> Notification Banner Image <span style={{ fontWeight: 400, color: textMuted }}>(optional)</span>
               </label>
-              {pushImageUrl ? (
+              {pushImageUrl && pushImageUrl.trim().length > 0 ? (
                 <div style={{ position: 'relative', marginBottom: 8 }}>
-                  <img src={pushImageUrl} alt="Banner preview" style={{ width: '100%', maxHeight: 120, objectFit: 'cover', borderRadius: 8, border: `1px solid ${border}` }} />
+                  <img 
+                    src={pushImageUrl} 
+                    alt="Banner preview" 
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = 'none';
+                    }}
+                    onLoad={(e) => {
+                      (e.target as HTMLImageElement).style.display = 'block';
+                    }}
+                    style={{ width: '100%', maxHeight: 120, objectFit: 'cover', borderRadius: 8, border: `1px solid ${border}` }} 
+                  />
                   <button
                     onClick={() => setPushImageUrl('')}
                     style={{ position: 'absolute', top: 6, right: 6, background: 'rgba(0,0,0,0.6)', border: 'none', borderRadius: '50%', width: 22, height: 22, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}

@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Upload, Video, Image as ImageIcon, X } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -56,6 +56,23 @@ export default function CloudinaryUpload({
   const [urlInput, setUrlInput] = useState("");
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState("");
+
+  // ── Sync urlInput with external value changes (e.g. when editing an existing record) ──
+  useEffect(() => {
+    if (!value) {
+      // External clear — reset local state too
+      setUrlInput("");
+      setPreview(null);
+    } else if (value !== (preview?.url || "")) {
+      // External value set (e.g. edit mode loaded) — reflect in URL input
+      if (value.startsWith("http") || value.startsWith("/")) {
+        setUrlInput(value);
+        const isVideo = /\.(mp4|mov|webm|ogg|m4v)(\?.*)?$/i.test(value);
+        setPreview({ name: value, type: isVideo ? "video" : "image", url: value });
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value]);
 
   // ── Direct-to-Cloudinary upload ──────────────────────────────────────────
   async function uploadToCloudinary(file: File): Promise<string> {
@@ -171,7 +188,7 @@ export default function CloudinaryUpload({
               <X size={13} color="white" />
             </button>
           </div>
-          <div style={{ padding: "6px 10px", background: "rgba(0,0,0,0.5)", fontSize: "11px", color: textMuted, display: "flex", alignItems: "center", gap: "6px" }}>
+          <div style={{ padding: "6px 10px", background: "rgba(0,0,0,0.5)", fontSize: "11px", color: "#fff", display: "flex", alignItems: "center", gap: "6px" }}>
             {displayType === "video" ? <Video size={11} /> : <ImageIcon size={11} />}
             {(preview?.name || value).startsWith("data:") ? "Uploaded file" : (preview?.name || value).slice(0, 50)}
           </div>
@@ -228,7 +245,7 @@ export default function CloudinaryUpload({
             value={urlInput}
             onChange={e => handleUrlChange(e.target.value)}
             placeholder="Paste image URL, video URL, or YouTube link"
-            style={{ width: "100%", padding: "8px 10px", borderRadius: "7px", background: surface, border: `1px solid ${border}`, color: textMuted, fontSize: "12px", outline: "none", fontFamily: "inherit", boxSizing: "border-box" }}
+            style={{ width: "100%", padding: "8px 10px", borderRadius: "7px", background: surface, border: `1px solid ${border}`, color: textMain, fontSize: "12px", outline: "none", fontFamily: "inherit", boxSizing: "border-box" }}
           />
         </>
       )}
