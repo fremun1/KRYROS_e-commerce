@@ -20,6 +20,8 @@ import {
   createProduct, 
   updateProduct, 
   deleteProduct,
+  getSettings,
+  updateSettings,
   api
 } from '@/lib/api';
 import CloudinaryUpload from '@/components/ui/file-upload';
@@ -45,13 +47,38 @@ type WholesaleProduct = {
   stockTotal?: number;
   stockCurrent?: number;
   condition?: string;
+  shippingFee?: string;
+  estimatedDeliveryDays?: string;
+  estimatedDeliveryMinDays?: string;
+  estimatedDeliveryMaxDays?: string;
 };
 
 const TIERS = ['Bronze','Silver','Gold','Platinum'];
 const PARTNER_STATUSES = ['Active','Inactive','Pending','Suspended'];
 const APP_STATUSES = ['Pending', 'Approved', 'Rejected'];
 const DEFAULT_WHOLESALE_CATEGORIES = ['Electronics', 'Audio', 'Wearables', 'Clothing', 'Food & Beverages', 'Sports'];
+const DEFAULT_CONDITION_OPTIONS = ['New', 'Used', 'Refurbished'];
 const toSlug = (value: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+
+const parseConditionOptions = (raw?: string | null): string[] => {
+  if (!raw || !raw.trim()) return DEFAULT_CONDITION_OPTIONS;
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) {
+      const cleaned = parsed
+        .map((item) => String(item || '').trim())
+        .filter(Boolean);
+      return cleaned.length > 0 ? Array.from(new Set(cleaned)) : DEFAULT_CONDITION_OPTIONS;
+    }
+  } catch {}
+
+  const cleaned = raw
+    .split(/\r?\n|,|\|/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+
+  return cleaned.length > 0 ? Array.from(new Set(cleaned)) : DEFAULT_CONDITION_OPTIONS;
+};
 
 function WholesaleContent() {
   const card = 'var(--card)';
@@ -174,18 +201,61 @@ function WholesaleContent() {
   const [iForm, setIForm] = useState({ 
     name:'', sku:'', price:'', moq:'', category:'Electronics', status:'Active',
     description: '', imageUrl: '', images: [] as string[], specifications: '',
-    stockTotal: '100', stockCurrent: '100', condition: 'New'
+    stockTotal: '100', stockCurrent: '100', condition: 'New',
+    shippingFee: '', estimatedDeliveryDays: '3', estimatedDeliveryMinDays: '2', estimatedDeliveryMaxDays: '7'
   });
   const [invImages, setInvImages] = useState<string[]>([]);
+  const [conditionOptions, setConditionOptions] = useState<string[]>(DEFAULT_CONDITION_OPTIONS);
+  const [conditionSettingsOpen, setConditionSettingsOpen] = useState(false);
+  const [conditionDraft, setConditionDraft] = useState(DEFAULT_CONDITION_OPTIONS.join('\n'));
+  const [conditionSaving, setConditionSaving] = useState(false);
   const ifp = (k:string) => (v:string) => setIForm(f=>({...f,[k]:v}));
 
   useEffect(() => {
+    loadConditionSettings();
     getCategories().then((r: any) => {
       const data = r?.data ?? r ?? [];
       const names = data.map((c: any) => c.name || c).filter(Boolean);
       if (names.length > 0) setCategories(names);
     }).catch(() => {});
   }, []);
+
+  const loadConditionSettings = async () => {
+    try {
+      const r: any = await getSettings();
+      const settings = Array.isArray(r.data) ? r.data : [];
+      const conditionSetting = settings.find((s: any) => s?.key === 'product_condition_options');
+      const nextOptions = parseConditionOptions(conditionSetting?.value);
+      setConditionOptions(nextOptions);
+      setConditionDraft(nextOptions.join('\n'));
+      setIForm((current: any) => {
+        if (!current.condition || !nextOptions.includes(current.condition)) {
+          return { ...current, condition: nextOptions[0] };
+        }
+        return current;
+      });
+    } catch {
+      setConditionOptions(DEFAULT_CONDITION_OPTIONS);
+      setConditionDraft(DEFAULT_CONDITION_OPTIONS.join('\n'));
+    }
+  };
+
+  const handleSaveConditionSettings = async () => {
+    setConditionSaving(true);
+    try {
+      const parsed = parseConditionOptions(conditionDraft);
+      await updateSettings([
+        { key: 'product_condition_options', value: JSON.stringify(parsed) }
+      ]);
+      setConditionOptions(parsed);
+      setConditionSettingsOpen(false);
+      toast.success('Condition options updated successfully');
+    } catch (err: any) {
+      toast.error('Failed to update condition options');
+    } finally {
+      setConditionSaving(false);
+    }
+  };
 
   const loadWholesaleProducts = () => {
     getProducts({ isWholesaleOnly: 'true', includeWholesale: 'true', take: 100 }).then(r => {
@@ -205,7 +275,12 @@ function WholesaleContent() {
         rawPrice: p.wholesalePrice || p.price || 0,
         rawMoq: p.wholesaleMoq || 1,
         stockTotal: p.stockTotal ?? p.inventory?.stock ?? 0,
-        stockCurrent: p.stockCurrent ?? p.inventory?.stock ?? 0
+        stockCurrent: p.stockCurrent ?? p.inventory?.stock ?? 0,
+        condition: p.condition || 'New',
+        shippingFee: p.shippingFee != null ? String(Number(p.shippingFee)) : '',
+        estimatedDeliveryDays: p.estimatedDeliveryDays != null ? String(Number(p.estimatedDeliveryDays)) : '3',
+        estimatedDeliveryMinDays: p.estimatedDeliveryMinDays != null ? String(Number(p.estimatedDeliveryMinDays)) : '2',
+        estimatedDeliveryMaxDays: p.estimatedDeliveryMaxDays != null ? String(Number(p.estimatedDeliveryMaxDays)) : '7'
       })));
     });
   };
@@ -300,7 +375,11 @@ function WholesaleContent() {
         replaceImages: invImages.length > 0,
         imageDataUrls: invImages,
         condition: iForm.condition,
-        specifications: iForm.specifications ? [{ key: 'Specifications', value: iForm.specifications }] : undefined
+        specifications: iForm.specifications ? [{ key: 'Specifications', value: iForm.specifications }] : undefined,
+        shippingFee: Number(iForm.shippingFee) || 0,
+        estimatedDeliveryDays: Number(iForm.estimatedDeliveryDays) || 3,
+        estimatedDeliveryMinDays: Number(iForm.estimatedDeliveryMinDays) || 2,
+        estimatedDeliveryMaxDays: Number(iForm.estimatedDeliveryMaxDays) || 7
       });
       toast.success('Wholesale product added');
       setAddInvOpen(false);
@@ -337,7 +416,11 @@ function WholesaleContent() {
         replaceImages: invImages.length > 0,
         imageDataUrls: invImages,
         condition: iForm.condition,
-        specifications: iForm.specifications ? [{ key: 'Specifications', value: iForm.specifications }] : []
+        specifications: iForm.specifications ? [{ key: 'Specifications', value: iForm.specifications }] : [],
+        shippingFee: Number(iForm.shippingFee) || 0,
+        estimatedDeliveryDays: Number(iForm.estimatedDeliveryDays) || 3,
+        estimatedDeliveryMinDays: Number(iForm.estimatedDeliveryMinDays) || 2,
+        estimatedDeliveryMaxDays: Number(iForm.estimatedDeliveryMaxDays) || 7
       });
       toast.success('Wholesale product updated');
       setEditInv(null);
@@ -385,7 +468,31 @@ function WholesaleContent() {
         <FormField label="Current Stock" value={iForm.stockCurrent} onChange={ifp('stockCurrent')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="100" />
       </div>
       <div style={{ display:'grid', gridTemplateColumns:'repeat(2, minmax(0, 1fr))', gap:'12px' }}>
-        <FormField label="Product Condition" value={iForm.condition} onChange={ifp('condition')} options={['New', 'Used', 'Refurbished']} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+        <FormField label="Product Condition" value={iForm.condition} onChange={ifp('condition')} options={conditionOptions} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+        <div style={{ display:'flex', alignItems:'center', gap:'8px' }}>
+          <FormField label="Shipping Fee" value={iForm.shippingFee} onChange={ifp('shippingFee')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="0.00" />
+          <button 
+            onClick={() => setConditionSettingsOpen(true)}
+            style={{
+              padding:'8px 12px',
+              borderRadius:'8px',
+              fontSize:'12px',
+              fontWeight:600,
+              background:'var(--primary)',
+              color:'#fff',
+              border:'none',
+              cursor:'pointer',
+              whiteSpace:'nowrap'
+            }}
+          >
+            Manage Conditions
+          </button>
+        </div>
+      </div>
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(3, minmax(0, 1fr))', gap:'12px' }}>
+        <FormField label="Est. Delivery Days" value={iForm.estimatedDeliveryDays} onChange={ifp('estimatedDeliveryDays')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="3" />
+        <FormField label="Min Days" value={iForm.estimatedDeliveryMinDays} onChange={ifp('estimatedDeliveryMinDays')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="2" />
+        <FormField label="Max Days" value={iForm.estimatedDeliveryMaxDays} onChange={ifp('estimatedDeliveryMaxDays')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="7" />
       </div>
       <FormField label="Description" value={iForm.description} onChange={ifp('description')} type="textarea" border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Describe the wholesale product..." />
       <FormField label="Specifications" value={iForm.specifications} onChange={ifp('specifications')} type="textarea" border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. Color: Black | RAM: 8GB | Storage: 256GB" />
@@ -515,7 +622,7 @@ function WholesaleContent() {
         {section === 'inventory' && (
           <div style={{ padding:'20px' }}>
             <div style={{ display:'flex', justifyContent:'flex-end', marginBottom:'16px' }}>
-              <button onClick={() => { setIForm({name:'',sku:'',price:'',moq:'',category:'Electronics',status:'Active',description:'',imageUrl:'',images:[],specifications:'',stockTotal:'100',stockCurrent:'100',condition:'New'}); setInvImages([]); setAddInvOpen(true); }}
+              <button onClick={() => { setIForm({name:'',sku:'',price:'',moq:'',category:'Electronics',status:'Active',description:'',imageUrl:'',images:[],specifications:'',stockTotal:'100',stockCurrent:'100',condition:conditionOptions[0] || 'New',shippingFee:'',estimatedDeliveryDays:'3',estimatedDeliveryMinDays:'2',estimatedDeliveryMaxDays:'7'}); setInvImages([]); setAddInvOpen(true); }}
                 style={{ background:'var(--primary)', color:'white', border:'none', padding:'8px 16px', borderRadius:'8px', fontWeight:600, cursor:'pointer' }}>
                 Add Wholesale Product
               </button>
@@ -537,7 +644,11 @@ function WholesaleContent() {
                   specifications: i.specifications || '',
                   stockTotal: String(i.stockTotal || 100),
                   stockCurrent: String(i.stockCurrent || 100),
-                  condition: i.condition || 'New'
+                  condition: i.condition || 'New',
+                  shippingFee: i.shippingFee || '',
+                  estimatedDeliveryDays: i.estimatedDeliveryDays || '3',
+                  estimatedDeliveryMinDays: i.estimatedDeliveryMinDays || '2',
+                  estimatedDeliveryMaxDays: i.estimatedDeliveryMaxDays || '7'
                 }); 
                 setInvImages(i.images || []); 
               }} 
@@ -574,6 +685,36 @@ function WholesaleContent() {
       <Modal open={!!editInv} onClose={() => setEditInv(null)} title={`Edit Wholesale Product${editInv?.name ? `: ${editInv.name}` : ''}`} maxWidth="680px">
         {inventoryForm}
         <ModalFooter onClose={() => setEditInv(null)} onSubmit={handleEditInv} loading={inventorySaving} submitLabel="Save Changes" border={border} textMain={textMain} />
+      </Modal>
+
+      {/* Condition Settings Modal */}
+      <Modal open={conditionSettingsOpen} onClose={() => setConditionSettingsOpen(false)} title="Manage Product Conditions" maxWidth="500px">
+        <div style={{ padding:'20px' }}>
+          <p style={{ fontSize:'13px', color:textMuted, marginBottom:'12px' }}>
+            Add one condition per line. These options will appear in the condition dropdown when creating products.
+          </p>
+          <textarea
+            value={conditionDraft}
+            onChange={(e) => setConditionDraft(e.target.value)}
+            style={{
+              width:'100%',
+              minHeight:'120px',
+              padding:'12px',
+              borderRadius:'8px',
+              border:`1px solid ${border}`,
+              background:surface,
+              color:textMain,
+              fontSize:'13px',
+              fontFamily:'inherit',
+              resize:'vertical'
+            }}
+            placeholder="New&#10;Used&#10;Refurbished&#10;Open Box"
+          />
+          <div style={{ marginTop:'12px', fontSize:'12px', color:textMuted }}>
+            Current options: {conditionOptions.join(', ')}
+          </div>
+        </div>
+        <ModalFooter onClose={() => setConditionSettingsOpen(false)} onSubmit={handleSaveConditionSettings} loading={conditionSaving} submitLabel="Save Conditions" border={border} textMain={textMain} />
       </Modal>
 
       {/* Delete Dialogs */}

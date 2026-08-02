@@ -6,14 +6,34 @@ import PageHeader from '@/components/admin/page-header';
 import { Modal, ConfirmDialog, FormField, ModalFooter } from '@/components/admin/modal';
 import { CreditCard, X } from 'lucide-react';
 import toast from 'react-hot-toast';
-import api, { getCreditAccounts, getCreditPlans, createCreditPlan, updateCreditPlan, deleteCreditPlan, getProducts, createProduct, updateProduct, deleteProduct } from '@/lib/api';
+import api, { getCreditAccounts, getCreditPlans, createCreditPlan, updateCreditPlan, deleteCreditPlan, getProducts, createProduct, updateProduct, deleteProduct, getSettings, updateSettings } from '@/lib/api';
 import CloudinaryUpload from '@/components/ui/file-upload';
 
 // ─── Types ────────────────────────────────────────────────
 type Credit = { id:string; customer:string; phone:string; limit:string; used:string; available:string; due:string; status:string; plan:string; outstanding:string };
 type Application = { id:string; user:string; email:string; product:string; plan:string; amount:string; status:string; date:string };
 type Plan = { id:string; name:string; months:number; interest:string; minAmount:string; maxAmount:string; status:string };
-type InstProduct = { id:string; name:string; sku:string; price:string; plans:string; status:string; condition?: string };
+type InstProduct = { 
+  id:string; 
+  name:string; 
+  sku:string; 
+  price:string; 
+  plans:string; 
+  status:string; 
+  condition?: string;
+  description?: string;
+  specifications?: string;
+  creditMessage?: string;
+  creditMinimum?: string;
+  images?: string[];
+  rawPrice?: number;
+  stockTotal?: number;
+  stockCurrent?: number;
+  shippingFee?: string;
+  estimatedDeliveryDays?: string;
+  estimatedDeliveryMinDays?: string;
+  estimatedDeliveryMaxDays?: string;
+};
 
 // ─── Initial Data ─────────────────────────────────────────
 // Credits loaded from API
@@ -23,6 +43,27 @@ type InstProduct = { id:string; name:string; sku:string; price:string; plans:str
 
 const APP_STATUSES = ['Pending', 'Approved', 'Rejected'];
 const PLAN_STATUSES = ['Active', 'Inactive'];
+const DEFAULT_CONDITION_OPTIONS = ['New', 'Used', 'Refurbished'];
+
+const parseConditionOptions = (raw?: string | null): string[] => {
+  if (!raw || !raw.trim()) return DEFAULT_CONDITION_OPTIONS;
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) {
+      const cleaned = parsed
+        .map((item) => String(item || '').trim())
+        .filter(Boolean);
+      return cleaned.length > 0 ? Array.from(new Set(cleaned)) : DEFAULT_CONDITION_OPTIONS;
+    }
+  } catch {}
+
+  const cleaned = raw
+    .split(/\r?\n|,|\|/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+
+  return cleaned.length > 0 ? Array.from(new Set(cleaned)) : DEFAULT_CONDITION_OPTIONS;
+};
 
 function CreditContent() {
   const card = 'var(--card)';
@@ -114,9 +155,14 @@ function CreditContent() {
   const [prodForm, setProdForm] = useState({ 
     name:'', sku:'', price:'', status:'Active', 
     description:'', specifications:'', creditMessage:'', creditMinimum:'',
-    stockTotal: '100', stockCurrent: '100', condition: 'New'
+    stockTotal: '100', stockCurrent: '100', condition: 'New',
+    shippingFee: '', estimatedDeliveryDays: '3', estimatedDeliveryMinDays: '2', estimatedDeliveryMaxDays: '7'
   });
   const [prodImages, setProdImages] = useState<string[]>([]);
+  const [conditionOptions, setConditionOptions] = useState<string[]>(DEFAULT_CONDITION_OPTIONS);
+  const [conditionSettingsOpen, setConditionSettingsOpen] = useState(false);
+  const [conditionDraft, setConditionDraft] = useState(DEFAULT_CONDITION_OPTIONS.join('\n'));
+  const [conditionSaving, setConditionSaving] = useState(false);
 
   const appendUploadedImage = (url?: string) => {
     if (!url) return;
@@ -162,7 +208,12 @@ function CreditContent() {
         images: Array.isArray(p.images) ? p.images.map((img: any) => img?.url || img || '').filter(Boolean) : [],
         rawPrice: p.price || 0,
         stockTotal: p.stockTotal ?? p.inventory?.stock ?? 0,
-        stockCurrent: p.stockCurrent ?? p.inventory?.stock ?? 0
+        stockCurrent: p.stockCurrent ?? p.inventory?.stock ?? 0,
+        condition: p.condition || 'New',
+        shippingFee: p.shippingFee != null ? String(Number(p.shippingFee)) : '',
+        estimatedDeliveryDays: p.estimatedDeliveryDays != null ? String(Number(p.estimatedDeliveryDays)) : '3',
+        estimatedDeliveryMinDays: p.estimatedDeliveryMinDays != null ? String(Number(p.estimatedDeliveryMinDays)) : '2',
+        estimatedDeliveryMaxDays: p.estimatedDeliveryMaxDays != null ? String(Number(p.estimatedDeliveryMaxDays)) : '7'
       })));
     });
   };
@@ -170,6 +221,47 @@ function CreditContent() {
   useEffect(() => {
     if (activeTab === 'products') loadCreditProducts();
   }, [activeTab]);
+
+  useEffect(() => {
+    loadConditionSettings();
+  }, []);
+
+  const loadConditionSettings = async () => {
+    try {
+      const r: any = await getSettings();
+      const settings = Array.isArray(r.data) ? r.data : [];
+      const conditionSetting = settings.find((s: any) => s?.key === 'product_condition_options');
+      const nextOptions = parseConditionOptions(conditionSetting?.value);
+      setConditionOptions(nextOptions);
+      setConditionDraft(nextOptions.join('\n'));
+      setProdForm((current: any) => {
+        if (!current.condition || !nextOptions.includes(current.condition)) {
+          return { ...current, condition: nextOptions[0] };
+        }
+        return current;
+      });
+    } catch {
+      setConditionOptions(DEFAULT_CONDITION_OPTIONS);
+      setConditionDraft(DEFAULT_CONDITION_OPTIONS.join('\n'));
+    }
+  };
+
+  const handleSaveConditionSettings = async () => {
+    setConditionSaving(true);
+    try {
+      const parsed = parseConditionOptions(conditionDraft);
+      await updateSettings([
+        { key: 'product_condition_options', value: JSON.stringify(parsed) }
+      ]);
+      setConditionOptions(parsed);
+      setConditionSettingsOpen(false);
+      toast.success('Condition options updated successfully');
+    } catch (err: any) {
+      toast.error('Failed to update condition options');
+    } finally {
+      setConditionSaving(false);
+    }
+  };
 
   const handleAddProd = async () => {
     if (!prodForm.name.trim() || !prodForm.sku.trim()) {
@@ -193,6 +285,11 @@ function CreditContent() {
         imageDataUrls: prodImages,
         replaceImages: prodImages.length > 0,
         specifications: parseSpecifications(prodForm.specifications),
+        condition: prodForm.condition,
+        shippingFee: Number(prodForm.shippingFee) || 0,
+        estimatedDeliveryDays: Number(prodForm.estimatedDeliveryDays) || 3,
+        estimatedDeliveryMinDays: Number(prodForm.estimatedDeliveryMinDays) || 2,
+        estimatedDeliveryMaxDays: Number(prodForm.estimatedDeliveryMaxDays) || 7,
       });
       toast.success('Credit product added');
       setAddProdOpen(false);
@@ -227,6 +324,11 @@ function CreditContent() {
         imageDataUrls: prodImages,
         replaceImages: prodImages.length > 0,
         specifications: parseSpecifications(prodForm.specifications),
+        condition: prodForm.condition,
+        shippingFee: Number(prodForm.shippingFee) || 0,
+        estimatedDeliveryDays: Number(prodForm.estimatedDeliveryDays) || 3,
+        estimatedDeliveryMinDays: Number(prodForm.estimatedDeliveryMinDays) || 2,
+        estimatedDeliveryMaxDays: Number(prodForm.estimatedDeliveryMaxDays) || 7,
       });
       toast.success('Credit product updated');
       setEditProd(null);
@@ -404,7 +506,7 @@ function CreditContent() {
         icon={CreditCard}
         onAdd={
           activeTab === 'plans' ? () => { setPlanForm({name:'',months:'3',interest:'0%',minAmount:'',maxAmount:'',status:'Active'}); setAddPlanOpen(true); } : 
-          activeTab === 'products' ? () => { setProdForm({name:'',sku:'',price:'',status:'Active',description:'',specifications:'',creditMessage:'',creditMinimum:'',stockTotal:'100',stockCurrent:'100',condition:'New'}); setProdImages([]); setAddProdOpen(true); } :
+          activeTab === 'products' ? () => { setProdForm({name:'',sku:'',price:'',status:'Active',description:'',specifications:'',creditMessage:'',creditMinimum:'',stockTotal:'100',stockCurrent:'100',condition:conditionOptions[0] || 'New',shippingFee:'',estimatedDeliveryDays:'3',estimatedDeliveryMinDays:'2',estimatedDeliveryMaxDays:'7'}); setProdImages([]); setAddProdOpen(true); } :
           undefined
         }
         addLabel={activeTab === 'plans' ? "Add Plan" : "Add Product"}
@@ -479,7 +581,11 @@ function CreditContent() {
               description: r.description, specifications: r.specifications,
               creditMessage: r.creditMessage, creditMinimum: r.creditMinimum,
               stockTotal: String(r.stockTotal || 0), stockCurrent: String(r.stockCurrent || 0),
-              condition: r.condition || 'New'
+              condition: r.condition || 'New',
+              shippingFee: r.shippingFee || '',
+              estimatedDeliveryDays: r.estimatedDeliveryDays || '3',
+              estimatedDeliveryMinDays: r.estimatedDeliveryMinDays || '2',
+              estimatedDeliveryMaxDays: r.estimatedDeliveryMaxDays || '7'
             });
             setProdImages(r.images || []);
             setEditProd(r);
@@ -561,6 +667,33 @@ function CreditContent() {
         </div>
         <FormField label="Credit Message" value={prodForm.creditMessage} onChange={v => setProdForm(f => ({ ...f, creditMessage: v }))} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. Get now, pay later" />
         <FormField label="Credit Minimum Deposit" value={prodForm.creditMinimum} onChange={v => setProdForm(f => ({ ...f, creditMinimum: v }))} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 500" />
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '12px' }}>
+          <FormField label="Product Condition" value={prodForm.condition} onChange={v => setProdForm(f => ({ ...f, condition: v }))} options={conditionOptions} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <FormField label="Shipping Fee" value={prodForm.shippingFee} onChange={v => setProdForm(f => ({ ...f, shippingFee: v }))} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="0.00" />
+            <button 
+              onClick={() => setConditionSettingsOpen(true)}
+              style={{
+                padding:'8px 12px',
+                borderRadius:'8px',
+                fontSize:'12px',
+                fontWeight:600,
+                background:'var(--primary)',
+                color:'#fff',
+                border:'none',
+                cursor:'pointer',
+                whiteSpace:'nowrap'
+              }}
+            >
+              Manage Conditions
+            </button>
+          </div>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '12px' }}>
+          <FormField label="Est. Delivery Days" value={prodForm.estimatedDeliveryDays} onChange={v => setProdForm(f => ({ ...f, estimatedDeliveryDays: v }))} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="3" />
+          <FormField label="Min Days" value={prodForm.estimatedDeliveryMinDays} onChange={v => setProdForm(f => ({ ...f, estimatedDeliveryMinDays: v }))} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="2" />
+          <FormField label="Max Days" value={prodForm.estimatedDeliveryMaxDays} onChange={v => setProdForm(f => ({ ...f, estimatedDeliveryMaxDays: v }))} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="7" />
+        </div>
         <FormField label="Specifications" value={prodForm.specifications} onChange={v => setProdForm(f => ({ ...f, specifications: v }))} type="textarea" border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Key: Value (one per line)" />
         <FormField label="Status" value={prodForm.status} onChange={v => setProdForm(f => ({ ...f, status: v }))} options={['Active', 'Inactive']} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
         <ModalFooter onClose={() => setAddProdOpen(false)} onSubmit={handleAddProd} loading={prodSaving} submitLabel="Add Product" border={border} textMain={textMain} />
@@ -611,6 +744,33 @@ function CreditContent() {
           </div>
           <FormField label="Credit Message" value={prodForm.creditMessage} onChange={v => setProdForm(f => ({ ...f, creditMessage: v }))} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. Get now, pay later" />
           <FormField label="Credit Minimum Deposit" value={prodForm.creditMinimum} onChange={v => setProdForm(f => ({ ...f, creditMinimum: v }))} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 500" />
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '12px' }}>
+            <FormField label="Product Condition" value={prodForm.condition} onChange={v => setProdForm(f => ({ ...f, condition: v }))} options={conditionOptions} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <FormField label="Shipping Fee" value={prodForm.shippingFee} onChange={v => setProdForm(f => ({ ...f, shippingFee: v }))} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="0.00" />
+              <button 
+                onClick={() => setConditionSettingsOpen(true)}
+                style={{
+                  padding:'8px 12px',
+                  borderRadius:'8px',
+                  fontSize:'12px',
+                  fontWeight:600,
+                  background:'var(--primary)',
+                  color:'#fff',
+                  border:'none',
+                  cursor:'pointer',
+                  whiteSpace:'nowrap'
+                }}
+              >
+                Manage Conditions
+              </button>
+            </div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '12px' }}>
+            <FormField label="Est. Delivery Days" value={prodForm.estimatedDeliveryDays} onChange={v => setProdForm(f => ({ ...f, estimatedDeliveryDays: v }))} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="3" />
+            <FormField label="Min Days" value={prodForm.estimatedDeliveryMinDays} onChange={v => setProdForm(f => ({ ...f, estimatedDeliveryMinDays: v }))} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="2" />
+            <FormField label="Max Days" value={prodForm.estimatedDeliveryMaxDays} onChange={v => setProdForm(f => ({ ...f, estimatedDeliveryMaxDays: v }))} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="7" />
+          </div>
           <FormField label="Specifications" value={prodForm.specifications} onChange={v => setProdForm(f => ({ ...f, specifications: v }))} type="textarea" border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Key: Value (one per line)" />
           <FormField label="Status" value={prodForm.status} onChange={v => setProdForm(f => ({ ...f, status: v }))} options={['Active', 'Inactive']} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
           <ModalFooter onClose={() => setEditProd(null)} onSubmit={handleEditProd} loading={prodSaving} submitLabel="Save Changes" border={border} textMain={textMain} />
@@ -618,6 +778,36 @@ function CreditContent() {
       )}
 
       <ConfirmDialog open={!!deleteProd} onClose={() => setDeleteProd(null)} onConfirm={handleDeleteProd} loading={false} title="Remove Product" message={`Remove "${deleteProd?.name}" from credit products?`} />
+
+      {/* Condition Settings Modal */}
+      <Modal open={conditionSettingsOpen} onClose={() => setConditionSettingsOpen(false)} title="Manage Product Conditions" maxWidth="500px">
+        <div style={{ padding:'20px' }}>
+          <p style={{ fontSize:'13px', color:textMuted, marginBottom:'12px' }}>
+            Add one condition per line. These options will appear in the condition dropdown when creating products.
+          </p>
+          <textarea
+            value={conditionDraft}
+            onChange={(e) => setConditionDraft(e.target.value)}
+            style={{
+              width:'100%',
+              minHeight:'120px',
+              padding:'12px',
+              borderRadius:'8px',
+              border:`1px solid ${border}`,
+              background:surface,
+              color:textMain,
+              fontSize:'13px',
+              fontFamily:'inherit',
+              resize:'vertical'
+            }}
+            placeholder="New&#10;Used&#10;Refurbished&#10;Open Box"
+          />
+          <div style={{ marginTop:'12px', fontSize:'12px', color:textMuted }}>
+            Current options: {conditionOptions.join(', ')}
+          </div>
+        </div>
+        <ModalFooter onClose={() => setConditionSettingsOpen(false)} onSubmit={handleSaveConditionSettings} loading={conditionSaving} submitLabel="Save Conditions" border={border} textMain={textMain} />
+      </Modal>
 
       {/* ── Modals: Credit Accounts ── */}
       {editCredit && (
