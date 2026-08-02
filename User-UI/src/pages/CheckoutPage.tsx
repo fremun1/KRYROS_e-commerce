@@ -395,6 +395,10 @@ export default function CheckoutPage() {
     if (selectedCurrency.code === "ZMW") {
       return Math.round(calculatedTotal * 100) / 100;
     }
+    
+    // Convert from selected currency to ZMW directly
+    // Formula: (Amount in selected currency / selected currency rate) * ZMW rate
+    // This converts: selected currency -> USD -> ZMW
     const usdAmount = calculatedTotal / selectedRate;
     const converted = usdAmount * zmwRate;
     return Math.round(converted * 100) / 100;

@@ -10,8 +10,8 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 @Injectable()
 export class CountriesService implements OnModuleInit {
   private readonly logger = new Logger(CountriesService.name);
-  private readonly PRIMARY_EXCHANGE_API = 'https://api.exchangerate-api.com/v4/latest/USD';
-  private readonly FALLBACK_EXCHANGE_API = 'https://open.er-api.com/v6/latest/USD';
+  private readonly DEFAULT_PRIMARY_EXCHANGE_API = 'https://api.exchangerate-api.com/v4/latest/USD';
+  private readonly DEFAULT_FALLBACK_EXCHANGE_API = 'https://open.er-api.com/v6/latest/USD';
 
   private readonly CACHE_TTL = 600000;
 
@@ -22,12 +22,34 @@ export class CountriesService implements OnModuleInit {
 
   async onModuleInit() {
     try {
+      // Seed default exchange rate config if not exists
+      await this.seedExchangeRateConfig();
       // Seed default USD and ZMW if not exists
       await this.seedDefaults();
       // Initial rate update
       await this.updateExchangeRates();
     } catch (error) {
       this.logger.error('Failed to initialize CountriesService. Database tables might be missing.', error.message);
+    }
+  }
+
+  async seedExchangeRateConfig() {
+    try {
+      const existingConfig = await this.prisma.exchangeRateConfig.findFirst();
+      if (!existingConfig) {
+        await this.prisma.exchangeRateConfig.create({
+          data: {
+            providerName: 'exchangerate-api',
+            primaryApiUrl: this.DEFAULT_PRIMARY_EXCHANGE_API,
+            fallbackApiUrl: this.DEFAULT_FALLBACK_EXCHANGE_API,
+            isActive: true,
+            updateInterval: 3600000, // 1 hour
+          },
+        });
+        this.logger.log('Seeded default exchange rate config');
+      }
+    } catch (error) {
+      this.logger.error('Failed to seed exchange rate config:', error.message);
     }
   }
 
@@ -113,21 +135,45 @@ export class CountriesService implements OnModuleInit {
   async updateExchangeRates() {
     this.logger.log('Updating exchange rates (Hourly Cron)...');
     
+    // Get exchange rate configuration from database
+    const config = await this.prisma.exchangeRateConfig.findFirst({
+      where: { isActive: true }
+    });
+
+    const primaryApiUrl = config?.primaryApiUrl || this.DEFAULT_PRIMARY_EXCHANGE_API;
+    const fallbackApiUrl = config?.fallbackApiUrl || this.DEFAULT_FALLBACK_EXCHANGE_API;
+    
     let rates = null;
     
     // 1. Try Primary Provider
     try {
-      this.logger.log(`Attempting to fetch rates from Primary Provider: ${this.PRIMARY_EXCHANGE_API}`);
-      const response = await axios.get(this.PRIMARY_EXCHANGE_API);
+      this.logger.log(`Attempting to fetch rates from Primary Provider: ${primaryApiUrl}`);
+      const response = await axios.get(primaryApiUrl);
       rates = response.data.rates;
+      
+      // Update last update timestamp
+      if (config) {
+        await this.prisma.exchangeRateConfig.update({
+          where: { id: config.id },
+          data: { lastUpdate: new Date() }
+        });
+      }
     } catch (primaryError) {
       this.logger.error('Primary Provider failed, attempting fallback...', primaryError.message);
       
       // 2. Try Fallback Provider
       try {
-        this.logger.log(`Attempting to fetch rates from Fallback Provider: ${this.FALLBACK_EXCHANGE_API}`);
-        const response = await axios.get(this.FALLBACK_EXCHANGE_API);
+        this.logger.log(`Attempting to fetch rates from Fallback Provider: ${fallbackApiUrl}`);
+        const response = await axios.get(fallbackApiUrl);
         rates = response.data.rates;
+        
+        // Update last update timestamp
+        if (config) {
+          await this.prisma.exchangeRateConfig.update({
+            where: { id: config.id },
+            data: { lastUpdate: new Date() }
+          });
+        }
       } catch (fallbackError) {
         this.logger.error('All exchange rate providers failed.', fallbackError.message);
         return { success: false, error: 'All providers failed' };
@@ -214,7 +260,13 @@ export class CountriesService implements OnModuleInit {
       let initialRate = countryData.exchangeRate || 1.0;
       if (countryData.autoRate || initialRate === 1.0) {
         try {
-          const response = await axios.get(this.PRIMARY_EXCHANGE_API);
+          // Get exchange rate configuration from database
+          const config = await this.prisma.exchangeRateConfig.findFirst({
+            where: { isActive: true }
+          });
+          const primaryApiUrl = config?.primaryApiUrl || this.DEFAULT_PRIMARY_EXCHANGE_API;
+          
+          const response = await axios.get(primaryApiUrl);
           const rate = response.data.rates[countryData.currencyCode];
           if (rate) {
             initialRate = parseFloat(rate.toFixed(4));
@@ -294,6 +346,60 @@ export class CountriesService implements OnModuleInit {
     });
   }
 
+  // ── Exchange Rate Config Management ─────────────────────────────────────
+  async getExchangeRateConfig() {
+    const config = await this.prisma.exchangeRateConfig.findFirst({
+      where: { isActive: true }
+    });
+    
+    if (!config) {
+      // Return default config if none exists
+      return {
+        providerName: 'exchangerate-api',
+        primaryApiUrl: this.DEFAULT_PRIMARY_EXCHANGE_API,
+        fallbackApiUrl: this.DEFAULT_FALLBACK_EXCHANGE_API,
+        isActive: true,
+        updateInterval: 3600000,
+        lastUpdate: null,
+      };
+    }
+    
+    return config;
+  }
+
+  async updateExchangeRateConfig(data: {
+    providerName?: string;
+    primaryApiUrl?: string;
+    fallbackApiUrl?: string;
+    isActive?: boolean;
+    updateInterval?: number;
+  }) {
+    const config = await this.prisma.exchangeRateConfig.findFirst();
+    
+    if (config) {
+      return this.prisma.exchangeRateConfig.update({
+        where: { id: config.id },
+        data
+      });
+    } else {
+      return this.prisma.exchangeRateConfig.create({
+        data: {
+          providerName: data.providerName || 'exchangerate-api',
+          primaryApiUrl: data.primaryApiUrl || this.DEFAULT_PRIMARY_EXCHANGE_API,
+          fallbackApiUrl: data.fallbackApiUrl || this.DEFAULT_FALLBACK_EXCHANGE_API,
+          isActive: data.isActive ?? true,
+          updateInterval: data.updateInterval || 3600000,
+        }
+      });
+    }
+  }
+
+  async triggerManualRateUpdate() {
+    this.logger.log('Manual exchange rate update triggered');
+    return this.updateExchangeRates();
+  }
+
+  // ── Country Management ────────────────────────────────────────────────────
   async update(id: string, updateCountryDto: UpdateCountryDto) {
     const { paymentMethods, ...countryData } = updateCountryDto;
     

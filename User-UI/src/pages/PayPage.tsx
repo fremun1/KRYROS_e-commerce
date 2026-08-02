@@ -504,6 +504,9 @@ export default function PayPage() {
       return roundMoney(total);
     }
 
+    // Convert from selected currency to ZMW directly
+    // Formula: (Amount in selected currency / selected currency rate) * ZMW rate
+    // This converts: selected currency -> USD -> ZMW
     const usdAmount = total / selectedRate;
     const converted = usdAmount * zmwRate;
     return roundMoney(converted);

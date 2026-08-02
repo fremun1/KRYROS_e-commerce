@@ -98,6 +98,30 @@ export class CountriesController {
     return this.countriesService.updateExchangeRates();
   }
 
+  @Get('exchange-rate/config')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get exchange rate provider configuration (Admin only)' })
+  getExchangeRateConfig() {
+    return this.countriesService.getExchangeRateConfig();
+  }
+
+  @Patch('exchange-rate/config')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Update exchange rate provider configuration (Admin only)' })
+  updateExchangeRateConfig(@Body() data: {
+    providerName?: string;
+    primaryApiUrl?: string;
+    fallbackApiUrl?: string;
+    isActive?: boolean;
+    updateInterval?: number;
+  }) {
+    return this.countriesService.updateExchangeRateConfig(data);
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get a single country (Public)' })
   @UseInterceptors(CacheInterceptor)

@@ -640,6 +640,21 @@ model SmsContact {
   @@map("sms_contacts")
 }
 
+model ExchangeRateConfig {
+  id              String   @id @default(uuid())
+  providerName    String   @default("exchangerate-api")
+  primaryApiUrl   String   @default("https://api.exchangerate-api.com/v4/latest/USD")
+  fallbackApiUrl  String   @default("https://open.er-api.com/v6/latest/USD")
+  isActive        Boolean  @default(true)
+  updateInterval  Int      @default(3600000) // 1 hour in milliseconds
+  lastUpdate      DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([isActive])
+  @@map("exchange_rate_config")
+}
+
 enum UserRole {
   CUSTOMER
   ADMIN
