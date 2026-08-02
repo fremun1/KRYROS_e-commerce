@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { inferPageContext, getScopedBrowsePath } from "@/lib/pageContext";
 import { motion, AnimatePresence } from "framer-motion";
@@ -35,16 +35,6 @@ interface ApiCategory {
   description?: string;
 }
 
-interface ApiBrand {
-  id: number;
-  name: string;
-  slug: string;
-  logo?: string | null;
-  description?: string | null;
-  categoryId?: number | string | null;
-  category?: { id: number | string; name: string; slug: string } | null;
-}
-
 interface SidebarProps {
   open: boolean;
   onClose: () => void;
@@ -59,7 +49,6 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
     preferences: true,
     info: true,
   });
-  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
   const [currencyOpen, setCurrencyOpen] = useState(false);
   const [location, setLocation] = useLocation();
   const pageContext = inferPageContext(location);
@@ -68,7 +57,6 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
   const { user, token, logout } = useAuthStore();
 
   const [categories, setCategories] = useState<ApiCategory[]>([]);
-  const [brands, setBrands] = useState<ApiBrand[]>([]);
   const [catsLoading, setCatsLoading] = useState(false);
 
   useEffect(() => {
@@ -98,52 +86,11 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
             .finally(() => setCatsLoading(false));
         });
     }
-
-    if (brands.length === 0) {
-      fetch(`${EFFECTIVE_API_BASE}/api/brands`)
-        .then((r) => r.json())
-        .then((data) => {
-          const list: ApiBrand[] = Array.isArray(data) ? data : (data.data ?? []);
-          setBrands(list);
-        })
-        .catch(() => {});
-    }
   }, [open]);
-
-  const brandsByCategory = useMemo(() => {
-    const map: Record<string | number, ApiBrand[]> = {};
-    brands.forEach((b) => {
-      const key = b.categoryId ?? b.category?.id;
-      if (key != null) {
-        if (!map[key]) map[key] = [];
-        map[key].push(b);
-      }
-    });
-    return map;
-  }, [brands]);
 
   const filteredCats = categories.filter((c) =>
     c.name.toLowerCase().includes(catSearch.toLowerCase())
   );
-
-  useEffect(() => {
-    if (categories.length === 0) return;
-
-    setExpandedCategories((prev) => {
-      const next = { ...prev };
-      let changed = false;
-
-      categories.forEach((cat) => {
-        const key = String(cat.id);
-        if (next[key] === undefined) {
-          next[key] = true;
-          changed = true;
-        }
-      });
-
-      return changed ? next : prev;
-    });
-  }, [categories]);
 
   const handleLogout = async () => {
     onClose();
@@ -154,14 +101,6 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
     setExpandedSections((prev) => ({
       ...prev,
       [section]: !(prev[section] ?? true),
-    }));
-  };
-
-  const toggleCategory = (categoryId: string | number) => {
-    const key = String(categoryId);
-    setExpandedCategories((prev) => ({
-      ...prev,
-      [key]: !(prev[key] ?? true),
     }));
   };
 
@@ -327,49 +266,16 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                           </div>
                           <div className="space-y-0.5">
                             {filteredCats.map((cat) => {
-                              const catBrands = brandsByCategory[cat.id] || [];
-                              const isCatExpanded = expandedCategories[String(cat.id)] ?? true;
                               const categoryPath = getScopedBrowsePath(pageContext, 'category', cat.slug || String(cat.id));
                               return (
-                                <div key={cat.id}>
-                                  <div className="flex items-center">
-                                    <button
-                                      type="button"
-                                      onClick={() => navigateTo(categoryPath)}
-                                      className="flex-grow flex items-center px-4 py-2.5 rounded-l-lg hover:bg-white/10 transition-colors text-white text-sm font-medium text-left"
-                                    >
-                                      {cat.name}
-                                    </button>
-                                    {catBrands.length > 0 && (
-                                      <button
-                                        type="button"
-                                        onClick={() => toggleCategory(cat.id)}
-                                        className="px-3 py-2.5 rounded-r-lg hover:bg-muted transition-colors border-l border-border/10"
-                                      >
-                                        <ChevronRight
-                                          className={`w-3 h-3 transition-transform ${isCatExpanded ? "rotate-90" : ""}`}
-                                        />
-                                      </button>
-                                    )}
-                                  </div>
-                                  {isCatExpanded && catBrands.length > 0 && (
-                                    <div className="pl-6 space-y-1 mt-1 mb-2 border-l-2 border-primary/20 ml-4">
-                                      {catBrands.map((brand) => {
-                                        const brandPath = getScopedBrowsePath(pageContext, 'brand', brand.slug || String(brand.id));
-                                        return (
-                                          <button
-                                            key={brand.id}
-                                            type="button"
-                                            onClick={() => navigateTo(brandPath)}
-                                            className="w-full px-3 py-1.5 rounded-lg hover:bg-white/10 transition-colors text-white text-xs cursor-pointer text-left"
-                                          >
-                                            {brand.name}
-                                          </button>
-                                        );
-                                      })}
-                                    </div>
-                                  )}
-                                </div>
+                                <button
+                                  key={cat.id}
+                                  type="button"
+                                  onClick={() => navigateTo(categoryPath)}
+                                  className="w-full flex items-center px-10 py-3 text-sm font-medium text-white hover:bg-white/10 transition-colors cursor-pointer text-left"
+                                >
+                                  {cat.name}
+                                </button>
                               );
                             })}
                           </div>

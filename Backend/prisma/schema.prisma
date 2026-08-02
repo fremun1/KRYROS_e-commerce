@@ -200,6 +200,8 @@ model Product {
   flashSaleEnd           DateTime?
   allowCredit            Boolean             @default(false)
   creditMinimum          Decimal?            @db.Decimal(10, 2)
+  creditDuration         Int?                @default(12) // Number of weeks or months
+  creditDurationType     String?             @default("weeks") // "weeks" or "months"
   metaTitle              String?
   metaDescription        String?
   metaKeywords           String?

@@ -28,7 +28,7 @@ import { useCartStore } from "@/store/cartStore";
 import { useWishlistStore } from "@/store/wishlistStore";
 import { useCurrencyStore } from "@/store/currencyStore";
 import UnifiedProductCard from "@/components/UnifiedProductCard";
-import { getCreditMessage, getProductDisplayPrice, getProductPurchaseMode } from "@/lib/productPurchaseMode";
+import { getCreditMessage, getProductDisplayPrice, getProductPurchaseMode, getCreditPaymentDetails } from "@/lib/productPurchaseMode";
 
 const SLIDE_INTERVAL = 3500;
 
@@ -234,6 +234,7 @@ export default function ProductPage() {
   const isWholesaleProduct = purchaseMode === "wholesale";
   const displayPrice = getProductDisplayPrice(product);
   const creditMessage = getCreditMessage(product);
+  const creditPaymentDetails = getCreditPaymentDetails(product);
 
   const handleAddToCart = () => {
     if (isWholesaleProduct && qty < (product.wholesaleMoq || 1)) {
@@ -413,15 +414,27 @@ export default function ProductPage() {
 
         {/* Credit Details — deliberately mirrors the wholesale information card. */}
         {isCreditProduct && (
-          <div className="bg-primary/5 border border-primary/10 p-3 rounded-2xl flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center flex-shrink-0 shadow-sm">
-              <CreditCard className="w-5 h-5 text-primary-foreground" />
+          <div className="bg-primary/5 border border-primary/10 p-3 rounded-2xl">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center flex-shrink-0 shadow-sm">
+                <CreditCard className="w-5 h-5 text-primary-foreground" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[10px] font-black text-primary uppercase tracking-wider">Credit Available</p>
+                <p className="text-xs font-bold text-foreground truncate" title={creditMessage}>
+                  Deposit: {format(product.creditMinimum || 0)} · {creditMessage}
+                </p>
+              </div>
             </div>
-            <div className="min-w-0">
-              <p className="text-[10px] font-black text-primary uppercase tracking-wider">Credit Available</p>
-              <p className="text-xs font-bold text-foreground truncate" title={creditMessage}>
-                Deposit: {format(product.creditMinimum || 0)} · {creditMessage}
-              </p>
+            <div className="flex items-center gap-2 text-xs">
+              <div className="flex items-center gap-1 text-muted-foreground">
+                <Clock className="w-3.5 h-3.5" />
+                <span>{format(creditPaymentDetails.weeklyPayment)}/w</span>
+              </div>
+              <div className="flex items-center gap-1 text-muted-foreground">
+                <Package className="w-3.5 h-3.5" />
+                <span>{creditPaymentDetails.period}</span>
+              </div>
             </div>
           </div>
         )}

@@ -9,7 +9,7 @@ export type ProductPurchaseMode = "retail" | "wholesale" | "credit";
 
 type PurchaseModeProduct = Pick<
   Product,
-  "allowCredit" | "creditMessage" | "isWholesaleOnly" | "price" | "wholesalePrice"
+  "allowCredit" | "creditMessage" | "isWholesaleOnly" | "price" | "wholesalePrice" | "creditDuration" | "creditDurationType"
 >;
 
 export function getProductPurchaseMode(product: PurchaseModeProduct): ProductPurchaseMode {
@@ -26,4 +26,24 @@ export function getProductDisplayPrice(product: PurchaseModeProduct): number {
 
 export function getCreditMessage(product: Pick<Product, "creditMessage">): string {
   return product.creditMessage?.trim() || "Credit available";
+}
+
+export function getCreditPaymentDetails(product: PurchaseModeProduct): {
+  weeklyPayment: number;
+  monthlyPayment: number;
+  period: string;
+} {
+  const price = getProductDisplayPrice(product);
+  const duration = product.creditDuration || 12;
+  const durationType = product.creditDurationType || 'weeks';
+  
+  const weeklyPayment = durationType === 'weeks' ? price / duration : (price / duration) * 12 / 52;
+  const monthlyPayment = durationType === 'months' ? price / duration : (price / duration) * 12 / 52;
+  const period = `${duration} ${durationType}`;
+  
+  return {
+    weeklyPayment: Math.round(weeklyPayment * 100) / 100,
+    monthlyPayment: Math.round(monthlyPayment * 100) / 100,
+    period
+  };
 }

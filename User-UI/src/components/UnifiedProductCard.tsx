@@ -7,7 +7,7 @@ import { useWishlistStore } from "@/store/wishlistStore";
 import { useCurrencyStore } from "@/store/currencyStore";
 import { useStoreStatus } from "@/hooks/useStoreStatus";
 import type { Product } from "@/lib/api";
-import { getCreditMessage, getProductDisplayPrice, getProductPurchaseMode } from "@/lib/productPurchaseMode";
+import { getCreditMessage, getProductDisplayPrice, getProductPurchaseMode, getCreditPaymentDetails } from "@/lib/productPurchaseMode";
 
 interface UnifiedProductCardProps {
   product: Product;
@@ -54,6 +54,7 @@ export default function UnifiedProductCard({
   const isWholesaleProduct = purchaseMode === "wholesale";
   const displayPrice = getProductDisplayPrice(product);
   const creditMessage = getCreditMessage(product);
+  const creditPaymentDetails = getCreditPaymentDetails(product);
   const specs = validSpecs(product.specs);
   const inStock = product.stock > 0;
   const isStoreClosed = storeStatus?.isStoreClosed ?? false;
@@ -197,6 +198,14 @@ export default function UnifiedProductCard({
               <span className="text-[9px] text-muted-foreground flex items-center gap-0.5 whitespace-nowrap">
                 <CreditCard className="w-2.5 h-2.5" />
                 Deposit {format(product.creditMinimum || 0)}
+              </span>
+              <span className="text-[9px] text-muted-foreground flex items-center gap-0.5 whitespace-nowrap">
+                <Clock className="w-2.5 h-2.5" />
+                {format(creditPaymentDetails.weeklyPayment)}/w
+              </span>
+              <span className="text-[9px] text-muted-foreground flex items-center gap-0.5 whitespace-nowrap">
+                <Package className="w-2.5 h-2.5" />
+                {creditPaymentDetails.period}
               </span>
             </>
           )}

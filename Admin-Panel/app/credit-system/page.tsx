@@ -156,7 +156,8 @@ function CreditContent() {
     name:'', sku:'', price:'', status:'Active', 
     description:'', specifications:'', creditMessage:'', creditMinimum:'',
     stockTotal: '100', stockCurrent: '100', condition: 'New',
-    shippingFee: '', estimatedDeliveryDays: '3', estimatedDeliveryMinDays: '2', estimatedDeliveryMaxDays: '7'
+    shippingFee: '', estimatedDeliveryDays: '3', estimatedDeliveryMinDays: '2', estimatedDeliveryMaxDays: '7',
+    creditDuration: '12', creditDurationType: 'weeks'
   });
   const [prodImages, setProdImages] = useState<string[]>([]);
   const [conditionOptions, setConditionOptions] = useState<string[]>(DEFAULT_CONDITION_OPTIONS);
@@ -213,7 +214,9 @@ function CreditContent() {
         shippingFee: p.shippingFee != null ? String(Number(p.shippingFee)) : '',
         estimatedDeliveryDays: p.estimatedDeliveryDays != null ? String(Number(p.estimatedDeliveryDays)) : '3',
         estimatedDeliveryMinDays: p.estimatedDeliveryMinDays != null ? String(Number(p.estimatedDeliveryMinDays)) : '2',
-        estimatedDeliveryMaxDays: p.estimatedDeliveryMaxDays != null ? String(Number(p.estimatedDeliveryMaxDays)) : '7'
+        estimatedDeliveryMaxDays: p.estimatedDeliveryMaxDays != null ? String(Number(p.estimatedDeliveryMaxDays)) : '7',
+        creditDuration: p.creditDuration != null ? String(Number(p.creditDuration)) : '12',
+        creditDurationType: p.creditDurationType || 'weeks'
       })));
     });
   };
@@ -290,6 +293,8 @@ function CreditContent() {
         estimatedDeliveryDays: Number(prodForm.estimatedDeliveryDays) || 3,
         estimatedDeliveryMinDays: Number(prodForm.estimatedDeliveryMinDays) || 2,
         estimatedDeliveryMaxDays: Number(prodForm.estimatedDeliveryMaxDays) || 7,
+        creditDuration: Number(prodForm.creditDuration) || 12,
+        creditDurationType: prodForm.creditDurationType || 'weeks',
       });
       toast.success('Credit product added');
       setAddProdOpen(false);
@@ -329,6 +334,8 @@ function CreditContent() {
         estimatedDeliveryDays: Number(prodForm.estimatedDeliveryDays) || 3,
         estimatedDeliveryMinDays: Number(prodForm.estimatedDeliveryMinDays) || 2,
         estimatedDeliveryMaxDays: Number(prodForm.estimatedDeliveryMaxDays) || 7,
+        creditDuration: Number(prodForm.creditDuration) || 12,
+        creditDurationType: prodForm.creditDurationType || 'weeks',
       });
       toast.success('Credit product updated');
       setEditProd(null);
@@ -506,7 +513,7 @@ function CreditContent() {
         icon={CreditCard}
         onAdd={
           activeTab === 'plans' ? () => { setPlanForm({name:'',months:'3',interest:'0%',minAmount:'',maxAmount:'',status:'Active'}); setAddPlanOpen(true); } : 
-          activeTab === 'products' ? () => { setProdForm({name:'',sku:'',price:'',status:'Active',description:'',specifications:'',creditMessage:'',creditMinimum:'',stockTotal:'100',stockCurrent:'100',condition:conditionOptions[0] || 'New',shippingFee:'',estimatedDeliveryDays:'3',estimatedDeliveryMinDays:'2',estimatedDeliveryMaxDays:'7'}); setProdImages([]); setAddProdOpen(true); } :
+          activeTab === 'products' ? () => { setProdForm({name:'',sku:'',price:'',status:'Active',description:'',specifications:'',creditMessage:'',creditMinimum:'',stockTotal:'100',stockCurrent:'100',condition:conditionOptions[0] || 'New',shippingFee:'',estimatedDeliveryDays:'3',estimatedDeliveryMinDays:'2',estimatedDeliveryMaxDays:'7',creditDuration:'12',creditDurationType:'weeks'}); setProdImages([]); setAddProdOpen(true); } :
           undefined
         }
         addLabel={activeTab === 'plans' ? "Add Plan" : "Add Product"}
@@ -585,7 +592,9 @@ function CreditContent() {
               shippingFee: r.shippingFee || '',
               estimatedDeliveryDays: r.estimatedDeliveryDays || '3',
               estimatedDeliveryMinDays: r.estimatedDeliveryMinDays || '2',
-              estimatedDeliveryMaxDays: r.estimatedDeliveryMaxDays || '7'
+              estimatedDeliveryMaxDays: r.estimatedDeliveryMaxDays || '7',
+              creditDuration: r.creditDuration || '12',
+              creditDurationType: r.creditDurationType || 'weeks'
             });
             setProdImages(r.images || []);
             setEditProd(r);
@@ -744,6 +753,10 @@ function CreditContent() {
           </div>
           <FormField label="Credit Message" value={prodForm.creditMessage} onChange={v => setProdForm(f => ({ ...f, creditMessage: v }))} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. Get now, pay later" />
           <FormField label="Credit Minimum Deposit" value={prodForm.creditMinimum} onChange={v => setProdForm(f => ({ ...f, creditMinimum: v }))} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 500" />
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '12px' }}>
+            <FormField label="Credit Duration" value={prodForm.creditDuration} onChange={v => setProdForm(f => ({ ...f, creditDuration: v }))} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="12" />
+            <FormField label="Duration Type" value={prodForm.creditDurationType} onChange={v => setProdForm(f => ({ ...f, creditDurationType: v }))} options={['weeks', 'months']} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+          </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '12px' }}>
             <FormField label="Product Condition" value={prodForm.condition} onChange={v => setProdForm(f => ({ ...f, condition: v }))} options={conditionOptions} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>

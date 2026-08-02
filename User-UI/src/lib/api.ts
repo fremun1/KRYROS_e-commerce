@@ -51,6 +51,8 @@ export interface Product {
   allowCredit?: boolean;
   creditMessage?: string | null;
   creditMinimum?: number | null;
+  creditDuration?: number;
+  creditDurationType?: 'weeks' | 'months';
   // Wholesale
   isWholesaleOnly?: boolean;
   wholesalePrice?: number | null;
