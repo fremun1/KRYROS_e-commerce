@@ -3,9 +3,10 @@ import { Link, useLocation } from "wouter";
 import { inferPageContext, getScopedBrowsePath } from "@/lib/pageContext";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  X, Home, ShoppingBag, Zap, Package, MapPin, Truck,
-  Search, Grid2x2, ChevronDown, LogOut, User, Heart, LayoutDashboard
+  X, Home, ShoppingBag, Zap, Package, MapPin, Truck, Info, Phone, Shield, FileText, RefreshCw,
+  ChevronRight, Search, Grid2x2, Globe, DollarSign, ChevronDown, LogOut, User, Heart, LayoutDashboard
 } from "lucide-react";
+import { useCurrencyStore } from "@/store/currencyStore";
 import { useAuthStore } from "@/store/authStore";
 import { EFFECTIVE_API_BASE } from "@/lib/api";
 
@@ -16,6 +17,14 @@ const menuItems = [
   { label: "Wholesale", icon: Package, href: "/wholesale" },
   { label: "Pickup Stations", icon: MapPin, href: "/pickup-stations" },
   { label: "Track Order", icon: Truck, href: "/track" },
+];
+
+const infoItems = [
+  { label: "About Us", icon: Info, href: "/about" },
+  { label: "Contact Us", icon: Phone, href: "/contact" },
+  { label: "Privacy Policy", icon: Shield, href: "/privacy" },
+  { label: "Terms & Conditions", icon: FileText, href: "/terms" },
+  { label: "Refund Policy", icon: RefreshCw, href: "/refund" },
 ];
 
 interface ApiCategory {
@@ -37,10 +46,14 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
     account: true,
     browse: true,
     categories: true,
+    preferences: true,
+    info: true,
   });
+  const [currencyOpen, setCurrencyOpen] = useState(false);
   const [location, setLocation] = useLocation();
   const pageContext = inferPageContext(location);
 
+  const { currencies, selected, setCurrency, fetchCurrencies } = useCurrencyStore();
   const { user, token, logout } = useAuthStore();
 
   const [categories, setCategories] = useState<ApiCategory[]>([]);
@@ -48,6 +61,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
 
   useEffect(() => {
     if (!open) return;
+    fetchCurrencies();
     if (categories.length === 0) {
       setCatsLoading(true);
       fetch(`${EFFECTIVE_API_BASE}/api/categories/active`)
@@ -264,6 +278,97 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                               );
                             })}
                           </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* PREFERENCES Section */}
+                <div className="border-b border-border/50 last:border-0">
+                  <button
+                    onClick={() => toggleSection("preferences")}
+                    className="w-full flex items-center justify-between px-4 py-4 text-sm font-bold text-foreground uppercase tracking-tight hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Globe className="w-5 h-5 text-primary" />
+                      <span>Preferences</span>
+                    </div>
+                    <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${expandedSections.preferences ? "rotate-180" : ""}`} />
+                  </button>
+                  <AnimatePresence>
+                    {expandedSections.preferences && (
+                      <motion.div 
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        className="overflow-hidden bg-muted/20"
+                      >
+                        <div className="pb-2">
+                          <div className="relative">
+                            <button
+                              onClick={() => setCurrencyOpen((prev) => !prev)}
+                              className="w-full flex items-center justify-between px-10 py-3 hover:bg-muted transition-colors cursor-pointer"
+                            >
+                              <div className="flex items-center gap-3 text-foreground">
+                                <DollarSign className="w-4 h-4" />
+                                <span className="text-sm font-medium">Currency</span>
+                              </div>
+                              <div className="flex items-center gap-1 text-muted-foreground text-xs">
+                                <span>{selected.code}</span>
+                                <ChevronRight className={`w-3 h-3 transition-transform ${currencyOpen ? "rotate-90" : ""}`} />
+                              </div>
+                            </button>
+                            {currencyOpen && (
+                              <div className="mx-10 my-2 bg-background border border-border rounded-xl shadow-lg overflow-hidden max-h-44 overflow-y-auto z-10">
+                                {currencies.map((c) => (
+                                  <button
+                                    key={c.code}
+                                    onClick={() => { setCurrency(c.code); setCurrencyOpen(false); }}
+                                    className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors text-left ${c.code === selected.code ? "bg-primary/10 text-primary font-semibold" : "text-foreground"}`}
+                                  >
+                                    <span className="font-medium">{c.code}</span>
+                                    <span className="text-muted-foreground text-xs ml-auto">{c.symbol}</span>
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* INFORMATION Section */}
+                <div className="border-b border-border/50 last:border-0">
+                  <button
+                    onClick={() => toggleSection("info")}
+                    className="w-full flex items-center justify-between px-4 py-4 text-sm font-bold text-foreground uppercase tracking-tight hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Info className="w-5 h-5 text-primary" />
+                      <span>Need Help?</span>
+                    </div>
+                    <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${expandedSections.info ? "rotate-180" : ""}`} />
+                  </button>
+                  <AnimatePresence>
+                    {expandedSections.info && (
+                      <motion.div 
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        className="overflow-hidden bg-muted/20"
+                      >
+                        <div className="pb-2">
+                          {infoItems.map(({ label, icon: Icon, href }) => (
+                            <Link key={href} href={href} onClick={onClose}>
+                              <div className="flex items-center gap-3 px-10 py-3 text-sm font-medium text-foreground hover:bg-muted transition-colors cursor-pointer">
+                                <Icon className="w-4 h-4" />
+                                <span>{label}</span>
+                              </div>
+                            </Link>
+                          ))}
                         </div>
                       </motion.div>
                     )}
