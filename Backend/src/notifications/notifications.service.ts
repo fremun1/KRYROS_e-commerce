@@ -345,8 +345,26 @@ export class NotificationsService implements OnModuleInit {
 
     // Zambia: Send SMS for payment status
     if (isZambia && payload.phone) {
-      const message = `Payment ${payload.paymentNumber} ${isPaid ? 'successful' : 'failed'}. ${isPaid ? 'Thank you for your payment!' : 'Please try again or contact support.'}`;
-      await this.sendSMS(payload.phone, message);
+      try {
+        const message = `Payment ${payload.paymentNumber} ${isPaid ? 'successful' : 'failed'}. ${isPaid ? 'Thank you for your payment!' : 'Please try again or contact support.'}`;
+        await this.sendSMS(payload.phone, message);
+        this.logger.log(`Payment status SMS sent to ${payload.phone}`);
+      } catch (error) {
+        this.logger.error(`Failed to send payment status SMS: ${error.message}`);
+        // Fallback to email if SMS fails
+        if (payload.email) {
+          await this.mailerService.sendAnnouncementEmail({
+            to: payload.email,
+            firstName: '',
+            subject: `Payment ${isPaid ? 'Paid' : 'Failed'}`,
+            headline: `Payment ${isPaid ? 'Successful' : 'Failed'}`,
+            bodyHtml: `<p>Payment <strong>${payload.paymentNumber}</strong> for your order has been <strong>${isPaid ? 'successfully processed' : 'failed'}</strong>.</p>
+                       <p>${isPaid ? 'Thank you for your payment! We are now processing your order.' : 'Please try again or contact our support team for assistance.'}</p>`,
+            ctaText: 'View Order Status',
+            ctaUrl: `${this.configService.get('FRONTEND_URL')}/dashboard`
+          });
+        }
+      }
     } else if (payload.email) {
       // Send email for non-Zambia users or if phone is missing
       await this.mailerService.sendAnnouncementEmail({
@@ -499,20 +517,35 @@ export class NotificationsService implements OnModuleInit {
     const secretKey = this.configService.get('BEEM_SECRET_KEY');
     
     if (!apiKey || !secretKey) {
-      this.logger.warn(`SMS skipped (Beem Africa not configured): ${phoneNumber}`);
-      return;
+      this.logger.error(`SMS FAILED: Beem Africa not configured. Missing BEEM_API_KEY or BEEM_SECRET_KEY`);
+      throw new Error('SMS service not configured. Please contact administrator.');
     }
 
     // Beem Africa expects phone numbers in international format without the '+' sign
-    const cleanPhone = phoneNumber.replace(/\D/g, '');
+    // Ensure the number starts with country code (e.g., 260 for Zambia)
+    let cleanPhone = phoneNumber.replace(/\D/g, '');
+    
+    // If number doesn't start with country code, try to add Zambia default
+    if (cleanPhone.length === 9 && !cleanPhone.startsWith('260')) {
+      cleanPhone = '260' + cleanPhone;
+      this.logger.warn(`Phone number appears to be local format, adding Zambia country code: ${cleanPhone}`);
+    }
+    
+    // Validate phone number length (should be 12-15 digits for international format)
+    if (cleanPhone.length < 10 || cleanPhone.length > 15) {
+      this.logger.error(`SMS FAILED: Invalid phone number format: ${cleanPhone} (length: ${cleanPhone.length})`);
+      throw new Error('Invalid phone number format');
+    }
+    
     const auth = Buffer.from(`${apiKey}:${secretKey}`).toString('base64');
+    const sourceAddr = this.configService.get('BEEM_SOURCE_ADDR', 'KRYROS');
     
     try {
       this.logger.log(`Attempting to send SMS to ${cleanPhone} via Beem...`);
       const response = await axios.post(
         this.beemBaseUrl,
         {
-          source_addr: this.configService.get('BEEM_SOURCE_ADDR', 'INFO'),
+          source_addr: sourceAddr,
           schedule_time: '',
           encoding: 0,
           message,
@@ -522,15 +555,25 @@ export class NotificationsService implements OnModuleInit {
           headers: { 
             'Authorization': `Basic ${auth}`,
             'Content-Type': 'application/json'
-          }
+          },
+          timeout: 10000 // 10 second timeout
         }
       );
-      this.logger.log(`SMS sent successfully to ${cleanPhone}. Response: ${JSON.stringify(response.data)}`);
+      
+      // Check if the response indicates success
+      if (response.data && response.data.response_code === '200') {
+        this.logger.log(`SMS sent successfully to ${cleanPhone}. Response: ${JSON.stringify(response.data)}`);
+        return { success: true, response: response.data };
+      } else {
+        this.logger.error(`SMS API returned error: ${JSON.stringify(response.data)}`);
+        throw new Error(`SMS API error: ${response.data?.response_message || 'Unknown error'}`);
+      }
     } catch (error) {
       this.logger.error(`SMS failure for ${cleanPhone}: ${error.message}`);
       if (error.response) {
         this.logger.error(`Beem API Error Details: ${JSON.stringify(error.response.data)}`);
       }
+      throw new Error(`Failed to send SMS: ${error.message}`);
     }
   }
 }
