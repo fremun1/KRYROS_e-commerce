@@ -186,10 +186,10 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
             animate={{ x: 0 }}
             exit={{ x: "-100%" }}
             transition={{ type: "spring", damping: 30, stiffness: 300 }}
-            className="fixed left-0 top-0 bottom-0 z-50 w-[88vw] md:w-[400px] bg-card flex flex-col overflow-hidden shadow-2xl"
+            className="fixed left-0 top-0 bottom-0 z-50 w-[88vw] md:w-[400px] bg-[var(--kryros-header-navy)] flex flex-col overflow-hidden shadow-2xl"
           >
             {/* Header */}
-            <div className="flex items-center justify-between p-5 border-b border-border">
+            <div className="flex items-center justify-between p-5 border-b border-white/10 bg-[var(--kryros-header-navy)]">
               <Link href="/" onClick={onClose}>
                 <span className="flex items-center gap-2">
                   <img
@@ -199,12 +199,12 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                     loading="eager"
                     decoding="async"
                   />
-                  <span className="text-xl font-black text-foreground tracking-tight uppercase">KRYROS</span>
+                  <span className="text-xl font-black text-white tracking-tight uppercase">KRYROS</span>
                 </span>
               </Link>
               <button
                 onClick={onClose}
-                className="w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-muted-foreground/20 transition-colors"
+                className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors text-white"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -215,13 +215,13 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
               <div className="p-2">
                 
                 {/* MY ACCOUNT Section */}
-                <div className="border-b border-border/50 last:border-0">
+                <div className="border-b border-white/10 last:border-0">
                   <button 
                     onClick={() => toggleSection("account")}
-                    className="w-full flex items-center justify-between px-4 py-4 text-sm font-bold text-foreground uppercase tracking-tight hover:bg-muted/50 transition-colors"
+                    className="w-full flex items-center justify-between px-4 py-4 text-sm font-bold text-white uppercase tracking-tight hover:bg-white/10 transition-colors"
                   >
                     <div className="flex items-center gap-3">
-                      <User className="w-5 h-5 text-primary" />
+                      <User className="w-5 h-5 text-white" />
                       <span>My Account</span>
                     </div>
                     <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${expandedSections.account ? "rotate-180" : ""}`} />
@@ -232,23 +232,23 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: "auto", opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
-                        className="overflow-hidden bg-muted/20"
+                        className="overflow-hidden bg-white/10"
                       >
                         <div className="pb-2">
                           <Link href="/dashboard" onClick={onClose}>
-                            <div className="flex items-center gap-3 px-10 py-3 text-sm font-medium text-foreground hover:bg-muted transition-colors cursor-pointer">
+                            <div className="flex items-center gap-3 px-10 py-3 text-sm font-medium text-white hover:bg-white/10 transition-colors cursor-pointer">
                               <LayoutDashboard className="w-4 h-4" />
                               <span>Dashboard</span>
                             </div>
                           </Link>
                           <Link href="/wishlist" onClick={onClose}>
-                            <div className="flex items-center gap-3 px-10 py-3 text-sm font-medium text-foreground hover:bg-muted transition-colors cursor-pointer">
+                            <div className="flex items-center gap-3 px-10 py-3 text-sm font-medium text-white hover:bg-white/10 transition-colors cursor-pointer">
                               <Heart className="w-4 h-4" />
                               <span>Wishlist</span>
                             </div>
                           </Link>
                           {token && (
-                            <button onClick={handleLogout} className="w-full flex items-center gap-3 px-10 py-3 text-sm font-medium text-destructive hover:bg-destructive/5 transition-colors cursor-pointer">
+                            <button onClick={handleLogout} className="w-full flex items-center gap-3 px-10 py-3 text-sm font-medium text-white hover:bg-white/10 transition-colors cursor-pointer">
                               <LogOut className="w-4 h-4" />
                               <span>Logout</span>
                             </button>
@@ -260,13 +260,13 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                 </div>
 
                 {/* BROWSE / MAIN MENU Section */}
-                <div className="border-b border-border/50 last:border-0">
+                <div className="border-b border-white/10 last:border-0">
                   <button 
                     onClick={() => toggleSection("browse")}
-                    className="w-full flex items-center justify-between px-4 py-4 text-sm font-bold text-foreground uppercase tracking-tight hover:bg-muted/50 transition-colors"
+                    className="w-full flex items-center justify-between px-4 py-4 text-sm font-bold text-white uppercase tracking-tight hover:bg-white/10 transition-colors"
                   >
                     <div className="flex items-center gap-3">
-                      <ShoppingBag className="w-5 h-5 text-primary" />
+                      <ShoppingBag className="w-5 h-5 text-white" />
                       <span>Quick Link</span>
                     </div>
                     <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${expandedSections.browse ? "rotate-180" : ""}`} />
@@ -277,12 +277,12 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: "auto", opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
-                        className="overflow-hidden bg-muted/20"
+                        className="overflow-hidden bg-white/10"
                       >
                         <div className="pb-2">
                           {menuItems.map(({ label, icon: Icon, href }) => (
                             <Link key={href} href={href} onClick={onClose}>
-                              <div className="flex items-center gap-3 px-10 py-3 text-sm font-medium text-foreground hover:bg-muted transition-colors cursor-pointer">
+                              <div className="flex items-center gap-3 px-10 py-3 text-sm font-medium text-white hover:bg-white/10 transition-colors cursor-pointer">
                                 <Icon className="w-4 h-4" />
                                 <span>{label}</span>
                               </div>
@@ -295,13 +295,13 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                 </div>
 
                 {/* CATEGORIES Section */}
-                <div className="border-b border-border/50 last:border-0">
+                <div className="border-b border-white/10 last:border-0">
                   <button 
                     onClick={() => toggleSection("categories")}
-                    className="w-full flex items-center justify-between px-4 py-4 text-sm font-bold text-foreground uppercase tracking-tight hover:bg-muted/50 transition-colors"
+                    className="w-full flex items-center justify-between px-4 py-4 text-sm font-bold text-white uppercase tracking-tight hover:bg-white/10 transition-colors"
                   >
                     <div className="flex items-center gap-3">
-                      <Grid2x2 className="w-5 h-5 text-primary" />
+                      <Grid2x2 className="w-5 h-5 text-white" />
                       <span>Our Categories</span>
                     </div>
                     <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${expandedSections.categories ? "rotate-180" : ""}`} />
@@ -312,7 +312,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: "auto", opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
-                        className="overflow-hidden bg-muted/20"
+                        className="overflow-hidden bg-white/10"
                       >
                         <div className="p-3">
                           <div className="relative mb-3">
@@ -322,7 +322,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                               placeholder="Search categories..."
                               value={catSearch}
                               onChange={(e) => setCatSearch(e.target.value)}
-                              className="w-full pl-9 pr-3 py-2 bg-background border border-border rounded-lg text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                              className="w-full pl-9 pr-3 py-2 bg-white/10 border border-white/20 rounded-lg text-sm text-white placeholder-white/50 focus:outline-none focus:ring-1 focus:ring-white"
                             />
                           </div>
                           <div className="space-y-0.5">
@@ -336,7 +336,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                                     <button
                                       type="button"
                                       onClick={() => navigateTo(categoryPath)}
-                                      className="flex-grow flex items-center px-4 py-2.5 rounded-l-lg hover:bg-muted transition-colors text-foreground text-sm font-medium text-left"
+                                      className="flex-grow flex items-center px-4 py-2.5 rounded-l-lg hover:bg-white/10 transition-colors text-white text-sm font-medium text-left"
                                     >
                                       {cat.name}
                                     </button>
@@ -361,7 +361,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                                             key={brand.id}
                                             type="button"
                                             onClick={() => navigateTo(brandPath)}
-                                            className="w-full px-3 py-1.5 rounded-lg hover:bg-muted transition-colors text-foreground text-xs cursor-pointer text-left"
+                                            className="w-full px-3 py-1.5 rounded-lg hover:bg-white/10 transition-colors text-white text-xs cursor-pointer text-left"
                                           >
                                             {brand.name}
                                           </button>
@@ -380,13 +380,13 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                 </div>
 
                 {/* PREFERENCES Section */}
-                <div className="border-b border-border/50 last:border-0">
+                <div className="border-b border-white/10 last:border-0">
                   <button 
                     onClick={() => toggleSection("preferences")}
-                    className="w-full flex items-center justify-between px-4 py-4 text-sm font-bold text-foreground uppercase tracking-tight hover:bg-muted/50 transition-colors"
+                    className="w-full flex items-center justify-between px-4 py-4 text-sm font-bold text-white uppercase tracking-tight hover:bg-white/10 transition-colors"
                   >
                     <div className="flex items-center gap-3">
-                      <Globe className="w-5 h-5 text-primary" />
+                      <Globe className="w-5 h-5 text-white" />
                       <span>Preferences</span>
                     </div>
                     <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${expandedSections.preferences ? "rotate-180" : ""}`} />
@@ -397,34 +397,34 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: "auto", opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
-                        className="overflow-hidden bg-muted/20"
+                        className="overflow-hidden bg-white/10"
                       >
                         <div className="pb-2">
                           {/* Currency */}
                           <div className="relative">
                             <button
                               onClick={() => setCurrencyOpen((prev) => !prev)}
-                              className="w-full flex items-center justify-between px-10 py-3 hover:bg-muted transition-colors cursor-pointer"
+                              className="w-full flex items-center justify-between px-10 py-3 hover:bg-white/10 transition-colors cursor-pointer"
                             >
-                              <div className="flex items-center gap-3 text-foreground">
+                              <div className="flex items-center gap-3 text-white">
                                 <DollarSign className="w-4 h-4" />
                                 <span className="text-sm font-medium">Currency</span>
                               </div>
-                              <div className="flex items-center gap-1 text-muted-foreground text-xs">
+                              <div className="flex items-center gap-1 text-white/70 text-xs">
                                 <span>{selected.code}</span>
                                 <ChevronRight className={`w-3 h-3 transition-transform ${currencyOpen ? "rotate-90" : ""}`} />
                               </div>
                             </button>
                             {currencyOpen && (
-                              <div className="mx-10 my-2 bg-background border border-border rounded-xl shadow-lg overflow-hidden max-h-44 overflow-y-auto z-10">
+                              <div className="mx-10 my-2 bg-white/10 border border-white/20 rounded-xl shadow-lg overflow-hidden max-h-44 overflow-y-auto z-10">
                                 {currencies.map((c) => (
                                   <button
                                     key={c.code}
                                     onClick={() => { setCurrency(c.code); setCurrencyOpen(false); }}
-                                    className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors text-left ${c.code === selected.code ? "bg-primary/10 text-primary font-semibold" : "text-foreground"}`}
+                                    className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-white/20 transition-colors text-left ${c.code === selected.code ? "bg-white/20 text-white font-semibold" : "text-white"}`}
                                   >
                                     <span className="font-medium">{c.code}</span>
-                                    <span className="text-muted-foreground text-xs ml-auto">{c.symbol}</span>
+                                    <span className="text-white/70 text-xs ml-auto">{c.symbol}</span>
                                   </button>
                                 ))}
                               </div>
@@ -437,13 +437,13 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                 </div>
 
                 {/* INFORMATION Section */}
-                <div className="border-b border-border/50 last:border-0">
+                <div className="border-b border-white/10 last:border-0">
                   <button 
                     onClick={() => toggleSection("info")}
-                    className="w-full flex items-center justify-between px-4 py-4 text-sm font-bold text-foreground uppercase tracking-tight hover:bg-muted/50 transition-colors"
+                    className="w-full flex items-center justify-between px-4 py-4 text-sm font-bold text-white uppercase tracking-tight hover:bg-white/10 transition-colors"
                   >
                     <div className="flex items-center gap-3">
-                      <Info className="w-5 h-5 text-primary" />
+                      <Info className="w-5 h-5 text-white" />
                       <span>Need Help?</span>
                     </div>
                     <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${expandedSections.info ? "rotate-180" : ""}`} />
@@ -454,12 +454,12 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: "auto", opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
-                        className="overflow-hidden bg-muted/20"
+                        className="overflow-hidden bg-white/10"
                       >
                         <div className="pb-2">
                           {infoItems.map(({ label, icon: Icon, href }) => (
                             <Link key={href} href={href} onClick={onClose}>
-                              <div className="flex items-center gap-3 px-10 py-3 text-sm font-medium text-foreground hover:bg-muted transition-colors cursor-pointer">
+                              <div className="flex items-center gap-3 px-10 py-3 text-sm font-medium text-white hover:bg-white/10 transition-colors cursor-pointer">
                                 <Icon className="w-4 h-4" />
                                 <span>{label}</span>
                               </div>

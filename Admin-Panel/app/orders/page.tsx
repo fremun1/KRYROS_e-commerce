@@ -552,19 +552,19 @@ function OrdersContent() {
       {detail && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', justifyContent: 'flex-end' }}>
           <div onClick={() => setDetail(null)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(4px)' }} />
-          <div style={{ position: 'relative', width: '600px', height: '100%', background: 'white', boxShadow: '-10px 0 40px rgba(0,0,0,0.1)', display: 'flex', flexDirection: 'column', animation: 'slideIn 0.3s ease-out' }}>
-            <div style={{ padding: '24px', borderBottom: `1px solid ${T.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ position: 'relative', width: '100%', maxWidth: '600px', height: '100%', background: 'white', boxShadow: '-10px 0 40px rgba(0,0,0,0.1)', display: 'flex', flexDirection: 'column', animation: 'slideIn 0.3s ease-out' }}>
+            <div style={{ padding: '20px', borderBottom: `1px solid ${T.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
-                <h2 style={{ fontSize: '20px', fontWeight: '800', color: T.text }}>Order Details</h2>
-                <p style={{ fontSize: '13px', color: T.muted }}>#{detail.orderNumber} • {fmtDate(detail.createdAt)}</p>
+                <h2 style={{ fontSize: '18px', fontWeight: '800', color: T.text }}>Order Details</h2>
+                <p style={{ fontSize: '12px', color: T.muted }}>#{detail.orderNumber} • {fmtDate(detail.createdAt)}</p>
               </div>
               <button onClick={() => setDetail(null)} style={{ width: '36px', height: '36px', borderRadius: '50%', border: 'none', background: 'var(--surface)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <X size={20} />
               </button>
             </div>
 
-            <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '32px' }}>
+            <div style={{ flex: 1, overflowY: 'auto', padding: '20px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '24px' }}>
                 <div style={{ background: 'var(--surface)', padding: '16px', borderRadius: '12px' }}>
                   <p style={{ fontSize: '11px', fontWeight: '700', color: T.muted, textTransform: 'uppercase', marginBottom: '12px' }}>Customer</p>
                   <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
@@ -665,7 +665,7 @@ function OrdersContent() {
 
               <div style={{ marginBottom: '20px' }}>
                 <h3 style={{ fontSize: '14px', fontWeight: '700', marginBottom: '16px' }}>Manage Order</h3>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '16px' }}>
                   <div style={{ position: 'relative' }}>
                     <label style={{ fontSize: '11px', fontWeight: '700', color: T.muted, textTransform: 'uppercase', display: 'block', marginBottom: '6px' }}>Order Status</label>
                     <button

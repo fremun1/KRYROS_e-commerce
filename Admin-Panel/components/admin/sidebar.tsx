@@ -44,11 +44,11 @@ export default function Sidebar({ collapsed, mobileOpen, onMobileClose }: Sideba
   const { user, logout } = useAuth();
   const [showUserPopup, setShowUserPopup] = useState(false);
 
-  const bg       = "var(--sidebar-bg)";
+  const bg       = "var(--kryros-header-navy)";
   const border   = "rgba(255, 255, 255, 0.1)";
   const textMain = "var(--sidebar-text-active)";
-  const textMuted = "var(--sidebar-text)";
-  const surface  = "var(--sidebar-active-bg)";
+  const textMuted = "rgba(255, 255, 255, 0.7)";
+  const surface  = "rgba(255, 255, 255, 0.1)";
 
   const handleLogout = () => {
     setShowUserPopup(false);
