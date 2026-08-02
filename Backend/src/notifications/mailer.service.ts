@@ -26,6 +26,7 @@ const BASE_STYLES = `
   .footer { padding: 20px 36px; background: #f8fafc; border-top: 1px solid #f1f5f9; text-align: center; }
   .footer-text { font-size: 11px; color: #94a3b8; line-height: 1.6; }
   .footer-brand { font-weight: 700; color: #C0151B; }
+  .contact-info { font-size: 11px; color: #64748b; margin-top: 8px; line-height: 1.4; }
 `;
 
 @Injectable()
@@ -61,18 +62,18 @@ export class MailerService {
   // ─── Core send method ─────────────────────────────────────────────────────
   async sendMail(to: string, subject: string, text: string, html?: string) {
     if (!this.transporter) {
-      this.logger.warn(`Email skipped (SMTP not configured): ${subject} → ${to}`);
-      return null;
+      this.logger.error(`Email FAILED (SMTP not configured): ${subject} → ${to}`);
+      throw new Error('SMTP service not configured. Please contact administrator.');
     }
     const from = this.configService.get('MAIL_FROM') || '"KRYROS Mobile" <kryrosmobile@gmail.com>';
     try {
       const info = await this.transporter.sendMail({ from, to, subject, text, html });
-      this.logger.log(`Email sent: ${info.messageId} → ${to}`);
+      this.logger.log(`Email sent successfully: ${info.messageId} → ${to}`);
       return info;
     } catch (error) {
       this.logger.error(`SMTP Error for ${to}: [${error.code}] ${error.message}`);
       if (error.response) this.logger.error(`SMTP Response: ${error.response}`);
-      throw error;
+      throw new Error(`Failed to send email: ${error.message}`);
     }
   }
 
@@ -107,9 +108,9 @@ export class MailerService {
     <p class="text">If payment still needs verification, we will automatically send your final payment receipt once it is confirmed. You can also track your order any time using the button below.</p>
     <a href="${trackingUrl || appUrl}" class="cta-btn">Track My Order →</a>
     <div class="divider"></div>
-    <p class="text" style="font-size:12px;color:#94a3b8">If you have any questions, reply to this email or contact our support team.</p>
+    <p class="text" style="font-size:12px;color:#94a3b8">Questions? We're here to help! Reply to this email or contact our support team at +260 969 597 029 or support@kryros.com</p>
   </div>
-  <div class="footer"><p class="footer-text">© 2025 <span class="footer-brand">KRYROS Mobile Tech Limited</span><br>Secure · Trusted · Fast</p></div>
+  <div class="footer"><p class="footer-text">© 2026 <span class="footer-brand">KRYROS Mobile Tech Limited</span><br>Secure · Trusted · Fast</p><p class="contact-info">📞 +260 969 597 029 | 📧 support@kryros.com | 🌐 www.kryros.com</p></div>
 </div></div></body></html>`;
   }
 
@@ -141,9 +142,9 @@ export class MailerService {
     <p class="text">${statusMessage}</p>
     <a href="${trackingUrl || appUrl}" class="cta-btn">View Order Details →</a>
     <div class="divider"></div>
-    <p class="text" style="font-size:12px;color:#94a3b8">Questions? Reply to this email or reach our support team anytime.</p>
+    <p class="text" style="font-size:12px;color:#94a3b8">Questions? We're here to help! Reply to this email or contact our support team at +260 969 597 029 or support@kryros.com</p>
   </div>
-  <div class="footer"><p class="footer-text">© 2025 <span class="footer-brand">KRYROS Mobile Tech Limited</span><br>Secure · Trusted · Fast</p></div>
+  <div class="footer"><p class="footer-text">© 2026 <span class="footer-brand">KRYROS Mobile Tech Limited</span><br>Secure · Trusted · Fast</p><p class="contact-info">📞 +260 969 597 029 | 📧 support@kryros.com | 🌐 www.kryros.com</p></div>
 </div></div></body></html>`;
   }
 
@@ -170,9 +171,9 @@ export class MailerService {
     <div style="font-size:14px;color:#475569;line-height:1.8;margin-bottom:20px">${bodyHtml}</div>
     ${ctaText ? `<a href="${ctaUrl || appUrl}" class="cta-btn">${ctaText} →</a>` : ''}
     <div class="divider"></div>
-    <p class="text" style="font-size:12px;color:#94a3b8">You're receiving this because you have an account with KRYROS Mobile. To unsubscribe, reply with "unsubscribe".</p>
+    <p class="text" style="font-size:12px;color:#94a3b8">Questions? We're here to help! Contact us at +260 969 597 029 or support@kryros.com</p>
   </div>
-  <div class="footer"><p class="footer-text">© 2025 <span class="footer-brand">KRYROS Mobile Tech Limited</span><br>Secure · Trusted · Fast</p></div>
+  <div class="footer"><p class="footer-text">© 2026 <span class="footer-brand">KRYROS Mobile Tech Limited</span><br>Secure · Trusted · Fast</p><p class="contact-info">📞 +260 969 597 029 | 📧 support@kryros.com | 🌐 www.kryros.com</p></div>
 </div></div></body></html>`;
   }
 
@@ -205,13 +206,13 @@ export class MailerService {
     trackingUrl?: string;
   }) {
     const statusMap: Record<string, { label: string; message: string; emoji: string; color: string }> = {
-      CONFIRMED:  { label: 'Order Confirmed',      emoji: '✅', color: '#C0151B', message: 'Your order has been confirmed and our team is preparing it for dispatch.' },
-      PROCESSING: { label: 'Processing Your Order', emoji: '📦', color: '#6366f1', message: 'We\'re currently processing your order. You\'ll hear from us as soon as it ships.' },
-      SHIPPED:    { label: 'Order Shipped',         emoji: '🚚', color: '#3b82f6', message: 'Great news! Your order is on its way. Expect delivery soon.' },
-      OUT_FOR_DELIVERY: { label: 'Out for Delivery', emoji: '🏃', color: '#f59e0b', message: 'Your order is out for delivery today. Please be available to receive it.' },
-      DELIVERED:  { label: 'Order Delivered',       emoji: '🏠', color: '#10b981', message: 'Your order has been successfully delivered. We hope you love your purchase!' },
-      CANCELLED:  { label: 'Order Cancelled',       emoji: '❌', color: '#ef4444', message: 'Your order has been cancelled. If you have questions, please contact our support team.' },
-      REFUNDED:   { label: 'Refund Processed',      emoji: '💰', color: '#8b5cf6', message: 'Your refund has been processed. Please allow 3-5 business days for it to reflect.' },
+      CONFIRMED:  { label: 'Order Confirmed',      emoji: '✅', color: '#C0151B', message: 'Your order has been confirmed and our team is preparing it for dispatch. Thank you for choosing KRYROS!' },
+      PROCESSING: { label: 'Processing Your Order', emoji: '📦', color: '#6366f1', message: 'We\'re currently processing your order with care. You\'ll hear from us as soon as it ships.' },
+      SHIPPED:    { label: 'Order Shipped',         emoji: '🚚', color: '#3b82f6', message: 'Great news! Your order is on its way to you. We\'ll update you when it\'s close to delivery.' },
+      OUT_FOR_DELIVERY: { label: 'Out for Delivery', emoji: '🏃', color: '#f59e0b', message: 'Your order is out for delivery today. Please be available to receive it. We\'re excited to get this to you!' },
+      DELIVERED:  { label: 'Order Delivered',       emoji: '🏠', color: '#10b981', message: 'Your order has been successfully delivered. We hope you love your purchase! If you have any issues, please let us know.' },
+      CANCELLED:  { label: 'Order Cancelled',       emoji: '❌', color: '#ef4444', message: 'We sincerely apologize, but your order has been cancelled. If this was in error or you have any questions, please contact our support team and we\'ll be happy to assist you.' },
+      REFUNDED:   { label: 'Refund Processed',      emoji: '💰', color: '#8b5cf6', message: 'Your refund has been processed successfully. Please allow 3-5 business days for it to reflect in your account. Thank you for your patience.' },
     };
 
     const info = statusMap[params.status] || {
@@ -277,9 +278,9 @@ export class MailerService {
     </div>
     <a href="${appUrl}" class="cta-btn">Shop KRYROS Now →</a>
     <div class="divider"></div>
-    <p class="text" style="font-size:12px;color:#94a3b8">Don't want emails? You can unsubscribe at any time by visiting our website.</p>
+    <p class="text" style="font-size:12px;color:#94a3b8">Questions? We're here to help! Contact us at +260 969 597 029 or support@kryros.com</p>
   </div>
-  <div class="footer"><p class="footer-text">© 2025 <span class="footer-brand">KRYROS Mobile Tech Limited</span><br>Secure · Trusted · Fast</p></div>
+  <div class="footer"><p class="footer-text">© 2026 <span class="footer-brand">KRYROS Mobile Tech Limited</span><br>Secure · Trusted · Fast</p><p class="contact-info">📞 +260 969 597 029 | 📧 support@kryros.com | 🌐 www.kryros.com</p></div>
 </div></div></body></html>`;
 
     await this.sendMail(
@@ -311,9 +312,9 @@ export class MailerService {
     ${bodyHtml}
     <a href="${appUrl}" class="cta-btn">Shop Now →</a>
     <div class="divider"></div>
-    <p class="text" style="font-size:12px;color:#94a3b8">You're receiving this because you subscribed to KRYROS updates.</p>
+    <p class="text" style="font-size:12px;color:#94a3b8">Questions? We're here to help! Contact us at +260 969 597 029 or support@kryros.com</p>
   </div>
-  <div class="footer"><p class="footer-text">© 2025 <span class="footer-brand">KRYROS Mobile Tech Limited</span><br>Secure · Trusted · Fast</p></div>
+  <div class="footer"><p class="footer-text">© 2026 <span class="footer-brand">KRYROS Mobile Tech Limited</span><br>Secure · Trusted · Fast</p><p class="contact-info">📞 +260 969 597 029 | 📧 support@kryros.com | 🌐 www.kryros.com</p></div>
 </div></div></body></html>`;
 
     await this.sendMail(to, subject, body, html);
