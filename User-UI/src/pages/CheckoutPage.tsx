@@ -238,7 +238,15 @@ export default function CheckoutPage() {
   const [mmPhone, setMmPhone] = useState("");
   const [mobileOptions, setMobileOptions] = useState<MobileOption[]>([]);
 
-  const SUBTOTAL = cartItems.reduce((s, i) => s + i.price * i.qty, 0);
+  const SUBTOTAL = cartItems.reduce((s, i) => {
+    if (i.allowCredit && i.creditMinimum) {
+      return s + i.creditMinimum * i.qty;
+    }
+    if (i.isWholesaleOnly && i.wholesalePrice) {
+      return s + i.wholesalePrice * i.qty;
+    }
+    return s + i.price * i.qty;
+  }, 0);
   const [feeRate, setFeeRate] = useState(0.03);
   const PROCESSING_FEE = SUBTOTAL * feeRate;
   const shippingPrice = cartItems.reduce((t, i) => t + (i.shippingFee || 0) * i.qty, 0);

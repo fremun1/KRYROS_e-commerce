@@ -20,7 +20,15 @@ export default function CartPage() {
   const displayBasePath = useMemo(() => getPageContextDisplayPath(pageContext), [pageContext]);
   const format = useCurrencyStore((s) => s.format);
   const cartCount = items.reduce((t, i) => t + i.qty, 0);
-  const subtotal = items.reduce((t, i) => t + i.price * i.qty, 0);
+  const subtotal = items.reduce((t, i) => {
+    if (i.allowCredit && i.creditMinimum) {
+      return t + i.creditMinimum * i.qty;
+    }
+    if (i.isWholesaleOnly && i.wholesalePrice) {
+      return t + i.wholesalePrice * i.qty;
+    }
+    return t + i.price * i.qty;
+  }, 0);
   const [feeRate, setFeeRate] = useState(0.03); // default to 3%
 
   // Calculate shipping as sum of each product's shipping fee
