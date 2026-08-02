@@ -44,6 +44,7 @@ type WholesaleProduct = {
   rawMoq?: number;
   stockTotal?: number;
   stockCurrent?: number;
+  condition?: string;
 };
 
 const TIERS = ['Bronze','Silver','Gold','Platinum'];

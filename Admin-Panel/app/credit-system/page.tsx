@@ -13,7 +13,7 @@ import CloudinaryUpload from '@/components/ui/file-upload';
 type Credit = { id:string; customer:string; phone:string; limit:string; used:string; available:string; due:string; status:string; plan:string; outstanding:string };
 type Application = { id:string; user:string; email:string; product:string; plan:string; amount:string; status:string; date:string };
 type Plan = { id:string; name:string; months:number; interest:string; minAmount:string; maxAmount:string; status:string };
-type InstProduct = { id:string; name:string; sku:string; price:string; plans:string; status:string };
+type InstProduct = { id:string; name:string; sku:string; price:string; plans:string; status:string; condition?: string };
 
 // ─── Initial Data ─────────────────────────────────────────
 // Credits loaded from API
@@ -114,7 +114,7 @@ function CreditContent() {
   const [prodForm, setProdForm] = useState({ 
     name:'', sku:'', price:'', status:'Active', 
     description:'', specifications:'', creditMessage:'', creditMinimum:'',
-    stockTotal: '100', stockCurrent: '100'
+    stockTotal: '100', stockCurrent: '100', condition: 'New'
   });
   const [prodImages, setProdImages] = useState<string[]>([]);
 
