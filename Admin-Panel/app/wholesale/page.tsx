@@ -515,7 +515,7 @@ function WholesaleContent() {
         {section === 'inventory' && (
           <div style={{ padding:'20px' }}>
             <div style={{ display:'flex', justifyContent:'flex-end', marginBottom:'16px' }}>
-              <button onClick={() => { setIForm({name:'',sku:'',price:'',moq:'',category:'Electronics',status:'Active',description:'',imageUrl:'',images:[],specifications:'',stockTotal:'100',stockCurrent:'100'}); setInvImages([]); setAddInvOpen(true); }}
+              <button onClick={() => { setIForm({name:'',sku:'',price:'',moq:'',category:'Electronics',status:'Active',description:'',imageUrl:'',images:[],specifications:'',stockTotal:'100',stockCurrent:'100',condition:'New'}); setInvImages([]); setAddInvOpen(true); }}
                 style={{ background:'var(--primary)', color:'white', border:'none', padding:'8px 16px', borderRadius:'8px', fontWeight:600, cursor:'pointer' }}>
                 Add Wholesale Product
               </button>
