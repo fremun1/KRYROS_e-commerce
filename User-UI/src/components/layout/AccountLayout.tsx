@@ -88,21 +88,22 @@ export default function AccountLayout({ children, showTopBar = true }: AccountLa
 
   const SidebarContent = () => (
     <div className="flex flex-col h-full bg-background">
-      <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+      <div className="flex items-center justify-between px-5 py-4 border-b border-border bg-[var(--kryros-header-navy)]">
         <Link href="/">
-          <span className="flex items-center text-foreground cursor-pointer">
+          <span className="flex items-center text-white cursor-pointer">
             <img
               src="/kryros-logo.png"
               alt="KRYROS"
               className="w-10 h-10 object-contain"
             />
+            <span className="ml-2 text-xl font-black tracking-tight uppercase">KRYROS</span>
           </span>
         </Link>
         <button
-          className="w-7 h-7 flex items-center justify-center hover:bg-muted rounded-full transition-colors lg:hidden"
+          className="w-7 h-7 flex items-center justify-center hover:bg-white/10 rounded-full transition-colors lg:hidden text-white"
           onClick={() => setSidebarOpen(false)}
         >
-          <X className="w-4 h-4 text-muted-foreground" />
+          <X className="w-4 h-4" />
         </button>
       </div>
 
