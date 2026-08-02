@@ -44,11 +44,11 @@ export default function Sidebar({ collapsed, mobileOpen, onMobileClose }: Sideba
   const { user, logout } = useAuth();
   const [showUserPopup, setShowUserPopup] = useState(false);
 
-  const bg       = "var(--kryros-header-navy)";
+  const bg       = "var(--sidebar-bg)";
   const border   = "rgba(255, 255, 255, 0.1)";
   const textMain = "var(--sidebar-text-active)";
-  const textMuted = "rgba(255, 255, 255, 0.7)";
-  const surface  = "rgba(255, 255, 255, 0.1)";
+  const textMuted = "var(--sidebar-text)";
+  const surface  = "var(--sidebar-active-bg)";
 
   const handleLogout = () => {
     setShowUserPopup(false);
@@ -71,6 +71,7 @@ export default function Sidebar({ collapsed, mobileOpen, onMobileClose }: Sideba
         display: "flex", alignItems: "center",
         justifyContent: collapsed ? "center" : "space-between",
         flexShrink: 0,
+        background: "var(--kryros-header-navy)",
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <img
