@@ -52,6 +52,7 @@ const GenericCMSPage = lazy(() => import("@/pages/GenericCMSPage"));
 const ForgotPasswordPage = lazy(() => import("@/pages/ForgotPasswordPage"));
 
 import SplashScreen from "@/components/SplashScreen";
+import PageLoader from "@/components/PageLoader";
 import PwaInstallPrompt from "@/components/PwaInstallPrompt";
 import { useAuthStore } from "@/store/authStore";
 import { useCurrencyStore } from "@/store/currencyStore";
@@ -196,58 +197,17 @@ function PageTransitionLoader({ visible }: { visible: boolean }) {
         pointerEvents: visible ? "auto" : "none",
       }}
     >
-      {/* Thin teal progress bar at top */}
-      <div
+            {/* KRYROS Logo — full red square, larger and prominent */}
+      <img
+        src="/kryros-logo.png"
+        alt="KRYROS"
         style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          height: 3,
-          background:
-            "linear-gradient(90deg, var(--kryros-primary), var(--kryros-primary-hover))",
-          borderRadius: "0 2px 2px 0",
-          animation: visible ? "ktp-progress 1.3s ease-out forwards" : "none",
-        }}
-      />
-
-      {/* Logo wrap with pulsing rings */}
-      <div
-        style={{
-          position: "relative",
           width: 100,
           height: 100,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
+          objectFit: "contain",
+          animation: "ktp-blink 1.4s ease-in-out infinite",
         }}
-      >
-        {[1, 2].map((i) => (
-          <div
-            key={i}
-            style={{
-              position: "absolute",
-              borderRadius: "50%",
-              border: `1.5px solid rgba(var(--kryros-primary-rgb),${0.4 - i * 0.12})`,
-              width: 46 + i * 24,
-              height: 46 + i * 24,
-              animation: `ktp-ring 1.6s ease-out ${(i - 1) * 0.3}s infinite`,
-            }}
-          />
-        ))}
-        <img
-          src="/kryros-logo.png"
-          alt="KRYROS"
-          style={{
-            width: 44,
-            height: 44,
-            objectFit: "contain",
-            animation: "ktp-blink 1.4s ease-in-out infinite",
-            zIndex: 1,
-            position: "relative",
-          }}
-        />
-      </div>
-
+      />
       {/* Bouncing dots */}
       <div style={{ display: "flex", gap: 6, marginTop: 18 }}>
         {[0, 1, 2].map((i) => (
@@ -263,22 +223,10 @@ function PageTransitionLoader({ visible }: { visible: boolean }) {
           />
         ))}
       </div>
-
       <style>{`
-        @keyframes ktp-progress {
-          0%   { width: 0%; }
-          40%  { width: 60%; }
-          80%  { width: 85%; }
-          100% { width: 100%; }
-        }
-        @keyframes ktp-ring {
-          0%   { transform: scale(0.82); opacity: 0.85; }
-          60%  { opacity: 0.3; }
-          100% { transform: scale(1.22); opacity: 0; }
-        }
         @keyframes ktp-blink {
           0%, 100% { opacity: 1; }
-          50%       { opacity: 0.4; }
+          50%       { opacity: 0.5; }
         }
         @keyframes ktp-dot {
           0%, 100% { transform: translateY(0);    opacity: 0.3; }
@@ -289,36 +237,7 @@ function PageTransitionLoader({ visible }: { visible: boolean }) {
   );
 }
 
-// ── Lightweight Suspense fallback (JS chunk loading) ──────────────────────────
-function PageLoader() {
-  return (
-    <div
-      style={{
-        minHeight: "60vh",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: "16px",
-      }}
-    >
-      <div
-        style={{
-          width: 32,
-          height: 32,
-          border: "3px solid var(--kryros-light-border)",
-          borderTop: "3px solid var(--kryros-primary)",
-          borderRadius: "50%",
-          animation: "spin 0.7s linear infinite",
-        }}
-      />
-      <p style={{ fontSize: "14px", color: "var(--muted-foreground)" }}>
-        Loading page...
-      </p>
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-    </div>
-  );
-}
+// PageLoader is now imported from @/components/PageLoader
 
 function LoginRoute() {
   return <AuthPage />;
