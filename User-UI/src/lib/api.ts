@@ -53,6 +53,9 @@ export interface Product {
   creditMinimum?: number | null;
   creditDuration?: number;
   creditDurationType?: 'weeks' | 'months';
+  creditInstallmentFrequency?: string;
+  creditInstallmentCount?: number;
+  creditInstallmentAmount?: number | null;
   // Wholesale
   isWholesaleOnly?: boolean;
   wholesalePrice?: number | null;
@@ -292,6 +295,11 @@ export function normalizeProduct(p: any): Product {
     allowCredit: !!(p.allowCredit),
     creditMessage: p.creditMessage ?? null,
     creditMinimum: p.creditMinimum ? Number(p.creditMinimum) : null,
+    creditDuration: p.creditDuration ? Number(p.creditDuration) : undefined,
+    creditDurationType: p.creditDurationType || 'weeks',
+    creditInstallmentFrequency: p.creditInstallmentFrequency || 'weekly',
+    creditInstallmentCount: p.creditInstallmentCount ? Number(p.creditInstallmentCount) : undefined,
+    creditInstallmentAmount: p.creditInstallmentAmount ? Number(p.creditInstallmentAmount) : null,
     // Wholesale
     isWholesaleOnly: !!(p.isWholesaleOnly),
     wholesalePrice: p.wholesalePrice ? Number(p.wholesalePrice) : null,

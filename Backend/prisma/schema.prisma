@@ -202,6 +202,9 @@ model Product {
   creditMinimum          Decimal?            @db.Decimal(10, 2)
   creditDuration         Int?                @default(12) // Number of weeks or months
   creditDurationType     String?             @default("weeks") // "weeks" or "months"
+  creditInstallmentFrequency String?           @default("weekly") // "daily", "weekly", "monthly"
+  creditInstallmentCount   Int?                @default(13) // Total number of installment payments
+  creditInstallmentAmount  Decimal?            @db.Decimal(10, 2) // Per-installment amount
   metaTitle              String?
   metaDescription        String?
   metaKeywords           String?

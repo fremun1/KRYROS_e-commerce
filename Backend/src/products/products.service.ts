@@ -506,6 +506,20 @@ export class ProductsService {
             dto.creditMinimum !== undefined && dto.creditMinimum !== null
               ? (isNaN(Number(dto.creditMinimum)) ? null : Number(dto.creditMinimum))
               : null,
+          creditDuration:
+            dto.creditDuration !== undefined
+              ? (isNaN(Number(dto.creditDuration)) ? 12 : Number(dto.creditDuration))
+              : 12,
+          creditDurationType: dto.creditDurationType || 'weeks',
+          creditInstallmentFrequency: dto.creditInstallmentFrequency || 'weekly',
+          creditInstallmentCount:
+            dto.creditInstallmentCount !== undefined
+              ? (isNaN(Number(dto.creditInstallmentCount)) ? null : Math.max(1, Number(dto.creditInstallmentCount)))
+              : null,
+          creditInstallmentAmount:
+            dto.creditInstallmentAmount !== undefined && dto.creditInstallmentAmount !== null
+              ? (isNaN(Number(dto.creditInstallmentAmount)) ? null : Number(dto.creditInstallmentAmount))
+              : null,
           wholesalePrice:
             dto.wholesalePrice !== undefined && dto.wholesalePrice !== null
               ? (isNaN(Number(dto.wholesalePrice)) ? null : Number(dto.wholesalePrice))
@@ -841,6 +855,20 @@ export class ProductsService {
         creditMinimum:
           dto.creditMinimum !== undefined
             ? (isNaN(Number(dto.creditMinimum)) ? null : Number(dto.creditMinimum))
+            : undefined,
+        creditDuration:
+          dto.creditDuration !== undefined
+            ? (isNaN(Number(dto.creditDuration)) ? 12 : Number(dto.creditDuration))
+            : undefined,
+        creditDurationType: dto.creditDurationType !== undefined ? dto.creditDurationType : undefined,
+        creditInstallmentFrequency: dto.creditInstallmentFrequency !== undefined ? dto.creditInstallmentFrequency : undefined,
+        creditInstallmentCount:
+          dto.creditInstallmentCount !== undefined
+            ? (isNaN(Number(dto.creditInstallmentCount)) ? null : Math.max(1, Number(dto.creditInstallmentCount)))
+            : undefined,
+        creditInstallmentAmount:
+          dto.creditInstallmentAmount !== undefined
+            ? (isNaN(Number(dto.creditInstallmentAmount)) ? null : Number(dto.creditInstallmentAmount))
             : undefined,
         wholesalePrice:
           dto.wholesalePrice !== undefined

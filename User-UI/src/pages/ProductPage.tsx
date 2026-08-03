@@ -426,14 +426,21 @@ export default function ProductPage() {
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-2 text-xs">
-              <div className="flex items-center gap-1 text-muted-foreground">
-                <Clock className="w-3.5 h-3.5" />
-                <span>{format(creditPaymentDetails.weeklyPayment)}/w</span>
+            <div className="grid grid-cols-3 gap-2 text-xs mt-2 pt-2 border-t border-primary/10">
+              <div className="text-center">
+                <p className="text-[9px] text-muted-foreground uppercase tracking-wider">Installment</p>
+                <p className="font-bold text-primary">{format(creditPaymentDetails.installmentAmount)}</p>
+                <p className="text-[9px] text-muted-foreground capitalize">per {creditPaymentDetails.frequency}</p>
               </div>
-              <div className="flex items-center gap-1 text-muted-foreground">
-                <Package className="w-3.5 h-3.5" />
-                <span>{creditPaymentDetails.period}</span>
+              <div className="text-center">
+                <p className="text-[9px] text-muted-foreground uppercase tracking-wider">Payments</p>
+                <p className="font-bold text-primary">{creditPaymentDetails.installmentCount}</p>
+                <p className="text-[9px] text-muted-foreground">installments</p>
+              </div>
+              <div className="text-center">
+                <p className="text-[9px] text-muted-foreground uppercase tracking-wider">Duration</p>
+                <p className="font-bold text-primary">{creditPaymentDetails.period}</p>
+                <p className="text-[9px] text-muted-foreground">total plan</p>
               </div>
             </div>
           </div>
@@ -595,6 +602,14 @@ export default function ProductPage() {
                       <span className="font-semibold text-primary">{creditMessage}</span>
                       <span>Initial Deposit:</span>
                       <span className="font-semibold text-primary">{format(product.creditMinimum || 0)}</span>
+                      <span>Payment Frequency:</span>
+                      <span className="font-semibold text-primary capitalize">{creditPaymentDetails.frequency}</span>
+                      <span>Per-Installment:</span>
+                      <span className="font-semibold text-primary">{format(creditPaymentDetails.installmentAmount)}</span>
+                      <span>Number of Payments:</span>
+                      <span className="font-semibold text-primary">{creditPaymentDetails.installmentCount}</span>
+                      <span>Total Duration:</span>
+                      <span className="font-semibold text-primary">{creditPaymentDetails.period}</span>
                     </div>
                   </div>
                 )}

@@ -91,6 +91,31 @@ export class UpdateProductDto {
   @IsOptional()
   @IsNumber()
   @Type(() => Number)
+  creditDuration?: number;
+
+  @IsOptional()
+  @IsString()
+  creditDurationType?: string;
+
+  @IsOptional()
+  @IsString()
+  creditInstallmentFrequency?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(1)
+  @Type(() => Number)
+  creditInstallmentCount?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Type(() => Number)
+  creditInstallmentAmount?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Type(() => Number)
   flashSalePrice?: number;
 
   @IsOptional()

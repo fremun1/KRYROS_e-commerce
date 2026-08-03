@@ -82,6 +82,31 @@ export class CreateProductDto {
   @IsNumber()
   @IsOptional()
   @Type(() => Number)
+  creditDuration?: number;
+
+  @IsString()
+  @IsOptional()
+  creditDurationType?: string;
+
+  @IsString()
+  @IsOptional()
+  creditInstallmentFrequency?: string;
+
+  @IsNumber()
+  @IsOptional()
+  @Min(1)
+  @Type(() => Number)
+  creditInstallmentCount?: number;
+
+  @IsNumber()
+  @IsOptional()
+  @Min(0)
+  @Type(() => Number)
+  creditInstallmentAmount?: number;
+
+  @IsNumber()
+  @IsOptional()
+  @Type(() => Number)
   flashSalePrice?: number;
 
   @IsString()

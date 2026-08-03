@@ -33,6 +33,11 @@ type InstProduct = {
   estimatedDeliveryDays?: string;
   estimatedDeliveryMinDays?: string;
   estimatedDeliveryMaxDays?: string;
+  creditDuration?: string;
+  creditDurationType?: string;
+  creditInstallmentFrequency?: string;
+  creditInstallmentCount?: string;
+  creditInstallmentAmount?: string;
 };
 
 // ─── Initial Data ─────────────────────────────────────────
@@ -157,7 +162,8 @@ function CreditContent() {
     description:'', specifications:'', creditMessage:'', creditMinimum:'',
     stockTotal: '100', stockCurrent: '100', condition: 'New',
     shippingFee: '', estimatedDeliveryDays: '3', estimatedDeliveryMinDays: '2', estimatedDeliveryMaxDays: '7',
-    creditDuration: '12', creditDurationType: 'weeks'
+    creditDuration: '12', creditDurationType: 'weeks',
+    creditInstallmentFrequency: 'weekly', creditInstallmentCount: '13', creditInstallmentAmount: ''
   });
   const [prodImages, setProdImages] = useState<string[]>([]);
   const [conditionOptions, setConditionOptions] = useState<string[]>(DEFAULT_CONDITION_OPTIONS);
@@ -216,7 +222,10 @@ function CreditContent() {
         estimatedDeliveryMinDays: p.estimatedDeliveryMinDays != null ? String(Number(p.estimatedDeliveryMinDays)) : '2',
         estimatedDeliveryMaxDays: p.estimatedDeliveryMaxDays != null ? String(Number(p.estimatedDeliveryMaxDays)) : '7',
         creditDuration: p.creditDuration != null ? String(Number(p.creditDuration)) : '12',
-        creditDurationType: p.creditDurationType || 'weeks'
+        creditDurationType: p.creditDurationType || 'weeks',
+        creditInstallmentFrequency: p.creditInstallmentFrequency || 'weekly',
+        creditInstallmentCount: p.creditInstallmentCount != null ? String(Number(p.creditInstallmentCount)) : '',
+        creditInstallmentAmount: p.creditInstallmentAmount != null ? String(Number(p.creditInstallmentAmount)) : ''
       })));
     });
   };
@@ -295,6 +304,9 @@ function CreditContent() {
         estimatedDeliveryMaxDays: Number(prodForm.estimatedDeliveryMaxDays) || 7,
         creditDuration: Number(prodForm.creditDuration) || 12,
         creditDurationType: prodForm.creditDurationType || 'weeks',
+        creditInstallmentFrequency: prodForm.creditInstallmentFrequency || 'weekly',
+        creditInstallmentCount: prodForm.creditInstallmentCount ? Number(prodForm.creditInstallmentCount) : undefined,
+        creditInstallmentAmount: prodForm.creditInstallmentAmount ? Number(prodForm.creditInstallmentAmount) : undefined,
       });
       toast.success('Credit product added');
       setAddProdOpen(false);
@@ -336,6 +348,9 @@ function CreditContent() {
         estimatedDeliveryMaxDays: Number(prodForm.estimatedDeliveryMaxDays) || 7,
         creditDuration: Number(prodForm.creditDuration) || 12,
         creditDurationType: prodForm.creditDurationType || 'weeks',
+        creditInstallmentFrequency: prodForm.creditInstallmentFrequency || 'weekly',
+        creditInstallmentCount: prodForm.creditInstallmentCount ? Number(prodForm.creditInstallmentCount) : undefined,
+        creditInstallmentAmount: prodForm.creditInstallmentAmount ? Number(prodForm.creditInstallmentAmount) : undefined,
       });
       toast.success('Credit product updated');
       setEditProd(null);
@@ -513,7 +528,7 @@ function CreditContent() {
         icon={CreditCard}
         onAdd={
           activeTab === 'plans' ? () => { setPlanForm({name:'',months:'3',interest:'0%',minAmount:'',maxAmount:'',status:'Active'}); setAddPlanOpen(true); } : 
-          activeTab === 'products' ? () => { setProdForm({name:'',sku:'',price:'',status:'Active',description:'',specifications:'',creditMessage:'',creditMinimum:'',stockTotal:'100',stockCurrent:'100',condition:conditionOptions[0] || 'New',shippingFee:'',estimatedDeliveryDays:'3',estimatedDeliveryMinDays:'2',estimatedDeliveryMaxDays:'7',creditDuration:'12',creditDurationType:'weeks'}); setProdImages([]); setAddProdOpen(true); } :
+          activeTab === 'products' ? () => { setProdForm({name:'',sku:'',price:'',status:'Active',description:'',specifications:'',creditMessage:'',creditMinimum:'',stockTotal:'100',stockCurrent:'100',condition:conditionOptions[0] || 'New',shippingFee:'',estimatedDeliveryDays:'3',estimatedDeliveryMinDays:'2',estimatedDeliveryMaxDays:'7',creditDuration:'12',creditDurationType:'weeks',creditInstallmentFrequency:'weekly',creditInstallmentCount:'13',creditInstallmentAmount:''}); setProdImages([]); setAddProdOpen(true); } :
           undefined
         }
         addLabel={activeTab === 'plans' ? "Add Plan" : "Add Product"}
@@ -594,7 +609,10 @@ function CreditContent() {
               estimatedDeliveryMinDays: r.estimatedDeliveryMinDays || '2',
               estimatedDeliveryMaxDays: r.estimatedDeliveryMaxDays || '7',
               creditDuration: r.creditDuration || '12',
-              creditDurationType: r.creditDurationType || 'weeks'
+              creditDurationType: r.creditDurationType || 'weeks',
+              creditInstallmentFrequency: r.creditInstallmentFrequency || 'weekly',
+              creditInstallmentCount: r.creditInstallmentCount ? String(r.creditInstallmentCount) : '',
+              creditInstallmentAmount: r.creditInstallmentAmount ? String(r.creditInstallmentAmount) : ''
             });
             setProdImages(r.images || []);
             setEditProd(r);
@@ -677,6 +695,47 @@ function CreditContent() {
         <FormField label="Credit Message" value={prodForm.creditMessage} onChange={v => setProdForm(f => ({ ...f, creditMessage: v }))} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. Get now, pay later" />
         <FormField label="Credit Minimum Deposit" value={prodForm.creditMinimum} onChange={v => setProdForm(f => ({ ...f, creditMinimum: v }))} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 500" />
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '12px' }}>
+          <FormField label="Credit Duration" value={prodForm.creditDuration} onChange={v => setProdForm(f => ({ ...f, creditDuration: v }))} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="12" />
+          <FormField label="Duration Type" value={prodForm.creditDurationType} onChange={v => setProdForm(f => ({ ...f, creditDurationType: v }))} options={['weeks', 'months']} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '12px' }}>
+          <FormField label="Payment Frequency" value={prodForm.creditInstallmentFrequency} onChange={v => setProdForm(f => ({ ...f, creditInstallmentFrequency: v }))} options={['daily', 'weekly', 'monthly']} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+          <FormField label="Number of Installments" value={prodForm.creditInstallmentCount} onChange={v => setProdForm(f => ({ ...f, creditInstallmentCount: v }))} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 13" />
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '12px' }}>
+          <FormField label="Per-Installment Amount" value={prodForm.creditInstallmentAmount} onChange={v => setProdForm(f => ({ ...f, creditInstallmentAmount: v }))} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Auto-calculated or enter manually" />
+          <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+            <button
+              type="button"
+              onClick={() => {
+                const price = Number(prodForm.price) || 0;
+                const deposit = Number(prodForm.creditMinimum) || 0;
+                const count = Number(prodForm.creditInstallmentCount) || 1;
+                if (count > 0 && price > 0) {
+                  const amount = ((price - deposit) / count).toFixed(2);
+                  setProdForm(f => ({ ...f, creditInstallmentAmount: amount }));
+                  toast.success(`Auto-calculated: ${(price - deposit).toFixed(2)} ÷ ${count} = ${amount}`);
+                } else {
+                  toast.error('Enter price, deposit, and installment count first');
+                }
+              }}
+              style={{
+                padding: '8px 14px',
+                borderRadius: '8px',
+                fontSize: '12px',
+                fontWeight: 600,
+                background: 'var(--primary)',
+                color: '#fff',
+                border: 'none',
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              Auto-Calculate
+            </button>
+          </div>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '12px' }}>
           <FormField label="Product Condition" value={prodForm.condition} onChange={v => setProdForm(f => ({ ...f, condition: v }))} options={conditionOptions} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <FormField label="Shipping Fee" value={prodForm.shippingFee} onChange={v => setProdForm(f => ({ ...f, shippingFee: v }))} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="0.00" />
@@ -756,6 +815,43 @@ function CreditContent() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '12px' }}>
             <FormField label="Credit Duration" value={prodForm.creditDuration} onChange={v => setProdForm(f => ({ ...f, creditDuration: v }))} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="12" />
             <FormField label="Duration Type" value={prodForm.creditDurationType} onChange={v => setProdForm(f => ({ ...f, creditDurationType: v }))} options={['weeks', 'months']} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '12px' }}>
+            <FormField label="Payment Frequency" value={prodForm.creditInstallmentFrequency} onChange={v => setProdForm(f => ({ ...f, creditInstallmentFrequency: v }))} options={['daily', 'weekly', 'monthly']} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="Number of Installments" value={prodForm.creditInstallmentCount} onChange={v => setProdForm(f => ({ ...f, creditInstallmentCount: v }))} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 13" />
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '12px' }}>
+            <FormField label="Per-Installment Amount" value={prodForm.creditInstallmentAmount} onChange={v => setProdForm(f => ({ ...f, creditInstallmentAmount: v }))} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Auto-calculated or enter manually" />
+            <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  const price = Number(prodForm.price) || 0;
+                  const deposit = Number(prodForm.creditMinimum) || 0;
+                  const count = Number(prodForm.creditInstallmentCount) || 1;
+                  if (count > 0 && price > 0) {
+                    const amount = ((price - deposit) / count).toFixed(2);
+                    setProdForm(f => ({ ...f, creditInstallmentAmount: amount }));
+                    toast.success(`Auto-calculated: ${(price - deposit).toFixed(2)} ÷ ${count} = ${amount}`);
+                  } else {
+                    toast.error('Enter price, deposit, and installment count first');
+                  }
+                }}
+                style={{
+                  padding: '8px 14px',
+                  borderRadius: '8px',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  background: 'var(--primary)',
+                  color: '#fff',
+                  border: 'none',
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                Auto-Calculate
+              </button>
+            </div>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '12px' }}>
             <FormField label="Product Condition" value={prodForm.condition} onChange={v => setProdForm(f => ({ ...f, condition: v }))} options={conditionOptions} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />

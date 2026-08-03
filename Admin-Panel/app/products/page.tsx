@@ -23,6 +23,11 @@ type Product = {
   allowCredit: boolean;
   creditMessage: string;
   creditMinimum: string;
+  creditDuration: string;
+  creditDurationType: string;
+  creditInstallmentFrequency: string;
+  creditInstallmentCount: string;
+  creditInstallmentAmount: string;
   isWholesaleOnly: boolean;
   wholesalePrice: string;
   wholesaleMoq: string;
@@ -75,7 +80,7 @@ const EMPTY_FORM = {
   featured: 'No',
   isNew: 'No',
   isFlashSale: 'No', flashSalePrice: '', flashSaleEnd: '',
-  allowCredit: 'No', creditMessage: '', creditMinimum: '',
+  allowCredit: 'No', creditMessage: '', creditMinimum: '', creditDuration: '12', creditDurationType: 'weeks', creditInstallmentFrequency: 'weekly', creditInstallmentCount: '13', creditInstallmentAmount: '',
   isWholesaleOnly: 'No', wholesalePrice: '', wholesaleMoq: '', unitsPerPack: '1',
   showGuaranteeBadge: 'No', showReturnsBadge: 'No',
   tags: '', metaTitle: '', metaDescription: '', imageUrl: '', specifications: '',
@@ -139,6 +144,11 @@ function ProductsContent() {
         allowCredit: !!p.allowCredit,
         creditMessage: p.creditMessage || '',
         creditMinimum: p.creditMinimum != null ? String(Number(p.creditMinimum)) : '',
+        creditDuration: p.creditDuration != null ? String(Number(p.creditDuration)) : '12',
+        creditDurationType: p.creditDurationType || 'weeks',
+        creditInstallmentFrequency: p.creditInstallmentFrequency || 'weekly',
+        creditInstallmentCount: p.creditInstallmentCount != null ? String(Number(p.creditInstallmentCount)) : '',
+        creditInstallmentAmount: p.creditInstallmentAmount != null ? String(Number(p.creditInstallmentAmount)) : '',
         isWholesaleOnly: !!p.isWholesaleOnly,
         wholesalePrice: p.wholesalePrice != null ? String(Number(p.wholesalePrice)) : '',
         wholesaleMoq: p.wholesaleMoq != null ? String(Number(p.wholesaleMoq)) : '',
@@ -267,6 +277,11 @@ function ProductsContent() {
       allowCredit: boolToStr(r.allowCredit),
       creditMessage: r.creditMessage || '',
       creditMinimum: r.creditMinimum || '',
+      creditDuration: r.creditDuration || '12',
+      creditDurationType: r.creditDurationType || 'weeks',
+      creditInstallmentFrequency: r.creditInstallmentFrequency || 'weekly',
+      creditInstallmentCount: r.creditInstallmentCount != null ? String(r.creditInstallmentCount) : '',
+      creditInstallmentAmount: r.creditInstallmentAmount != null ? String(r.creditInstallmentAmount) : '',
       isWholesaleOnly: boolToStr(r.isWholesaleOnly),
       wholesalePrice: r.wholesalePrice || '',
       wholesaleMoq: r.wholesaleMoq || '',
@@ -355,6 +370,17 @@ function ProductsContent() {
       categorySlug: selectedCategory?.slug || toSlug(form.category || 'general'),
       creditMinimum: strToBool(form.allowCredit)
         ? (form.creditMinimum ? Number(form.creditMinimum) : 0)
+        : undefined,
+      creditDuration: strToBool(form.allowCredit)
+        ? (form.creditDuration ? Number(form.creditDuration) : 12)
+        : undefined,
+      creditDurationType: strToBool(form.allowCredit) ? (form.creditDurationType || 'weeks') : undefined,
+      creditInstallmentFrequency: strToBool(form.allowCredit) ? (form.creditInstallmentFrequency || 'weekly') : undefined,
+      creditInstallmentCount: strToBool(form.allowCredit)
+        ? (form.creditInstallmentCount ? Number(form.creditInstallmentCount) : undefined)
+        : undefined,
+      creditInstallmentAmount: strToBool(form.allowCredit)
+        ? (form.creditInstallmentAmount ? Number(form.creditInstallmentAmount) : undefined)
         : undefined,
       flashSalePrice: strToBool(form.isFlashSale) && form.flashSalePrice ? Number(form.flashSalePrice) : null,
       flashSaleEnd: strToBool(form.isFlashSale) && form.flashSaleEnd ? form.flashSaleEnd : null,
@@ -611,7 +637,51 @@ function ProductsContent() {
       {strToBool(form.allowCredit) && (
         <>
           <FormField label="Credit Message" value={form.creditMessage} onChange={fp('creditMessage')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. Get Now, Pay Later" />
-          <FormField label="Minimum Deposit" value={form.creditMinimum} onChange={fp('creditMinimum')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 200" />
+          <FormField label="Minimum Deposit (Initial Payment)" value={form.creditMinimum} onChange={fp('creditMinimum')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 200" />
+          <div style={{ fontSize: '11px', color: textMuted, padding: '6px 0 8px' }}>
+            Configure the payment plan breakdown. The per-installment amount will be auto-calculated as (Price − Deposit) ÷ Number of Installments, or you can override it manually.
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '12px' }}>
+            <FormField label="Payment Duration" value={form.creditDuration} onChange={fp('creditDuration')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="12" />
+            <FormField label="Duration Unit" value={form.creditDurationType} onChange={fp('creditDurationType')} options={['weeks', 'months']} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '12px' }}>
+            <FormField label="Payment Frequency" value={form.creditInstallmentFrequency} onChange={fp('creditInstallmentFrequency')} options={['daily', 'weekly', 'monthly']} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
+            <FormField label="Number of Installments" value={form.creditInstallmentCount} onChange={fp('creditInstallmentCount')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="e.g. 13" />
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '12px' }}>
+            <FormField label="Per-Installment Amount" value={form.creditInstallmentAmount} onChange={fp('creditInstallmentAmount')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Auto-calculated or enter manually" />
+            <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  const price = Number(form.price) || 0;
+                  const deposit = Number(form.creditMinimum) || 0;
+                  const count = Number(form.creditInstallmentCount) || 1;
+                  if (count > 0 && price > 0) {
+                    const amount = ((price - deposit) / count).toFixed(2);
+                    setForm(f => ({ ...f, creditInstallmentAmount: amount }));
+                    toast.success(`Auto-calculated: ${(price - deposit).toFixed(2)} ÷ ${count} = ${amount}`);
+                  } else {
+                    toast.error('Enter price, deposit, and installment count first');
+                  }
+                }}
+                style={{
+                  padding: '8px 14px',
+                  borderRadius: '8px',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  background: 'var(--primary)',
+                  color: '#fff',
+                  border: 'none',
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                Auto-Calculate
+              </button>
+            </div>
+          </div>
         </>
       )}
 

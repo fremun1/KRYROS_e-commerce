@@ -201,7 +201,7 @@ export default function UnifiedProductCard({
               </span>
               <span className="text-[9px] text-muted-foreground flex items-center gap-0.5 whitespace-nowrap">
                 <Clock className="w-2.5 h-2.5" />
-                {format(creditPaymentDetails.weeklyPayment)}/w
+                {format(creditPaymentDetails.installmentAmount)} × {creditPaymentDetails.installmentCount}
               </span>
               <span className="text-[9px] text-muted-foreground flex items-center gap-0.5 whitespace-nowrap">
                 <Package className="w-2.5 h-2.5" />
