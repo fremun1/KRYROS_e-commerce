@@ -189,7 +189,7 @@ export default function UnifiedProductCard({
             </div>
           )}
 
-          {/* 4. Credit details — the same compact row pattern used by wholesale cards. */}
+          {/* 4. Credit details — showing explicit installment breakdown configured in admin. */}
           {isCreditProduct && (
             <>
               <span className="text-[9px] text-primary font-semibold flex items-center gap-0.5 whitespace-nowrap">
@@ -198,11 +198,11 @@ export default function UnifiedProductCard({
               </span>
               <span className="text-[9px] text-primary font-semibold flex items-center gap-0.5 whitespace-nowrap">
                 <Clock className="w-2.5 h-2.5" />
-                {format(creditPaymentDetails.installmentAmount)} × {creditPaymentDetails.installmentCount}
+                {format(creditPaymentDetails.installmentAmount)} / {creditPaymentDetails.frequency.replace(/ly$/, '')}
               </span>
               <span className="text-[9px] text-primary font-semibold flex items-center gap-0.5 whitespace-nowrap">
                 <Package className="w-2.5 h-2.5" />
-                {creditPaymentDetails.period}
+                {creditPaymentDetails.installmentCount} Payments
               </span>
             </>
           )}

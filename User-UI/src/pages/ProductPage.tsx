@@ -422,7 +422,7 @@ export default function ProductPage() {
               <div className="min-w-0">
                 <p className="text-[10px] font-black text-primary uppercase tracking-wider">Credit Available</p>
                 <p className="text-xs font-bold text-foreground truncate" title={creditMessage}>
-                  Deposit: {format(product.creditMinimum || 0)} · {creditMessage}
+                  Initial Deposit: {format(product.creditMinimum || 0)}
                 </p>
               </div>
             </div>
@@ -430,7 +430,7 @@ export default function ProductPage() {
               <div className="text-center">
                 <p className="text-[9px] text-muted-foreground uppercase tracking-wider">Installment</p>
                 <p className="font-bold text-primary">{format(creditPaymentDetails.installmentAmount)}</p>
-                <p className="text-[9px] text-muted-foreground capitalize">per {creditPaymentDetails.frequency}</p>
+                <p className="text-[9px] text-muted-foreground capitalize">every {creditPaymentDetails.frequency.replace(/ly$/, '')}</p>
               </div>
               <div className="text-center">
                 <p className="text-[9px] text-muted-foreground uppercase tracking-wider">Payments</p>
