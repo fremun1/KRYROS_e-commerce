@@ -196,11 +196,11 @@ export default function UnifiedProductCard({
                 <CreditCard className="w-2.5 h-2.5" />
                 Deposit {format(product.creditMinimum || 0)}
               </span>
-              <span className="text-[9px] text-muted-foreground flex items-center gap-0.5 whitespace-nowrap">
+              <span className="text-[9px] text-primary font-semibold flex items-center gap-0.5 whitespace-nowrap">
                 <Clock className="w-2.5 h-2.5" />
                 {format(creditPaymentDetails.installmentAmount)} × {creditPaymentDetails.installmentCount}
               </span>
-              <span className="text-[9px] text-muted-foreground flex items-center gap-0.5 whitespace-nowrap">
+              <span className="text-[9px] text-primary font-semibold flex items-center gap-0.5 whitespace-nowrap">
                 <Package className="w-2.5 h-2.5" />
                 {creditPaymentDetails.period}
               </span>
