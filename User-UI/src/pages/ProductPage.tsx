@@ -384,20 +384,39 @@ export default function ProductPage() {
           </p>
         )}
 
-        {/* Price row */}
-        <div className="flex items-center gap-2.5 flex-wrap">
-          <span className="text-3xl lg:text-4xl font-black text-foreground">
-            {format(displayPrice)}
-          </span>
-          {product.oldPrice > displayPrice && (
-            <span className="text-base text-muted-foreground line-through">
-              {format(product.oldPrice)}
+        {/* Price row — for credit products, show deposit as main price */}
+        {isCreditProduct ? (
+          <div className="space-y-2">
+            <div className="flex items-baseline gap-2">
+              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Initial Deposit</span>
+            </div>
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <span className="text-3xl lg:text-4xl font-black text-primary">
+                {format(product.creditMinimum || 0)}
+              </span>
+            </div>
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <span className="text-sm text-muted-foreground">Total Price: </span>
+              <span className="text-lg font-bold text-foreground">
+                {format(displayPrice)}
+              </span>
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <span className="text-3xl lg:text-4xl font-black text-foreground">
+              {format(displayPrice)}
             </span>
-          )}
-          {product.discount > 0 && (
-            <span className="text-xs font-bold text-destructive bg-destructive/10 px-2.5 py-1 rounded-lg">Save {product.discount}%</span>
-          )}
-        </div>
+            {product.oldPrice > displayPrice && (
+              <span className="text-base text-muted-foreground line-through">
+                {format(product.oldPrice)}
+              </span>
+            )}
+            {product.discount > 0 && (
+              <span className="text-xs font-bold text-destructive bg-destructive/10 px-2.5 py-1 rounded-lg">Save {product.discount}%</span>
+            )}
+          </div>
+        )}
 
         {/* Wholesale Details */}
         {isWholesaleProduct && (
@@ -412,21 +431,10 @@ export default function ProductPage() {
           </div>
         )}
 
-        {/* Credit Details — deliberately mirrors the wholesale information card. */}
+        {/* Credit Details — payment breakdown without redundant labels */}
         {isCreditProduct && (
           <div className="bg-primary/5 border border-primary/10 p-3 rounded-2xl">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center flex-shrink-0 shadow-sm">
-                <CreditCard className="w-5 h-5 text-primary-foreground" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-[10px] font-black text-primary uppercase tracking-wider">Credit Available</p>
-                <p className="text-xs font-bold text-foreground truncate" title={creditMessage}>
-                  Initial Deposit: {format(product.creditMinimum || 0)}
-                </p>
-              </div>
-            </div>
-            <div className="grid grid-cols-3 gap-2 text-xs mt-2 pt-2 border-t border-primary/10">
+            <div className="grid grid-cols-3 gap-2 text-xs pt-2 border-t border-primary/10">
               <div className="text-center">
                 <p className="text-[9px] text-muted-foreground uppercase tracking-wider">Installment</p>
                 <p className="font-bold text-primary">{format(creditPaymentDetails.installmentAmount)}</p>
