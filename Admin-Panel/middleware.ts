@@ -209,7 +209,9 @@ export function middleware(request: NextRequest) {
   }
 
   const accept = request.headers.get("accept") || "";
-  const isIframe = request.headers.get("sec-fetch-dest") === "iframe";
+  const userAgent = request.headers.get("user-agent") || "";
+  const isMobileApp = userAgent.includes("KRYROS_ADMIN_APP");
+  const isIframe = request.headers.get("sec-fetch-dest") === "iframe" && !isMobileApp;
 
   if (isIframe) {
     return addSecurityHeaders(
@@ -241,7 +243,15 @@ function addSecurityHeaders(response: NextResponse, request: NextRequest): NextR
     response.headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
   }
 
-  response.headers.set("Content-Security-Policy", `frame-ancestors ${FRAME_ANCESTORS}`);
+  const userAgent = request.headers.get("user-agent") || "";
+  const isMobileApp = userAgent.includes("KRYROS_ADMIN_APP");
+  
+  if (isMobileApp) {
+    response.headers.set("Content-Security-Policy", "frame-ancestors *");
+    response.headers.set("X-Frame-Options", "ALLOWALL");
+  } else {
+    response.headers.set("Content-Security-Policy", `frame-ancestors ${FRAME_ANCESTORS}`);
+  }
 
   return response;
 }
