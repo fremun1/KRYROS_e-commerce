@@ -192,10 +192,7 @@ export default function UnifiedProductCard({
           {/* 4. Credit details — the same compact row pattern used by wholesale cards. */}
           {isCreditProduct && (
             <>
-              <span className="max-w-[132px] md:max-w-[180px] truncate text-[10px] text-primary font-semibold whitespace-nowrap" title={creditMessage}>
-                {creditMessage}
-              </span>
-              <span className="text-[9px] text-muted-foreground flex items-center gap-0.5 whitespace-nowrap">
+              <span className="text-[9px] text-primary font-semibold flex items-center gap-0.5 whitespace-nowrap">
                 <CreditCard className="w-2.5 h-2.5" />
                 Deposit {format(product.creditMinimum || 0)}
               </span>
