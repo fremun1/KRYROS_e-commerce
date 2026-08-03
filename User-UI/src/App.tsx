@@ -290,10 +290,10 @@ function AppRoutes() {
       // Show the overlay briefly for smooth transition
       setTransitioning(true);
 
-      // Auto-dismiss quickly - let individual pages handle their own loading states
+      // Stay visible for 1.5 seconds to ensure content loads smoothly in the background
       transitionTimerRef.current = setTimeout(() => {
         setTransitioning(false);
-      }, 300);
+      }, 1500);
     }
     return () => {
       if (transitionTimerRef.current) clearTimeout(transitionTimerRef.current);
@@ -320,8 +320,8 @@ function AppRoutes() {
 
   return (
     <>
-      {/* Page transition overlay disabled to prevent blank screens */}
-      {/* <PageTransitionLoader visible={transitioning} /> */}
+      {/* Page transition overlay — shows every time the user navigates to a new page */}
+      <PageTransitionLoader visible={transitioning} />
       {!hideShell && <Header />}
       <Suspense fallback={<PageLoader />}>
         <div className="pb-0">
@@ -393,14 +393,10 @@ function AppRoutes() {
 export default function App() {
   const [showSplash, setShowSplash] = useState(true);
 
-  // If running inside the KRYROS native app, skip the website's splash screen
-  // because the app already shows its own native splash screen.
-  const isApp = (window as any).isKryrosApp;
-
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        {showSplash && !isApp && <SplashScreen onDone={() => setShowSplash(false)} />}
+        {showSplash && <SplashScreen onDone={() => setShowSplash(false)} />}
         <WouterRouter>
           <AppRoutes />
         </WouterRouter>

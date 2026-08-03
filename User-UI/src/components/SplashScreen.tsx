@@ -8,13 +8,14 @@ export default function SplashScreen({ onDone }: SplashScreenProps) {
   const [fading, setFading] = useState(false);
 
   useEffect(() => {
-    // Show for at least 1.2 seconds, then fade out over 300ms
+    // Show for at least 2.5 seconds, then fade out over 300ms
+    // This gives the content plenty of time to load in the background
     const fadeTimer = setTimeout(() => {
       setFading(true);
-    }, 1200);
+    }, 2500);
     const doneTimer = setTimeout(() => {
       onDone();
-    }, 1500);
+    }, 2800);
     return () => {
       clearTimeout(fadeTimer);
       clearTimeout(doneTimer);
