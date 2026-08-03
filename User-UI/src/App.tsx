@@ -196,95 +196,17 @@ function PageTransitionLoader({ visible }: { visible: boolean }) {
         pointerEvents: visible ? "auto" : "none",
       }}
     >
-      {/* Thin teal progress bar at top */}
       <div
         style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          height: 3,
-          background:
-            "linear-gradient(90deg, var(--kryros-primary), var(--kryros-primary-hover))",
-          borderRadius: "0 2px 2px 0",
-          animation: visible ? "ktp-progress 1.3s ease-out forwards" : "none",
+          width: 48,
+          height: 48,
+          border: "4px solid var(--border)",
+          borderTop: "4px solid #1A237E",
+          borderRadius: "50%",
+          animation: "spin 0.8s linear infinite",
         }}
       />
-
-      {/* Logo wrap with pulsing rings */}
-      <div
-        style={{
-          position: "relative",
-          width: 100,
-          height: 100,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        {[1, 2].map((i) => (
-          <div
-            key={i}
-            style={{
-              position: "absolute",
-              borderRadius: "50%",
-              border: `1.5px solid rgba(var(--kryros-primary-rgb),${0.4 - i * 0.12})`,
-              width: 46 + i * 24,
-              height: 46 + i * 24,
-              animation: `ktp-ring 1.6s ease-out ${(i - 1) * 0.3}s infinite`,
-            }}
-          />
-        ))}
-        <img
-          src="/kryros-logo.png"
-          alt="KRYROS"
-          style={{
-            width: 44,
-            height: 44,
-            objectFit: "contain",
-            animation: "ktp-blink 1.4s ease-in-out infinite",
-            zIndex: 1,
-            position: "relative",
-          }}
-        />
-      </div>
-
-      {/* Bouncing dots */}
-      <div style={{ display: "flex", gap: 6, marginTop: 18 }}>
-        {[0, 1, 2].map((i) => (
-          <div
-            key={i}
-            style={{
-              width: 5,
-              height: 5,
-              borderRadius: "50%",
-              background: "var(--kryros-primary)",
-              animation: `ktp-dot 0.85s ease-in-out ${i * 0.16}s infinite`,
-            }}
-          />
-        ))}
-      </div>
-
-      <style>{`
-        @keyframes ktp-progress {
-          0%   { width: 0%; }
-          40%  { width: 60%; }
-          80%  { width: 85%; }
-          100% { width: 100%; }
-        }
-        @keyframes ktp-ring {
-          0%   { transform: scale(0.82); opacity: 0.85; }
-          60%  { opacity: 0.3; }
-          100% { transform: scale(1.22); opacity: 0; }
-        }
-        @keyframes ktp-blink {
-          0%, 100% { opacity: 1; }
-          50%       { opacity: 0.4; }
-        }
-        @keyframes ktp-dot {
-          0%, 100% { transform: translateY(0);    opacity: 0.3; }
-          50%       { transform: translateY(-7px); opacity: 1; }
-        }
-      `}</style>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }

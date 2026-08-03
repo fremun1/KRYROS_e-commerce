@@ -37,81 +37,17 @@ export default function SplashScreen({ onDone }: SplashScreenProps) {
         pointerEvents: fading ? "none" : "auto",
       }}
     >
-      {/* Pulsing rings around logo */}
       <div
         style={{
-          position: "relative",
-          width: 140,
-          height: 140,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
+          width: 48,
+          height: 48,
+          border: "4px solid var(--border)",
+          borderTop: "4px solid #1A237E", // Dark blue color matching the user's screenshot
+          borderRadius: "50%",
+          animation: "spin 0.8s linear infinite",
         }}
-      >
-        {[1, 2, 3].map((i) => (
-          <div
-            key={i}
-            style={{
-              position: "absolute",
-              borderRadius: "50%",
-              border: `${i === 1 ? "2px" : "1.5px"} solid rgba(var(--kryros-primary-rgb),${0.5 - i * 0.12})`,
-              width: 54 + i * 26,
-              height: 54 + i * 26,
-              animation: `kryros-pulse-ring 2s ease-out ${(i - 1) * 0.35}s infinite`,
-            }}
-          />
-        ))}
-
-        {/* KRYROS Logo */}
-        <img
-          src="/kryros-logo.png"
-          alt="KRYROS"
-          style={{
-            width: 60,
-            height: 60,
-            objectFit: "contain",
-            animation: "kryros-blink 1.6s ease-in-out infinite",
-            zIndex: 1,
-            position: "relative",
-          }}
-          onError={(e) => {
-            // Fallback: show K letter if logo not found
-            (e.target as HTMLImageElement).style.display = "none";
-          }}
-        />
-      </div>
-
-      {/* Bouncing loading dots */}
-      <div style={{ display: "flex", gap: 7, marginTop: 28 }}>
-        {[0, 1, 2].map((i) => (
-          <div
-            key={i}
-            style={{
-              width: 6,
-              height: 6,
-              borderRadius: "50%",
-              background: "var(--kryros-primary)",
-              animation: `kryros-bounce 0.9s ease-in-out ${i * 0.18}s infinite`,
-            }}
-          />
-        ))}
-      </div>
-
-      <style>{`
-        @keyframes kryros-pulse-ring {
-          0%   { transform: scale(0.85); opacity: 0.9; }
-          60%  { opacity: 0.35; }
-          100% { transform: scale(1.25); opacity: 0; }
-        }
-        @keyframes kryros-blink {
-          0%, 100% { opacity: 1; }
-          50%       { opacity: 0.45; }
-        }
-        @keyframes kryros-bounce {
-          0%, 100% { transform: translateY(0);    opacity: 0.35; }
-          50%       { transform: translateY(-8px); opacity: 1; }
-        }
-      `}</style>
+      />
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }
