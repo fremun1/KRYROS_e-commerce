@@ -210,7 +210,7 @@ export function middleware(request: NextRequest) {
 
   const accept = request.headers.get("accept") || "";
   const userAgent = request.headers.get("user-agent") || "";
-  const isMobileApp = userAgent.includes("KRYROS_ADMIN_APP");
+  const isMobileApp = userAgent.includes("KRYROS_ADMIN_APP") || userAgent.includes("KRYROS_USER_APP") || userAgent.includes("KRYROS_MOBILE_APP");
   const isIframe = request.headers.get("sec-fetch-dest") === "iframe" && !isMobileApp;
 
   if (isIframe) {
@@ -244,7 +244,7 @@ function addSecurityHeaders(response: NextResponse, request: NextRequest): NextR
   }
 
   const userAgent = request.headers.get("user-agent") || "";
-  const isMobileApp = userAgent.includes("KRYROS_ADMIN_APP");
+  const isMobileApp = userAgent.includes("KRYROS_ADMIN_APP") || userAgent.includes("KRYROS_USER_APP") || userAgent.includes("KRYROS_MOBILE_APP");
   
   if (isMobileApp) {
     response.headers.set("Content-Security-Policy", "frame-ancestors *");
