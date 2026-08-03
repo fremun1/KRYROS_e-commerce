@@ -45,7 +45,7 @@
         }
 
         // Detect if the app is running in a WebView
-        window.isKryrosApp = /KryrosApp/i.test(navigator.userAgent);
+        window.isKryrosApp = /KRYROS_(USER|ADMIN)_APP/i.test(navigator.userAgent);
         
         // Listen for force-refresh signals from the native app
         window.addEventListener('kryros:force-refresh', function() {

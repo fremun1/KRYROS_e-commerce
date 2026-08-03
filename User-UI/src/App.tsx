@@ -201,11 +201,11 @@ function PageTransitionLoader({ visible }: { visible: boolean }) {
           width: 48,
           height: 48,
           border: "4px solid var(--border)",
-          borderTop: "4px solid #1A237E",
-          borderRadius: "50%",
-          animation: "spin 0.8s linear infinite",
-        }}
-      />
+        borderTop: "4px solid var(--kryros-primary)",
+        borderRadius: "50%",
+        animation: "spin 0.8s linear infinite",
+      }}
+    />
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
@@ -393,10 +393,14 @@ function AppRoutes() {
 export default function App() {
   const [showSplash, setShowSplash] = useState(true);
 
+  // If running inside the KRYROS native app, skip the website's splash screen
+  // because the app already shows its own native splash screen.
+  const isApp = (window as any).isKryrosApp;
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        {showSplash && <SplashScreen onDone={() => setShowSplash(false)} />}
+        {showSplash && !isApp && <SplashScreen onDone={() => setShowSplash(false)} />}
         <WouterRouter>
           <AppRoutes />
         </WouterRouter>
