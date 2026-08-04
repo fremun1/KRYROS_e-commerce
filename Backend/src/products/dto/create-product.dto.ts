@@ -228,6 +228,12 @@ export class CreateProductDto {
   wholesaleMoq?: number;
 
   @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Type(() => Number)
+  unitsPerPack?: number;
+
+  @IsOptional()
   @IsBoolean()
   @Transform(({ value }) => value === 'true' || value === true)
   isWholesaleOnly?: boolean;

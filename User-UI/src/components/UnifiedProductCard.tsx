@@ -113,9 +113,9 @@ export default function UnifiedProductCard({
             -{product.discount}%
           </span>
         )}
-        {(isWholesaleProduct || isCreditProduct) && (
+        {isWholesaleProduct && (
           <span className="absolute top-3 left-3 bg-primary text-primary-foreground text-[9px] font-bold px-1.5 py-0.5 rounded-lg z-10">
-            {isWholesaleProduct ? "Wholesale" : "Credit"}
+            Wholesale
           </span>
         )}
         {badge && (
@@ -215,14 +215,6 @@ export default function UnifiedProductCard({
               <span className="text-[9px] text-primary font-semibold flex items-center gap-0.5 whitespace-nowrap">
                 <Clock className="w-2.5 h-2.5" />
                 {format(creditPaymentDetails.installmentAmount)} / {creditPaymentDetails.intervalLabel}
-              </span>
-              <span className="text-[9px] text-primary font-semibold flex items-center gap-0.5 whitespace-nowrap">
-                <Package className="w-2.5 h-2.5" />
-                {creditPaymentDetails.installmentCount} Payments
-              </span>
-              <span className="text-[9px] text-primary font-semibold flex items-center gap-0.5 whitespace-nowrap">
-                <CalendarDays className="w-2.5 h-2.5" />
-                {creditPaymentDetails.period}
               </span>
             </>
           )}
