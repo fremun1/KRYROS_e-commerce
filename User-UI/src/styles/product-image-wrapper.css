@@ -166,13 +166,14 @@
   width: 28px;
   height: 28px;
   border-radius: 50%;          /* Fully circular */
-  border: 1px solid transparent;
+  border: 0;
 
   /* ── Appearance ── */
-  background-color: var(--kryros-overlay-light);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  box-shadow: 0 1px 3px var(--kryros-shadow);
+  background-color: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  /* Neutral shadow only (no theme tint) */
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
 
   /* ── Layout ── */
   display: flex;
@@ -185,7 +186,6 @@
 }
 
 .product-image-wrapper__wishlist:hover {
-  background-color: var(--kryros-white);
   transform: scale(1.1);
 }
 
