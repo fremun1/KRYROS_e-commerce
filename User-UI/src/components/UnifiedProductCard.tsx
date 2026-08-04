@@ -143,15 +143,33 @@ export default function UnifiedProductCard({
           <p className="text-[9px] md:text-[11px] text-muted-foreground truncate mb-0.5">{specs}</p>
         )}
 
-        {/* Price + old price */}
+        {/* Price + old price — for credit products, show deposit as main price */}
         <div className="flex items-center flex-wrap gap-x-1 mb-0.5">
-          <span className="text-[13px] md:text-[15px] font-bold text-foreground">
-            {format(displayPrice)}
-          </span>
-          {product.oldPrice > displayPrice && (
-            <span className="text-[9px] md:text-xs text-muted-foreground line-through">{format(product.oldPrice)}</span>
+          {isCreditProduct ? (
+            <>
+              <span className="text-[11px] md:text-xs text-muted-foreground font-semibold">Deposit:</span>
+              <span className="text-[13px] md:text-[15px] font-bold text-primary">
+                {format(product.creditMinimum || 0)}
+              </span>
+            </>
+          ) : (
+            <>
+              <span className="text-[13px] md:text-[15px] font-bold text-foreground">
+                {format(displayPrice)}
+              </span>
+              {product.oldPrice > displayPrice && (
+                <span className="text-[9px] md:text-xs text-muted-foreground line-through">{format(product.oldPrice)}</span>
+              )}
+            </>
           )}
         </div>
+
+        {/* For credit products, show total price below deposit */}
+        {isCreditProduct && (
+          <div className="flex items-center flex-wrap gap-x-1 mb-0.5">
+            <span className="text-[10px] md:text-xs text-muted-foreground">Total: {format(displayPrice)}</span>
+          </div>
+        )}
 
         {/* Product card labels, condition, then stars/reviews */}
         <div className="flex items-center flex-wrap gap-x-1.5 gap-y-0.5 mb-1">
