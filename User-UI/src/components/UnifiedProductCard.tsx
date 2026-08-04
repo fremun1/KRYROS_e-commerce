@@ -211,10 +211,6 @@ export default function UnifiedProductCard({
           {isCreditProduct && (
             <>
               <span className="text-[9px] text-primary font-semibold flex items-center gap-0.5 whitespace-nowrap">
-                <CreditCard className="w-2.5 h-2.5" />
-                Deposit {format(product.creditMinimum || 0)}
-              </span>
-              <span className="text-[9px] text-primary font-semibold flex items-center gap-0.5 whitespace-nowrap">
                 <Clock className="w-2.5 h-2.5" />
                 {format(creditPaymentDetails.installmentAmount)} / {creditPaymentDetails.frequency.replace(/ly$/, '')}
               </span>
