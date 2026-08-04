@@ -218,10 +218,8 @@ function PageLoader() {
       style={{
         minHeight: "60vh",
         display: "flex",
-        flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        gap: "16px",
       }}
     >
       <div
@@ -234,9 +232,6 @@ function PageLoader() {
           animation: "spin 0.7s linear infinite",
         }}
       />
-      <p style={{ fontSize: "14px", color: "var(--muted-foreground)" }}>
-        Loading page...
-      </p>
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );

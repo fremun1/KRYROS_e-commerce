@@ -40,6 +40,7 @@ export default function ProductPage() {
   const [product, setProduct] = useState<Product | null>(null);
   const [related, setRelated] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showDelayedLoader, setShowDelayedLoader] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [qty, setQty] = useState(1);
   const [activeImg, setActiveImg] = useState("");
@@ -128,6 +129,21 @@ export default function ProductPage() {
     window.scrollTo(0, 0);
   }, [id]);
 
+  useEffect(() => {
+    if (!loading) {
+      setShowDelayedLoader(false);
+      return;
+    }
+
+    const loaderTimer = window.setTimeout(() => {
+      setShowDelayedLoader(true);
+    }, 1500);
+
+    return () => {
+      window.clearTimeout(loaderTimer);
+    };
+  }, [loading]);
+
   const images = product
     ? product.additionalImages
       ? [product.image, ...product.additionalImages]
@@ -196,11 +212,19 @@ export default function ProductPage() {
     }
   }, [product, addProduct]);
 
-  if (loading) return (
+  if (loading && showDelayedLoader) return (
     <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      <div
+        className="w-12 h-12 rounded-full animate-spin"
+        style={{
+          border: "4px solid var(--border)",
+          borderTop: "4px solid var(--kryros-primary)",
+        }}
+      />
     </div>
   );
+
+  if (loading) return null;
 
   if (error) return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-background p-6 text-center">
