@@ -163,6 +163,10 @@ function SupportFloatingButtons() {
         style={{
           background: "transparent",
           color: "var(--kryros-header-navy)",
+          boxShadow: "0 10px 30px rgba(var(--kryros-primary-rgb), 0.18)",
+          border: "1px solid rgba(var(--kryros-primary-rgb), 0.2)",
+          backdropFilter: "blur(6px)",
+          WebkitBackdropFilter: "blur(6px)",
         }}
       >
         <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
