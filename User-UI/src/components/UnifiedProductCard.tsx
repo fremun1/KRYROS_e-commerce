@@ -131,7 +131,7 @@ export default function UnifiedProductCard({
             toggleWishlist(product.id);
             toast.success(wishlisted ? "Removed from wishlist" : "Added to wishlist", { description: product.name });
           }}
-          className="absolute top-3 right-3 w-7 h-7 md:w-8 md:h-8 rounded-full bg-card/90 backdrop-blur-sm flex items-center justify-center z-10 shadow-sm border border-border"
+          className="absolute top-3 right-3 z-10 flex h-7 w-7 items-center justify-center rounded-full border-0 bg-transparent shadow-[0_8px_24px_rgba(15,23,42,0.14)] transition-all hover:scale-105 hover:shadow-[0_10px_28px_rgba(15,23,42,0.18)] active:scale-95 focus:outline-none md:h-8 md:w-8"
         >
           <Heart className={`w-3.5 h-3.5 md:w-4 md:h-4 transition-colors ${wishlisted ? "fill-destructive text-destructive" : "text-muted-foreground"}`} />
         </button>
