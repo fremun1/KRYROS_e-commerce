@@ -432,7 +432,7 @@ export default function ProductPage() {
               <div className="text-center">
                 <p className="text-[9px] text-muted-foreground uppercase tracking-wider">Installment</p>
                 <p className="font-bold text-primary">{format(creditPaymentDetails.installmentAmount)}</p>
-                <p className="text-[9px] text-muted-foreground capitalize">every {creditPaymentDetails.frequency.replace(/ly$/, '')}</p>
+                <p className="text-[9px] text-muted-foreground capitalize">every {creditPaymentDetails.intervalLabel}</p>
               </div>
               <div className="text-center">
                 <p className="text-[9px] text-muted-foreground uppercase tracking-wider">Payments</p>

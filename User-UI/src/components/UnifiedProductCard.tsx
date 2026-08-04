@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
-import { Heart, Package, Clock, CreditCard } from "lucide-react";
+import { Heart, Package, Clock, CalendarDays } from "lucide-react";
 import { toast } from "sonner";
 import { useCartStore } from "@/store/cartStore";
 import { useWishlistStore } from "@/store/wishlistStore";
@@ -212,11 +212,15 @@ export default function UnifiedProductCard({
             <>
               <span className="text-[9px] text-primary font-semibold flex items-center gap-0.5 whitespace-nowrap">
                 <Clock className="w-2.5 h-2.5" />
-                {format(creditPaymentDetails.installmentAmount)} / {creditPaymentDetails.frequency.replace(/ly$/, '')}
+                {format(creditPaymentDetails.installmentAmount)} / {creditPaymentDetails.intervalLabel}
               </span>
               <span className="text-[9px] text-primary font-semibold flex items-center gap-0.5 whitespace-nowrap">
                 <Package className="w-2.5 h-2.5" />
                 {creditPaymentDetails.installmentCount} Payments
+              </span>
+              <span className="text-[9px] text-primary font-semibold flex items-center gap-0.5 whitespace-nowrap">
+                <CalendarDays className="w-2.5 h-2.5" />
+                {creditPaymentDetails.period}
               </span>
             </>
           )}

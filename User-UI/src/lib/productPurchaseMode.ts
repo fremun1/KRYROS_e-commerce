@@ -38,65 +38,95 @@ export function getCreditPaymentDetails(product: PurchaseModeProduct): {
   monthlyPayment: number;
   period: string;
   frequency: string;
+  intervalLabel: string;
   installmentCount: number;
   installmentAmount: number;
+  durationValue: number;
+  durationUnit: string;
 } {
   const price = getProductDisplayPrice(product);
-  const duration = product.creditDuration || 12;
-  const durationType = product.creditDurationType || 'weeks';
+  const duration = product.creditDuration && product.creditDuration > 0 ? product.creditDuration : 12;
+  const durationType = product.creditDurationType === "months" ? "months" : "weeks";
 
-  // If explicit installment fields are configured, use them directly
-  if (product.creditInstallmentCount && product.creditInstallmentCount > 0) {
-    const frequency = product.creditInstallmentFrequency || 'weekly';
-    const installmentAmount = product.creditInstallmentAmount != null
-      ? Number(product.creditInstallmentAmount)
-      : Math.round(((price - (product.creditMinimum || 0)) / product.creditInstallmentCount) * 100) / 100;
+  const frequency =
+    product.creditInstallmentFrequency === "daily" ||
+    product.creditInstallmentFrequency === "weekly" ||
+    product.creditInstallmentFrequency === "monthly"
+      ? product.creditInstallmentFrequency
+      : durationType === "months"
+        ? "monthly"
+        : "weekly";
 
-    const period = `${product.creditInstallmentCount} ${frequency}`;
+  const intervalLabel =
+    frequency === "daily" ? "day" : frequency === "monthly" ? "month" : "week";
 
-    // Derive weekly/monthly equivalents for legacy display
-    let weeklyPayment: number;
-    let monthlyPayment: number;
-    switch (frequency) {
-      case 'daily':
-        weeklyPayment = Math.round(installmentAmount * 7 * 100) / 100;
-        monthlyPayment = Math.round(installmentAmount * 30 * 100) / 100;
-        break;
-      case 'weekly':
-        weeklyPayment = Math.round(installmentAmount * 100) / 100;
-        monthlyPayment = Math.round(installmentAmount * 4 * 100) / 100;
-        break;
-      case 'monthly':
-        weeklyPayment = Math.round(installmentAmount / 4 * 100) / 100;
-        monthlyPayment = Math.round(installmentAmount * 100) / 100;
-        break;
-      default:
-        weeklyPayment = Math.round(installmentAmount * 100) / 100;
-        monthlyPayment = Math.round(installmentAmount * 4 * 100) / 100;
+  const explicitInstallmentCount =
+    product.creditInstallmentCount && product.creditInstallmentCount > 0
+      ? product.creditInstallmentCount
+      : undefined;
+
+  const derivedInstallmentCount = (() => {
+    if (explicitInstallmentCount) return explicitInstallmentCount;
+
+    if (durationType === "months") {
+      if (frequency === "daily") return duration * 30;
+      if (frequency === "weekly") return duration * 4;
+      return duration;
     }
 
-    return {
-      weeklyPayment,
-      monthlyPayment,
-      period,
-      frequency,
-      installmentCount: product.creditInstallmentCount,
-      installmentAmount,
-    };
+    if (frequency === "daily") return duration * 7;
+    if (frequency === "monthly") return Math.max(1, Math.round(duration / 4));
+    return duration;
+  })();
+
+  const installmentCount = Math.max(1, derivedInstallmentCount);
+
+  const installmentAmount =
+    product.creditInstallmentAmount != null
+      ? Number(product.creditInstallmentAmount)
+      : Math.round(((price - (product.creditMinimum || 0)) / installmentCount) * 100) / 100;
+
+  const period =
+    product.creditDuration && product.creditDuration > 0
+      ? `${duration} ${durationType === "months" ? (duration === 1 ? "month" : "months") : (duration === 1 ? "week" : "weeks")}`
+      : `${installmentCount} ${installmentCount === 1 ? intervalLabel : `${intervalLabel}s`}`;
+
+  // Derive weekly/monthly equivalents for legacy display
+  let weeklyPayment: number;
+  let monthlyPayment: number;
+  switch (frequency) {
+    case "daily":
+      weeklyPayment = Math.round(installmentAmount * 7 * 100) / 100;
+      monthlyPayment = Math.round(installmentAmount * 30 * 100) / 100;
+      break;
+    case "weekly":
+      weeklyPayment = Math.round(installmentAmount * 100) / 100;
+      monthlyPayment = Math.round(installmentAmount * 4 * 100) / 100;
+      break;
+    case "monthly":
+      weeklyPayment = Math.round((installmentAmount / 4) * 100) / 100;
+      monthlyPayment = Math.round(installmentAmount * 100) / 100;
+      break;
+    default:
+      weeklyPayment = Math.round(installmentAmount * 100) / 100;
+      monthlyPayment = Math.round(installmentAmount * 4 * 100) / 100;
   }
 
-  // Fallback: legacy duration-based calculation
-  const weeklyPayment = durationType === 'weeks' ? price / duration : (price / duration) * 12 / 52;
-  const monthlyPayment = durationType === 'months' ? price / duration : (price / duration) * 12 / 52;
-  const period = `${duration} ${durationType}`;
-
   return {
-    weeklyPayment: Math.round(weeklyPayment * 100) / 100,
-    monthlyPayment: Math.round(monthlyPayment * 100) / 100,
+    weeklyPayment,
+    monthlyPayment,
     period,
-    frequency: durationType === 'weeks' ? 'weekly' : durationType === 'months' ? 'monthly' : 'weekly',
-    installmentCount: duration,
-    installmentAmount: durationType === 'weeks' ? weeklyPayment : monthlyPayment,
+    frequency,
+    intervalLabel,
+    installmentCount,
+    installmentAmount,
+    durationValue: product.creditDuration && product.creditDuration > 0 ? duration : installmentCount,
+    durationUnit:
+      product.creditDuration && product.creditDuration > 0
+        ? durationType
+        : installmentCount === 1
+          ? intervalLabel
+          : `${intervalLabel}s`,
   };
 }
 
@@ -105,6 +135,6 @@ export function getCreditPaymentDetails(product: PurchaseModeProduct): {
  */
 export function getCreditBreakdownSummary(product: PurchaseModeProduct): string {
   const details = getCreditPaymentDetails(product);
-  const freqLabel = details.frequency.charAt(0).toUpperCase() + details.frequency.slice(1);
+  const freqLabel = details.intervalLabel.charAt(0).toUpperCase() + details.intervalLabel.slice(1);
   return `${freqLabel} ${details.installmentCount} × ${details.installmentAmount.toFixed(2)}`;
 }
