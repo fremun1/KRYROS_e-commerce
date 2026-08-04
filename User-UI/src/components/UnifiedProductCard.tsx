@@ -143,15 +143,33 @@ export default function UnifiedProductCard({
           <p className="text-[9px] md:text-[11px] text-muted-foreground truncate mb-0.5">{specs}</p>
         )}
 
-        {/* Price + old price */}
-        <div className="flex items-center flex-wrap gap-x-1 mb-0.5">
-          <span className="text-[13px] md:text-[15px] font-bold text-foreground">
-            {format(displayPrice)}
-          </span>
-          {product.oldPrice > displayPrice && (
-            <span className="text-[9px] md:text-xs text-muted-foreground line-through">{format(product.oldPrice)}</span>
-          )}
-        </div>
+        {/* Price display */}
+        {isCreditProduct ? (
+          <div className="mb-0.5">
+            <div className="flex items-baseline gap-1 flex-wrap">
+              <span className="text-[13px] md:text-[15px] font-bold text-foreground">
+                {format(product.creditMinimum || 0)}
+              </span>
+              <span className="text-[9px] md:text-[10px] font-semibold text-primary uppercase tracking-wide">
+                Deposit
+              </span>
+            </div>
+            <div className="flex items-center gap-1 flex-wrap">
+              <span className="text-[9px] md:text-xs text-muted-foreground">
+                Total: {format(product.price)}
+              </span>
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center flex-wrap gap-x-1 mb-0.5">
+            <span className="text-[13px] md:text-[15px] font-bold text-foreground">
+              {format(displayPrice)}
+            </span>
+            {product.oldPrice > displayPrice && (
+              <span className="text-[9px] md:text-xs text-muted-foreground line-through">{format(product.oldPrice)}</span>
+            )}
+          </div>
+        )}
 
         {/* Product card labels, condition, then stars/reviews */}
         <div className="flex items-center flex-wrap gap-x-1.5 gap-y-0.5 mb-1">
