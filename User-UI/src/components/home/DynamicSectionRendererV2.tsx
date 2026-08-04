@@ -137,7 +137,9 @@ export default function DynamicSectionRendererV2({
                   brandSlug: section.config?.brandSlug,
                   popularity: section.config?.popularity,
                   sortBy: section.config?.sortBy,
-                  order: section.config?.order,
+                  // Backward/AI-script compatibility: some configs use `sortOrder: 'asc'|'desc'`
+                  // while the storefront expects `order`.
+                  order: section.config?.order ?? section.config?.sortOrder,
                 }}
               />
             );

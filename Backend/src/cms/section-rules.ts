@@ -59,7 +59,9 @@ export const SECTION_RULES: Record<string, SectionRule> = {
     label: 'New Arrivals',
     description: 'Latest products added to the store (ordered by creation date).',
     category: 'products',
-    params: { popularity: 'new' },
+    // Explicit sort fields make the behaviour robust even if the frontend sends no sorting params.
+    // (The ProductsService also supports `popularity: 'new'`, this just makes it unambiguous.)
+    params: { popularity: 'new', sortBy: 'createdAt', order: 'desc' },
     icon: '✨',
     templateType: 'ProductShelf'
   },

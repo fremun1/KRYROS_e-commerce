@@ -173,32 +173,44 @@ export class ProductsService {
       where.AND = andFilters;
     }
 
-    let orderBy: any = { createdAt: 'desc' };
+    /**
+     * Ensure deterministic ordering.
+     * When many products share the same `createdAt` (common after bulk imports),
+     * sorting only by `createdAt` can appear "random" between refreshes.
+     *
+     * We always add `id` as a tie-breaker to stabilize results.
+     */
+    const addIdTieBreaker = (value: any) => {
+      if (Array.isArray(value)) return [...value, { id: 'desc' }];
+      return [value, { id: 'desc' }];
+    };
+
+    let orderBy: any = addIdTieBreaker({ createdAt: 'desc' });
     
     if (sortBy) {
       if (sortBy === 'price') {
-        orderBy = { price: order };
+        orderBy = addIdTieBreaker({ price: order });
       } else if (sortBy === 'name') {
-        orderBy = { name: order };
+        orderBy = addIdTieBreaker({ name: order });
       } else if (sortBy === 'sales' || sortBy === 'popularity') {
-        orderBy = { orderItems: { _count: order } };
+        orderBy = addIdTieBreaker({ orderItems: { _count: order } });
       } else if (sortBy === 'wishlist') {
-        orderBy = { wishlists: { _count: order } };
+        orderBy = addIdTieBreaker({ wishlists: { _count: order } });
       } else if (sortBy === 'newest' || sortBy === 'createdAt') {
-        orderBy = { createdAt: order };
+        orderBy = addIdTieBreaker({ createdAt: order });
       }
     } else if (params.popularity === 'trending') {
-      orderBy = [
+      orderBy = addIdTieBreaker([
         { orderItems: { _count: 'desc' } },
         { wishlists: { _count: 'desc' } },
         { createdAt: 'desc' }
-      ];
+      ]);
     } else if (popularity === 'bestseller') {
-      orderBy = { orderItems: { _count: 'desc' } };
+      orderBy = addIdTieBreaker({ orderItems: { _count: 'desc' } });
     } else if (popularity === 'hot') {
-      orderBy = { wishlists: { _count: 'desc' } };
+      orderBy = addIdTieBreaker({ wishlists: { _count: 'desc' } });
     } else if (popularity === 'new') {
-      orderBy = { createdAt: 'desc' };
+      orderBy = addIdTieBreaker({ createdAt: 'desc' });
     }
 
     const sanitizeProducts = (products: any[]) => products.map((p) => {
@@ -268,7 +280,7 @@ export class ProductsService {
               },
               inventory: true,
             },
-            orderBy: { createdAt: 'desc' },
+            orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
           }),
           this.prisma.product.count({ where }),
         ]);
