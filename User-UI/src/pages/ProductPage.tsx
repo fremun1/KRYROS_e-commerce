@@ -553,7 +553,7 @@ export default function ProductPage() {
               <button onClick={handleAction} disabled={product.stock === 0 || (isWholesaleProduct && qty < (product.wholesaleMoq || 1))}
                 className="w-full py-3.5 bg-primary text-primary-foreground rounded-full font-bold text-sm hover:bg-primary/90 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2">
                 {isCreditProduct ? (
-                  <><CreditCard className="w-4 h-4" /> Apply for Credit</>
+                  <><CreditCard className="w-4 h-4" /> Shop Now</>
                 ) : isWholesaleProduct ? (
                   <><Package className="w-4 h-4" /> Request Bulk Quote</>
                 ) : (
