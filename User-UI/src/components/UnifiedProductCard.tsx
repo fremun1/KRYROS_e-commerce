@@ -58,6 +58,13 @@ export default function UnifiedProductCard({
   const specs = validSpecs(product.specs);
   const inStock = product.stock > 0;
   const isStoreClosed = storeStatus?.isStoreClosed ?? false;
+  const totalPriceLabel = isCreditProduct ? (
+    <div className="mb-1">
+      <span className="text-[9px] md:text-xs text-muted-foreground">
+        Total: {format(product.price)}
+      </span>
+    </div>
+  ) : null;
 
   return (
     <div
@@ -147,16 +154,11 @@ export default function UnifiedProductCard({
         {isCreditProduct ? (
           <div className="mb-0.5">
             <div className="flex items-baseline gap-1 flex-wrap">
-              <span className="text-[13px] md:text-[15px] font-bold text-foreground">
-                {format(product.creditMinimum || 0)}
-              </span>
               <span className="text-[9px] md:text-[10px] font-semibold text-primary uppercase tracking-wide">
                 Deposit
               </span>
-            </div>
-            <div className="flex items-center gap-1 flex-wrap">
-              <span className="text-[9px] md:text-xs text-muted-foreground">
-                Total: {format(product.price)}
+              <span className="text-[13px] md:text-[15px] font-bold text-foreground">
+                {format(product.creditMinimum || 0)}
               </span>
             </div>
           </div>
@@ -267,6 +269,8 @@ export default function UnifiedProductCard({
             </div>
           </div>
         )}
+
+        {totalPriceLabel}
 
         {/* Buttons — only show if NOT store closed */}
         {!isStoreClosed && (
