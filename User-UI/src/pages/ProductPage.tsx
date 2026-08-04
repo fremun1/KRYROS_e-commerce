@@ -395,12 +395,6 @@ export default function ProductPage() {
                 {format(product.creditMinimum || 0)}
               </span>
             </div>
-            <div className="flex items-center gap-2.5 flex-wrap">
-              <span className="text-sm text-muted-foreground">Total Price: </span>
-              <span className="text-lg font-bold text-foreground">
-                {format(displayPrice)}
-              </span>
-            </div>
           </div>
         ) : (
           <div className="flex items-center gap-2.5 flex-wrap">
@@ -450,6 +444,11 @@ export default function ProductPage() {
                 <p className="font-bold text-primary">{creditPaymentDetails.period}</p>
                 <p className="text-[9px] text-muted-foreground">total plan</p>
               </div>
+            </div>
+
+            <div className="mt-3 pt-3 border-t border-primary/10 flex items-center justify-between">
+              <span className="text-xs font-semibold text-muted-foreground">Total Price:</span>
+              <span className="text-sm font-black text-foreground">{format(displayPrice)}</span>
             </div>
           </div>
         )}
