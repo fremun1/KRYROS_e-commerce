@@ -212,14 +212,16 @@ export default function UnifiedProductCard({
           {/* 4. Credit details — show installment amount + duration on cards. */}
           {isCreditProduct && (
             <>
-              <span className="text-[9px] text-primary font-semibold flex items-center gap-0.5 whitespace-nowrap">
-                <Clock className="w-2.5 h-2.5" />
-                {format(creditPaymentDetails.installmentAmount)} / {creditPaymentDetails.intervalLabel}
-              </span>
-              <span className="text-[9px] text-primary font-semibold flex items-center gap-0.5 whitespace-nowrap">
-                <CalendarDays className="w-2.5 h-2.5" />
-                {creditPaymentDetails.period}
-              </span>
+              <div className="flex flex-col items-start gap-0.5">
+                <span className="text-[9px] text-primary font-semibold flex items-center gap-0.5 whitespace-nowrap">
+                  <Clock className="w-2.5 h-2.5" />
+                  {format(creditPaymentDetails.installmentAmount)} / {creditPaymentDetails.intervalLabel}
+                </span>
+                <span className="text-[9px] text-primary font-semibold flex items-center gap-0.5 whitespace-nowrap">
+                  <CalendarDays className="w-2.5 h-2.5" />
+                  {creditPaymentDetails.period}
+                </span>
+              </div>
             </>
           )}
 
