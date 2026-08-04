@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
-import { Heart, Package, Clock, CalendarDays } from "lucide-react";
+import { Heart, Package, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { useCartStore } from "@/store/cartStore";
 import { useWishlistStore } from "@/store/wishlistStore";
@@ -209,7 +209,7 @@ export default function UnifiedProductCard({
             </div>
           )}
 
-          {/* 4. Credit details — showing explicit installment breakdown configured in admin. */}
+          {/* 4. Credit details — keep only the recurring payment amount on cards. */}
           {isCreditProduct && (
             <>
               <span className="text-[9px] text-primary font-semibold flex items-center gap-0.5 whitespace-nowrap">
