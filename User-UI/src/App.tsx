@@ -125,6 +125,9 @@ function SupportFloatingButtons() {
         element.style.setProperty("bottom", `${bottomOffset}px`, "important");
         element.style.setProperty("top", "auto", "important");
         element.style.setProperty("z-index", "48", "important");
+        element.style.setProperty("box-shadow", "0 10px 28px rgba(15, 23, 42, 0.14)", "important");
+        element.style.setProperty("filter", "none", "important");
+        element.style.setProperty("border", "0", "important");
       });
     };
 
@@ -163,10 +166,10 @@ function SupportFloatingButtons() {
         style={{
           background: "transparent",
           color: "var(--kryros-header-navy)",
-          boxShadow: "0 10px 30px rgba(var(--kryros-primary-rgb), 0.18)",
-          border: "1px solid rgba(var(--kryros-primary-rgb), 0.2)",
-          backdropFilter: "blur(6px)",
-          WebkitBackdropFilter: "blur(6px)",
+          boxShadow: "0 10px 28px rgba(15, 23, 42, 0.14)",
+          border: "0",
+          backdropFilter: "none",
+          WebkitBackdropFilter: "none",
         }}
       >
         <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
