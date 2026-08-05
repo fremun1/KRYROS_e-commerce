@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "wouter";
 import { inferPageContext, getScopedBrowsePath, getPageContextDisplayPath } from "@/lib/pageContext";
 import {
-  ShoppingBag, Heart, User, Globe, Menu, Mic, ChevronDown, LogOut, LayoutDashboard, X, Grid2x2, Bell, Clock, Download
+  ShoppingBag, Heart, User, Globe, Menu, Mic, ChevronDown, LogOut, LayoutDashboard, X, Grid2x2, Bell, Clock
 } from "lucide-react";
 import { useCartStore } from "@/store/cartStore";
 import { useWishlistStore } from "@/store/wishlistStore";
@@ -224,17 +224,6 @@ export default function Header() {
 
           {/* Desktop: Right icons — lg: slightly more gap */}
           <div className="hidden md:flex items-center gap-0.5 lg:gap-1">
-            {/* APK download button */}
-            <a
-              href="/downloads/KRYROS_User_App.apk"
-              download
-              className="mr-1 inline-flex items-center gap-1.5 px-3 py-2 rounded-full bg-[#FF7A00] text-white text-xs font-extrabold hover:opacity-95 active:scale-95 transition-all"
-              aria-label="Download Android App"
-              title="Download Android App"
-            >
-              <Download className="w-4 h-4" />
-              Open
-            </a>
             {/* Currency selector */}
             <div className="relative">
               <button
@@ -420,16 +409,6 @@ export default function Header() {
 
           {/* Mobile: Right icons */}
           <div className="flex md:hidden items-center gap-0.5">
-            {/* APK download button */}
-            <a
-              href="/downloads/KRYROS_User_App.apk"
-              download
-              className="p-1.5 rounded-xl bg-[#FF7A00] text-white active:scale-95 transition-all"
-              aria-label="Download Android App"
-              title="Download Android App"
-            >
-              <Download className="w-5 h-5" />
-            </a>
             {isLoggedIn ? (
               <Link href="/dashboard">
                 <button className="p-1.5 rounded-xl hover:bg-white/10 transition-colors">
@@ -496,6 +475,24 @@ export default function Header() {
         </div>
         </header>
       </div>
+
+      {/* Floating APK "Open" button (like the screenshot) */}
+      <a
+        href="/downloads/KRYROS_User_App.apk"
+        download
+        className="fixed right-2 top-[118px] md:top-[128px] z-50 inline-flex items-center gap-2 pl-2.5 pr-4 py-2 rounded-full bg-[#FF7A00] text-white shadow-lg hover:opacity-95 active:scale-95 transition-all"
+        aria-label="Download Android App"
+        title="Download Android App"
+      >
+        <img
+          src="/kryros-logo.png"
+          alt=""
+          className="w-6 h-6 rounded-full bg-white/10 object-contain"
+          loading="eager"
+          decoding="async"
+        />
+        <span className="text-xs font-extrabold">Open</span>
+      </a>
 
       {/* Spacer: keeps content below the fixed header */}
       <div style={{ height: headerHeight }} className="bg-background" />
