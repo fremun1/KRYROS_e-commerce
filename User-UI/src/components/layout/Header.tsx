@@ -41,6 +41,7 @@ type HeaderConfig = {
 export default function Header() {
   const [location, setLocation] = useLocation();
   const pageContext = inferPageContext(location);
+  const showApkButton = location === "/";
   const [headerCfg, setHeaderCfg] = useState<HeaderConfig | null>(null);
   const [announceHidden, setAnnounceHidden] = useState(false);
   const [headerHeight, setHeaderHeight] = useState(52);
@@ -476,23 +477,32 @@ export default function Header() {
         </header>
       </div>
 
-      {/* Floating APK "Open" button (like the screenshot) */}
-      <a
-        href="/downloads/KRYROS_User_App.apk"
-        download
-        className="fixed right-2 top-[118px] md:top-[128px] z-50 inline-flex items-center gap-2 pl-2.5 pr-4 py-2 rounded-full bg-[#FF7A00] text-white shadow-lg hover:opacity-95 active:scale-95 transition-all"
-        aria-label="Download Android App"
-        title="Download Android App"
-      >
-        <img
-          src="/kryros-logo.png"
-          alt=""
-          className="w-6 h-6 rounded-full bg-white/10 object-contain"
-          loading="eager"
-          decoding="async"
-        />
-        <span className="text-xs font-extrabold">Open</span>
-      </a>
+      {/* Floating APK "Open" button (homepage only) */}
+      {showApkButton && (
+        <a
+          href="/downloads/KRYROS_User_App.apk"
+          download
+          className="fixed right-4 top-1/2 -translate-y-1/2 z-50 inline-flex items-center gap-2 pl-2.5 pr-4 py-2 rounded-full transition-transform duration-200 hover:scale-110 active:scale-95"
+          aria-label="Download Android App"
+          title="Download Android App"
+          style={{
+            background: "transparent",
+            boxShadow: "0 10px 28px rgba(15, 23, 42, 0.14)",
+            border: 0,
+            backdropFilter: "none",
+            WebkitBackdropFilter: "none",
+          }}
+        >
+          <img
+            src="/kryros-logo.png"
+            alt=""
+            className="w-6 h-6 rounded-full object-contain"
+            loading="eager"
+            decoding="async"
+          />
+          <span className="text-xs font-extrabold text-[#FF7A00]">Open</span>
+        </a>
+      )}
 
       {/* Spacer: keeps content below the fixed header */}
       <div style={{ height: headerHeight }} className="bg-background" />
