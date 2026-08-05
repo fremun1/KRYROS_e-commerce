@@ -500,7 +500,12 @@ export default function Header() {
             loading="eager"
             decoding="async"
           />
-          <span className="text-xs font-extrabold text-[#FF7A00]">Open</span>
+          <span
+            className="text-xs font-extrabold"
+            style={{ color: "var(--kryros-header-navy)" }}
+          >
+            Open
+          </span>
         </a>
       )}
 
