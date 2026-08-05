@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "wouter";
 import { inferPageContext, getScopedBrowsePath, getPageContextDisplayPath } from "@/lib/pageContext";
 import {
-  ShoppingBag, Heart, User, Globe, Menu, Mic, ChevronDown, LogOut, LayoutDashboard, X, Grid2x2, Bell, Clock
+  ShoppingBag, Heart, User, Globe, Menu, Mic, ChevronDown, LogOut, LayoutDashboard, X, Grid2x2, Bell, Clock, Download
 } from "lucide-react";
 import { useCartStore } from "@/store/cartStore";
 import { useWishlistStore } from "@/store/wishlistStore";
@@ -224,6 +224,17 @@ export default function Header() {
 
           {/* Desktop: Right icons — lg: slightly more gap */}
           <div className="hidden md:flex items-center gap-0.5 lg:gap-1">
+            {/* APK download button */}
+            <a
+              href="/downloads/KRYROS_User_App.apk"
+              download
+              className="mr-1 inline-flex items-center gap-1.5 px-3 py-2 rounded-full bg-[#FF7A00] text-white text-xs font-extrabold hover:opacity-95 active:scale-95 transition-all"
+              aria-label="Download Android App"
+              title="Download Android App"
+            >
+              <Download className="w-4 h-4" />
+              Open
+            </a>
             {/* Currency selector */}
             <div className="relative">
               <button
@@ -409,6 +420,16 @@ export default function Header() {
 
           {/* Mobile: Right icons */}
           <div className="flex md:hidden items-center gap-0.5">
+            {/* APK download button */}
+            <a
+              href="/downloads/KRYROS_User_App.apk"
+              download
+              className="p-1.5 rounded-xl bg-[#FF7A00] text-white active:scale-95 transition-all"
+              aria-label="Download Android App"
+              title="Download Android App"
+            >
+              <Download className="w-5 h-5" />
+            </a>
             {isLoggedIn ? (
               <Link href="/dashboard">
                 <button className="p-1.5 rounded-xl hover:bg-white/10 transition-colors">
