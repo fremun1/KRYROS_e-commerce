@@ -1,1 +1,400 @@
-import {\n  Controller,\n  Post,\n  Put,\n  Delete,\n  Get,\n  Body,\n  Param,\n  UseGuards,\n  ForbiddenException,\n  Request,\n  BadRequestException,\n  Query,\n} from '@nestjs/common';\nimport { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';\nimport { JwtAuthGuard } from '../common/guards/jwt-auth.guard';\nimport { RolesGuard } from '../common/guards/roles.guard';\nimport { Roles } from '../common/decorators/roles.decorator';\nimport { UserRole } from '@prisma/client';\nimport { UsersService } from './users.service';\nimport { CreateUserDto } from './dto/create-user.dto';\nimport { AuditService } from '../common/services/audit.service';\nimport { AccountStatusService } from '../common/services/account-status.service';\nimport { PasswordResetService } from '../auth/password-reset.service';\n\ninterface AuthenticatedRequest {\n  user: { id: string; email: string; role: UserRole };\n}\n\n@ApiTags('User Management')\n@Controller('admin/users')\n@UseGuards(JwtAuthGuard, RolesGuard)\n@ApiBearerAuth()\nexport class UsersManagementController {\n  constructor(\n    private usersService: UsersService,\n    private auditService: AuditService,\n    private accountStatusService: AccountStatusService,\n    private passwordResetService: PasswordResetService,\n  ) {}\n\n  /**\n   * Create a new user or admin\n   * Super Admin can create Admins and Super Admins\n   * Admin can only create regular Users\n   */\n  @Post()\n  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)\n  @ApiOperation({ summary: 'Create a new user or admin' })\n  async createUser(\n    @Body() createUserDto: CreateUserDto,\n    @Request() req: AuthenticatedRequest,\n  ) {\n    const { role = UserRole.CUSTOMER } = createUserDto;\n\n    // Authorization: Only Super Admin can create Admins/Super Admins\n    if (role !== UserRole.CUSTOMER && req.user.role !== UserRole.SUPER_ADMIN) {\n      throw new ForbiddenException('Only Super Admins can create admin accounts');\n    }\n\n    // Create user\n    const user = await this.usersService.create(createUserDto);\n\n    // Generate password reset link\n    const adminDomain = process.env.ADMIN_DOMAIN || 'https://admin.yourdomain.com';\n    await this.passwordResetService.generateResetToken(user.id, adminDomain);\n\n    // Log the action\n    await this.auditService.log({\n      performedBy: req.user.id,\n      targetUserId: user.id,\n      action: 'USER_CREATED',\n      resource: 'USER',\n      resourceId: user.id,\n      changes: {\n        email: user.email,\n        role: user.role,\n        firstName: user.firstName,\n        lastName: user.lastName,\n      },\n      ipAddress: req.headers?.['x-forwarded-for'] as string,\n      userAgent: req.headers?.['user-agent'] as string,\n    });\n\n    return {\n      id: user.id,\n      email: user.email,\n      firstName: user.firstName,\n      lastName: user.lastName,\n      role: user.role,\n      message: 'User created successfully. Password reset link sent to email.',\n    };\n  }\n\n  /**\n   * Promote a user to a higher role\n   * Only Super Admin can promote users\n   */\n  @Put(':id/promote')\n  @Roles(UserRole.SUPER_ADMIN)\n  @ApiOperation({ summary: 'Promote user to higher role' })\n  async promoteUser(\n    @Param('id') userId: string,\n    @Body('newRole') newRole: UserRole,\n    @Request() req: AuthenticatedRequest,\n  ) {\n    if (!newRole || ![UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER].includes(newRole)) {\n      throw new BadRequestException('Invalid role for promotion');\n    }\n\n    const user = await this.usersService.findById(userId);\n\n    // Cannot promote Super Admin\n    if (user.role === UserRole.SUPER_ADMIN) {\n      throw new ForbiddenException('Super Admin cannot be promoted');\n    }\n\n    // Update user role\n    const updatedUser = await this.usersService.update(userId, { role: newRole });\n\n    // Log the action\n    await this.auditService.log({\n      performedBy: req.user.id,\n      targetUserId: userId,\n      action: 'USER_PROMOTED',\n      resource: 'USER',\n      resourceId: userId,\n      changes: {\n        from: user.role,\n        to: newRole,\n      },\n      ipAddress: req.headers?.['x-forwarded-for'] as string,\n      userAgent: req.headers?.['user-agent'] as string,\n    });\n\n    return {\n      id: updatedUser.id,\n      email: updatedUser.email,\n      role: updatedUser.role,\n      message: `User promoted to ${newRole}`,\n    };\n  }\n\n  /**\n   * Demote a user to a lower role\n   * Only Super Admin can demote users\n   * Cannot demote Super Admin via UI (database-only)\n   */\n  @Put(':id/demote')\n  @Roles(UserRole.SUPER_ADMIN)\n  @ApiOperation({ summary: 'Demote user to lower role' })\n  async demoteUser(\n    @Param('id') userId: string,\n    @Body('newRole') newRole: UserRole,\n    @Request() req: AuthenticatedRequest,\n  ) {\n    if (!newRole || ![UserRole.CUSTOMER, UserRole.WHOLESALER, UserRole.STAFF].includes(newRole)) {\n      throw new BadRequestException('Invalid role for demotion');\n    }\n\n    const user = await this.usersService.findById(userId);\n\n    // Cannot demote Super Admin via UI\n    if (user.role === UserRole.SUPER_ADMIN) {\n      throw new ForbiddenException('Super Admin cannot be demoted. Database-only deletion allowed.');\n    }\n\n    // Update user role\n    const updatedUser = await this.usersService.update(userId, { role: newRole });\n\n    // Log the action\n    await this.auditService.log({\n      performedBy: req.user.id,\n      targetUserId: userId,\n      action: 'USER_DEMOTED',\n      resource: 'USER',\n      resourceId: userId,\n      changes: {\n        from: user.role,\n        to: newRole,\n      },\n      ipAddress: req.headers?.['x-forwarded-for'] as string,\n      userAgent: req.headers?.['user-agent'] as string,\n    });\n\n    return {\n      id: updatedUser.id,\n      email: updatedUser.email,\n      role: updatedUser.role,\n      message: `User demoted to ${newRole}`,\n    };\n  }\n\n  /**\n   * Delete a user (soft delete - mark as inactive)\n   * Super Admin can delete anyone (except themselves)\n   * Admin can only delete regular Users\n   */\n  @Delete(':id')\n  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)\n  @ApiOperation({ summary: 'Delete user (soft delete)' })\n  async deleteUser(\n    @Param('id') userId: string,\n    @Request() req: AuthenticatedRequest,\n  ) {\n    // Cannot delete self\n    if (userId === req.user.id) {\n      throw new ForbiddenException('You cannot delete your own account');\n    }\n\n    const user = await this.usersService.findById(userId);\n\n    // Super Admin protection: Cannot delete Super Admin via UI\n    if (user.role === UserRole.SUPER_ADMIN) {\n      throw new ForbiddenException('Super Admin cannot be deleted via UI. Database-only deletion allowed.');\n    }\n\n    // Admin can only delete regular Users, not other Admins\n    if (req.user.role === UserRole.ADMIN && [UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER].includes(user.role)) {\n      throw new ForbiddenException('Admins can only delete regular users, not other admins');\n    }\n\n    // Soft delete\n    await this.usersService.remove(userId);\n    await this.accountStatusService.deactivate(userId);\n\n    // Log the action\n    await this.auditService.log({\n      performedBy: req.user.id,\n      targetUserId: userId,\n      action: 'USER_DELETED',\n      resource: 'USER',\n      resourceId: userId,\n      changes: {\n        isActive: false,\n      },\n      ipAddress: req.headers?.['x-forwarded-for'] as string,\n      userAgent: req.headers?.['user-agent'] as string,\n    });\n\n    return {\n      message: 'User deleted successfully',\n    };\n  }\n\n  /**\n   * Suspend user account temporarily\n   * Only Super Admin can suspend\n   */\n  @Put(':id/suspend')\n  @Roles(UserRole.SUPER_ADMIN)\n  @ApiOperation({ summary: 'Suspend user account temporarily' })\n  async suspendUser(\n    @Param('id') userId: string,\n    @Body() body: { durationHours: number; reason?: string },\n    @Request() req: AuthenticatedRequest,\n  ) {\n    if (!body.durationHours || body.durationHours <= 0) {\n      throw new BadRequestException('Duration must be greater than 0');\n    }\n\n    await this.accountStatusService.suspend(userId, body.durationHours, body.reason);\n\n    // Log the action\n    await this.auditService.log({\n      performedBy: req.user.id,\n      targetUserId: userId,\n      action: 'USER_SUSPENDED',\n      resource: 'USER',\n      resourceId: userId,\n      changes: {\n        durationHours: body.durationHours,\n      },\n      reason: body.reason,\n      ipAddress: req.headers?.['x-forwarded-for'] as string,\n      userAgent: req.headers?.['user-agent'] as string,\n    });\n\n    return {\n      message: `User suspended for ${body.durationHours} hours`,\n    };\n  }\n\n  /**\n   * Restrict user account temporarily\n   * Only Super Admin can restrict\n   */\n  @Put(':id/restrict')\n  @Roles(UserRole.SUPER_ADMIN)\n  @ApiOperation({ summary: 'Restrict user account temporarily' })\n  async restrictUser(\n    @Param('id') userId: string,\n    @Body() body: { durationHours: number; reason?: string },\n    @Request() req: AuthenticatedRequest,\n  ) {\n    if (!body.durationHours || body.durationHours <= 0) {\n      throw new BadRequestException('Duration must be greater than 0');\n    }\n\n    await this.accountStatusService.restrict(userId, body.durationHours, body.reason);\n\n    // Log the action\n    await this.auditService.log({\n      performedBy: req.user.id,\n      targetUserId: userId,\n      action: 'USER_RESTRICTED',\n      resource: 'USER',\n      resourceId: userId,\n      changes: {\n        durationHours: body.durationHours,\n      },\n      reason: body.reason,\n      ipAddress: req.headers?.['x-forwarded-for'] as string,\n      userAgent: req.headers?.['user-agent'] as string,\n    });\n\n    return {\n      message: `User restricted for ${body.durationHours} hours`,\n    };\n  }\n\n  /**\n   * Block user account permanently\n   * Only Super Admin can block\n   */\n  @Put(':id/block')\n  @Roles(UserRole.SUPER_ADMIN)\n  @ApiOperation({ summary: 'Block user account permanently' })\n  async blockUser(\n    @Param('id') userId: string,\n    @Body() body: { reason?: string },\n    @Request() req: AuthenticatedRequest,\n  ) {\n    await this.accountStatusService.block(userId, body.reason);\n\n    // Log the action\n    await this.auditService.log({\n      performedBy: req.user.id,\n      targetUserId: userId,\n      action: 'USER_BLOCKED',\n      resource: 'USER',\n      resourceId: userId,\n      reason: body.reason,\n      ipAddress: req.headers?.['x-forwarded-for'] as string,\n      userAgent: req.headers?.['user-agent'] as string,\n    });\n\n    return {\n      message: 'User blocked successfully',\n    };\n  }\n\n  /**\n   * Unblock user account\n   * Only Super Admin can unblock\n   */\n  @Put(':id/unblock')\n  @Roles(UserRole.SUPER_ADMIN)\n  @ApiOperation({ summary: 'Unblock user account' })\n  async unblockUser(\n    @Param('id') userId: string,\n    @Request() req: AuthenticatedRequest,\n  ) {\n    await this.accountStatusService.unblock(userId);\n\n    // Log the action\n    await this.auditService.log({\n      performedBy: req.user.id,\n      targetUserId: userId,\n      action: 'USER_UNBLOCKED',\n      resource: 'USER',\n      resourceId: userId,\n      ipAddress: req.headers?.['x-forwarded-for'] as string,\n      userAgent: req.headers?.['user-agent'] as string,\n    });\n\n    return {\n      message: 'User unblocked successfully',\n    };\n  }\n\n  /**\n   * Get audit logs for a user\n   * Only Super Admin can view audit logs\n   */\n  @Get(':id/audit-log')\n  @Roles(UserRole.SUPER_ADMIN)\n  @ApiOperation({ summary: 'Get audit logs for user' })\n  async getAuditLog(\n    @Param('id') userId: string,\n    @Query('skip') skip?: number,\n    @Query('take') take?: number,\n  ) {\n    return this.auditService.getLogsForTargetUser(userId, {\n      skip: skip ? Number(skip) : 0,\n      take: take ? Number(take) : 50,\n    });\n  }\n}\n
+import {
+  Controller,
+  Post,
+  Put,
+  Delete,
+  Get,
+  Body,
+  Param,
+  UseGuards,
+  ForbiddenException,
+  Request,
+  BadRequestException,
+  Query,
+} from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { RolesGuard } from '../common/guards/roles.guard';
+import { Roles } from '../common/decorators/roles.decorator';
+import { UserRole } from '@prisma/client';
+import { UsersService } from './users.service';
+import { CreateUserDto } from './dto/create-user.dto';
+import { AuditService } from '../common/services/audit.service';
+import { AccountStatusService } from '../common/services/account-status.service';
+import { PasswordResetService } from '../auth/password-reset.service';
+
+interface AuthenticatedRequest {
+  user: { id: string; email: string; role: UserRole };
+  headers: Record<string, string | string[] | undefined>;
+}
+
+@ApiTags('User Management')
+@Controller('admin/users')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@ApiBearerAuth()
+export class UsersManagementController {
+  constructor(
+    private usersService: UsersService,
+    private auditService: AuditService,
+    private accountStatusService: AccountStatusService,
+    private passwordResetService: PasswordResetService,
+  ) {}
+
+  /**
+   * Create a new user or admin
+   * Super Admin can create Admins and Super Admins
+   * Admin can only create regular Users
+   */
+  @Post()
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @ApiOperation({ summary: 'Create a new user or admin' })
+  async createUser(
+    @Body() createUserDto: CreateUserDto,
+    @Request() req: AuthenticatedRequest,
+  ) {
+    const { role = UserRole.CUSTOMER } = createUserDto;
+
+    // Authorization: Only Super Admin can create Admins/Super Admins
+    if (role !== UserRole.CUSTOMER && req.user.role !== UserRole.SUPER_ADMIN) {
+      throw new ForbiddenException('Only Super Admins can create admin accounts');
+    }
+
+    // Create user
+    const user = await this.usersService.create(createUserDto);
+
+    // Generate password reset link
+    const adminDomain = process.env.ADMIN_DOMAIN || 'https://admin.yourdomain.com';
+    await this.passwordResetService.generateResetToken(user.id, adminDomain);
+
+    // Log the action
+    await this.auditService.log({
+      performedBy: req.user.id,
+      targetUserId: user.id,
+      action: 'USER_CREATED',
+      resource: 'USER',
+      resourceId: user.id,
+      changes: {
+        email: user.email,
+        role: user.role,
+        firstName: user.firstName,
+        lastName: user.lastName,
+      },
+      ipAddress: req.headers?.['x-forwarded-for'] as string,
+      userAgent: req.headers?.['user-agent'] as string,
+    });
+
+    return {
+      id: user.id,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      role: user.role,
+      message: 'User created successfully. Password reset link sent to email.',
+    };
+  }
+
+  /**
+   * Promote a user to a higher role
+   * Only Super Admin can promote users
+   */
+  @Put(':id/promote')
+  @Roles(UserRole.SUPER_ADMIN)
+  @ApiOperation({ summary: 'Promote user to higher role' })
+  async promoteUser(
+    @Param('id') userId: string,
+    @Body('newRole') newRole: UserRole,
+    @Request() req: AuthenticatedRequest,
+  ) {
+    if (!newRole || ![UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER].includes(newRole)) {
+      throw new BadRequestException('Invalid role for promotion');
+    }
+
+    const user = await this.usersService.findById(userId);
+
+    // Cannot promote Super Admin
+    if (user.role === UserRole.SUPER_ADMIN) {
+      throw new ForbiddenException('Super Admin cannot be promoted');
+    }
+
+    // Update user role
+    const updatedUser = await this.usersService.update(userId, { role: newRole });
+
+    // Log the action
+    await this.auditService.log({
+      performedBy: req.user.id,
+      targetUserId: userId,
+      action: 'USER_PROMOTED',
+      resource: 'USER',
+      resourceId: userId,
+      changes: {
+        from: user.role,
+        to: newRole,
+      },
+      ipAddress: req.headers?.['x-forwarded-for'] as string,
+      userAgent: req.headers?.['user-agent'] as string,
+    });
+
+    return {
+      id: updatedUser.id,
+      email: updatedUser.email,
+      role: updatedUser.role,
+      message: `User promoted to ${newRole}`,
+    };
+  }
+
+  /**
+   * Demote a user to a lower role
+   * Only Super Admin can demote users
+   * Cannot demote Super Admin via UI (database-only)
+   */
+  @Put(':id/demote')
+  @Roles(UserRole.SUPER_ADMIN)
+  @ApiOperation({ summary: 'Demote user to lower role' })
+  async demoteUser(
+    @Param('id') userId: string,
+    @Body('newRole') newRole: UserRole,
+    @Request() req: AuthenticatedRequest,
+  ) {
+    if (!newRole || ![UserRole.CUSTOMER, UserRole.WHOLESALER, UserRole.STAFF].includes(newRole)) {
+      throw new BadRequestException('Invalid role for demotion');
+    }
+
+    const user = await this.usersService.findById(userId);
+
+    // Cannot demote Super Admin via UI
+    if (user.role === UserRole.SUPER_ADMIN) {
+      throw new ForbiddenException('Super Admin cannot be demoted. Database-only deletion allowed.');
+    }
+
+    // Update user role
+    const updatedUser = await this.usersService.update(userId, { role: newRole });
+
+    // Log the action
+    await this.auditService.log({
+      performedBy: req.user.id,
+      targetUserId: userId,
+      action: 'USER_DEMOTED',
+      resource: 'USER',
+      resourceId: userId,
+      changes: {
+        from: user.role,
+        to: newRole,
+      },
+      ipAddress: req.headers?.['x-forwarded-for'] as string,
+      userAgent: req.headers?.['user-agent'] as string,
+    });
+
+    return {
+      id: updatedUser.id,
+      email: updatedUser.email,
+      role: updatedUser.role,
+      message: `User demoted to ${newRole}`,
+    };
+  }
+
+  /**
+   * Delete a user (soft delete - mark as inactive)
+   * Super Admin can delete anyone (except themselves)
+   * Admin can only delete regular Users
+   */
+  @Delete(':id')
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @ApiOperation({ summary: 'Delete user (soft delete)' })
+  async deleteUser(
+    @Param('id') userId: string,
+    @Request() req: AuthenticatedRequest,
+  ) {
+    // Cannot delete self
+    if (userId === req.user.id) {
+      throw new ForbiddenException('You cannot delete your own account');
+    }
+
+    const user = await this.usersService.findById(userId);
+
+    // Super Admin protection: Cannot delete Super Admin via UI
+    if (user.role === UserRole.SUPER_ADMIN) {
+      throw new ForbiddenException('Super Admin cannot be deleted via UI. Database-only deletion allowed.');
+    }
+
+    // Admin can only delete regular Users, not other Admins
+    if (req.user.role === UserRole.ADMIN && [UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER].includes(user.role)) {
+      throw new ForbiddenException('Admins can only delete regular users, not other admins');
+    }
+
+    // Soft delete
+    await this.usersService.remove(userId);
+    await this.accountStatusService.deactivate(userId);
+
+    // Log the action
+    await this.auditService.log({
+      performedBy: req.user.id,
+      targetUserId: userId,
+      action: 'USER_DELETED',
+      resource: 'USER',
+      resourceId: userId,
+      changes: {
+        isActive: false,
+      },
+      ipAddress: req.headers?.['x-forwarded-for'] as string,
+      userAgent: req.headers?.['user-agent'] as string,
+    });
+
+    return {
+      message: 'User deleted successfully',
+    };
+  }
+
+  /**
+   * Suspend user account temporarily
+   * Only Super Admin can suspend
+   */
+  @Put(':id/suspend')
+  @Roles(UserRole.SUPER_ADMIN)
+  @ApiOperation({ summary: 'Suspend user account temporarily' })
+  async suspendUser(
+    @Param('id') userId: string,
+    @Body() body: { durationHours: number; reason?: string },
+    @Request() req: AuthenticatedRequest,
+  ) {
+    if (!body.durationHours || body.durationHours <= 0) {
+      throw new BadRequestException('Duration must be greater than 0');
+    }
+
+    await this.accountStatusService.suspend(userId, body.durationHours, body.reason);
+
+    // Log the action
+    await this.auditService.log({
+      performedBy: req.user.id,
+      targetUserId: userId,
+      action: 'USER_SUSPENDED',
+      resource: 'USER',
+      resourceId: userId,
+      changes: {
+        durationHours: body.durationHours,
+      },
+      reason: body.reason,
+      ipAddress: req.headers?.['x-forwarded-for'] as string,
+      userAgent: req.headers?.['user-agent'] as string,
+    });
+
+    return {
+      message: `User suspended for ${body.durationHours} hours`,
+    };
+  }
+
+  /**
+   * Restrict user account temporarily
+   * Only Super Admin can restrict
+   */
+  @Put(':id/restrict')
+  @Roles(UserRole.SUPER_ADMIN)
+  @ApiOperation({ summary: 'Restrict user account temporarily' })
+  async restrictUser(
+    @Param('id') userId: string,
+    @Body() body: { durationHours: number; reason?: string },
+    @Request() req: AuthenticatedRequest,
+  ) {
+    if (!body.durationHours || body.durationHours <= 0) {
+      throw new BadRequestException('Duration must be greater than 0');
+    }
+
+    await this.accountStatusService.restrict(userId, body.durationHours, body.reason);
+
+    // Log the action
+    await this.auditService.log({
+      performedBy: req.user.id,
+      targetUserId: userId,
+      action: 'USER_RESTRICTED',
+      resource: 'USER',
+      resourceId: userId,
+      changes: {
+        durationHours: body.durationHours,
+      },
+      reason: body.reason,
+      ipAddress: req.headers?.['x-forwarded-for'] as string,
+      userAgent: req.headers?.['user-agent'] as string,
+    });
+
+    return {
+      message: `User restricted for ${body.durationHours} hours`,
+    };
+  }
+
+  /**
+   * Block user account permanently
+   * Only Super Admin can block
+   */
+  @Put(':id/block')
+  @Roles(UserRole.SUPER_ADMIN)
+  @ApiOperation({ summary: 'Block user account permanently' })
+  async blockUser(
+    @Param('id') userId: string,
+    @Body() body: { reason?: string },
+    @Request() req: AuthenticatedRequest,
+  ) {
+    await this.accountStatusService.block(userId, body.reason);
+
+    // Log the action
+    await this.auditService.log({
+      performedBy: req.user.id,
+      targetUserId: userId,
+      action: 'USER_BLOCKED',
+      resource: 'USER',
+      resourceId: userId,
+      reason: body.reason,
+      ipAddress: req.headers?.['x-forwarded-for'] as string,
+      userAgent: req.headers?.['user-agent'] as string,
+    });
+
+    return {
+      message: 'User blocked successfully',
+    };
+  }
+
+  /**
+   * Unblock user account
+   * Only Super Admin can unblock
+   */
+  @Put(':id/unblock')
+  @Roles(UserRole.SUPER_ADMIN)
+  @ApiOperation({ summary: 'Unblock user account' })
+  async unblockUser(
+    @Param('id') userId: string,
+    @Request() req: AuthenticatedRequest,
+  ) {
+    await this.accountStatusService.unblock(userId);
+
+    // Log the action
+    await this.auditService.log({
+      performedBy: req.user.id,
+      targetUserId: userId,
+      action: 'USER_UNBLOCKED',
+      resource: 'USER',
+      resourceId: userId,
+      ipAddress: req.headers?.['x-forwarded-for'] as string,
+      userAgent: req.headers?.['user-agent'] as string,
+    });
+
+    return {
+      message: 'User unblocked successfully',
+    };
+  }
+
+  /**
+   * Get audit logs for a user
+   * Only Super Admin can view audit logs
+   */
+  @Get(':id/audit-log')
+  @Roles(UserRole.SUPER_ADMIN)
+  @ApiOperation({ summary: 'Get audit logs for user' })
+  async getAuditLog(
+    @Param('id') userId: string,
+    @Query('skip') skip?: number,
+    @Query('take') take?: number,
+  ) {
+    return this.auditService.getLogsForTargetUser(userId, {
+      skip: skip ? Number(skip) : 0,
+      take: take ? Number(take) : 50,
+    });
+  }
+}

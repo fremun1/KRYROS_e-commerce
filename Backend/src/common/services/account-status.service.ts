@@ -2,4 +2,278 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { PrismaService } from '../../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
 
-export enum AccountStatusType {\n  ACTIVE = 'ACTIVE',\n  INACTIVE = 'INACTIVE',\n  SUSPENDED = 'SUSPENDED',\n  RESTRICTED = 'RESTRICTED',\n  BLOCKED = 'BLOCKED',\n}\n\n@Injectable()\nexport class AccountStatusService {\n  constructor(\n    private prisma: PrismaService,\n    private emailService: EmailService,\n  ) {}\n\n  /**\n   * Get current account status\n   */\n  async getStatus(userId: string) {\n    let status = await this.prisma.accountStatus.findUnique({\n      where: { userId },\n    });\n\n    if (!status) {\n      // Create default ACTIVE status if doesn't exist\n      status = await this.prisma.accountStatus.create({\n        data: {\n          userId,\n          status: AccountStatusType.ACTIVE,\n        },\n      });\n    }\n\n    // Check if suspension/restriction has expired\n    const now = new Date();\n    if (status.status === AccountStatusType.SUSPENDED && status.suspendedUntil && now > status.suspendedUntil) {\n      // Auto-unlock suspended account\n      status = await this.prisma.accountStatus.update({\n        where: { userId },\n        data: {\n          status: AccountStatusType.ACTIVE,\n          suspendedUntil: null,\n        },\n      });\n    }\n\n    if (status.status === AccountStatusType.RESTRICTED && status.restrictedUntil && now > status.restrictedUntil) {\n      // Auto-unlock restricted account\n      status = await this.prisma.accountStatus.update({\n        where: { userId },\n        data: {\n          status: AccountStatusType.ACTIVE,\n          restrictedUntil: null,\n        },\n      });\n    }\n\n    return status;\n  }\n\n  /**\n   * Check if user can access the system\n   */\n  async canAccess(userId: string): Promise<boolean> {\n    const status = await this.getStatus(userId);\n    return status.status === AccountStatusType.ACTIVE;\n  }\n\n  /**\n   * Suspend account temporarily (user cannot log in)\n   */\n  async suspend(userId: string, durationHours: number, reason?: string): Promise<void> {\n    const user = await this.prisma.user.findUnique({\n      where: { id: userId },\n      select: { email: true, firstName: true },\n    });\n\n    if (!user) {\n      throw new NotFoundException('User not found');\n    }\n\n    const suspendedUntil = new Date(Date.now() + durationHours * 60 * 60 * 1000);\n\n    await this.prisma.accountStatus.upsert({\n      where: { userId },\n      create: {\n        userId,\n        status: AccountStatusType.SUSPENDED,\n        suspendedUntil,\n        reason,\n      },\n      update: {\n        status: AccountStatusType.SUSPENDED,\n        suspendedUntil,\n        reason,\n      },\n    });\n\n    // Send notification email\n    if (user.email) {\n      await this.emailService.sendAccountSuspendedEmail(\n        user.email,\n        user.firstName,\n        suspendedUntil,\n        reason,\n      );\n    }\n  }\n\n  /**\n   * Restrict account temporarily (limited access)\n   */\n  async restrict(userId: string, durationHours: number, reason?: string): Promise<void> {\n    const user = await this.prisma.user.findUnique({\n      where: { id: userId },\n      select: { email: true, firstName: true },\n    });\n\n    if (!user) {\n      throw new NotFoundException('User not found');\n    }\n\n    const restrictedUntil = new Date(Date.now() + durationHours * 60 * 60 * 1000);\n\n    await this.prisma.accountStatus.upsert({\n      where: { userId },\n      create: {\n        userId,\n        status: AccountStatusType.RESTRICTED,\n        restrictedUntil,\n        reason,\n      },\n      update: {\n        status: AccountStatusType.RESTRICTED,\n        restrictedUntil,\n        reason,\n      },\n    });\n\n    // Send notification email\n    if (user.email) {\n      await this.emailService.sendAccountRestrictedEmail(\n        user.email,\n        user.firstName,\n        restrictedUntil,\n        reason,\n      );\n    }\n  }\n\n  /**\n   * Block account permanently (manual unblock required)\n   */\n  async block(userId: string, reason?: string): Promise<void> {\n    const user = await this.prisma.user.findUnique({\n      where: { id: userId },\n      select: { email: true, firstName: true },\n    });\n\n    if (!user) {\n      throw new NotFoundException('User not found');\n    }\n\n    await this.prisma.accountStatus.upsert({\n      where: { userId },\n      create: {\n        userId,\n        status: AccountStatusType.BLOCKED,\n        reason,\n      },\n      update: {\n        status: AccountStatusType.BLOCKED,\n        reason,\n      },\n    });\n\n    // Send notification email\n    if (user.email) {\n      await this.emailService.sendAccountBlockedEmail(user.email, user.firstName, reason);\n    }\n  }\n\n  /**\n   * Unblock account\n   */\n  async unblock(userId: string): Promise<void> {\n    const user = await this.prisma.user.findUnique({\n      where: { id: userId },\n      select: { email: true, firstName: true },\n    });\n\n    if (!user) {\n      throw new NotFoundException('User not found');\n    }\n\n    await this.prisma.accountStatus.upsert({\n      where: { userId },\n      create: {\n        userId,\n        status: AccountStatusType.ACTIVE,\n      },\n      update: {\n        status: AccountStatusType.ACTIVE,\n        suspendedUntil: null,\n        restrictedUntil: null,\n        reason: null,\n      },\n    });\n\n    // Send notification email\n    if (user.email) {\n      await this.emailService.sendAccountUnblockedEmail(user.email, user.firstName);\n    }\n  }\n\n  /**\n   * Activate inactive account\n   */\n  async activate(userId: string): Promise<void> {\n    const user = await this.prisma.user.findUnique({\n      where: { id: userId },\n      select: { email: true, firstName: true },\n    });\n\n    if (!user) {\n      throw new NotFoundException('User not found');\n    }\n\n    await this.prisma.accountStatus.upsert({\n      where: { userId },\n      create: {\n        userId,\n        status: AccountStatusType.ACTIVE,\n      },\n      update: {\n        status: AccountStatusType.ACTIVE,\n      },\n    });\n\n    // Send notification email\n    if (user.email) {\n      await this.emailService.sendAccountActivatedEmail(user.email, user.firstName);\n    }\n  }\n\n  /**\n   * Deactivate account (soft delete)\n   */\n  async deactivate(userId: string): Promise<void> {\n    const user = await this.prisma.user.findUnique({\n      where: { id: userId },\n      select: { email: true, firstName: true },\n    });\n\n    if (!user) {\n      throw new NotFoundException('User not found');\n    }\n\n    await this.prisma.accountStatus.upsert({\n      where: { userId },\n      create: {\n        userId,\n        status: AccountStatusType.INACTIVE,\n      },\n      update: {\n        status: AccountStatusType.INACTIVE,\n      },\n    });\n\n    // Send notification email\n    if (user.email) {\n      await this.emailService.sendAccountDeactivatedEmail(user.email, user.firstName);\n    }\n  }\n}\n
+export enum AccountStatusType {
+  ACTIVE = 'ACTIVE',
+  INACTIVE = 'INACTIVE',
+  SUSPENDED = 'SUSPENDED',
+  RESTRICTED = 'RESTRICTED',
+  BLOCKED = 'BLOCKED',
+}
+
+@Injectable()
+export class AccountStatusService {
+  constructor(
+    private prisma: PrismaService,
+    private emailService: EmailService,
+  ) {}
+
+  /**
+   * Get current account status
+   */
+  async getStatus(userId: string) {
+    let status = await this.prisma.accountStatus.findUnique({
+      where: { userId },
+    });
+
+    if (!status) {
+      // Create default ACTIVE status if doesn't exist
+      status = await this.prisma.accountStatus.create({
+        data: {
+          userId,
+          status: AccountStatusType.ACTIVE,
+        },
+      });
+    }
+
+    // Check if suspension/restriction has expired
+    const now = new Date();
+    if (status.status === AccountStatusType.SUSPENDED && status.suspendedUntil && now > status.suspendedUntil) {
+      // Auto-unlock suspended account
+      status = await this.prisma.accountStatus.update({
+        where: { userId },
+        data: {
+          status: AccountStatusType.ACTIVE,
+          suspendedUntil: null,
+        },
+      });
+    }
+
+    if (status.status === AccountStatusType.RESTRICTED && status.restrictedUntil && now > status.restrictedUntil) {
+      // Auto-unlock restricted account
+      status = await this.prisma.accountStatus.update({
+        where: { userId },
+        data: {
+          status: AccountStatusType.ACTIVE,
+          restrictedUntil: null,
+        },
+      });
+    }
+
+    return status;
+  }
+
+  /**
+   * Check if user can access the system
+   */
+  async canAccess(userId: string): Promise<boolean> {
+    const status = await this.getStatus(userId);
+    return status.status === AccountStatusType.ACTIVE;
+  }
+
+  /**
+   * Suspend account temporarily (user cannot log in)
+   */
+  async suspend(userId: string, durationHours: number, reason?: string): Promise<void> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { email: true, firstName: true },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const suspendedUntil = new Date(Date.now() + durationHours * 60 * 60 * 1000);
+
+    await this.prisma.accountStatus.upsert({
+      where: { userId },
+      create: {
+        userId,
+        status: AccountStatusType.SUSPENDED,
+        suspendedUntil,
+        reason,
+      },
+      update: {
+        status: AccountStatusType.SUSPENDED,
+        suspendedUntil,
+        reason,
+      },
+    });
+
+    // Send notification email
+    if (user.email) {
+      await this.emailService.sendAccountSuspendedEmail(
+        user.email,
+        user.firstName,
+        suspendedUntil,
+        reason,
+      );
+    }
+  }
+
+  /**
+   * Restrict account temporarily (limited access)
+   */
+  async restrict(userId: string, durationHours: number, reason?: string): Promise<void> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { email: true, firstName: true },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const restrictedUntil = new Date(Date.now() + durationHours * 60 * 60 * 1000);
+
+    await this.prisma.accountStatus.upsert({
+      where: { userId },
+      create: {
+        userId,
+        status: AccountStatusType.RESTRICTED,
+        restrictedUntil,
+        reason,
+      },
+      update: {
+        status: AccountStatusType.RESTRICTED,
+        restrictedUntil,
+        reason,
+      },
+    });
+
+    // Send notification email
+    if (user.email) {
+      await this.emailService.sendAccountRestrictedEmail(
+        user.email,
+        user.firstName,
+        restrictedUntil,
+        reason,
+      );
+    }
+  }
+
+  /**
+   * Block account permanently (manual unblock required)
+   */
+  async block(userId: string, reason?: string): Promise<void> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { email: true, firstName: true },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    await this.prisma.accountStatus.upsert({
+      where: { userId },
+      create: {
+        userId,
+        status: AccountStatusType.BLOCKED,
+        reason,
+      },
+      update: {
+        status: AccountStatusType.BLOCKED,
+        reason,
+      },
+    });
+
+    // Send notification email
+    if (user.email) {
+      await this.emailService.sendAccountBlockedEmail(user.email, user.firstName, reason);
+    }
+  }
+
+  /**
+   * Unblock account
+   */
+  async unblock(userId: string): Promise<void> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { email: true, firstName: true },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    await this.prisma.accountStatus.upsert({
+      where: { userId },
+      create: {
+        userId,
+        status: AccountStatusType.ACTIVE,
+      },
+      update: {
+        status: AccountStatusType.ACTIVE,
+        suspendedUntil: null,
+        restrictedUntil: null,
+        reason: null,
+      },
+    });
+
+    // Send notification email
+    if (user.email) {
+      await this.emailService.sendAccountUnblockedEmail(user.email, user.firstName);
+    }
+  }
+
+  /**
+   * Activate inactive account
+   */
+  async activate(userId: string): Promise<void> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { email: true, firstName: true },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    await this.prisma.accountStatus.upsert({
+      where: { userId },
+      create: {
+        userId,
+        status: AccountStatusType.ACTIVE,
+      },
+      update: {
+        status: AccountStatusType.ACTIVE,
+      },
+    });
+
+    // Send notification email
+    if (user.email) {
+      await this.emailService.sendAccountActivatedEmail(user.email, user.firstName);
+    }
+  }
+
+  /**
+   * Deactivate account (soft delete)
+   */
+  async deactivate(userId: string): Promise<void> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { email: true, firstName: true },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    await this.prisma.accountStatus.upsert({
+      where: { userId },
+      create: {
+        userId,
+        status: AccountStatusType.INACTIVE,
+      },
+      update: {
+        status: AccountStatusType.INACTIVE,
+      },
+    });
+
+    // Send notification email
+    if (user.email) {
+      await this.emailService.sendAccountDeactivatedEmail(user.email, user.firstName);
+    }
+  }
+}
