@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { EFFECTIVE_API_BASE } from "@/lib/api";
 import type { ApiCMSSection } from "@/lib/api";
 import DynamicSectionRendererV2 from "@/components/home/DynamicSectionRendererV2";
-import AccountLayout from "@/components/layout/AccountLayout";
+
 import ErrorBoundary from "@/components/ErrorBoundary";
 
 export default function GetNowPage() {
@@ -47,15 +47,14 @@ export default function GetNowPage() {
   }, []);
 
   return (
-    <AccountLayout>
-      <ErrorBoundary pageName="Get Now">
-        <div className="max-w-7xl mx-auto">
-          <div className="px-4 md:px-6 py-6 border-b border-border">
-            <h1 className="text-2xl font-black text-foreground">Get Now</h1>
-            <p className="text-sm text-muted-foreground mt-2">
-              Buy now, pay in easy installments. Simple. Flexible. Hassle-free.
-            </p>
-          </div>
+    <ErrorBoundary pageName="Get Now">
+      <div className="max-w-7xl mx-auto pb-6 md:pb-10">
+        <div className="px-4 md:px-6 py-8 border-b border-border mb-6">
+          <h1 className="text-3xl md:text-4xl font-black text-foreground">Get Now</h1>
+          <p className="text-base text-muted-foreground mt-3 max-w-2xl">
+            Buy now, pay in easy installments. Simple. Flexible. Hassle-free.
+          </p>
+        </div>
 
           {loading && (
             <div className="px-4 md:px-6 py-12">
@@ -93,8 +92,7 @@ export default function GetNowPage() {
           {!loading && sections.length > 0 && (
             <DynamicSectionRendererV2 sections={sections} pageSlug="get-now" />
           )}
-        </div>
-      </ErrorBoundary>
-    </AccountLayout>
+      </div>
+    </ErrorBoundary>
   );
 }

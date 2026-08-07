@@ -311,7 +311,6 @@ function AppRoutes() {
       "/checkout",
       "/dashboard",
       "/cart",
-      "/get-now",
       "/apply-credit",
       "/wholesale-checkout",
       "/track",
