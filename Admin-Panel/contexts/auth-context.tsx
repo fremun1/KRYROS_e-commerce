@@ -31,7 +31,10 @@ const AuthContext = createContext<AuthContextType>({
 const normalizeRole = (role?: string | null) =>
   (role || "").toUpperCase().replace(/[\s_]+/g, "");
 
-const ADMIN_ROLES = new Set(["SUPERADMIN", "ADMIN", "MANAGER", "STAFF", "WHOLESALER", "WHOLESALE"]);
+// Admin-panel access is restricted to admin-level roles only.
+// WHOLESALER/WHOLESALE are commercial roles, not admin roles — they must
+// not grant access to the admin panel.
+const ADMIN_ROLES = new Set(["SUPERADMIN", "ADMIN", "MANAGER", "STAFF"]);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUserState] = useState<AdminUser | null>(null);

@@ -28,6 +28,25 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: "Authentication failed" }, { status: 401 });
     }
 
+    // ── Server-side admin role gate ──────────────────────────────────────
+    // Only admin-level roles may enter the admin panel. Customer and
+    // Wholesale accounts are rejected here (403) instead of being logged
+    // out later by the frontend, and no session cookies are set.
+    const ADMIN_ROLES = new Set(["SUPERADMIN", "ADMIN", "MANAGER", "STAFF"]);
+    const normalizedRole = ((user?.role ?? "") as string)
+      .toUpperCase()
+      .replace(/[\s_]+/g, "");
+    if (!ADMIN_ROLES.has(normalizedRole) || normalizedRole === "") {
+      return NextResponse.json(
+        {
+          message:
+            "This account does not have admin panel access. Please log in through the customer portal.",
+          reason: "insufficient_role",
+        },
+        { status: 403 },
+      );
+    }
+
     const res = NextResponse.json({ success: true, user: user ?? null });
     res.cookies.set("kryros_token", accessToken, {
       httpOnly: true, secure: isProd, sameSite: "strict", maxAge: 15 * 60, path: "/",
