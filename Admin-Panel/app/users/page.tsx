@@ -335,7 +335,7 @@ function UsersContent() {
       {/* Add User Modal */}
       <Modal open={addOpen} onClose={() => setAddOpen(false)} title="Add New User">
         {modalFields}
-        <ModalFooter onCancel={() => setAddOpen(false)} onSubmit={handleAdd} loading={loading} />
+        <ModalFooter onClose={() => setAddOpen(false)} onSubmit={handleAdd} loading={loading} submitLabel="Add User" border={border} textMain={textMain} />
       </Modal>
 
       {/* Action Modals for Super Admin */}
@@ -348,7 +348,7 @@ function UsersContent() {
               <div style={{ fontSize: '14px', fontWeight: 600, color: textMain }}>{selectedUser.role}</div>
             </div>
             <FormField label="New Role" value={actionForm.newRole} onChange={fap('newRole')} options={['Admin', 'Super Admin', 'Manager']} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-            <ModalFooter onCancel={() => setActionModal(null)} onSubmit={handlePromote} loading={loading} submitLabel="Promote" />
+            <ModalFooter onClose={() => setActionModal(null)} onSubmit={handlePromote} loading={loading} submitLabel="Promote" border={border} textMain={textMain} />
           </Modal>
 
           {/* Demote Modal */}
@@ -358,27 +358,27 @@ function UsersContent() {
               <div style={{ fontSize: '14px', fontWeight: 600, color: textMain }}>{selectedUser.role}</div>
             </div>
             <FormField label="New Role" value={actionForm.newRole} onChange={fap('newRole')} options={['Customer', 'Wholesale', 'Staff']} border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
-            <ModalFooter onCancel={() => setActionModal(null)} onSubmit={handleDemote} loading={loading} submitLabel="Demote" />
+            <ModalFooter onClose={() => setActionModal(null)} onSubmit={handleDemote} loading={loading} submitLabel="Demote" border={border} textMain={textMain} />
           </Modal>
 
           {/* Suspend Modal */}
           <Modal open={actionModal === 'suspend'} onClose={() => setActionModal(null)} title="Suspend User">
             <FormField label="Duration (hours)" value={String(actionForm.durationHours)} onChange={(v) => fap('durationHours')(v)} type="number" border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
             <FormField label="Reason (optional)" value={actionForm.reason} onChange={fap('reason')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Why is this user being suspended?" />
-            <ModalFooter onCancel={() => setActionModal(null)} onSubmit={() => {}} loading={loading} submitLabel="Suspend" />
+            <ModalFooter onClose={() => setActionModal(null)} onSubmit={() => {}} loading={loading} submitLabel="Suspend" border={border} textMain={textMain} />
           </Modal>
 
           {/* Restrict Modal */}
           <Modal open={actionModal === 'restrict'} onClose={() => setActionModal(null)} title="Restrict User">
             <FormField label="Duration (hours)" value={String(actionForm.durationHours)} onChange={(v) => fap('durationHours')(v)} type="number" border={border} textMain={textMain} textMuted={textMuted} surface={surface} />
             <FormField label="Reason (optional)" value={actionForm.reason} onChange={fap('reason')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Why is this user being restricted?" />
-            <ModalFooter onCancel={() => setActionModal(null)} onSubmit={() => {}} loading={loading} submitLabel="Restrict" />
+            <ModalFooter onClose={() => setActionModal(null)} onSubmit={() => {}} loading={loading} submitLabel="Restrict" border={border} textMain={textMain} />
           </Modal>
 
           {/* Block Modal */}
           <Modal open={actionModal === 'block'} onClose={() => setActionModal(null)} title="Block User">
             <FormField label="Reason (optional)" value={actionForm.reason} onChange={fap('reason')} border={border} textMain={textMain} textMuted={textMuted} surface={surface} placeholder="Why is this user being blocked?" />
-            <ModalFooter onCancel={() => setActionModal(null)} onSubmit={() => {}} loading={loading} submitLabel="Block" />
+            <ModalFooter onClose={() => setActionModal(null)} onSubmit={() => {}} loading={loading} submitLabel="Block" border={border} textMain={textMain} />
           </Modal>
         </>
       )}
