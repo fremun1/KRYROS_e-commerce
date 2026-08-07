@@ -57,7 +57,6 @@ export class PasswordResetService {
       user.email,
       user.firstName,
       resetLink,
-      PASSWORD_RESET_TOKEN_EXPIRY_HOURS,
     );
 
     return resetToken.id;

@@ -105,7 +105,7 @@ export class AccountStatusService {
       await this.emailService.sendAccountSuspendedEmail(
         user.email,
         user.firstName,
-        suspendedUntil,
+        durationHours,
         reason,
       );
     }
@@ -146,7 +146,7 @@ export class AccountStatusService {
       await this.emailService.sendAccountRestrictedEmail(
         user.email,
         user.firstName,
-        restrictedUntil,
+        durationHours,
         reason,
       );
     }
