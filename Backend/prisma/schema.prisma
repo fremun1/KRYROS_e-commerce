@@ -46,6 +46,10 @@ model User {
   wholesaleApplications    WholesaleApplication[]
   wishlists                WishlistItem[]
   directPayments           DirectPayment[]
+  passwordResetTokens      PasswordResetToken[]  @relation("PasswordResetTokens")
+  accountStatus            AccountStatus?        @relation("AccountStatus")
+  auditLogsPerformed       AuditLog[]            @relation("AuditLogsPerformed")
+  auditLogsTarget          AuditLog[]            @relation("AuditLogsTarget")
 
   @@map("users")
 }
@@ -881,16 +885,24 @@ model TicketMessage {
 }
 
 model AuditLog {
-  id         String   @id @default(uuid())
-  userId     String?
-  action     String
-  resource   String
-  resourceId String?
-  changes    Json?
-  ipAddress  String?
-  userAgent  String?
-  createdAt  DateTime @default(now())
+  id           String   @id @default(uuid())
+  userId       String?  // User who performed the action
+  targetUserId String?  // User who was affected by the action
+  action       String   // Action type (USER_CREATED, USER_DELETED, etc.)
+  resource     String   // Resource type (USER, ROLE, etc.)
+  resourceId   String?  // Resource ID
+  changes      Json?    // What changed (before/after)
+  reason       String?  // Reason for the action
+  ipAddress    String?
+  userAgent    String?
+  createdAt    DateTime @default(now())
+  performer    User?    @relation("AuditLogsPerformed", fields: [userId], references: [id], onDelete: SetNull)
+  targetUser   User?    @relation("AuditLogsTarget", fields: [targetUserId], references: [id], onDelete: SetNull)
 
+  @@index([userId])
+  @@index([targetUserId])
+  @@index([action])
+  @@index([createdAt])
   @@map("audit_logs")
 }
 
@@ -1248,6 +1260,31 @@ enum PaymentStatus {
   PARTIALLY_PAID
 }
 
+enum AccountStatusEnum {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  RESTRICTED
+  BLOCKED
+}
+
+enum AuditAction {
+  USER_CREATED
+  USER_UPDATED
+  USER_DELETED
+  USER_PROMOTED
+  USER_DEMOTED
+  USER_SUSPENDED
+  USER_RESTRICTED
+  USER_BLOCKED
+  USER_UNBLOCKED
+  USER_ACTIVATED
+  PASSWORD_RESET_REQUESTED
+  PASSWORD_RESET_COMPLETED
+  ROLE_CHANGED
+  STATUS_CHANGED
+}
+
 enum PaymentMethodType {
   CASH
   CARD
@@ -1412,4 +1449,37 @@ model PendingRegistration {
   @@index([phone])
   @@index([expiresAt])
   @@map("pending_registrations")
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+  user      User     @relation("PasswordResetTokens", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+  @@index([expiresAt])
+  @@map("password_reset_tokens")
+}
+
+model AccountStatus {
+  id               String   @id @default(uuid())
+  userId           String   @unique
+  status           AccountStatusEnum @default(ACTIVE)
+  suspendedUntil   DateTime?
+  restrictedUntil  DateTime?
+  reason           String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  user             User     @relation("AccountStatus", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@index([suspendedUntil])
+  @@index([restrictedUntil])
+  @@map("account_statuses")
 }

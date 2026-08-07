@@ -60,24 +60,24 @@ export class UsersController {
       throw new ForbiddenException('You do not have permission to update users');
     }
 
-    if (req.user.id !== id && !isAdmin) {
-      throw new ForbiddenException('You do not have permission to update this user');
-    }
-
-    if (!isSuperAdmin) {
-      const { firstName, lastName, email, phone, avatar } = updateUserDto;
-      return this.usersService.update(id, { firstName, lastName, email, phone, avatar });
-    }
-
+    // Prevent role changes for non-Super Admins
     if (!isSuperAdmin && updateUserDto.role && (updateUserDto.role === UserRole.SUPER_ADMIN || updateUserDto.role === UserRole.ADMIN || updateUserDto.role === UserRole.MANAGER)) {
       throw new ForbiddenException('Only Super Admins can assign protected roles (Admin, Manager, Super Admin)');
+    }
+
+    // Allow Super Admin to update any user, Admins can only update themselves or regular users
+    if (!isSuperAdmin && req.user.id !== id) {
+      const targetUser = await this.usersService.findById(id);
+      if ([UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER].includes(targetUser.role)) {
+        throw new ForbiddenException('Admins can only update regular users, not other admins');
+      }
     }
 
     return this.usersService.update(id, updateUserDto);
   }
 
   @Delete(':id')
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
   @ApiOperation({ summary: 'Delete user' })
   async remove(@Param('id') id: string, @Request() req) {
     const targetUser = await this.usersService.findById(id);
@@ -87,8 +87,15 @@ export class UsersController {
     }
 
     const isSuperAdmin = req.user.role === UserRole.SUPER_ADMIN;
-    if (!isSuperAdmin && (targetUser.role === UserRole.SUPER_ADMIN || targetUser.role === UserRole.ADMIN || targetUser.role === UserRole.MANAGER)) {
-      throw new ForbiddenException('Only Super Admins can delete users with protected roles (Admin, Manager, Super Admin)');
+    
+    // Super Admin protection: Cannot delete Super Admin via UI
+    if (targetUser.role === UserRole.SUPER_ADMIN) {
+      throw new ForbiddenException('Super Admin cannot be deleted via UI. Database-only deletion allowed.');
+    }
+
+    // Admin can only delete regular users, not other admins
+    if (!isSuperAdmin && (targetUser.role === UserRole.ADMIN || targetUser.role === UserRole.MANAGER)) {
+      throw new ForbiddenException('Admins can only delete regular users, not other admins or managers');
     }
 
     return this.usersService.remove(id);

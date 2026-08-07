@@ -7,11 +7,15 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { TwoFactorService } from './two-factor.service';
+import { PasswordResetService } from './password-reset.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { LocalStrategy } from './strategies/local.strategy';
 import { UsersModule } from '../users/users.module';
 import { PrismaModule } from '../prisma/prisma.module';
 import { CountriesModule } from '../countries/countries.module';
+import { EmailModule } from '../common/email/email.module';
+
+// Note: EmailModule is already imported above
 
 @Module({
   imports: [
@@ -38,8 +42,8 @@ import { CountriesModule } from '../countries/countries.module';
       inject: [ConfigService],
     }),
   ],
-  providers: [AuthService, TwoFactorService, JwtStrategy, LocalStrategy],
+  providers: [AuthService, TwoFactorService, PasswordResetService, JwtStrategy, LocalStrategy],
   controllers: [AuthController],
-  exports: [AuthService, TwoFactorService],
+  exports: [AuthService, TwoFactorService, PasswordResetService],
 })
 export class AuthModule {}
