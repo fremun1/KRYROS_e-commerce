@@ -5,7 +5,6 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { CloudinaryService } from '../common/cloudinary/cloudinary.service';
-import { compressImage } from '../common/utils/image.util';
 
 const BCRYPT_ROUNDS = 12;
 
@@ -29,10 +28,28 @@ export class UsersService {
     private cloudinary: CloudinaryService,
   ) {}
 
+  /**
+   * Resolves the effective role for a user by checking both the role column
+   * and the UserRoleAssignment table. This ensures that roles granted via
+   * the granular permission system are reflected in the legacy role enum.
+   */
+  private getEffectiveRole(user: any): UserRole {
+    if (!user.roleAssignments || user.roleAssignments.length === 0) {
+      return user.role;
+    }
+
+    const assignedRoles = user.roleAssignments.map((a: any) => a.role.name.toUpperCase().replace(/[\s_]+/g, ''));
+    
+    if (assignedRoles.includes('SUPERADMIN')) return UserRole.SUPER_ADMIN;
+    if (assignedRoles.includes('ADMIN')) return UserRole.ADMIN;
+    if (assignedRoles.includes('MANAGER')) return UserRole.MANAGER;
+    if (assignedRoles.includes('STAFF')) return UserRole.STAFF;
+    if (assignedRoles.includes('WHOLESALER') || assignedRoles.includes('WHOLESALE')) return UserRole.WHOLESALER;
+    
+    return user.role;
+  }
+
   async create(createUserDto: CreateUserDto) {
-    // SECURITY: explicitly destructure fields to prevent mass-assignment of privileged
-    // columns (role, isVerified, isActive). Role defaults to CUSTOMER — callers that need
-    // a different role (e.g. auth.service after SUPER_ADMIN validation) pass it explicitly.
     const {
       avatar,
       role = UserRole.CUSTOMER,
@@ -61,15 +78,6 @@ export class UsersService {
       },
     });
 
-    // Notify about new user registration (if not already handled by auth service)
-    // We use a try-catch to ensure user creation doesn't fail if notification fails
-    try {
-      // Note: We need to inject NotificationsService here if we want to call it directly.
-      // Alternatively, we can let the caller handle it.
-      // But looking at the codebase, auth.service handles it for public registrations.
-      // For admin-created users, we might want to skip or send a different one.
-    } catch (e) {}
-
     return user;
   }
 
@@ -78,11 +86,7 @@ export class UsersService {
     const take = Math.min(Math.max(1, Number(rawTake) || 20), 100);
     
     const where: any = {};
-    
-    // Default to only showing active users
-    if (!showInactive) {
-      where.isActive = true;
-    }
+    if (!showInactive) where.isActive = true;
 
     if (search) {
       where.OR = [
@@ -98,47 +102,59 @@ export class UsersService {
         where,
         skip,
         take,
-        select: {
-          id: true,
-          email: true,
-          firstName: true,
-          lastName: true,
-          phone: true,
-          avatar: true,
-          role: true,
-          isVerified: true,
-          isActive: true,
-          createdAt: true,
-          updatedAt: true,
+        include: {
+          roleAssignments: {
+            include: {
+              role: true
+            }
+          }
         },
         orderBy: { createdAt: 'desc' },
       }),
       this.prisma.user.count({ where }),
     ]);
 
-    return { data: users, meta: { total, skip, take } };
+    // Process users to ensure they have the correct effective role
+    const processedUsers = await Promise.all(users.map(async (user) => {
+      const effectiveRole = this.getEffectiveRole(user);
+      if (user.role !== effectiveRole) {
+        await this.prisma.user.update({
+          where: { id: user.id },
+          data: { role: effectiveRole }
+        });
+        user.role = effectiveRole;
+      }
+      // Remove sensitive or unnecessary data from the list view if needed
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { roleAssignments, ...rest } = user;
+      return { ...rest, role: effectiveRole };
+    }));
+
+    return { data: processedUsers, meta: { total, skip, take } };
   }
 
   async findById(id: string) {
     const user = await this.prisma.user.findUnique({
       where: { id },
-      select: {
-        id: true,
-        email: true,
-        firstName: true,
-        lastName: true,
-        phone: true,
-        avatar: true,
-        role: true,
-        isVerified: true,
-        isActive: true,
-        createdAt: true,
-        updatedAt: true,
-      },
+      include: {
+        roleAssignments: {
+          include: {
+            role: true
+          }
+        }
+      }
     });
     
-    if (!user) {
-      throw new NotFoundException('User not found');
+    if (!user) throw new NotFoundException('User not found');
+    
+    // Sync legacy role column with role assignments if mismatch found
+    const effectiveRole = this.getEffectiveRole(user);
+    if (user.role !== effectiveRole) {
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: { role: effectiveRole }
+      });
+      user.role = effectiveRole;
     }
     
     return user;
@@ -158,15 +174,34 @@ export class UsersService {
 
   async findByIdentifier(identifier: string) {
     const normalized = normalizeIdentifier(identifier);
-    // Check if identifier is email or phone
-    return this.prisma.user.findFirst({
+    const user = await this.prisma.user.findFirst({
       where: {
         OR: [
           { email: normalized },
           { phone: normalized }
         ]
+      },
+      include: {
+        roleAssignments: {
+          include: {
+            role: true
+          }
+        }
       }
     });
+
+    if (user) {
+      const effectiveRole = this.getEffectiveRole(user);
+      if (user.role !== effectiveRole) {
+        await this.prisma.user.update({
+          where: { id: user.id },
+          data: { role: effectiveRole }
+        });
+        user.role = effectiveRole;
+      }
+    }
+
+    return user;
   }
 
   async update(id: string, updateUserDto: UpdateUserDto) {
@@ -174,7 +209,6 @@ export class UsersService {
 
     const data: Record<string, unknown> = { ...updateUserDto };
 
-    // SECURITY: never store a plaintext password — hash it before writing
     if (data.password && typeof data.password === 'string') {
       data.password = await bcrypt.hash(data.password as string, BCRYPT_ROUNDS);
     }
@@ -187,29 +221,32 @@ export class UsersService {
       );
     }
 
-    return this.prisma.user.update({
+    const updatedUser = await this.prisma.user.update({
       where: { id },
       data,
-      select: {
-        id: true,
-        email: true,
-        firstName: true,
-        lastName: true,
-        phone: true,
-        avatar: true,
-        role: true,
-        isVerified: true,
-        isActive: true,
-        createdAt: true,
-        updatedAt: true,
-        // password, passwordResetToken, passwordResetExpires intentionally excluded
-      },
+      include: {
+        roleAssignments: {
+          include: {
+            role: true
+          }
+        }
+      }
     });
+
+    const effectiveRole = this.getEffectiveRole(updatedUser);
+    if (updatedUser.role !== effectiveRole) {
+      await this.prisma.user.update({
+        where: { id: updatedUser.id },
+        data: { role: effectiveRole }
+      });
+      updatedUser.role = effectiveRole;
+    }
+
+    return updatedUser;
   }
 
   async remove(id: string) {
     await this.findById(id);
-    // Soft delete — preserves orders, reviews, wallet, and other user data
     return this.prisma.user.update({
       where: { id },
       data: { isActive: false },
@@ -219,24 +256,27 @@ export class UsersService {
   async getUserProfile(id: string) {
     const user = await this.prisma.user.findUnique({
       where: { id },
-      select: {
-        id: true,
-        email: true,
-        firstName: true,
-        lastName: true,
-        phone: true,
-        avatar: true,
-        role: true,
-        isVerified: true,
-        createdAt: true,
+      include: {
         addresses: true,
         creditProfile: true,
         wallet: true,
-      },
+        roleAssignments: {
+          include: {
+            role: true
+          }
+        }
+      }
     });
 
-    if (!user) {
-      throw new NotFoundException('User not found');
+    if (!user) throw new NotFoundException('User not found');
+
+    const effectiveRole = this.getEffectiveRole(user);
+    if (user.role !== effectiveRole) {
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: { role: effectiveRole }
+      });
+      user.role = effectiveRole;
     }
 
     return user;
