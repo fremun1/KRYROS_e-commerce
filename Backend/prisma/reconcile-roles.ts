@@ -110,11 +110,13 @@ async function main() {
         create: { name: targetName },
         update: {},
       });
-      await prisma.userRoleAssignment.create({
-        data: { userId: user.id, roleId: roleRow.id },
+      await prisma.userRoleAssignment.upsert({
+        where: { userId_roleId: { userId: user.id, roleId: roleRow.id } },
+        create: { userId: user.id, roleId: roleRow.id },
+        update: {},
       });
       console.log(
-        `[FIX] ${user.email || user.id}: created missing user_roles row '${targetName}'`,
+        `[FIX] ${user.email || user.id}: ensured user_roles row '${targetName}' exists`,
       );
       fixed++;
     } else if (matches.length > 1) {

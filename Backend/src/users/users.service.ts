@@ -156,14 +156,20 @@ export class UsersService {
     });
 
     if (!hasTarget) {
-      // Create (or re-use) the Role row and assign it.
+      // Create (or re-use) the Role row and assign it. Use `upsert` on the
+      // (userId, roleId) unique constraint so two concurrent reads can never
+      // throw "A record with this userId, roleId already exists" (Prisma
+      // P2002) — a second concurrent request that created the row first is
+      // harmless and simply re-uses it.
       const roleRow = await this.prisma.role.upsert({
         where: { name: targetName },
         create: { name: targetName },
         update: {},
       });
-      await this.prisma.userRoleAssignment.create({
-        data: { userId: user.id, roleId: roleRow.id },
+      await this.prisma.userRoleAssignment.upsert({
+        where: { userId_roleId: { userId: user.id, roleId: roleRow.id } },
+        create: { userId: user.id, roleId: roleRow.id },
+        update: {},
       });
     }
 
@@ -345,8 +351,10 @@ export class UsersService {
         update: {},
       });
       await this.prisma.userRoleAssignment.deleteMany({ where: { userId: id } });
-      await this.prisma.userRoleAssignment.create({
-        data: { userId: id, roleId: roleRow.id },
+      await this.prisma.userRoleAssignment.upsert({
+        where: { userId_roleId: { userId: id, roleId: roleRow.id } },
+        create: { userId: id, roleId: roleRow.id },
+        update: {},
       });
     } else if (roleValue === UserRole.CUSTOMER) {
       // Demoting to CUSTOMER — remove all privileged assignments.
