@@ -162,15 +162,15 @@ export default function ApplyCreditPage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="sticky top-0 z-20 bg-background border-b border-border">
+      <div className="sticky top-0 z-20 bg-[var(--kryros-header-navy)] border-b border-white/10 shadow-sm">
         <div className="max-w-2xl mx-auto px-4 md:px-6 py-4 flex items-center justify-between">
           <button
             onClick={() => window.history.back()}
-            className="p-2 hover:bg-muted rounded-full transition-colors"
+            className="p-2 hover:bg-white/10 rounded-full transition-colors text-white"
           >
-            <ArrowLeft className="w-5 h-5 text-foreground" />
+            <ArrowLeft className="w-5 h-5" />
           </button>
-          <h1 className="text-lg font-black text-foreground">Apply for Credit</h1>
+          <h1 className="text-lg font-black text-white">Apply for Credit</h1>
           <div className="w-16" />
         </div>
       </div>

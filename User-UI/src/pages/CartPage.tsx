@@ -51,10 +51,10 @@ export default function CartPage() {
   }, []);
 
   const TopBar = () => (
-    <div className="md:hidden sticky top-0 z-10 bg-background border-b border-border px-4 py-3 flex items-center gap-3">
+    <div className="md:hidden sticky top-0 z-10 bg-[var(--kryros-header-navy)] border-b border-white/10 px-4 py-3 flex items-center gap-3 shadow-sm">
       <Link href={displayBasePath}>
-        <button className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-muted transition-colors">
-          <ChevronLeft className="w-5 h-5 text-foreground" />
+        <button className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors text-white">
+          <ChevronLeft className="w-5 h-5" />
         </button>
       </Link>
       <span className="flex items-center">
@@ -66,7 +66,7 @@ export default function CartPage() {
       </span>
       <div className="flex-1" />
       <Link href={displayBasePath}>
-        <span className="text-xs text-primary font-semibold hover:underline">Continue Shopping</span>
+        <span className="text-xs text-white font-semibold hover:underline">Continue Shopping</span>
       </Link>
     </div>
   );

@@ -76,15 +76,15 @@ export default function WholesaleCheckoutPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="sticky top-0 z-20 bg-background border-b border-border">
+      <div className="sticky top-0 z-20 bg-[var(--kryros-header-navy)] border-b border-white/10 shadow-sm">
         <div className="max-w-md mx-auto px-4 py-4 flex items-center justify-between">
           <button
             onClick={() => setLocation("/dashboard")}
-            className="flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors"
+            className="flex items-center gap-2 text-sm font-semibold text-white/70 hover:text-white transition-colors"
           >
             <ArrowLeft className="w-4 h-4" /> Back
           </button>
-          <h1 className="text-lg font-black text-foreground">Wholesale Application</h1>
+          <h1 className="text-lg font-black text-white">Wholesale Application</h1>
           <div className="w-16" />
         </div>
       </div>

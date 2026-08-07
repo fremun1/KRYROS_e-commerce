@@ -137,31 +137,31 @@ export default function AccountLayout({ children, showTopBar = true }: AccountLa
       <main className="flex-1 min-w-0 overflow-y-auto">
         {/* Top bar (optional) */}
         {showTopBar && (
-          <div className="sticky top-0 z-20 bg-background border-b border-border flex items-center justify-between px-4 md:px-6 py-3">
+          <div className="sticky top-0 z-20 bg-[var(--kryros-header-navy)] border-b border-white/10 flex items-center justify-between px-4 md:px-6 py-3 shadow-sm">
             <button
-              className="lg:hidden w-8 h-8 flex items-center justify-center rounded-xl hover:bg-muted transition-colors"
+              className="lg:hidden w-8 h-8 flex items-center justify-center rounded-xl hover:bg-white/10 transition-colors"
               onClick={() => setSidebarOpen(true)}
             >
-              <Menu className="w-5 h-5 text-foreground" />
+              <Menu className="w-5 h-5 text-white" />
             </button>
             <div className="hidden lg:block" />
 
             <div className="flex items-center gap-3">
               <Link href={displayBasePath}>
-                <button className="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-muted transition-colors">
-                  <Search style={{ width: 18, height: 18 }} className="text-foreground" />
+                <button className="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-white/10 transition-colors">
+                  <Search style={{ width: 18, height: 18 }} className="text-white" />
                 </button>
               </Link>
 
               <Link href="/wishlist">
-                <button className="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-muted transition-colors">
-                  <Heart style={{ width: 18, height: 18 }} className="text-foreground" />
+                <button className="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-white/10 transition-colors">
+                  <Heart style={{ width: 18, height: 18 }} className="text-white" />
                 </button>
               </Link>
 
               <Link href="/cart">
-                <button className="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-muted transition-colors">
-                  <ShoppingBag style={{ width: 18, height: 18 }} className="text-foreground" />
+                <button className="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-white/10 transition-colors">
+                  <ShoppingBag style={{ width: 18, height: 18 }} className="text-white" />
                 </button>
               </Link>
 
@@ -169,11 +169,11 @@ export default function AccountLayout({ children, showTopBar = true }: AccountLa
                 <button 
                   ref={bellRef}
                   onClick={() => setNotifOpen(!notifOpen)}
-                  className={`w-8 h-8 flex items-center justify-center rounded-xl hover:bg-muted transition-colors relative ${notifOpen ? 'bg-muted' : ''}`}
+                  className={`w-8 h-8 flex items-center justify-center rounded-xl hover:bg-white/10 transition-colors relative ${notifOpen ? 'bg-white/10' : ''}`}
                 >
-                  <Bell style={{ width: 18, height: 18 }} className="text-foreground" />
+                  <Bell style={{ width: 18, height: 18 }} className="text-white" />
                   {unreadCount > 0 && (
-                    <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-primary text-white text-[10px] font-bold flex items-center justify-center rounded-full border-2 border-background">
+                    <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-primary text-white text-[10px] font-bold flex items-center justify-center rounded-full border-2 border-[var(--kryros-header-navy)]">
                       {unreadCount > 9 ? '9+' : unreadCount}
                     </span>
                   )}
@@ -250,13 +250,13 @@ export default function AccountLayout({ children, showTopBar = true }: AccountLa
                     <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0 ring-2 ring-primary/30 text-white text-xs font-black">
                       {initials}
                     </div>
-                    <span className="hidden md:block text-sm font-semibold text-foreground max-w-[100px] truncate">{displayName}</span>
-                    <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+                    <span className="hidden md:block text-sm font-semibold text-white max-w-[100px] truncate">{displayName}</span>
+                    <ChevronDown className="w-3.5 h-3.5 text-white/70" />
                   </button>
                 </Link>
                 <button
                   onClick={handleLogout}
-                  className="p-1.5 rounded-lg hover:bg-kryros-error/10 text-muted-foreground hover:text-kryros-error transition-colors"
+                  className="p-1.5 rounded-lg hover:bg-white/10 text-white/70 hover:text-red-400 transition-colors"
                   title="Logout"
                 >
                   <LogOut className="w-4 h-4" />
