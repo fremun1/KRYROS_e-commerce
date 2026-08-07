@@ -4,7 +4,7 @@ import { inferPageContext, getScopedBrowsePath } from "@/lib/pageContext";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X, Home, ShoppingBag, Zap, Package, MapPin, Truck, Info, Phone, Shield, FileText, RefreshCw,
-  ChevronRight, Search, Grid2x2, Globe, DollarSign, ChevronDown, LogOut, User, Heart, LayoutDashboard
+  ChevronRight, Search, Grid2x2, Globe, DollarSign, ChevronDown, LogOut, User, Heart, LayoutDashboard, Smartphone
 } from "lucide-react";
 import { useCurrencyStore } from "@/store/currencyStore";
 import { useAuthStore } from "@/store/authStore";
@@ -338,6 +338,31 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                       </motion.div>
                     )}
                   </AnimatePresence>
+                </div>
+
+                {/* APP DOWNLOAD Section */}
+                <div className="border-b border-border/50">
+                  <a 
+                    href="/downloads/KRYROS_User_App.apk"
+                    download
+                    onClick={onClose}
+                    className="w-full flex items-center justify-between px-4 py-4 hover:bg-muted/50 transition-colors group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-[var(--kryros-header-navy)] flex items-center justify-center p-1.5 shadow-sm group-hover:scale-110 transition-transform">
+                        <img 
+                          src="/kryros-logo.png" 
+                          alt="" 
+                          className="w-full h-full object-contain brightness-0 invert" 
+                        />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-sm font-bold text-foreground uppercase tracking-tight">Download App</span>
+                        <span className="text-[10px] text-muted-foreground font-medium">Get the KRYROS Android APK</span>
+                      </div>
+                    </div>
+                    <Smartphone className="w-5 h-5 text-primary" />
+                  </a>
                 </div>
 
                 {/* INFORMATION Section */}
