@@ -96,8 +96,8 @@ function UsersContent() {
   const [form, setForm] = useState({ ...EMPTY_FORM });
   const [loading, setLoading] = useState(false);
 
-  const fp = (k: string) => (v: string) => setForm(f => ({ ...f, [k]: v }));
-  const fap = (k: string) => (v: string) => setActionForm(f => ({ ...f, [k]: v }));
+  const fp = (k: string) => (v: string) => setForm((f: typeof EMPTY_FORM) => ({ ...f, [k]: v }));
+  const fap = (k: string) => (v: string) => setActionForm((f: any) => ({ ...f, [k]: v }));
 
   const openAdd = () => { setForm({ ...EMPTY_FORM }); setAddOpen(true); };
   const openEdit = (row: Record<string, unknown>) => { const r = row as unknown as User; setForm({ name: r.name, email: r.email, role: r.role, status: r.status, password: '' }); setEditRow(r); };
