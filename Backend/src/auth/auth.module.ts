@@ -13,9 +13,7 @@ import { LocalStrategy } from './strategies/local.strategy';
 import { UsersModule } from '../users/users.module';
 import { PrismaModule } from '../prisma/prisma.module';
 import { CountriesModule } from '../countries/countries.module';
-import { EmailModule } from '../common/email/email.module';
 
-// Note: EmailModule is already imported above
 
 @Module({
   imports: [

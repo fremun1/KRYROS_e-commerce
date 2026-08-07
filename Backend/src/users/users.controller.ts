@@ -68,7 +68,7 @@ export class UsersController {
     // Allow Super Admin to update any user, Admins can only update themselves or regular users
     if (!isSuperAdmin && req.user.id !== id) {
       const targetUser = await this.usersService.findById(id);
-      if ([UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER].includes(targetUser.role)) {
+      if (([UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER] as any[]).includes(targetUser.role)) {
         throw new ForbiddenException('Admins can only update regular users, not other admins');
       }
     }

@@ -105,7 +105,7 @@ export class UsersManagementController {
     @Body('newRole') newRole: UserRole,
     @Request() req: AuthenticatedRequest,
   ) {
-    if (!newRole || ![UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER].includes(newRole)) {
+    if (!newRole || !([UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER] as any[]).includes(newRole)) {
       throw new BadRequestException('Invalid role for promotion');
     }
 
@@ -155,7 +155,7 @@ export class UsersManagementController {
     @Body('newRole') newRole: UserRole,
     @Request() req: AuthenticatedRequest,
   ) {
-    if (!newRole || ![UserRole.CUSTOMER, UserRole.WHOLESALER, UserRole.STAFF].includes(newRole)) {
+    if (!newRole || !([UserRole.CUSTOMER, UserRole.WHOLESALER, UserRole.STAFF] as any[]).includes(newRole)) {
       throw new BadRequestException('Invalid role for demotion');
     }
 
@@ -217,7 +217,7 @@ export class UsersManagementController {
     }
 
     // Admin can only delete regular Users, not other Admins
-    if (req.user.role === UserRole.ADMIN && [UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER].includes(user.role)) {
+    if (req.user.role === UserRole.ADMIN && ([UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER] as any[]).includes(user.role)) {
       throw new ForbiddenException('Admins can only delete regular users, not other admins');
     }
 

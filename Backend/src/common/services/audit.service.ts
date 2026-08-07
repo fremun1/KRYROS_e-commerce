@@ -29,7 +29,7 @@ export class AuditService {
           action: data.action,
           resource: data.resource,
           resourceId: data.resourceId,
-          changes: data.changes,
+          changes: data.changes as any,
           reason: data.reason,
           ipAddress: data.ipAddress,
           userAgent: data.userAgent,
