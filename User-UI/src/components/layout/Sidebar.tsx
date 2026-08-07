@@ -151,6 +151,31 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
             {/* Content - Unified Accordion Menu */}
             <div className="flex-1 overflow-y-auto">
               <div className="p-2">
+
+                {/* APP DOWNLOAD Section (Pinned at top) */}
+                <div className="border-b border-border/50 mb-1">
+                  <a 
+                    href="/downloads/KRYROS_User_App.apk"
+                    download
+                    onClick={onClose}
+                    className="w-full flex items-center justify-between px-4 py-4 bg-primary/[0.03] hover:bg-primary/[0.08] transition-colors group rounded-xl"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-[var(--kryros-header-navy)] flex items-center justify-center p-1.5 shadow-sm group-hover:scale-110 transition-transform">
+                        <img 
+                          src="/kryros-logo.png" 
+                          alt="" 
+                          className="w-full h-full object-contain brightness-0 invert" 
+                        />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-sm font-black text-primary uppercase tracking-tight">Download App</span>
+                        <span className="text-[10px] text-muted-foreground font-medium">Get KRYROS Android APK</span>
+                      </div>
+                    </div>
+                    <Smartphone className="w-5 h-5 text-primary" />
+                  </a>
+                </div>
                 
                 {/* MY ACCOUNT Section */}
                 <div className="border-b border-border/50 last:border-0">
@@ -340,30 +365,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                   </AnimatePresence>
                 </div>
 
-                {/* APP DOWNLOAD Section */}
-                <div className="border-b border-border/50">
-                  <a 
-                    href="/downloads/KRYROS_User_App.apk"
-                    download
-                    onClick={onClose}
-                    className="w-full flex items-center justify-between px-4 py-4 hover:bg-muted/50 transition-colors group"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-[var(--kryros-header-navy)] flex items-center justify-center p-1.5 shadow-sm group-hover:scale-110 transition-transform">
-                        <img 
-                          src="/kryros-logo.png" 
-                          alt="" 
-                          className="w-full h-full object-contain brightness-0 invert" 
-                        />
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-sm font-bold text-foreground uppercase tracking-tight">Download App</span>
-                        <span className="text-[10px] text-muted-foreground font-medium">Get the KRYROS Android APK</span>
-                      </div>
-                    </div>
-                    <Smartphone className="w-5 h-5 text-primary" />
-                  </a>
-                </div>
+
 
                 {/* INFORMATION Section */}
                 <div className="border-b border-border/50 last:border-0">
