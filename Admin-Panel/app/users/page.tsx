@@ -288,24 +288,58 @@ function UsersContent() {
     <div>
       <PageHeader title="Users & Roles" subtitle="Manage users and their permissions" icon={Users} onAdd={openAdd} addLabel="Add User" />
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '24px' }} className="stats-grid">
-        {[{ label: 'Total Users', val: String(data.length), color: 'var(--primary)' }, { label: 'Active', val: String(data.filter(u=>u.status==='Active').length), color: 'var(--primary)' }, { label: 'Inactive', val: String(data.filter(u=>u.status==='Inactive').length), color: 'var(--text-muted)' }, { label: 'Blocked', val: String(data.filter(u=>u.status==='Blocked').length), color: 'var(--danger)' }].map((s) => (
-          <div key={s.label} style={{ background: card, border: `1px solid ${border}`, borderRadius: '12px', padding: '16px' }}>
-            <div style={{ fontSize: '12px', color: textMuted, marginBottom: '6px' }}>{s.label}</div>
-            <div style={{ fontSize: '24px', fontWeight: 800, color: s.color }}>{s.val}</div>
+      <div style={{ 
+        display: 'grid', 
+        gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', 
+        gap: '12px', 
+        marginBottom: '24px' 
+      }} className="stats-grid">
+        {[
+          { label: 'Total Users', val: String(data.length), color: 'var(--primary)' }, 
+          { label: 'Active', val: String(data.filter(u=>u.status==='Active').length), color: 'var(--primary)' }, 
+          { label: 'Inactive', val: String(data.filter(u=>u.status==='Inactive').length), color: 'var(--text-muted)' }, 
+          { label: 'Blocked', val: String(data.filter(u=>u.status==='Blocked').length), color: 'var(--danger)' }
+        ].map((s) => (
+          <div key={s.label} style={{ 
+            background: card, 
+            border: `1px solid ${border}`, 
+            borderRadius: '12px', 
+            padding: '16px',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            minHeight: '100px'
+          }}>
+            <div style={{ fontSize: '12px', fontWeight: 600, color: textMuted, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{s.label}</div>
+            <div style={{ fontSize: '28px', fontWeight: 800, color: s.color, lineHeight: 1 }}>{s.val}</div>
           </div>
         ))}
       </div>
 
       <div style={{ background: card, border: `1px solid ${border}`, borderRadius: '12px', padding: '18px', marginBottom: '20px' }}>
         <div style={{ fontSize: '14px', fontWeight: 700, color: textMain, marginBottom: '14px' }}>Roles Overview</div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '12px' }} className="roles-grid">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '12px' }} className="roles-grid">
           {[
-            { name: 'Super Admin', permissions: 'Full Access', users: data.filter(u=>(u.role||'').toLowerCase().includes('super admin')).length, color: 'var(--danger)' },
-            { name: 'Admin', permissions: 'User Management', users: data.filter(u=>(u.role||'').toLowerCase().includes('admin') && !(u.role||'').toLowerCase().includes('super')).length, color: 'var(--gold)' },
-            { name: 'Manager', permissions: 'Inventory, Orders', users: data.filter(u=>(u.role||'').toLowerCase().includes('manager')).length, color: 'var(--link)' },
-            { name: 'Wholesale', permissions: 'Wholesale Orders', users: data.filter(u=>(u.role||'').toLowerCase().includes('wholesale')).length, color: 'var(--secondary)' },
-            { name: 'Customer', permissions: 'Place Orders', users: data.filter(u=>(u.role||'').toLowerCase().includes('customer')).length, color: 'var(--primary)' },
+            { name: 'Super Admin', permissions: 'Full Access', users: data.filter(u => {
+              const r = (u.role || '').toUpperCase().replace(/[\s_]+/g, '');
+              return r === 'SUPERADMIN';
+            }).length, color: 'var(--danger)' },
+            { name: 'Admin', permissions: 'User Management', users: data.filter(u => {
+              const r = (u.role || '').toUpperCase().replace(/[\s_]+/g, '');
+              return r === 'ADMIN';
+            }).length, color: 'var(--gold)' },
+            { name: 'Manager', permissions: 'Inventory, Orders', users: data.filter(u => {
+              const r = (u.role || '').toUpperCase().replace(/[\s_]+/g, '');
+              return r === 'MANAGER';
+            }).length, color: 'var(--link)' },
+            { name: 'Wholesale', permissions: 'Wholesale Orders', users: data.filter(u => {
+              const r = (u.role || '').toUpperCase().replace(/[\s_]+/g, '');
+              return r === 'WHOLESALE' || r === 'WHOLESALER';
+            }).length, color: 'var(--secondary)' },
+            { name: 'Customer', permissions: 'Place Orders', users: data.filter(u => {
+              const r = (u.role || '').toUpperCase().replace(/[\s_]+/g, '');
+              return r === 'CUSTOMER' || r === '';
+            }).length, color: 'var(--primary)' },
           ].map((r) => (
             <div key={r.name} style={{ background: surface, border: `1px solid ${border}`, borderRadius: '10px', padding: '14px', minWidth: 0 }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '6px', gap: '8px', flexWrap: 'wrap' }}>
