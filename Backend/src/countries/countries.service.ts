@@ -20,6 +20,12 @@ export class CountriesService implements OnModuleInit {
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
+  private readonly COUNTRIES_LIST_CACHE_KEY = '/api/countries';
+
+  private async invalidateCountriesCache() {
+    await this.cacheManager.del(this.COUNTRIES_LIST_CACHE_KEY);
+  }
+
   async onModuleInit() {
     try {
       // Seed default exchange rate config if not exists
@@ -208,6 +214,8 @@ export class CountriesService implements OnModuleInit {
             this.logger.log(`Updated rate for ${country.currencyCode}: ${newRate}`);
           }
         }
+
+        await this.invalidateCountriesCache();
         return { success: true, updated: updatedCount };
       } catch (dbError) {
         this.logger.error('Failed to save updated rates to database', dbError.message);
@@ -246,7 +254,7 @@ export class CountriesService implements OnModuleInit {
 
       if (softDeleted) {
         this.logger.log(`Restoring soft-deleted country: ${countryData.code}`);
-        return await this.prisma.country.update({
+        const restored = await this.prisma.country.update({
           where: { id: softDeleted.id },
           data: {
             ...countryData,
@@ -258,6 +266,9 @@ export class CountriesService implements OnModuleInit {
             },
           },
         });
+
+        await this.invalidateCountriesCache();
+        return restored;
       }
 
       // If autoRate is enabled, or rate is 1.0, fetch the initial rate from the API immediately
@@ -295,6 +306,8 @@ export class CountriesService implements OnModuleInit {
           data: { isDefault: false },
         });
       }
+
+      await this.invalidateCountriesCache();
 
       if (paymentMethods && paymentMethods.length > 0) {
         for (const pmData of paymentMethods) {
@@ -387,6 +400,8 @@ export class CountriesService implements OnModuleInit {
       data: { isDefault: true },
     });
 
+    await this.invalidateCountriesCache();
+
     return this.prisma.country.findUnique({
       where: { id: target.id },
       include: {
@@ -463,21 +478,27 @@ export class CountriesService implements OnModuleInit {
     
     // If updating payment methods, it's easier to handle them separately or use a more complex logic
     // For now, let's just update the country fields
-    return this.prisma.country.update({
+    const updated = await this.prisma.country.update({
       where: { id },
       data: countryData,
       include: {
         paymentMethods: true,
       },
     });
+
+    await this.invalidateCountriesCache();
+    return updated;
   }
 
   async remove(id: string) {
     // Soft delete — preserves states, shipping zones, and payment methods
-    return this.prisma.country.update({
+    const result = await this.prisma.country.update({
       where: { id },
       data: { status: false },
     });
+
+    await this.invalidateCountriesCache();
+    return result;
   }
 
   async addPaymentMethod(countryId: string, data: any) {
