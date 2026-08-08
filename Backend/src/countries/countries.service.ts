@@ -369,14 +369,16 @@ export class CountriesService implements OnModuleInit {
     return defaultCountry;
   }
 
-  async setDefaultCountry(code: string) {
-    const target = await this.prisma.country.findUnique({ where: { code } });
+  async setDefaultCountry(currencyCode: string) {
+    const target = await this.prisma.country.findFirst({
+      where: { currencyCode: currencyCode.toUpperCase(), status: true },
+    });
     if (!target) {
-      throw new BadRequestException(`Country with code ${code} not found`);
+      throw new BadRequestException(`Country with currency code ${currencyCode} not found`);
     }
 
     await this.prisma.country.updateMany({
-      where: { isDefault: true },
+      where: { id: { not: target.id }, isDefault: true },
       data: { isDefault: false },
     });
 

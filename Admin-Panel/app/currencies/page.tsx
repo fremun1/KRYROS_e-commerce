@@ -237,7 +237,7 @@ function CurrenciesContent() {
   const handleSetDefault = async (code: string) => {
     setSettingDefault(true);
     try {
-      await api.post('/api/countries/default', { code });
+      await api.post('/api/countries/default', { currencyCode: code });
       toast.success(`Default currency set to ${code}`);
       fetchData();
     } catch (e: any) {

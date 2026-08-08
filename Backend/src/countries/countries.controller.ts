@@ -115,7 +115,7 @@ export class CountriesController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Set default currency/country (Admin only)' })
   setDefault(@Body() setDefaultCountryDto: SetDefaultCountryDto) {
-    return this.countriesService.setDefaultCountry(setDefaultCountryDto.code);
+    return this.countriesService.setDefaultCountry(setDefaultCountryDto.currencyCode);
   }
 
   @Post('refresh-rates')
