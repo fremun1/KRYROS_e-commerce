@@ -620,6 +620,12 @@ export class PaymentsService {
     });
   }
 
+  async deleteDirectPayment(id: string) {
+    return this.prisma.directPayment.delete({
+      where: { id },
+    });
+  }
+
   async findDirectById(id: string) {
     return this.prisma.directPayment.findUnique({
       where: { id },

@@ -9,7 +9,7 @@ import {
   ExternalLink, Wallet,
 } from 'lucide-react';
 import {
-  getDirectPayments, updateDirectPayment, getPaymentLinks, createPaymentLink, deletePaymentLink,
+  getDirectPayments, updateDirectPayment, deleteDirectPayment, getPaymentLinks, createPaymentLink, deletePaymentLink,
   updatePaymentLink,
   getPaymentMethods, updatePaymentMethod, deletePaymentMethod, reorderPaymentMethods,
   createPaymentMethod, createPaymentProvider, updatePaymentProvider, deletePaymentProvider,
@@ -347,6 +347,17 @@ function WalletPaymentsContent() {
       countryId: (method as any)?.countryId || null,
     });
     setShowMethodModal(true);
+  }, []);
+
+  const handleDeleteTx = useCallback(async (id: string) => {
+    if (!window.confirm('Are you sure you want to delete this transaction record?')) return;
+    try {
+      await deleteDirectPayment(id);
+      setTxData(prev => prev.filter(t => t.id !== id));
+      toast.success('Transaction deleted');
+    } catch {
+      toast.error('Failed to delete transaction');
+    }
   }, []);
 
   const saveMethod = useCallback(async () => {
@@ -786,7 +797,15 @@ function WalletPaymentsContent() {
                             <div style={{ fontWeight: 900, color: T.text, fontSize: '0.9rem', flexShrink: 0 }}>{fmtMoney(t.amount, t.currency)}</div>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem' }}>
-                            <span style={pillStyle('var(--secondary)', 'rgba(129,140,248,0.1)')}>{t.method}</span>
+                            <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                              <span style={pillStyle('var(--secondary)', 'rgba(129,140,248,0.1)')}>{t.method}</span>
+                              <button 
+                                onClick={(e) => { e.stopPropagation(); handleDeleteTx(t.id); }} 
+                                style={{ ...actionButton('danger'), padding: '4px', height: '24px', width: '24px', borderRadius: '6px' }}
+                              >
+                                <Trash2 size={11} />
+                              </button>
+                            </div>
                             <span style={{ color: T.muted, fontSize: '0.72rem', whiteSpace: 'nowrap' }}>{fmtDate(t.date)} {fmtTime(t.date)}</span>
                           </div>
                           {t.linkName && <div style={{ fontSize: '0.72rem', color: T.muted }}>Via: {t.linkName}</div>}
@@ -838,7 +857,18 @@ function WalletPaymentsContent() {
                                   <span style={pillStyle(sc.color, sc.bg)}>{sc.label}</span>
                                 </td>
                                 <td style={tableCellMuted(T)}>{t.linkName || 'Direct'}</td>
-                                <td style={{ ...tableCell(T), textAlign: 'right' }}><ChevronRight size={14} color={T.muted} /></td>
+                                <td style={{ ...tableCell(T), textAlign: 'right' }}>
+                                  <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', alignItems: 'center' }}>
+                                    <button 
+                                      onClick={(e) => { e.stopPropagation(); handleDeleteTx(t.id); }} 
+                                      style={{ ...actionButton('danger'), padding: '4px', height: '28px', width: '28px' }}
+                                      title="Delete transaction"
+                                    >
+                                      <Trash2 size={13} />
+                                    </button>
+                                    <ChevronRight size={14} color={T.muted} />
+                                  </div>
+                                </td>
                               </tr>
                             );
                           })}

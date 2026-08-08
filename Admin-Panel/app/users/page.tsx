@@ -2,10 +2,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import AdminShell from '@/components/admin/admin-shell';
-import DataTable, { Column } from '@/components/admin/data-table';
+import DataTable, { Column, ActionBtn } from '@/components/admin/data-table';
 import PageHeader from '@/components/admin/page-header';
 import { Modal, ConfirmDialog, FormField, ModalFooter } from '@/components/admin/modal';
-import { Users } from 'lucide-react';
+import { Users, ArrowUp, ArrowDown, ShieldAlert, UserMinus, Ban, MoreHorizontal } from 'lucide-react';
 import { createUser, updateUser, deleteUser, getUsers } from '@/lib/api';
 import { useAuth } from '@/contexts/auth-context';
 import toast from 'react-hot-toast';
@@ -366,13 +366,77 @@ function UsersContent() {
           <style>{`@keyframes skeletonPulse { 0%,100%{opacity:1} 50%{opacity:0.35} }`}</style>
         </div>
       ) : (
-      <DataTable columns={columns} data={data as unknown as Record<string, unknown>[]} searchPlaceholder="Search users..." onEdit={openEdit} onDelete={openDelete} onView={openView} />
+      <DataTable 
+        columns={columns} 
+        data={data as unknown as Record<string, unknown>[]} 
+        searchPlaceholder="Search users..." 
+        onEdit={openEdit} 
+        onDelete={openDelete} 
+        onView={openView}
+        renderActions={(row) => {
+          if (!isSuperAdmin) return null;
+          return (
+            <>
+              <ActionBtn icon={ArrowUp} color="var(--success)" onClick={() => openPromote(row)} />
+              <ActionBtn icon={ArrowDown} color="var(--gold)" onClick={() => openDemote(row)} />
+              <ActionBtn icon={UserMinus} color="var(--secondary)" onClick={() => openSuspend(row)} />
+              <ActionBtn icon={ShieldAlert} color="var(--danger)" onClick={() => openRestrict(row)} />
+              <ActionBtn icon={Ban} color="var(--danger)" onClick={() => openBlock(row)} />
+            </>
+          );
+        }}
+      />
       )}
 
       {/* Add User Modal */}
       <Modal open={addOpen} onClose={() => setAddOpen(false)} title="Add New User">
         {modalFields}
         <ModalFooter onClose={() => setAddOpen(false)} onSubmit={handleAdd} loading={loading} submitLabel="Add User" border={border} textMain={textMain} />
+      </Modal>
+
+      {/* Edit User Modal */}
+      <Modal open={!!editRow} onClose={() => setEditRow(null)} title="Edit User">
+        {modalFields}
+        <ModalFooter onClose={() => setEditRow(null)} onSubmit={async () => {
+          if (!editRow) return;
+          setLoading(true);
+          try {
+            const roleMap: Record<string, string> = { 'Customer': 'CUSTOMER', 'Wholesale': 'WHOLESALE', 'Manager': 'MANAGER', 'Admin': 'ADMIN', 'Super Admin': 'SUPER_ADMIN', 'Staff': 'STAFF' };
+            await updateUser(editRow.id, {
+              role: roleMap[form.role] || 'CUSTOMER',
+              status: form.status.toUpperCase(),
+            });
+            setData(d => d.map(u => u.id === editRow.id ? { ...u, ...form } : u));
+            toast.success('User updated');
+            setEditRow(null);
+          } catch { toast.error('Failed to update user'); }
+          setLoading(false);
+        }} loading={loading} submitLabel="Save Changes" border={border} textMain={textMain} />
+      </Modal>
+
+      {/* View User Modal */}
+      <Modal open={!!viewRow} onClose={() => setViewRow(null)} title="User Details">
+        {viewRow && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', background: surface, borderRadius: '8px' }}>
+              <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'rgba(192,21,27,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', fontWeight: 700, color: 'var(--primary)' }}>
+                {viewRow.name.charAt(0)}
+              </div>
+              <div>
+                <div style={{ fontSize: '16px', fontWeight: 700, color: textMain }}>{viewRow.name}</div>
+                <div style={{ fontSize: '13px', color: textMuted }}>{viewRow.email}</div>
+              </div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+              <div><div style={{ fontSize: '11px', color: textMuted }}>ID</div><div style={{ fontWeight: 600 }}>{viewRow.displayId}</div></div>
+              <div><div style={{ fontSize: '11px', color: textMuted }}>Joined</div><div style={{ fontWeight: 600 }}>{viewRow.joined}</div></div>
+              <div><div style={{ fontSize: '11px', color: textMuted }}>Role</div><div>{roleBadge(viewRow.role)}</div></div>
+              <div><div style={{ fontSize: '11px', color: textMuted }}>Status</div><div>{statusBadge(viewRow.status)}</div></div>
+              <div><div style={{ fontSize: '11px', color: textMuted }}>Orders</div><div style={{ fontWeight: 600 }}>{viewRow.orders}</div></div>
+            </div>
+          </div>
+        )}
+        <ModalFooter onClose={() => setViewRow(null)} border={border} textMain={textMain} />
       </Modal>
 
       {/* Action Modals for Super Admin */}

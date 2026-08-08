@@ -36,10 +36,11 @@ interface DataTableProps {
   pageSize?: number;
   filterNode?: React.ReactNode;
   actionNode?: React.ReactNode;
+  renderActions?: (row: Record<string, unknown>) => React.ReactNode;
 }
 
 export default function DataTable({
-  columns, data, searchPlaceholder = 'Search...', onEdit, onDelete, onView, pageSize = 10, filterNode, actionNode
+  columns, data, searchPlaceholder = 'Search...', onEdit, onDelete, onView, pageSize = 10, filterNode, actionNode, renderActions
 }: DataTableProps) {
   const card    = 'var(--card)';
   const border  = 'var(--border)';
@@ -57,7 +58,7 @@ export default function DataTable({
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
 
-  const hasActions = onEdit || onDelete || onView;
+  const hasActions = onEdit || onDelete || onView || !!renderActions;
 
   return (
     <div style={{ background: card, border: `1px solid ${border}`, borderRadius: '12px', overflow: 'hidden' }}>
@@ -108,9 +109,10 @@ export default function DataTable({
                         : String(row[col.key] ?? '-')}
                   </td>
                 ))}
-                {hasActions && (
+                {(hasActions || renderActions) && (
                   <td style={{ padding: '12px 16px', textAlign: 'right' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '4px' }}>
+                      {renderActions && renderActions(row)}
                       {onView && <ActionBtn icon={Eye} color="var(--secondary)" onClick={() => onView(row)} />}
                       {onEdit && <ActionBtn icon={Edit} color="var(--btn-primary)" onClick={() => onEdit(row)} />}
                       {onDelete && <ActionBtn icon={Trash2} color="var(--danger)" onClick={() => onDelete(row)} />}
@@ -150,7 +152,7 @@ export default function DataTable({
   );
 }
 
-function ActionBtn({ icon: Icon, color, onClick }: { icon: React.ComponentType<{size?: number; color?: string}>, color: string, onClick: () => void }) {
+export function ActionBtn({ icon: Icon, color, onClick }: { icon: React.ComponentType<{size?: number; color?: string}>, color: string, onClick: () => void }) {
   return (
     <button onClick={onClick} style={{
       width: '30px', height: '30px', borderRadius: '7px',

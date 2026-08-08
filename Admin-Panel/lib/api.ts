@@ -143,7 +143,7 @@ export const getUsers = (params?: Record<string, unknown>) =>
 export const getUser = (id: string) =>
   api.get(`/api/users/${id}`);
 export const createUser = (data: Record<string, unknown>) =>
-  api.post("/api/users", data);
+  api.post("/api/admin/users", data);
 export const updateUser = (id: string, data: Record<string, unknown>) =>
   api.put(`/api/users/${id}`, data);
 export const deleteUser = (id: string) =>
@@ -355,6 +355,8 @@ export const getDirectPayments = (params?: Record<string, unknown>) =>
   api.get("/api/payments/direct-all", { params });
 export const updateDirectPayment = (id: string, data: Record<string, unknown>) =>
   api.patch(`/api/payments/direct-status/${id}`, data);
+export const deleteDirectPayment = (id: string) =>
+  api.delete(`/api/payments/direct/${id}`);
 
 
 // ── Payment Config ──────────────────────────────────────────────────────────
