@@ -95,24 +95,24 @@ export default function BrandsPage() {
     setForm(p => ({ ...p, [k]: v, ...(k === 'name' && !editRow ? { slug: toSlug(v) } : {}) }));
 
   const COLS: Column[] = [
-    { key: 'name', label: 'Brand Name', render: (_v, row) => {
+    { key: 'name', label: 'Brand Name', width: '220px', render: (_v, row) => {
       const r = row as any;
       return (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: '180px' }}>
           <div style={{ width: '32px', height: '32px', background: surface, border: `1px solid ${border}`, borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <Award size={14} color={accent} />
           </div>
-          <div>
-            <div style={{ fontWeight: 600, fontSize: '13px', color: textMain }}>{r.name}</div>
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontWeight: 600, fontSize: '13px', color: textMain, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.name}</div>
             <div style={{ fontSize: '11px', color: textMuted }}>/{r.slug}</div>
           </div>
         </div>
       );
     }},
-    { key: 'logo', label: 'Logo', render: (v, row) => {
+    { key: 'logo', label: 'Logo', width: '100px', render: (v, row) => {
       const r = row as Brand;
       return r.logo ? (
-        <div style={{ width: '56px', height: '36px', borderRadius: '8px', border: `1px solid ${border}`, background: 'var(--card)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '4px' }}>
+        <div style={{ width: '48px', height: '32px', borderRadius: '6px', border: `1px solid ${border}`, background: 'var(--card)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2px' }}>
           <img
             src={r.logo}
             alt={`${r.name} logo`}
@@ -120,18 +120,18 @@ export default function BrandsPage() {
           />
         </div>
       ) : (
-        <span style={{ color: textMuted, fontSize: '12px' }}>No logo</span>
+        <span style={{ color: textMuted, fontSize: '12px' }}>—</span>
       );
     }},
-    { key: 'products', label: 'Products', render: (v) => (
+    { key: 'products', label: 'Products', width: '90px', render: (v) => (
       <span style={{ background: surface, color: accent, fontWeight: 700, fontSize: '12px', padding: '2px 10px', borderRadius: '20px' }}>{String(v ?? 0)}</span>
     )},
-    { key: 'country', label: 'Country', render: (v) => <span style={{ color: textMuted, fontSize: '12px' }}>{String(v || '—')}</span> },
-    { key: 'status', label: 'Status', render: (v) => {
+    { key: 'country', label: 'Country', width: '120px', render: (v) => <span style={{ color: textMuted, fontSize: '12px' }}>{String(v || '—')}</span> },
+    { key: 'status', label: 'Status', width: '100px', render: (v) => {
       const active = v === 'Active';
       return <span style={{ background: active ? 'rgba(22,163,74,0.15)' : 'rgba(214,48,49,0.15)', color: active ? 'var(--success)' : 'var(--danger)', fontWeight: 600, fontSize: '11px', padding: '2px 10px', borderRadius: '20px' }}>{String(v)}</span>;
     }},
-    { key: 'slug', label: 'Shop Anchor', render: (v) => (
+    { key: 'slug', label: 'Anchor', width: '100px', render: (v) => (
       <span style={{ fontFamily: 'monospace', fontSize: '11px', color: accent, background: surface, padding: '2px 8px', borderRadius: '6px' }}>#{String(v)}</span>
     )},
   ];
