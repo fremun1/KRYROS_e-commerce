@@ -1,10 +1,10 @@
 'use client';
 import AdminShell from '@/components/admin/admin-shell';
 import PageHeader from '@/components/admin/page-header';
-import { Settings, Store, Bell, Shield, Globe, CreditCard, Palette, Save, Mail, MessageSquare, Smartphone, Send, CheckCircle, AlertCircle, Clock, KeyRound, Lock, Unlock, RefreshCw, Copy } from 'lucide-react';
+import { Settings, Store, Bell, Shield, CreditCard, Palette, Save, Send, CheckCircle, RefreshCw } from 'lucide-react';
 import api from '@/lib/api';
 import { useState, useEffect } from 'react';
-import { getCountries, getSettings, updateSettings } from '@/lib/api';
+import { getSettings, updateSettings } from '@/lib/api';
 import toast from 'react-hot-toast';
 
 type Tab = 'general'|'store'|'notifications'|'security'|'payments'|'appearance';
@@ -28,14 +28,12 @@ function SettingsContent() {
   const [storeName, setStoreName] = useState('Kryros Mobile');
   const [storeEmail, setStoreEmail] = useState(process.env.NEXT_PUBLIC_STORE_EMAIL || 'info@kryros.com');
   const [storePhone, setStorePhone] = useState('+260 97X XXX XXX');
-  const [currency, setCurrency] = useState('USD');
   const [timezone, setTimezone] = useState('Africa/Lusaka');
   const [emailNotif, setEmailNotif] = useState(true);
   const [pushNotif, setPushNotif] = useState(true);
   const [orderNotif, setOrderNotif] = useState(true);
   const [processingFeeRate, setProcessingFeeRate] = useState('10');
   const [whatsappNumber, setWhatsappNumber] = useState('');
-  const [currencyOptions, setCurrencyOptions] = useState<string[]>(['USD']);
   
   // ── 2FA state ──────────────────────────────────────────────────────────────
   type TwoFAStep = 'loading' | 'disabled' | 'setup' | 'enabled' | 'disabling';
@@ -71,7 +69,6 @@ function SettingsContent() {
       if (sMap.store_name) setStoreName(sMap.store_name);
       if (sMap.store_email) setStoreEmail(sMap.store_email);
       if (sMap.store_phone) setStorePhone(sMap.store_phone);
-      if (sMap.currency) setCurrency(sMap.currency);
       if (sMap.timezone) setTimezone(sMap.timezone);
       if (sMap.email_notifications) setEmailNotif(sMap.email_notifications === 'true');
       if (sMap.push_notifications) setPushNotif(sMap.push_notifications === 'true');
@@ -92,25 +89,6 @@ function SettingsContent() {
   }, []);
 
   useEffect(() => {
-    getCountries()
-      .then((r: any) => {
-        const raw: any[] = Array.isArray(r.data?.data) ? r.data.data : Array.isArray(r.data) ? r.data : [];
-        const uniqueCodes = Array.from(
-          new Set(
-            raw
-              .map((country: any) => country.currencyCode || country.currency)
-              .filter(Boolean)
-          )
-        );
-        if (uniqueCodes.length > 0) {
-          setCurrencyOptions(uniqueCodes);
-          setCurrency((current) => (uniqueCodes.includes(current) ? current : uniqueCodes[0]));
-        }
-      })
-      .catch(() => {});
-  }, []);
-
-  useEffect(() => {
     api.get('/api/auth/2fa/status').then((r: any) => {
       setTwoFAStep(r.data?.enabled ? 'enabled' : 'disabled');
     }).catch(() => { setTwoFAStep('disabled'); });
@@ -123,7 +101,6 @@ function SettingsContent() {
         store_name: storeName,
         store_email: storeEmail,
         store_phone: storePhone,
-        currency: currency,
         timezone: timezone,
         email_notifications: String(emailNotif),
         push_notifications: String(pushNotif),
@@ -257,14 +234,6 @@ function SettingsContent() {
             <Field label="Store Email"><input style={inputStyle} value={storeEmail} onChange={e=>setStoreEmail(e.target.value)} /></Field>
             <Field label="Store Phone Number"><input style={inputStyle} value={storePhone} onChange={e=>setStorePhone(e.target.value)} /></Field>
             <Field label="WhatsApp Number (Payment)"><input style={inputStyle} value={whatsappNumber} onChange={e=>setWhatsappNumber(e.target.value)} placeholder="e.g. 260969597029" /></Field>
-            <Field label="Default Currency">
-              <select style={inputStyle} value={currency} onChange={e=>setCurrency(e.target.value)}>
-                {currencyOptions.map(c=><option key={c}>{c}</option>)}
-              </select>
-              <div style={{ fontSize:'12px', color:textMuted, marginTop:'6px' }}>
-                Currency code, symbol, and symbol position are managed from the `Currencies` and `Countries & Currencies` pages.
-              </div>
-            </Field>
             <Field label="Timezone">
               <select style={inputStyle} value={timezone} onChange={e=>setTimezone(e.target.value)}>
                 {['Africa/Lusaka','Africa/Nairobi','Africa/Johannesburg','Europe/London','America/New_York'].map(t=><option key={t}>{t}</option>)}

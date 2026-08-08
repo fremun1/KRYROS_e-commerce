@@ -4,7 +4,7 @@ import AdminShell from '@/components/admin/admin-shell';
 import DataTable, { Column } from '@/components/admin/data-table';
 import PageHeader from '@/components/admin/page-header';
 import { Modal, FormField, ModalFooter } from '@/components/admin/modal';
-import { DollarSign } from 'lucide-react';
+import { DollarSign, Star } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { createCountry, getCountries, updateCountry, api } from '@/lib/api';
 
@@ -17,6 +17,7 @@ type CurrencyRow = {
   autoRate: boolean;
   countries: string;
   status: string;
+  isDefault: boolean;
 };
 
 const EMPTY_ADD_FORM = {
@@ -40,6 +41,8 @@ function CurrenciesContent() {
 
   const [currencies, setCurrencies] = useState<CurrencyRow[]>([]);
   const [loading, setLoading] = useState(false);
+  const [defaultCurrencyCode, setDefaultCurrencyCode] = useState<string>('USD');
+  const [settingDefault, setSettingDefault] = useState(false);
 
   // For edit modal — we need the raw countries to patch the right one
   const [rawCountries, setRawCountries] = useState<any[]>([]);
@@ -64,6 +67,11 @@ function CurrenciesContent() {
       const raw: any[] = Array.isArray(r.data?.data) ? r.data.data : Array.isArray(r.data) ? r.data : [];
       setRawCountries(raw);
 
+      const defaultCountry = raw.find((c: any) => c.isDefault === true);
+      if (defaultCountry) {
+        setDefaultCurrencyCode(defaultCountry.currencyCode || defaultCountry.currency || 'USD');
+      }
+
       // Build one currency row per unique currency code
       const seen = new Set<string>();
       const list: CurrencyRow[] = [];
@@ -71,21 +79,22 @@ function CurrenciesContent() {
         const code = c.currencyCode || c.currency || '';
         if (!code) return;
         if (seen.has(code)) {
-          // Add this country name to the existing entry
           const existing = list.find(x => x.code === code);
           if (existing) existing.countries += `, ${c.name}`;
           return;
         }
         seen.add(code);
+        const isDefault = c.isDefault === true;
         list.push({
           code,
-          name: code, // currency name = code for now (ZMW, USD, ZWL)
+          name: code,
           symbol: c.currencySymbol || c.symbol || '',
           symbolPosition: c.symbolPosition || 'BEFORE',
           rate: Number(c.exchangeRate || c.rate || 1),
           autoRate: c.autoRate !== false,
           countries: c.name || '',
           status: Number(c.exchangeRate || c.rate || 1) === 1 ? 'Base' : 'Active',
+          isDefault,
         });
       });
       setCurrencies(list);
@@ -218,12 +227,24 @@ function CurrenciesContent() {
   const handleRefreshAll = async () => {
     setLoading(true);
     try {
-      // Enable auto-rate on all countries — backend will update rates on next cron
       await Promise.all(rawCountries.map((c: any) => updateCountry(c.id, { autoRate: true })));
       toast.success('Auto-rate enabled for all countries. Rates will refresh shortly.');
       fetchData();
     } catch { toast.error('Failed to enable auto-rate'); }
     setLoading(false);
+  };
+
+  const handleSetDefault = async (code: string) => {
+    setSettingDefault(true);
+    try {
+      await api.post('/api/countries/default', { code });
+      toast.success(`Default currency set to ${code}`);
+      fetchData();
+    } catch (e: any) {
+      toast.error(e?.response?.data?.message || 'Failed to set default currency');
+    } finally {
+      setSettingDefault(false);
+    }
   };
 
   const currencyColumns: Column[] = [
@@ -244,6 +265,26 @@ function CurrenciesContent() {
     },
     { key: 'symbolPosition', label: 'Position', render: (v) => <span style={{ color: textMuted, fontSize: '12px' }}>{String(v)}</span>, width: '90px' },
     { key: 'countries', label: 'Used By', render: (v) => <span style={{ color: textMuted, fontSize: '12px' }}>{String(v)}</span> },
+    { key: 'isDefault', label: 'Default', render: (v, row) => {
+        const r = row as unknown as CurrencyRow;
+        if (r.isDefault) {
+          return (
+            <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 600, background: 'rgba(246,176,30,0.12)', color: 'var(--gold)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+              <Star size={12} fill="var(--gold)" stroke="var(--gold)" /> Default
+            </span>
+          );
+        }
+        return (
+          <button
+            onClick={() => handleSetDefault(r.code)}
+            disabled={settingDefault}
+            style={{ padding: '4px 12px', borderRadius: '20px', fontSize: '11px', fontWeight: 600, background: 'transparent', color: 'var(--primary)', border: '1px solid var(--primary)', cursor: settingDefault ? 'not-allowed' : 'pointer', opacity: settingDefault ? 0.6 : 1 }}
+          >
+            Set as Default
+          </button>
+        );
+      }
+    },
     { key: 'status', label: 'Status', render: (v) => (
         <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 600, background: v === 'Base' ? 'rgba(246,176,30,0.12)' : 'rgba(192,21,27,0.10)', color: v === 'Base' ? 'var(--gold)' : 'var(--primary)' }}>
           {String(v)}
@@ -264,6 +305,39 @@ function CurrenciesContent() {
         }}
         addLabel="Add Currency"
       />
+
+      {/* Default Currency Selector */}
+      <div style={{ marginBottom: '16px', padding: '16px 20px', background: 'rgba(246,176,30,0.06)', border: '1px solid rgba(246,176,30,0.2)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'rgba(246,176,30,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Star size={20} color="var(--gold)" fill="var(--gold)" />
+          </div>
+          <div>
+            <div style={{ fontSize: '14px', fontWeight: 700, color: textMain }}>Default Currency</div>
+            <div style={{ fontSize: '12px', color: textMuted, marginTop: '2px' }}>
+              This currency is shown to visitors when geolocation fails or their country is not configured. Currently set to <b style={{ color: 'var(--gold)' }}>{defaultCurrencyCode}</b>.
+            </div>
+          </div>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <select
+            value={defaultCurrencyCode}
+            onChange={(e) => setDefaultCurrencyCode(e.target.value)}
+            style={{ padding: '8px 12px', borderRadius: '8px', background: surface, border: `1px solid ${border}`, color: textMain, fontSize: '13px', fontWeight: 600, cursor: 'pointer', outline: 'none' }}
+          >
+            {currencies.map((c) => (
+              <option key={c.code} value={c.code}>{c.code} — {c.symbol}</option>
+            ))}
+          </select>
+          <button
+            onClick={() => handleSetDefault(defaultCurrencyCode)}
+            disabled={settingDefault}
+            style={{ padding: '8px 20px', borderRadius: '8px', background: 'var(--gold)', color: '#000', border: 'none', fontSize: '13px', fontWeight: 700, cursor: settingDefault ? 'not-allowed' : 'pointer', whiteSpace: 'nowrap', opacity: settingDefault ? 0.7 : 1 }}
+          >
+            {settingDefault ? 'Saving...' : 'Set as Default'}
+          </button>
+        </div>
+      </div>
 
       {/* Info banner */}
       <div style={{ marginBottom: '16px', padding: '12px 16px', background: 'rgba(31,168,154,0.06)', border: '1px solid rgba(192,21,27,0.15)', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>

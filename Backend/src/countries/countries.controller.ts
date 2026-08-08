@@ -9,6 +9,7 @@ import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { UserRole } from '@prisma/client';
 import { AddPaymentMethodDto, UpdateCountryPaymentMethodDto } from './dto/add-payment-method.dto';
+import { SetDefaultCountryDto } from './dto/set-default-country.dto';
 import { GeolocationService } from '../common/services/geolocation.service';
 
 @ApiTags('Countries')
@@ -43,27 +44,46 @@ export class CountriesController {
     const geoData = await this.geolocationService.detectCountryByIp(clientIp);
     
     if (!geoData) {
-      // Return default (USD) if geolocation fails
-      const defaultCountry = await this.countriesService.findByCode('US');
+      const defaultCountry = await this.countriesService.getDefaultCountry();
+      if (!defaultCountry) {
+        const fallback = await this.countriesService.findByCode('US');
+        return {
+          success: true,
+          detected: false,
+          reason: 'Geolocation failed, returning fallback USD',
+          country: fallback,
+          clientIp,
+        };
+      }
       return {
         success: true,
         detected: false,
-        reason: 'Geolocation failed, returning default',
+        reason: 'Geolocation failed, returning default currency',
         country: defaultCountry,
         clientIp,
       };
     }
 
-    // Find country by code
     const country = await this.countriesService.findByCode(geoData.countryCode);
     
     if (!country) {
-      // Country not in system, return default
-      const defaultCountry = await this.countriesService.findByCode('US');
+      const defaultCountry = await this.countriesService.getDefaultCountry();
+      if (!defaultCountry) {
+        const fallback = await this.countriesService.findByCode('US');
+        return {
+          success: true,
+          detected: true,
+          reason: `Country ${geoData.countryCode} not configured in system, returning fallback USD`,
+          detectedCountryCode: geoData.countryCode,
+          country: fallback,
+          clientIp,
+          geoData,
+        };
+      }
       return {
         success: true,
         detected: true,
-        reason: `Country ${geoData.countryCode} not configured in system`,
+        reason: `Country ${geoData.countryCode} not configured in system, returning default currency`,
         detectedCountryCode: geoData.countryCode,
         country: defaultCountry,
         clientIp,
@@ -87,6 +107,15 @@ export class CountriesController {
   @ApiOperation({ summary: 'Seed default countries (Super Admin only)' })
   seed() {
     return this.countriesService.seedDefaults();
+  }
+
+  @Post('default')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Set default currency/country (Admin only)' })
+  setDefault(@Body() setDefaultCountryDto: SetDefaultCountryDto) {
+    return this.countriesService.setDefaultCountry(setDefaultCountryDto.code);
   }
 
   @Post('refresh-rates')

@@ -284,6 +284,8 @@ export const updateCountry = (id: string, data: Record<string, unknown>) =>
   api.patch(`/api/countries/${id}`, data);
 export const createCountry = (data: Record<string, unknown>) =>
   api.post("/api/countries", data);
+export const setDefaultCountry = (code: string) =>
+  api.post("/api/countries/default", { code });
 
 // ── Credit ────────────────────────────────────────────────
 export const getCreditAccounts = (params?: Record<string, unknown>) =>

@@ -55,6 +55,10 @@ export class CountriesService implements OnModuleInit {
 
   async seedDefaults() {
     try {
+      const existingDefault = await this.prisma.country.findFirst({
+        where: { isDefault: true },
+      });
+      
       const usd = await this.prisma.country.findUnique({ where: { code: 'US' } });
       if (!usd) {
         await this.prisma.country.create({
@@ -66,7 +70,7 @@ export class CountriesService implements OnModuleInit {
             symbolPosition: SymbolPosition.BEFORE,
             exchangeRate: 1.0,
             autoRate: false,
-            isDefault: true,
+            isDefault: !existingDefault,
             flag: '🇺🇸',
           },
         });
@@ -285,6 +289,13 @@ export class CountriesService implements OnModuleInit {
         },
       });
 
+      if (countryData.isDefault) {
+        await this.prisma.country.updateMany({
+          where: { id: { not: country.id }, isDefault: true },
+          data: { isDefault: false },
+        });
+      }
+
       if (paymentMethods && paymentMethods.length > 0) {
         for (const pmData of paymentMethods) {
           const pm = await this.prisma.paymentMethod.upsert({
@@ -338,6 +349,44 @@ export class CountriesService implements OnModuleInit {
   async findByCode(code: string) {
     return this.prisma.country.findUnique({
       where: { code },
+      include: {
+        paymentMethods: {
+          where: { isActive: true },
+        },
+      },
+    });
+  }
+
+  async getDefaultCountry() {
+    const defaultCountry = await this.prisma.country.findFirst({
+      where: { isDefault: true, status: true },
+      include: {
+        paymentMethods: {
+          where: { isActive: true },
+        },
+      },
+    });
+    return defaultCountry;
+  }
+
+  async setDefaultCountry(code: string) {
+    const target = await this.prisma.country.findUnique({ where: { code } });
+    if (!target) {
+      throw new BadRequestException(`Country with code ${code} not found`);
+    }
+
+    await this.prisma.country.updateMany({
+      where: { isDefault: true },
+      data: { isDefault: false },
+    });
+
+    await this.prisma.country.update({
+      where: { id: target.id },
+      data: { isDefault: true },
+    });
+
+    return this.prisma.country.findUnique({
+      where: { id: target.id },
       include: {
         paymentMethods: {
           where: { isActive: true },
@@ -402,6 +451,13 @@ export class CountriesService implements OnModuleInit {
   // ── Country Management ────────────────────────────────────────────────────
   async update(id: string, updateCountryDto: UpdateCountryDto) {
     const { paymentMethods, ...countryData } = updateCountryDto;
+    
+    if (countryData.isDefault) {
+      await this.prisma.country.updateMany({
+        where: { id: { not: id }, isDefault: true },
+        data: { isDefault: false },
+      });
+    }
     
     // If updating payment methods, it's easier to handle them separately or use a more complex logic
     // For now, let's just update the country fields
