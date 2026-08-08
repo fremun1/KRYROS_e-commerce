@@ -413,12 +413,12 @@ function OrdersContent() {
 
   return (
     <div className="orders-page" style={{ padding: '24px', maxWidth: '1600px', margin: '0 auto' }}>
-      <div className="header" style={{ marginBottom: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+      <div className="header" style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
         <div>
-          <h1 style={{ fontSize: '28px', fontWeight: '800', color: T.text, marginBottom: '8px' }}>Orders</h1>
-          <p style={{ color: T.muted, fontSize: '14px' }}>Manage and track all customer orders</p>
+          <h1 style={{ fontSize: '24px', fontWeight: '800', color: T.text, marginBottom: '4px' }}>Orders</h1>
+          <p style={{ color: T.muted, fontSize: '13px' }}>Manage and track all customer orders</p>
         </div>
-        <div style={{ display: 'flex', gap: '12px' }}>
+        <div style={{ display: 'flex', gap: '12px', marginLeft: 'auto' }}>
           {selectedIds.size > 0 && (
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center', background: 'rgba(192,21,27,0.05)', padding: '6px 12px', borderRadius: '8px', border: '1px solid rgba(192,21,27,0.1)' }}>
               <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--primary)', marginRight: '8px' }}>{selectedIds.size} selected</span>
@@ -434,45 +434,62 @@ function OrdersContent() {
         </div>
       </div>
 
-      <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px', marginBottom: '32px' }}>
+      <div className="stats-grid" style={{ 
+        display: 'grid', 
+        gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', 
+        gap: '12px', 
+        marginBottom: '24px' 
+      }}>
         {[
           { label: 'Total Orders', value: orders.length, icon: ShoppingBag, color: 'var(--primary)' },
           { label: 'Pending Payment', value: orders.filter(o => o.paymentStatus === 'PENDING').length, icon: Clock, color: 'var(--gold)' },
           { label: 'To Ship', value: orders.filter(o => o.status === 'CONFIRMED' || o.status === 'PROCESSING').length, icon: Package, color: 'var(--secondary)' },
           { label: 'Completed', value: orders.filter(o => o.status === 'DELIVERED' || o.status === 'COLLECTED').length, icon: CheckCircle, color: 'var(--success)' },
         ].map((s, i) => (
-          <div key={i} style={{ background: T.card, padding: '20px', borderRadius: '16px', border: `1px solid ${T.border}`, display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: `${s.color}10`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: s.color }}>
-              <s.icon size={24} />
+          <div key={i} style={{ 
+            background: T.card, 
+            padding: '16px', 
+            borderRadius: '16px', 
+            border: `1px solid ${T.border}`, 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '12px',
+            minHeight: '80px'
+          }}>
+            <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: `${s.color}10`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: s.color, flexShrink: 0 }}>
+              <s.icon size={20} />
             </div>
-            <div>
-              <p style={{ fontSize: '13px', color: T.muted, marginBottom: '4px' }}>{s.label}</p>
-              <p style={{ fontSize: '20px', fontWeight: '700', color: T.text }}>{s.value}</p>
+            <div style={{ minWidth: 0 }}>
+              <p style={{ fontSize: '11px', fontWeight: 600, color: T.muted, marginBottom: '2px', textTransform: 'uppercase', letterSpacing: '0.3px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.label}</p>
+              <p style={{ fontSize: '18px', fontWeight: '800', color: T.text, lineHeight: 1.2 }}>{s.value}</p>
             </div>
           </div>
         ))}
       </div>
 
       <div className="main-card" style={{ background: T.card, borderRadius: '20px', border: `1px solid ${T.border}`, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
-        <div className="card-toolbar" style={{ padding: '20px', borderBottom: `1px solid ${T.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
-          <div className="tabs" style={{ display: 'flex', gap: '4px', background: 'var(--surface)', padding: '4px', borderRadius: '10px' }}>
-            {TABS.map(t => (
-              <button
-                key={t.key}
-                onClick={() => setTab(t.key)}
-                style={{
-                  padding: '8px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: '600', border: 'none', cursor: 'pointer',
-                  background: tab === t.key ? 'white' : 'transparent',
-                  color: tab === t.key ? 'var(--primary)' : T.muted,
-                  boxShadow: tab === t.key ? '0 2px 8px rgba(0,0,0,0.05)' : 'none',
-                  transition: 'all 0.2s'
-                }}
-              >
-                {t.label}
-              </button>
-            ))}
+        <div className="card-toolbar" style={{ padding: '16px', borderBottom: `1px solid ${T.border}`, display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div className="tabs-container" style={{ width: '100%', overflowX: 'auto', paddingBottom: '4px' }}>
+            <div className="tabs" style={{ display: 'inline-flex', gap: '4px', background: 'var(--surface)', padding: '4px', borderRadius: '10px', minWidth: 'max-content' }}>
+              {TABS.map(t => (
+                <button
+                  key={t.key}
+                  onClick={() => setTab(t.key)}
+                  style={{
+                    padding: '8px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: '600', border: 'none', cursor: 'pointer',
+                    background: tab === t.key ? 'white' : 'transparent',
+                    color: tab === t.key ? 'var(--primary)' : T.muted,
+                    boxShadow: tab === t.key ? '0 2px 8px rgba(0,0,0,0.05)' : 'none',
+                    transition: 'all 0.2s',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
           </div>
-          <div className="search" style={{ position: 'relative', width: '300px' }}>
+          <div className="search" style={{ position: 'relative', width: '100%', maxWidth: '400px' }}>
             <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: T.muted }} />
             <input
               type="text"
