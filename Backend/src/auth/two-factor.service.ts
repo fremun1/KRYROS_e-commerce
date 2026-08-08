@@ -117,7 +117,7 @@ export class TwoFactorService {
       throw new BadRequestException('2FA setup not initiated. Call /auth/2fa/setup first.');
     }
     const plaintextSecret = decryptSecret(user.twoFactorSecret);
-    const isValid = authenticator.check({ secret: plaintextSecret, token: code });
+    const isValid = authenticator.check(code, plaintextSecret);
     if (!isValid) {
       throw new UnauthorizedException('Invalid authenticator code');
     }
@@ -136,7 +136,7 @@ export class TwoFactorService {
       throw new BadRequestException('2FA is not enabled on this account');
     }
     const plaintextSecret = decryptSecret(user.twoFactorSecret);
-    const isValid = authenticator.check({ secret: plaintextSecret, token: code });
+    const isValid = authenticator.check(code, plaintextSecret);
     if (!isValid) {
       throw new UnauthorizedException('Invalid authenticator code');
     }
@@ -151,6 +151,6 @@ export class TwoFactorService {
     const otplib = await loadOtplib();
     const { authenticator } = otplib;
     const secret = decryptSecret(encryptedOrPlainSecret);
-    return authenticator.check({ secret, token: code });
+    return authenticator.check(code, secret);
   }
 }
