@@ -1,7 +1,7 @@
 'use client';
 import AdminShell from '@/components/admin/admin-shell';
 import PageHeader from '@/components/admin/page-header';
-import { Settings, Store, Bell, Shield, CreditCard, Palette, Save, Send, CheckCircle, RefreshCw } from 'lucide-react';
+import { Settings, Store, Bell, Shield, CreditCard, Palette, Save, Send, CheckCircle, RefreshCw, Globe, Lock } from 'lucide-react';
 import api from '@/lib/api';
 import { useState, useEffect } from 'react';
 import { getSettings, updateSettings } from '@/lib/api';
@@ -34,6 +34,9 @@ function SettingsContent() {
   const [orderNotif, setOrderNotif] = useState(true);
   const [processingFeeRate, setProcessingFeeRate] = useState('10');
   const [whatsappNumber, setWhatsappNumber] = useState('');
+  const [regionRestrictionEnabled, setRegionRestrictionEnabled] = useState(false);
+  const [blockedCountries, setBlockedCountries] = useState('');
+  const [screenshotRestrictionEnabled, setScreenshotRestrictionEnabled] = useState(false);
   
   // ── 2FA state ──────────────────────────────────────────────────────────────
   type TwoFAStep = 'loading' | 'disabled' | 'setup' | 'enabled' | 'disabling';
@@ -75,6 +78,9 @@ function SettingsContent() {
       if (sMap.order_notifications) setOrderNotif(sMap.order_notifications === 'true');
       if (sMap.processing_fee_rate) setProcessingFeeRate(sMap.processing_fee_rate);
       if (sMap.whatsapp_number) setWhatsappNumber(sMap.whatsapp_number);
+      if (sMap.admin_region_restriction_enabled) setRegionRestrictionEnabled(sMap.admin_region_restriction_enabled === 'true');
+      if (sMap.admin_blocked_countries) setBlockedCountries(sMap.admin_blocked_countries);
+      if (sMap.admin_screenshot_restriction_enabled) setScreenshotRestrictionEnabled(sMap.admin_screenshot_restriction_enabled === 'true');
       
       setStoreSettings({
         isStoreClosed: sMap.is_store_closed_manual === 'true',
@@ -114,6 +120,9 @@ function SettingsContent() {
         next_opening_day: String(storeSettings.nextOpeningDay),
         processing_fee_rate: processingFeeRate,
         whatsapp_number: whatsappNumber,
+        admin_region_restriction_enabled: String(regionRestrictionEnabled),
+        admin_blocked_countries: blockedCountries,
+        admin_screenshot_restriction_enabled: String(screenshotRestrictionEnabled),
       });
       toast.success('Settings saved successfully');
     } catch { toast.error('Failed to save settings — check connection'); }
@@ -383,6 +392,60 @@ function SettingsContent() {
                       </div>
                     </div>
                   )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <SectionTitle title="Access Control" sub="Restrict admin panel access by region and device" />
+          
+          <div style={{ background:surface, border:`1px solid ${border}`, borderRadius:'12px', padding:'20px', marginBottom:'24px' }}>
+            <div style={{ display:'flex', alignItems:'start', gap:'16px', marginBottom:'16px' }}>
+              <div style={{ width:'48px', height:'48px', borderRadius:'12px', background:'rgba(246,176,30,0.1)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                <Globe size={24} color="var(--gold)" style={{margin:'auto'}} />
+              </div>
+              <div style={{ flex:1 }}>
+                <div style={{ fontSize:'15px', fontWeight:700, color:textMain, marginBottom:'4px' }}>Region Restriction</div>
+                <p style={{ fontSize:'13px', color:textMuted, lineHeight:1.5 }}>
+                  Block admin panel access from specific countries. When enabled, users from blocked regions will see an access denied message. Uses IP geolocation — note that VPNs may bypass this.
+                </p>
+                <div style={{ marginTop:'12px', display:'flex', alignItems:'center', gap:'12px', flexWrap:'wrap' }}>
+                  <Row label="Enable Region Restriction" sub="Block admin access from selected countries">
+                    <ToggleSwitch value={regionRestrictionEnabled} onChange={()=>setRegionRestrictionEnabled(!regionRestrictionEnabled)} />
+                  </Row>
+                </div>
+                {regionRestrictionEnabled && (
+                  <div style={{ marginTop:'16px' }}>
+                    <label style={labelStyle}>Blocked Country Codes (comma-separated)</label>
+                    <input 
+                      style={{...inputStyle, marginTop:'6px'}} 
+                      value={blockedCountries} 
+                      onChange={e=>setBlockedCountries(e.target.value)} 
+                      placeholder="e.g. NG, GH, KE, ZM" 
+                    />
+                    <div style={{ fontSize:'11px', color:textMuted, marginTop:'4px' }}>
+                      Enter ISO 3166-1 alpha-2 country codes separated by commas. Example: NG = Nigeria, GH = Ghana, KE = Kenya.
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div style={{ background:surface, border:`1px solid ${border}`, borderRadius:'12px', padding:'20px', marginBottom:'24px' }}>
+            <div style={{ display:'flex', alignItems:'start', gap:'16px' }}>
+              <div style={{ width:'48px', height:'48px', borderRadius:'12px', background:'rgba(239,68,68,0.1)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                <Lock size={24} color="var(--danger)" style={{margin:'auto'}} />
+              </div>
+              <div style={{ flex:1 }}>
+                <div style={{ fontSize:'15px', fontWeight:700, color:textMain, marginBottom:'4px' }}>Screenshot Restriction</div>
+                <p style={{ fontSize:'13px', color:textMuted, lineHeight:1.5 }}>
+                  Deter screenshots and screen recording in the admin panel. When enabled, right-click, copy, PrintScreen, and Ctrl+P are blocked. Note: This is a client-side deterrent and cannot prevent all capture methods.
+                </p>
+                <div style={{ marginTop:'12px' }}>
+                  <Row label="Enable Screenshot Restriction" sub="Block common screenshot and copy actions">
+                    <ToggleSwitch value={screenshotRestrictionEnabled} onChange={()=>setScreenshotRestrictionEnabled(!screenshotRestrictionEnabled)} />
+                  </Row>
                 </div>
               </div>
             </div>

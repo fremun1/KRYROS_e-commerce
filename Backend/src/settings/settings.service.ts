@@ -28,6 +28,9 @@ export class SettingsService implements OnModuleInit {
       { key: 'next_opening_day', value: 'Thursday', type: 'string', category: 'general' },
       { key: 'whatsapp_number', value: process.env.WHATSAPP_NUMBER || '', type: 'string', category: 'contact' },
       { key: 'processing_fee_rate', value: '0', type: 'number', category: 'general' },
+      { key: 'admin_region_restriction_enabled', value: 'false', type: 'boolean', category: 'security' },
+      { key: 'admin_blocked_countries', value: '', type: 'string', category: 'security' },
+      { key: 'admin_screenshot_restriction_enabled', value: 'false', type: 'boolean', category: 'security' },
     ];
 
     for (const s of defaultSettings) {

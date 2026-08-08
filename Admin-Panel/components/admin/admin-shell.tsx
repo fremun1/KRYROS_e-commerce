@@ -4,14 +4,67 @@ import { useRouter } from "next/navigation";
 import { AuthProvider, useAuth } from "@/contexts/auth-context";
 import Sidebar from "@/components/admin/sidebar";
 import Topbar from "@/components/admin/topbar";
+import toast from "react-hot-toast";
+import api from "@/lib/api";
 
 function AdminShellInner({ children, noPadding }: { children: React.ReactNode; noPadding?: boolean }) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(() => typeof window !== "undefined" ? window.innerWidth < 768 : true);
+  const [screenshotBlocked, setScreenshotBlocked] = useState(false);
   const { isAuthenticated, loading } = useAuth();
   const router = useRouter();
   const sidebarW = collapsed ? 60 : 260;
+
+  useEffect(() => {
+    let cancelled = false;
+    api.get("/api/settings").then((r: any) => {
+      if (cancelled) return;
+      const settings = Array.isArray(r.data) ? r.data : [];
+      const map: Record<string, string> = {};
+      settings.forEach((s: any) => { map[s.key] = s.value; });
+      if (map.admin_screenshot_restriction_enabled === 'true') {
+        setScreenshotBlocked(true);
+      }
+    }).catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => {
+    if (!screenshotBlocked) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'PrintScreen') {
+        e.preventDefault();
+        toast.error("Screenshots are disabled in the admin panel", { duration: 3000 });
+        return;
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'p') {
+        e.preventDefault();
+        toast.error("Printing is disabled in the admin panel", { duration: 3000 });
+      }
+    };
+
+    const handleContextMenu = (e: MouseEvent) => {
+      e.preventDefault();
+      toast.error("Right-click is disabled in the admin panel", { duration: 3000 });
+    };
+
+    const handleCopy = (e: ClipboardEvent) => {
+      e.preventDefault();
+      toast.error("Copying is disabled in the admin panel", { duration: 3000 });
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('contextmenu', handleContextMenu);
+    window.addEventListener('copy', handleCopy);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('contextmenu', handleContextMenu);
+      window.removeEventListener('copy', handleCopy);
+    };
+  }, [screenshotBlocked]);
 
   // Detect mobile ONCE and on resize — no layout flicker
   useEffect(() => {
@@ -49,15 +102,13 @@ function AdminShellInner({ children, noPadding }: { children: React.ReactNode; n
   const mainTop = isMobile ? 56 : 64;
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--bg)" }}>
-      {/* Sidebar */}
+    <div style={{ minHeight: "100vh", background: "var(--bg)", userSelect: screenshotBlocked ? 'none' : 'auto', WebkitUserSelect: screenshotBlocked ? 'none' : 'auto' }}>
       <Sidebar
         collapsed={collapsed}
         mobileOpen={mobileOpen}
         onMobileClose={() => setMobileOpen(false)}
       />
 
-      {/* Topbar */}
       <Topbar
         collapsed={collapsed}
         sidebarW={isMobile ? 0 : sidebarW}

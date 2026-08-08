@@ -13,6 +13,7 @@ import { LocalStrategy } from './strategies/local.strategy';
 import { UsersModule } from '../users/users.module';
 import { PrismaModule } from '../prisma/prisma.module';
 import { CountriesModule } from '../countries/countries.module';
+import { RegionRestrictionGuard } from '../common/guards/region-restriction.guard';
 
 
 @Module({
@@ -40,7 +41,7 @@ import { CountriesModule } from '../countries/countries.module';
       inject: [ConfigService],
     }),
   ],
-  providers: [AuthService, TwoFactorService, PasswordResetService, JwtStrategy, LocalStrategy],
+  providers: [AuthService, TwoFactorService, PasswordResetService, JwtStrategy, LocalStrategy, RegionRestrictionGuard],
   controllers: [AuthController],
   exports: [AuthService, TwoFactorService, PasswordResetService],
 })

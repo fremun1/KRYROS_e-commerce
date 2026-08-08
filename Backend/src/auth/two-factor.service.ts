@@ -3,12 +3,14 @@ import * as QRCode from 'qrcode';
 import * as crypto from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 
-// Use require to avoid TypeScript module resolution issues with the new otplib ESM build
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const { generateSecret, verify } = require('otplib') as {
-  generateSecret: () => string;
-  verify: (opts: { secret: string; token: string }) => Promise<boolean>;
-};
+let otplibModule: typeof import('otplib') | null = null;
+
+async function loadOtplib(): Promise<typeof import('otplib')> {
+  if (!otplibModule) {
+    otplibModule = await import('otplib');
+  }
+  return otplibModule;
+}
 
 // ── AES-256-GCM encryption for TOTP secrets ──────────────────────────────────
 // TOTP secrets are encrypted at rest using a key derived from TOTP_ENCRYPTION_KEY.
@@ -91,10 +93,11 @@ export class TwoFactorService {
 
   async generateSecret(userId: string, email: string): Promise<{ qrCodeUrl: string; secret: string }> {
     this.warnIfUsingFallbackKey();
-    const secret = generateSecret();
+    const otplib = await loadOtplib();
+    const { authenticator } = otplib;
+    const secret = authenticator.generateSecret();
     const otpauthUrl = buildOtpauthUrl(email, secret);
 
-    // Encrypt the secret before storing in DB
     const encryptedSecret = encryptSecret(secret);
     await this.prisma.user.update({
       where: { id: userId },
@@ -102,18 +105,19 @@ export class TwoFactorService {
     });
 
     const qrCodeUrl = await QRCode.toDataURL(otpauthUrl);
-    // Return the plaintext secret to the user for QR code scanning — never stored plaintext
     return { qrCodeUrl, secret };
   }
 
   async enableTwoFactor(userId: string, code: string): Promise<void> {
     this.warnIfUsingFallbackKey();
+    const otplib = await loadOtplib();
+    const { authenticator } = otplib;
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user?.twoFactorSecret) {
       throw new BadRequestException('2FA setup not initiated. Call /auth/2fa/setup first.');
     }
     const plaintextSecret = decryptSecret(user.twoFactorSecret);
-    const isValid = await verify({ secret: plaintextSecret, token: code });
+    const isValid = authenticator.check({ secret: plaintextSecret, token: code });
     if (!isValid) {
       throw new UnauthorizedException('Invalid authenticator code');
     }
@@ -125,12 +129,14 @@ export class TwoFactorService {
 
   async disableTwoFactor(userId: string, code: string): Promise<void> {
     this.warnIfUsingFallbackKey();
+    const otplib = await loadOtplib();
+    const { authenticator } = otplib;
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user?.twoFactorEnabled || !user?.twoFactorSecret) {
       throw new BadRequestException('2FA is not enabled on this account');
     }
     const plaintextSecret = decryptSecret(user.twoFactorSecret);
-    const isValid = await verify({ secret: plaintextSecret, token: code });
+    const isValid = authenticator.check({ secret: plaintextSecret, token: code });
     if (!isValid) {
       throw new UnauthorizedException('Invalid authenticator code');
     }
@@ -142,7 +148,9 @@ export class TwoFactorService {
 
   async verifyCode(encryptedOrPlainSecret: string, code: string): Promise<boolean> {
     this.warnIfUsingFallbackKey();
+    const otplib = await loadOtplib();
+    const { authenticator } = otplib;
     const secret = decryptSecret(encryptedOrPlainSecret);
-    return verify({ secret, token: code });
+    return authenticator.check({ secret, token: code });
   }
 }

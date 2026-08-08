@@ -25,6 +25,7 @@ import { ResetPasswordDto } from './dto/reset-password.dto';
 import { SendOtpDto, VerifyOtpDto } from './dto/otp.dto';
 import { TwoFactorEnableDto, TwoFactorValidateDto } from './dto/two-factor.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { RegionRestrictionGuard } from '../common/guards/region-restriction.guard';
 import { JwtPayload } from './interfaces/jwt-payload.interface';
 import { UserRole } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
@@ -67,6 +68,7 @@ export class AuthController {
   }
 
   @Post('login')
+  @UseGuards(RegionRestrictionGuard)
   @Throttle({ default: { ttl: 60000, limit: 10 } })
   @ApiOperation({ summary: 'Login with email/phone and password' })
   async login(@Body() loginDto: LoginDto) {
@@ -226,6 +228,7 @@ export class AuthController {
   }
 
   @Post('2fa/validate')
+  @UseGuards(RegionRestrictionGuard)
   @Throttle({ default: { ttl: 60000, limit: 5 } })
   @ApiOperation({ summary: 'Complete 2FA login by submitting the TOTP code and pending token' })
   async validate2fa(@Body() body: TwoFactorValidateDto) {
