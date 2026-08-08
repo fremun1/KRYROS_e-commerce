@@ -299,18 +299,18 @@ function UsersContent() {
 
       <div style={{ background: card, border: `1px solid ${border}`, borderRadius: '12px', padding: '18px', marginBottom: '20px' }}>
         <div style={{ fontSize: '14px', fontWeight: 700, color: textMain, marginBottom: '14px' }}>Roles Overview</div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '12px' }} className="roles-grid">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '12px' }} className="roles-grid">
           {[
-            { name: 'Super Admin', permissions: 'Full Access', users: data.filter(u=>u.role==='Super Admin').length, color: 'var(--danger)' },
-            { name: 'Admin', permissions: 'User Management', users: data.filter(u=>u.role==='Admin').length, color: 'var(--gold)' },
-            { name: 'Manager', permissions: 'Inventory, Orders', users: data.filter(u=>u.role==='Manager').length, color: 'var(--link)' },
-            { name: 'Wholesale', permissions: 'Wholesale Orders', users: data.filter(u=>u.role==='Wholesale').length, color: 'var(--secondary)' },
-            { name: 'Customer', permissions: 'Place Orders', users: data.filter(u=>u.role==='Customer').length, color: 'var(--primary)' },
+            { name: 'Super Admin', permissions: 'Full Access', users: data.filter(u=>(u.role||'').toLowerCase().includes('super admin')).length, color: 'var(--danger)' },
+            { name: 'Admin', permissions: 'User Management', users: data.filter(u=>(u.role||'').toLowerCase().includes('admin') && !(u.role||'').toLowerCase().includes('super')).length, color: 'var(--gold)' },
+            { name: 'Manager', permissions: 'Inventory, Orders', users: data.filter(u=>(u.role||'').toLowerCase().includes('manager')).length, color: 'var(--link)' },
+            { name: 'Wholesale', permissions: 'Wholesale Orders', users: data.filter(u=>(u.role||'').toLowerCase().includes('wholesale')).length, color: 'var(--secondary)' },
+            { name: 'Customer', permissions: 'Place Orders', users: data.filter(u=>(u.role||'').toLowerCase().includes('customer')).length, color: 'var(--primary)' },
           ].map((r) => (
-            <div key={r.name} style={{ background: surface, border: `1px solid ${border}`, borderRadius: '10px', padding: '14px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-                <span style={{ fontSize: '13px', fontWeight: 700, color: textMain }}>{r.name}</span>
-                <span style={{ fontSize: '11px', fontWeight: 700, color: r.color }}>{r.users} users</span>
+            <div key={r.name} style={{ background: surface, border: `1px solid ${border}`, borderRadius: '10px', padding: '14px', minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '6px', gap: '8px', flexWrap: 'wrap' }}>
+                <span style={{ fontSize: '13px', fontWeight: 700, color: textMain, whiteSpace: 'nowrap' }}>{r.name}</span>
+                <span style={{ fontSize: '11px', fontWeight: 700, color: r.color, whiteSpace: 'nowrap' }}>{r.users} users</span>
               </div>
               <div style={{ fontSize: '11.5px', color: textMuted }}>{r.permissions}</div>
             </div>
