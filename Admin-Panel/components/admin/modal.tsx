@@ -235,20 +235,22 @@ export function FormField({ label, value, onChange, type = 'text', options, read
 // ── ModalFooter ────────────────────────────────────────────
 interface ModalFooterProps {
   onClose: () => void;
-  onSubmit: () => void;
-  loading: boolean;
-  submitLabel: string;
+  onSubmit?: () => void;
+  loading?: boolean;
+  submitLabel?: string;
   border: string;
   textMain: string;
 }
 
-export function ModalFooter({ onClose, onSubmit, loading, submitLabel, border, textMain }: ModalFooterProps) {
+export function ModalFooter({ onClose, onSubmit, loading = false, submitLabel = 'Save', border, textMain }: ModalFooterProps) {
   return (
     <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '6px', paddingTop: '16px', borderTop: `1px solid ${border}` }}>
-      <button onClick={onClose} disabled={loading} style={{ padding: '9px 18px', borderRadius: '9px', background: 'var(--surface)', border: `1px solid ${border}`, color: textMain, fontSize: '13.5px', fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-inter)' }}>Cancel</button>
-      <button onClick={onSubmit} disabled={loading} style={{ padding: '9px 18px', borderRadius: '9px', background: 'var(--btn-primary)', border: 'none', color: 'var(--text-white)', fontSize: '13.5px', fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1, fontFamily: 'var(--font-inter)' }}>
-        {loading ? 'Saving...' : submitLabel}
-      </button>
+      <button onClick={onClose} disabled={loading} style={{ padding: '9px 18px', borderRadius: '9px', background: 'var(--surface)', border: `1px solid ${border}`, color: textMain, fontSize: '13.5px', fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-inter)' }}>{onSubmit ? 'Cancel' : 'Close'}</button>
+      {onSubmit && (
+        <button onClick={onSubmit} disabled={loading} style={{ padding: '9px 18px', borderRadius: '9px', background: 'var(--btn-primary)', border: 'none', color: 'var(--text-white)', fontSize: '13.5px', fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1, fontFamily: 'var(--font-inter)' }}>
+          {loading ? 'Saving...' : submitLabel}
+        </button>
+      )}
     </div>
   );
 }
