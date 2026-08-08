@@ -105,8 +105,9 @@ const nextConfig: NextConfig = {
       { source: `/api/${seg}/:rest*`, destination: `${backendUrl}/api/${seg}/:rest*` },
     ];
 
-    return [
-      ...proxy("auth"),
+	    return [
+	      ...proxy("admin"),
+	      ...proxy("auth"),
       ...proxy("orders"),
       ...proxy("products"),
       ...proxy("users"),
