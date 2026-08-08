@@ -87,14 +87,15 @@ async function main() {
     // 2. Reconcile user_roles: keep/create only the effective role row.
     const targetName = effectiveRole.toString();
     const existing = user.roleAssignments;
+    const targetNameNorm = targetName.toUpperCase().replace(/[\s_]+/g, '');
     const matches = existing.filter((a) =>
-      (a.role?.name ?? '').toUpperCase().replace(/[\s_]+/g, '') === targetName,
+      (a.role?.name ?? '').toUpperCase().replace(/[\s_]+/g, '') === targetNameNorm,
     );
 
     // Delete all non-matching assignments.
     for (const a of existing) {
       const assigned = a.role.name.toUpperCase().replace(/[\s_]+/g, '');
-      if (assigned !== targetName) {
+      if (assigned !== targetNameNorm) {
         console.log(
           `[FIX] ${user.email || user.id}: removing stale user_roles row '${a.role.name}'`,
         );

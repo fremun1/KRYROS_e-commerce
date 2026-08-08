@@ -150,9 +150,10 @@ export class UsersService {
     //    downgrade loop permanently.
     const existing = user.roleAssignments ?? [];
     const targetName = effectiveRole.toString(); // e.g. 'SUPER_ADMIN'
+    const targetNameNorm = targetName.toUpperCase().replace(/[\s_]+/g, '');
     const hasTarget = existing.some((a: any) => {
       const assigned = (a.role?.name ?? '').toUpperCase().replace(/[\s_]+/g, '');
-      return assigned === targetName;
+      return assigned === targetNameNorm;
     });
 
     if (!hasTarget) {
@@ -174,7 +175,7 @@ export class UsersService {
     }
 
     // Delete every assignment that does not match the effective role.
-    const keepNames = new Set([targetName]);
+    const keepNames = new Set([targetNameNorm]);
     for (const a of existing) {
       const assigned = ((a.role?.name ?? '') as string).toUpperCase().replace(/[\s_]+/g, '');
       if (!keepNames.has(assigned)) {

@@ -60,14 +60,16 @@ function UsersContent() {
   const [actionModal, setActionModal] = useState<'promote' | 'demote' | 'suspend' | 'restrict' | 'block' | null>(null);
   const [actionForm, setActionForm] = useState<any>({});
 
-  const normalizeRole = (r: string) =>
-    r === 'SUPER_ADMIN' ? 'Super Admin'
-      : r === 'ADMIN' ? 'Admin'
-      : r === 'MANAGER' ? 'Manager'
-      : r === 'WHOLESALER' ? 'Wholesale'
-      : r === 'WHOLESALE' ? 'Wholesale'
-      : r === 'STAFF' ? 'Staff'
+  const normalizeRole = (r: string) => {
+    const norm = (r || '').toUpperCase().replace(/[\s_]+/g, '');
+    return norm === 'SUPERADMIN' ? 'Super Admin'
+      : norm === 'ADMIN' ? 'Admin'
+      : norm === 'MANAGER' ? 'Manager'
+      : norm === 'WHOLESALER' ? 'Wholesale'
+      : norm === 'WHOLESALE' ? 'Wholesale'
+      : norm === 'STAFF' ? 'Staff'
       : 'Customer';
+  };
 
   // Load real users from API on mount
   useEffect(() => {
@@ -297,10 +299,11 @@ function UsersContent() {
 
       <div style={{ background: card, border: `1px solid ${border}`, borderRadius: '12px', padding: '18px', marginBottom: '20px' }}>
         <div style={{ fontSize: '14px', fontWeight: 700, color: textMain, marginBottom: '14px' }}>Roles Overview</div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }} className="roles-grid">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '12px' }} className="roles-grid">
           {[
             { name: 'Super Admin', permissions: 'Full Access', users: data.filter(u=>u.role==='Super Admin').length, color: 'var(--danger)' },
             { name: 'Admin', permissions: 'User Management', users: data.filter(u=>u.role==='Admin').length, color: 'var(--gold)' },
+            { name: 'Manager', permissions: 'Inventory, Orders', users: data.filter(u=>u.role==='Manager').length, color: 'var(--link)' },
             { name: 'Wholesale', permissions: 'Wholesale Orders', users: data.filter(u=>u.role==='Wholesale').length, color: 'var(--secondary)' },
             { name: 'Customer', permissions: 'Place Orders', users: data.filter(u=>u.role==='Customer').length, color: 'var(--primary)' },
           ].map((r) => (
