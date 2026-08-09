@@ -384,9 +384,9 @@ function AppRoutes() {
       </Suspense>
       {!hideShell && <Footer />}
       {/* Spacer for MobileBottomNav — only on mobile, sits after footer */}
-      <div className="md:hidden" style={{ height: "calc(56px + env(safe-area-inset-bottom, 0px))" }} />
-      <MobileBottomNav />
-      <SupportFloatingButtons />
+      {!hideShell && <div className="md:hidden" style={{ height: "calc(56px + env(safe-area-inset-bottom, 0px))" }} />}
+      {!hideShell && <MobileBottomNav />}
+      {!hideShell && <SupportFloatingButtons />}
     </>
   );
 }
