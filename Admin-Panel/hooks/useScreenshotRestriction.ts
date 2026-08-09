@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import React from "react";
 import api from "@/lib/api";
 
 export function useScreenshotRestriction() {
@@ -91,32 +92,36 @@ export function useScreenshotRestriction() {
 
   const handleKeyDown = (e: KeyboardEvent) => {
     // Block common screenshot and dev tools shortcuts
-    const blockedCombos = [
+    const blockedCombos: Array<{
+      key: string;
+      ctrlKey?: boolean;
+      metaKey?: boolean;
+      shiftKey?: boolean;
+      altKey?: boolean;
+    }> = [
       // Print Screen
-      { key: "PrintScreen" },
+      { key: "PrintScreen", altKey: false },
       // Ctrl+P (Print)
-      { key: "p", ctrlKey: true },
+      { key: "p", ctrlKey: true, altKey: false },
       // Ctrl+Shift+I (DevTools)
-      { key: "i", ctrlKey: true, shiftKey: true },
+      { key: "i", ctrlKey: true, shiftKey: true, altKey: false },
       // Ctrl+Shift+J (Console)
-      { key: "j", ctrlKey: true, shiftKey: true },
+      { key: "j", ctrlKey: true, shiftKey: true, altKey: false },
       // Ctrl+Shift+C (Inspect)
-      { key: "c", ctrlKey: true, shiftKey: true },
+      { key: "c", ctrlKey: true, shiftKey: true, altKey: false },
       // F12 (DevTools)
-      { key: "F12" },
+      { key: "F12", altKey: false },
       // Ctrl+U (View Source)
-      { key: "u", ctrlKey: true },
+      { key: "u", ctrlKey: true, altKey: false },
       // Ctrl+S (Save Page)
-      { key: "s", ctrlKey: true },
-      // Ctrl+A (Select All) - optional
-      // { key: "a", ctrlKey: true },
+      { key: "s", ctrlKey: true, altKey: false },
       // Meta key variants (Mac)
-      { key: "p", metaKey: true },
-      { key: "i", metaKey: true, shiftKey: true },
-      { key: "j", metaKey: true, shiftKey: true },
-      { key: "c", metaKey: true, shiftKey: true },
-      { key: "u", metaKey: true },
-      { key: "s", metaKey: true },
+      { key: "p", metaKey: true, altKey: false },
+      { key: "i", metaKey: true, shiftKey: true, altKey: false },
+      { key: "j", metaKey: true, shiftKey: true, altKey: false },
+      { key: "c", metaKey: true, shiftKey: true, altKey: false },
+      { key: "u", metaKey: true, altKey: false },
+      { key: "s", metaKey: true, altKey: false },
     ];
 
     for (const combo of blockedCombos) {
@@ -308,5 +313,5 @@ export function useScreenshotRestriction() {
 // Client-side component to apply restrictions
 export function ScreenshotRestrictionGuard({ children }: { children: React.ReactNode }) {
   useScreenshotRestriction();
-  return <>{children}</>;
+  return React.createElement(React.Fragment, null, children);
 }

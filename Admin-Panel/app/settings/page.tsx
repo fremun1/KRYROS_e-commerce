@@ -400,46 +400,48 @@ function SettingsContent() {
                           Can't scan? Enter this setup key manually in your authenticator app:
                         </p>
                         {twoFASecret && (
-                          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-                            <code style={{
-                              background: 'var(--bg)',
-                              border: `1px solid ${border}`,
-                              borderRadius: '8px',
-                              padding: '12px 16px',
-                              fontSize: '14px',
-                              fontFamily: 'monospace',
-                              letterSpacing: '0.1em',
-                              color: textMain,
-                              flex: 1,
-                              minWidth: '200px',
-                              textTransform: 'uppercase',
-                              userSelect: 'all'
-                            }}>
-                              {twoFASecret.match(/.{1,4}/g)?.join(' ') || twoFASecret}
-                            </code>
-                            <button
-                              onClick={() => {
-                                navigator.clipboard.writeText(twoFASecret);
-                                toast.success('Setup key copied to clipboard');
-                              }}
-                              style={{
-                                background: 'var(--primary)',
-                                color: 'white',
-                                border: 'none',
+                          <>
+                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                              <code style={{
+                                background: 'var(--bg)',
+                                border: `1px solid ${border}`,
                                 borderRadius: '8px',
-                                padding: '8px 16px',
-                                fontSize: '12px',
-                                fontWeight: 600,
-                                cursor: 'pointer',
-                                whiteSpace: 'nowrap'
-                              }}
-                            >
-                              Copy Key
-                            </button>
-                          </div>
-                          <p style={{ fontSize:'11px', color:textMuted, marginTop:'8px' }}>
-                            Enter this key in your authenticator app as "Setup Key" or "Manual Entry"
-                          </p>
+                                padding: '12px 16px',
+                                fontSize: '14px',
+                                fontFamily: 'monospace',
+                                letterSpacing: '0.1em',
+                                color: textMain,
+                                flex: 1,
+                                minWidth: '200px',
+                                textTransform: 'uppercase',
+                                userSelect: 'all'
+                              }}>
+                                {twoFASecret.match(/.{1,4}/g)?.join(' ') || twoFASecret}
+                              </code>
+                              <button
+                                onClick={() => {
+                                  navigator.clipboard.writeText(twoFASecret);
+                                  toast.success('Setup key copied to clipboard');
+                                }}
+                                style={{
+                                  background: 'var(--primary)',
+                                  color: 'white',
+                                  border: 'none',
+                                  borderRadius: '8px',
+                                  padding: '8px 16px',
+                                  fontSize: '12px',
+                                  fontWeight: 600,
+                                  cursor: 'pointer',
+                                  whiteSpace: 'nowrap'
+                                }}
+                              >
+                                Copy Key
+                              </button>
+                            </div>
+                            <p style={{ fontSize:'11px', color:textMuted, marginTop:'8px' }}>
+                              Enter this key in your authenticator app as "Setup Key" or "Manual Entry"
+                            </p>
+                          </>
                         )}
                       </div>
 
