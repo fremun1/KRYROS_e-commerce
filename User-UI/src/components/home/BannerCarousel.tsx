@@ -9,6 +9,8 @@ interface BannerSlide {
   linkUrl?: string;
   buttonColor?: string;
   buttonTextColor?: string;
+  enableControls?: boolean;
+  enableSound?: boolean;
 }
 
 interface BannerCarouselProps {
@@ -80,13 +82,18 @@ export default function BannerCarousel({
 
   const renderMedia = (slide: BannerSlide, idx: number) => {
     if (slide.videoUrl) {
+      const mediaClass = slide.enableControls
+        ? bannerMediaClassName.replace("pointer-events-none", "")
+        : bannerMediaClassName;
+
       return (
         <video
           src={slide.videoUrl}
-          className={bannerMediaClassName}
+          className={mediaClass}
           autoPlay
-          muted
-          loop
+          muted={!slide.enableSound}
+          controls={slide.enableControls}
+          loop={!slide.enableControls}
           playsInline
           preload={idx === 0 ? 'auto' : 'metadata'}
         />

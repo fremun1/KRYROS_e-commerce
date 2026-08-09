@@ -972,6 +972,42 @@ export default function CMSPagesPage() {
                         <p className="text-[10px] text-muted-foreground">
                           Upload an image or video banner. Uploading a new file replaces the current banner media for this slide.
                         </p>
+                        {slide.videoUrl && (
+                          <div className="grid grid-cols-2 gap-3 py-2 bg-muted/40 px-3 rounded-lg border border-border/50 mt-1">
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="checkbox"
+                                id={`enableControls-${idx}`}
+                                checked={slide.enableControls === true}
+                                onChange={(e) => {
+                                  const slides = [...(formData.config?.slides || [])];
+                                  slides[idx] = {...slides[idx], enableControls: e.target.checked};
+                                  setFormData({...formData, config: {...formData.config, slides}});
+                                }}
+                                className="w-3.5 h-3.5"
+                              />
+                              <label htmlFor={`enableControls-${idx}`} className="text-[10px] font-bold text-muted-foreground uppercase cursor-pointer select-none">
+                                Playback Controls
+                              </label>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="checkbox"
+                                id={`enableSound-${idx}`}
+                                checked={slide.enableSound === true}
+                                onChange={(e) => {
+                                  const slides = [...(formData.config?.slides || [])];
+                                  slides[idx] = {...slides[idx], enableSound: e.target.checked};
+                                  setFormData({...formData, config: {...formData.config, slides}});
+                                }}
+                                className="w-3.5 h-3.5"
+                              />
+                              <label htmlFor={`enableSound-${idx}`} className="text-[10px] font-bold text-muted-foreground uppercase cursor-pointer select-none">
+                                Enable Sound
+                              </label>
+                            </div>
+                          </div>
+                        )}
                       </div>
                       <div className="grid grid-cols-2 gap-2">
                         <FormField
