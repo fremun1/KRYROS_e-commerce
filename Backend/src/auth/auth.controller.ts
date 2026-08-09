@@ -1,3 +1,4 @@
+import { PrismaService } from "../prisma/prisma.service";
 import {
   Controller,
   Post,
