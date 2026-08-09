@@ -696,7 +696,7 @@ export default function AuthPage() {
           <p className="text-[14px] font-bold text-[#313133] mt-0.5 font-['Roboto']">{identifier}</p>
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-3">
           <div className="flex gap-2 justify-between" onPaste={handleOTPPaste}>
             {otp.map((digit, i) => (
               <input
@@ -714,9 +714,7 @@ export default function AuthPage() {
             ))}
           </div>
 
-          <p className="text-center text-[11.5px] text-[#75757A] leading-relaxed px-2 font-['Roboto']">
-            📧 For non-Zambia users, the code is sent to your email. Zambia users receive via SMS.
-          </p>
+
 
           <div className="text-center py-0.5">
             {countdown > 0 ? (
@@ -761,8 +759,8 @@ export default function AuthPage() {
   }, [step, setLocation]);
 
   const renderSuccessStep = () => (
-    <div className="flex flex-col items-center text-center py-2">
-      <div className="w-[64px] h-[64px] bg-[var(--kryros-success)] rounded-full flex items-center justify-center mb-4 shadow-sm animate-bounce">
+    <div className="flex flex-col items-center text-center">
+      <div className="w-[64px] h-[64px] bg-[var(--kryros-success)] rounded-full flex items-center justify-center mb-3 shadow-sm animate-bounce">
         <Check className="w-8 h-8 text-white" strokeWidth={3} />
       </div>
       <h2 className="text-[20px] font-extrabold text-[#313133] mb-1 font-['Roboto'] tracking-tight">Account created! 🎉</h2>
@@ -815,12 +813,12 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="h-screen h-[100dvh] w-full bg-white flex flex-col items-center justify-between font-['Roboto'] overflow-hidden py-4 px-4 select-none">
-      <div className="w-full max-w-[360px] flex-1 flex flex-col justify-between relative">
+    <div className="h-[100dvh] w-full bg-white flex flex-col items-center font-['Roboto'] overflow-hidden py-3 px-4 select-none">
+      <div className="w-full max-w-[360px] flex-1 flex flex-col relative min-h-0">
 
         {/* TOP HEADER */}
         {step !== "checking" ? (
-          <div className="w-full relative flex items-center justify-center mb-2 shrink-0">
+          <div className="w-full relative flex items-center justify-center pt-1 pb-3 shrink-0">
             {showBack && <BackButton onClick={onBack} />}
             <Logo />
           </div>
@@ -829,16 +827,19 @@ export default function AuthPage() {
         )}
 
         {/* MAIN BODY */}
-        <div className="flex-1 flex flex-col justify-center my-auto min-h-0">
+        <div className="flex flex-col shrink-0">
           <NoticeBanner />
           <div key={step} className="flex flex-col" style={{ animation: "fadeSlideIn 0.3s ease-out" }}>
             {renderCurrentStepContent()}
           </div>
         </div>
 
+        {/* SPACER - pushes footer to bottom like Jumia */}
+        <div className="flex-1" />
+
         {/* SUPPORT FOOTER */}
         {step !== "checking" ? (
-          <SupportFooter mt="mt-2" />
+          <SupportFooter mt="mt-0" />
         ) : (
           <div className="h-8 shrink-0" />
         )}
