@@ -1,5 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, UseInterceptors } from '@nestjs/common';
-import { CacheInterceptor } from '@nestjs/cache-manager';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { CitiesService } from './cities.service';
 import { CreateCityDto } from './dto/create-city.dto';
@@ -11,7 +10,6 @@ import { UserRole } from '@prisma/client';
 
 @ApiTags('Cities')
 @Controller('cities')
-@UseInterceptors(CacheInterceptor)
 export class CitiesController {
   constructor(private readonly citiesService: CitiesService) {}
 

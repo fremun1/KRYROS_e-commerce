@@ -1,5 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, UseInterceptors, Req, Header } from '@nestjs/common';
-import { CacheInterceptor } from '@nestjs/cache-manager';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, Header } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { CountriesService } from './countries.service';
 import { CreateCountryDto } from './dto/create-country.dto';
@@ -31,7 +30,6 @@ export class CountriesController {
 
   @Get()
   @ApiOperation({ summary: 'List all countries (Public)' })
-  @UseInterceptors(CacheInterceptor)
   findAll() {
     return this.countriesService.findAll();
   }
@@ -153,7 +151,6 @@ export class CountriesController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get a single country (Public)' })
-  @UseInterceptors(CacheInterceptor)
   findOne(@Param('id') id: string) {
     return this.countriesService.findOne(id);
   }
