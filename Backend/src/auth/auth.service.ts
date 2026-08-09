@@ -563,6 +563,7 @@ export class AuthService {
       password: string;
       firstName: string;
       lastName: string;
+      dob?: string;
     },
   ): Promise<{ success: boolean; message: string; user?: any; accessToken?: string; refreshToken?: string }> {
     const normalizedIdentifier = this.normalizeIdentifier(identifier);
@@ -602,6 +603,7 @@ export class AuthService {
       firstName: userData.firstName,
       lastName: userData.lastName,
       country: pending.countryCode,
+      dob: userData.dob,
     });
 
     // Delete pending registration

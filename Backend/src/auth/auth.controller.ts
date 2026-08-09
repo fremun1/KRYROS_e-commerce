@@ -153,6 +153,7 @@ export class AuthController {
       password: body.password,
       firstName: body.firstName,
       lastName: body.lastName,
+      dob: body.dob,
     });
   }
 
