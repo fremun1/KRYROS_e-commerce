@@ -28,7 +28,8 @@ import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RegionRestrictionGuard } from '../common/guards/region-restriction.guard';
 import { JwtPayload } from './interfaces/jwt-payload.interface';
 import { UserRole } from '@prisma/client';
-import { PrismaService } from '../prisma/prisma.service';
+import { SettingsService } from '../settings/settings.service';
+import { GeolocationService } from '../common/services/geolocation.service';
 
 interface AuthenticatedRequest {
   user: Pick<JwtPayload, 'email' | 'role'> & { id: string };
@@ -42,6 +43,8 @@ export class AuthController {
     private authService: AuthService,
     private twoFactorService: TwoFactorService,
     private prisma: PrismaService,
+    private settingsService: SettingsService,
+    private geolocationService: GeolocationService,
   ) {}
 
   @Post('register')
@@ -254,5 +257,39 @@ export class AuthController {
     }
 
     return this.authService.completeTwoFactorLogin(user);
+  }
+
+  @Post('check-region')
+  @Throttle({ default: { ttl: 60000, limit: 30 } })
+  @ApiOperation({ summary: 'Check if IP is from a blocked region (for middleware)' })
+  async checkRegion(@Body() body: { ip: string }, @Request() req: any) {
+    // Use the same logic as RegionRestrictionGuard but return JSON instead of throwing
+    const ip = body.ip || this.geolocationService.getClientIp(req);
+    
+    const enabledSetting = await this.settingsService.getByKey('admin_region_restriction_enabled');
+    if (!enabledSetting || enabledSetting.value !== 'true') {
+      return { blocked: false };
+    }
+
+    const geoData = await this.geolocationService.detectCountryByIp(ip);
+    if (!geoData) {
+      return { blocked: false };
+    }
+
+    const blockedSetting = await this.settingsService.getByKey('admin_blocked_countries');
+    const blockedList = blockedSetting?.value || '';
+    const blockedCountries = blockedList
+      .split(',')
+      .map((c) => c.trim().toUpperCase())
+      .filter(Boolean);
+
+    const isBlocked = blockedCountries.includes(geoData.countryCode);
+    
+    return { 
+      blocked: isBlocked,
+      countryCode: geoData.countryCode,
+      countryName: geoData.countryName,
+      blockedCountries: blockedCountries,
+    };
   }
 }

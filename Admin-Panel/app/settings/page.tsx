@@ -42,6 +42,7 @@ function SettingsContent() {
   type TwoFAStep = 'loading' | 'disabled' | 'setup' | 'enabled' | 'disabling';
   const [twoFAStep, setTwoFAStep] = useState<TwoFAStep>('loading');
   const [twoFAQr, setTwoFAQr] = useState('');
+  const [twoFASecret, setTwoFASecret] = useState(''); // Secret key for manual entry
   const [twoFACode, setTwoFACode] = useState('');
   const [twoFABusy, setTwoFABusy] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -165,6 +166,7 @@ function SettingsContent() {
     try {
       const res: any = await api.post('/api/auth/2fa/setup');
       setTwoFAQr(res.data.qrCodeUrl);
+      setTwoFASecret(res.data.secret); // Store secret for manual entry
       setTwoFACode('');
       setTwoFAStep('setup');
     } catch (e: any) {
@@ -348,22 +350,213 @@ function SettingsContent() {
                   
                   {twoFAStep === 'setup' && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                      <p style={{ fontSize:'13px', fontWeight:600, color:textMain, marginBottom:'8px' }}>1. Scan this QR code with Google Authenticator or Authy:</p>
-                      {twoFAQr ? (
-                        <div style={{ background:'white', padding:'12px', borderRadius:'8px', display:'inline-block', marginBottom:'16px' }}>
-                          <img src={twoFAQr} alt="2FA QR Code" style={{ width:'160px', height:'160px' }} />
-                        </div>
-                      ) : <div style={{ height:'160px', width:'160px', background:surface, borderRadius:'8px', marginBottom:'16px' }} />}
+                      <p style={{ fontSize:'13px', fontWeight:600, color:textMain, marginBottom:'8px' }}>
+                        Choose your setup method:
+                      </p>
                       
-                      <p style={{ fontSize:'13px', fontWeight:600, color:textMain, marginBottom:'8px' }}>2. Enter the 6-digit code from the app:</p>
+                      {/* Option 1: QR Code */}
+                      <div style={{ background: surface, border: `1px solid ${border}`, borderRadius: '12px', padding: '16px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                          <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--primary)' }} />
+                          <span style={{ fontSize: '13px', fontWeight: 600, color: textMain }}>Option 1: Scan QR Code</span>
+                        </div>
+                        <p style={{ fontSize:'12px', color:textMuted, marginBottom:'12px' }}>
+                          Open Google Authenticator, Authy, or Microsoft Authenticator and scan this code:
+                        </p>
+                        {twoFAQr ? (
+                          <div style={{ background:'white', padding:'12px', borderRadius:'8px', display:'inline-block', marginBottom:'8px', position: 'relative' }}>
+                            <img src={twoFAQr} alt="2FA QR Code" style={{ width:'160px', height:'160px' }} />
+                            <button
+                              onClick={() => {
+                                navigator.clipboard.writeText(twoFAQr);
+                                toast.success('QR code data URL copied');
+                              }}
+                              style={{
+                                position: 'absolute',
+                                top: '8px',
+                                right: '8px',
+                                background: 'rgba(0,0,0,0.7)',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '4px',
+                                padding: '4px 8px',
+                                fontSize: '10px',
+                                cursor: 'pointer'
+                              }}
+                            >
+                              Copy Image
+                            </button>
+                          </div>
+                        ) : <div style={{ height:'160px', width:'160px', background:surface, borderRadius:'8px', marginBottom:'8px', display:'flex', alignItems:'center', justifyContent:'center', color:textMuted }}>Generating...</div>}
+                      </div>
+
+                      {/* Option 2: Manual Entry - Secret Key */}
+                      <div style={{ background: surface, border: `1px solid ${border}`, borderRadius: '12px', padding: '16px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                          <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--gold)' }} />
+                          <span style={{ fontSize: '13px', fontWeight: 600, color: textMain }}>Option 2: Manual Entry (Setup Key)</span>
+                        </div>
+                        <p style={{ fontSize:'12px', color:textMuted, marginBottom:'12px' }}>
+                          Can't scan? Enter this setup key manually in your authenticator app:
+                        </p>
+                        {twoFASecret && (
+                          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                            <code style={{
+                              background: 'var(--bg)',
+                              border: `1px solid ${border}`,
+                              borderRadius: '8px',
+                              padding: '12px 16px',
+                              fontSize: '14px',
+                              fontFamily: 'monospace',
+                              letterSpacing: '0.1em',
+                              color: textMain,
+                              flex: 1,
+                              minWidth: '200px',
+                              textTransform: 'uppercase',
+                              userSelect: 'all'
+                            }}>
+                              {twoFASecret.match(/.{1,4}/g)?.join(' ') || twoFASecret}
+                            </code>
+                            <button
+                              onClick={() => {
+                                navigator.clipboard.writeText(twoFASecret);
+                                toast.success('Setup key copied to clipboard');
+                              }}
+                              style={{
+                                background: 'var(--primary)',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '8px',
+                                padding: '8px 16px',
+                                fontSize: '12px',
+                                fontWeight: 600,
+                                cursor: 'pointer',
+                                whiteSpace: 'nowrap'
+                              }}
+                            >
+                              Copy Key
+                            </button>
+                          </div>
+                          <p style={{ fontSize:'11px', color:textMuted, marginTop:'8px' }}>
+                            Enter this key in your authenticator app as "Setup Key" or "Manual Entry"
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Option 3: OTPAuth URL (for apps that accept URL paste) */}
+                      {twoFAQr && (
+                        <div style={{ background: surface, border: `1px solid ${border}`, borderRadius: '12px', padding: '16px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--success)' }} />
+                            <span style={{ fontSize: '13px', fontWeight: 600, color: textMain }}>Option 3: Paste OTPAuth URL</span>
+                          </div>
+                          <p style={{ fontSize:'12px', color:textMuted, marginBottom:'12px' }}>
+                            Some authenticator apps accept pasting the otpauth:// URL directly:
+                          </p>
+                          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                            <code style={{
+                              background: 'var(--bg)',
+                              border: `1px solid ${border}`,
+                              borderRadius: '8px',
+                              padding: '8px 12px',
+                              fontSize: '11px',
+                              fontFamily: 'monospace',
+                              color: textMain,
+                              flex: 1,
+                              minWidth: '200px',
+                              overflow: 'auto',
+                              maxWidth: '100%',
+                              whiteSpace: 'nowrap'
+                            }}>
+                              {twoFAQr.split(',')[1] ? atob(twoFAQr.split(',')[1]).split('?')[0] + '?' + atob(twoFAQr.split(',')[1]).split('?')[1] : 'otpauth://totp/KRYROS%20Admin:...'}
+                            </code>
+                            <button
+                              onClick={() => {
+                                const otpauthUrl = twoFAQr.split(',')[1] ? atob(twoFAQr.split(',')[1]) : '';
+                                if (otpauthUrl) {
+                                  navigator.clipboard.writeText(otpauthUrl);
+                                  toast.success('OTPAuth URL copied to clipboard');
+                                }
+                              }}
+                              style={{
+                                background: 'var(--primary)',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '8px',
+                                padding: '8px 16px',
+                                fontSize: '12px',
+                                fontWeight: 600,
+                                cursor: 'pointer',
+                                whiteSpace: 'nowrap'
+                              }}
+                            >
+                              Copy URL
+                            </button>
+                          </div>
+                          <p style={{ fontSize:'11px', color:textMuted, marginTop:'8px' }}>
+                            Paste this URL into apps like 1Password, Bitwarden, or KeePassXC
+                          </p>
+                        </div>
+                      )}
+
+                      <p style={{ fontSize:'13px', fontWeight:600, color:textMain, marginBottom:'8px', marginTop: '8px' }}>
+                        3. Enter the 6-digit code from your authenticator app:
+                      </p>
                       <div style={{ display:'flex', gap:'8px' }}>
                         <input style={{...inputStyle, width:'120px'}} maxLength={6} placeholder="000000" value={twoFACode} onChange={e=>setTwoFACode(e.target.value)} />
                         <button onClick={handle2faEnable} disabled={twoFABusy || twoFACode.length!==6}
                           style={{ background:'var(--primary)', color:'white', border:'none', borderRadius:'8px', padding:'0 16px', fontSize:'13px', fontWeight:600, cursor:'pointer' }}>
                           Verify & Enable
                         </button>
-                        <button onClick={()=>setTwoFAStep('disabled')} style={{ background:'transparent', border:'none', color:textMuted, fontSize:'13px', cursor:'pointer' }}>Cancel</button>
+                        <button onClick={()=>{setTwoFAStep('disabled'); setTwoFASecret('');}} style={{ background:'transparent', border:'none', color:textMuted, fontSize:'13px', cursor:'pointer' }}>Cancel</button>
                       </div>
+
+                      {/* Troubleshooting */}
+                      <details style={{ marginTop: '20px', padding: '16px', background: surface, border: `1px solid ${border}`, borderRadius: '12px' }}>
+                        <summary style={{ cursor: 'pointer', fontSize: '12px', fontWeight: 600, color: textMuted, listStyle: 'none' }}>
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                            <span style={{ fontSize: '10px' }}>▸</span> Troubleshooting: "Invalid code" errors
+                          </span>
+                        </summary>
+                        <div style={{ marginTop: '12px', fontSize: '11px', color: textMuted, lineHeight: 1.7 }}>
+                          <div style={{ marginBottom: '8px' }}>
+                            <strong style={{ color: textMain }}>⏱ Time Sync Issues (Most Common):</strong>
+                            <ul style={{ margin: '6px 0 0 16px', padding: 0 }}>
+                              <li>TOTP codes change every 30 seconds - enter quickly!</li>
+                              <li>Your device clock MUST match the server time (±30s)</li>
+                              <li><strong>Fix:</strong> Enable "Set time automatically" in OS settings</li>
+                              <li><strong>Mobile:</strong> Settings → Date & Time → "Automatic date & time"</li>
+                              <li><strong>Authenticator apps:</strong> Some have "Time correction" in settings</li>
+                            </ul>
+                          </div>
+                          <div style={{ marginBottom: '8px' }}>
+                            <strong style={{ color: textMain }}>📱 Authenticator App Tips:</strong>
+                            <ul style={{ margin: '6px 0 0 16px', padding: 0 }}>
+                              <li>Google Authenticator: ⋮ → Time correction → Sync now</li>
+                              <li>Authy: Settings → Accounts → Time sync</li>
+                              <li>Microsoft Authenticator: ⋮ → Settings → Time sync</li>
+                              <li>1Password/Bitwarden: Sync is automatic</li>
+                            </ul>
+                          </div>
+                          <div style={{ marginBottom: '8px' }}>
+                            <strong style={{ color: textMain }}>🔑 Common Mistakes:</strong>
+                            <ul style={{ margin: '6px 0 0 16px', padding: 0 }}>
+                              <li>Entering spaces in the code (use 6 digits only: 123456)</li>
+                              <li>Using an old/expired code (codes refresh every 30s)</li>
+                              <li>Multiple 2FA entries for same account - delete old ones</li>
+                              <li>Wrong account selected in authenticator app</li>
+                            </ul>
+                          </div>
+                          <div style={{ marginBottom: '0' }}>
+                            <strong style={{ color: textMain }}>🔧 Still not working?</strong>
+                            <ul style={{ margin: '6px 0 0 16px', padding: 0 }}>
+                              <li>Click "Cancel" above, then "Enable 2FA" again to generate a new secret</li>
+                              <li>Ensure your server has <code>TOTP_ENCRYPTION_KEY</code> in environment variables</li>
+                              <li>Check server time with: <code>date</code> (should be UTC)</li>
+                            </ul>
+                          </div>
+                        </div>
+                      </details>
                     </div>
                   )}
                   

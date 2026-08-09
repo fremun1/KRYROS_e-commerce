@@ -27,7 +27,7 @@ const FRAME_ANCESTORS = IS_PROD
   ? "'self' *.agemo.ai *.codewords.run *.codewords.click"
   : "'self' *.agemo.ai *.codewords.run *.codewords.click *.ngrok.app *.ngrok.dev localhost:3001";
 
-const SKIP_PATHS = ["/_next", "/favicon.ico", "/health", "/api/health", "/api/cw-auth"];
+const SKIP_PATHS = ["/_next", "/favicon.ico", "/health", "/api/health", "/api/cw-auth", "/api/bff/check-region", "/login"];
 
 const CODEWORDS_APP_URL =
   process.env.CODEWORDS_APP_URL || "https://codewords.agemo.ai";
@@ -107,6 +107,29 @@ export function middleware(request: NextRequest) {
       const loginUrl = new URL("/login", request.url);
       loginUrl.searchParams.set("from", encodeURIComponent(pathname));
       return NextResponse.redirect(loginUrl);
+    }
+  }
+
+  // ── Region Restriction Check ─────────────────────────────────────────────
+  // Skip region check for API routes (they have their own guard) and login page
+  const isApiRoute = pathname.startsWith("/api/");
+  const isLoginPage = pathname === "/login";
+  
+  if (!isApiRoute && !isLoginPage && needsAdminAuth) {
+    const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+               request.headers.get("x-real-ip");
+    
+    if (ip) {
+      try {
+        // Call backend to check region (we can't do this synchronously in middleware)
+        // For now, we'll rely on the client-side check in AdminShell + backend guard on login
+        // The middleware can set a header for the client to use
+        const response = NextResponse.next();
+        response.headers.set("x-client-ip", ip);
+        return addSecurityHeaders(injectAuthHeader(request, response), request);
+      } catch {
+        // Continue if check fails
+      }
     }
   }
 

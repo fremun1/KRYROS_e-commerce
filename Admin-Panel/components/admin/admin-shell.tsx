@@ -4,67 +4,18 @@ import { useRouter } from "next/navigation";
 import { AuthProvider, useAuth } from "@/contexts/auth-context";
 import Sidebar from "@/components/admin/sidebar";
 import Topbar from "@/components/admin/topbar";
-import toast from "react-hot-toast";
-import api from "@/lib/api";
+import { useScreenshotRestriction } from "@/hooks/useScreenshotRestriction";
+import { useRegionRestriction } from "@/hooks/useRegionRestriction";
 
 function AdminShellInner({ children, noPadding }: { children: React.ReactNode; noPadding?: boolean }) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(() => typeof window !== "undefined" ? window.innerWidth < 768 : true);
-  const [screenshotBlocked, setScreenshotBlocked] = useState(false);
   const { isAuthenticated, loading } = useAuth();
+  const { enabled: screenshotBlocked, loaded: screenshotLoaded } = useScreenshotRestriction();
+  const { blocked: regionBlocked, loaded: regionLoaded, message: regionMessage } = useRegionRestriction();
   const router = useRouter();
   const sidebarW = collapsed ? 60 : 260;
-
-  useEffect(() => {
-    let cancelled = false;
-    api.get("/api/settings").then((r: any) => {
-      if (cancelled) return;
-      const settings = Array.isArray(r.data) ? r.data : [];
-      const map: Record<string, string> = {};
-      settings.forEach((s: any) => { map[s.key] = s.value; });
-      if (map.admin_screenshot_restriction_enabled === 'true') {
-        setScreenshotBlocked(true);
-      }
-    }).catch(() => {});
-    return () => { cancelled = true; };
-  }, []);
-
-  useEffect(() => {
-    if (!screenshotBlocked) return;
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'PrintScreen') {
-        e.preventDefault();
-        toast.error("Screenshots are disabled in the admin panel", { duration: 3000 });
-        return;
-      }
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'p') {
-        e.preventDefault();
-        toast.error("Printing is disabled in the admin panel", { duration: 3000 });
-      }
-    };
-
-    const handleContextMenu = (e: MouseEvent) => {
-      e.preventDefault();
-      toast.error("Right-click is disabled in the admin panel", { duration: 3000 });
-    };
-
-    const handleCopy = (e: ClipboardEvent) => {
-      e.preventDefault();
-      toast.error("Copying is disabled in the admin panel", { duration: 3000 });
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('contextmenu', handleContextMenu);
-    window.addEventListener('copy', handleCopy);
-
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('contextmenu', handleContextMenu);
-      window.removeEventListener('copy', handleCopy);
-    };
-  }, [screenshotBlocked]);
 
   // Detect mobile ONCE and on resize — no layout flicker
   useEffect(() => {
@@ -79,6 +30,34 @@ function AdminShellInner({ children, noPadding }: { children: React.ReactNode; n
       router.replace("/login");
     }
   }, [loading, isAuthenticated, router]);
+
+  // Show region blocked message if enabled and user is from blocked region
+  if (regionLoaded && regionBlocked) {
+    return (
+      <div style={{
+        minHeight: "100vh",
+        background: "var(--bg)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "24px",
+        textAlign: "center"
+      }}>
+        <div style={{ maxWidth: "400px" }}>
+          <div style={{ fontSize: "64px", marginBottom: "16px" }}>🌍</div>
+          <h1 style={{ fontSize: "24px", fontWeight: 700, color: "var(--text-main)", marginBottom: "12px" }}>
+            Access Restricted
+          </h1>
+          <p style={{ fontSize: "16px", color: "var(--text-muted)", lineHeight: 1.6 }}>
+            {regionMessage}
+          </p>
+          <p style={{ fontSize: "14px", color: "var(--text-muted)", marginTop: "16px" }}>
+            If you believe this is an error, please contact your administrator.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
