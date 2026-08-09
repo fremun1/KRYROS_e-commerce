@@ -45,6 +45,11 @@ export class CreateUserDto {
   @Transform(({ value }) => value?.trim())
   phone?: string;
 
+  @ApiProperty({ example: '1995-12-25', required: false })
+  @IsOptional()
+  @IsString()
+  dob?: string;
+
   @ApiProperty({ example: 'ZM', required: false, description: 'ISO-3166-1 alpha-2 country code' })
   @IsOptional()
   @IsString()

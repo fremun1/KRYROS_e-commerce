@@ -54,4 +54,9 @@ export class VerifyOtpDto {
   @IsOptional()
   @IsString()
   lastName?: string;
+
+  @ApiProperty({ description: 'User Date of Birth (optional)', required: false })
+  @IsOptional()
+  @IsString()
+  dob?: string;
 }

@@ -84,6 +84,7 @@ export default function AuthPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [dob, setDob] = useState("");
   const [phone, setPhone] = useState("");
   const [countryCode, setCountryCode] = useState("+260");
   const [selectedIso, setSelectedIso] = useState("ZM");
@@ -223,7 +224,8 @@ export default function AuthPage() {
           code,
           password,
           firstName: firstName.trim(),
-          lastName: lastName.trim()
+          lastName: lastName.trim(),
+          dob
         })
       });
       
@@ -306,13 +308,12 @@ export default function AuthPage() {
 
   const Logo = () => (
     <div className="flex flex-col items-center select-none">
-      <div className="w-[56px] h-[56px] rounded-full bg-[var(--kryros-primary)] flex items-center justify-center shadow-sm border border-[#E5E5E5]/10 mb-2">
-        <img
-          src="/kryros-logo.png"
-          alt="KRYROS"
-          className="w-[34px] h-[34px] object-contain brightness-0 invert"
-        />
-      </div>
+      <img
+        src="/kryros-logo.png"
+        alt="KRYROS"
+        className="w-[48px] h-[48px] object-contain mb-1.5"
+        loading="eager"
+      />
       <div className="text-[12px] font-black tracking-[0.15em] uppercase text-[#313133] font-['Roboto']">KRYROS</div>
     </div>
   );
@@ -617,6 +618,17 @@ export default function AuthPage() {
         </div>
 
         <div>
+          <label className={lc}>Date of Birth*</label>
+          <input
+            type="date"
+            value={dob}
+            onChange={(e) => setDob(e.target.value)}
+            className={ic}
+            required
+          />
+        </div>
+
+        <div>
           <label className={lc}>Phone Number {selectedIso === "ZM" ? "(Zambia: mandatory)" : "(Optional)"}</label>
           <div className="flex gap-2 h-[48px]">
             <div className="relative w-[100px] shrink-0">
@@ -665,7 +677,7 @@ export default function AuthPage() {
         <button
           type="button"
           onClick={handleRegisterAndSendOTP}
-          disabled={active || !firstName.trim() || !lastName.trim() || !acceptedTerms}
+          disabled={active || !firstName.trim() || !lastName.trim() || !dob || !acceptedTerms}
           className={bp}
         >
           {active ? <Spinner /> : "Continue"}
@@ -805,19 +817,21 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-white flex flex-col items-center justify-start font-['Roboto'] overflow-x-hidden pt-12 md:pt-16 px-4 pb-8">
-      <div className="w-full max-w-[360px] flex flex-col relative">
+    <div className="h-screen h-[100dvh] w-full bg-white flex flex-col items-center justify-between font-['Roboto'] overflow-hidden py-6 px-4 select-none">
+      <div className="w-full max-w-[360px] flex-1 flex flex-col justify-between relative">
 
         {/* TOP HEADER */}
-        {step !== "checking" && (
-          <div className="w-full relative flex items-center justify-center mb-6 shrink-0">
+        {step !== "checking" ? (
+          <div className="w-full relative flex items-center justify-center mb-4 shrink-0">
             {showBack && <BackButton onClick={onBack} />}
             <Logo />
           </div>
+        ) : (
+          <div className="h-8 shrink-0" />
         )}
 
         {/* MAIN BODY */}
-        <div className="flex flex-col justify-start">
+        <div className="flex-1 flex flex-col justify-center my-auto min-h-0">
           <NoticeBanner />
           <div key={step} className="flex flex-col" style={{ animation: "fadeSlideIn 0.3s ease-out" }}>
             {renderCurrentStepContent()}
@@ -825,7 +839,11 @@ export default function AuthPage() {
         </div>
 
         {/* SUPPORT FOOTER */}
-        {step !== "checking" && <SupportFooter mt="mt-8" />}
+        {step !== "checking" ? (
+          <SupportFooter mt="mt-4" />
+        ) : (
+          <div className="h-12 shrink-0" />
+        )}
       </div>
       <style>{`@keyframes fadeSlideIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}`}</style>
     </div>
