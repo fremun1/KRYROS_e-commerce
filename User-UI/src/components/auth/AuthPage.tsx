@@ -815,6 +815,8 @@ export default function AuthPage() {
   return (
     <div className="h-[100dvh] w-full bg-white flex flex-col items-center font-['Roboto'] overflow-hidden py-3 px-4 select-none">
       <div className="w-full max-w-[360px] flex-1 flex flex-col relative min-h-0">
+        {/* TOP SPACER - balances content vertically */}
+        <div className="flex-1" />
 
         {/* TOP HEADER */}
         {step !== "checking" ? (
