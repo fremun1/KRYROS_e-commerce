@@ -367,7 +367,6 @@ export default function AuthPage() {
 
   const renderIdentifierStep = () => (
     <div className="flex flex-col">
-      <Logo mb="mb-1.5" />
       <div className="text-center mb-4">
         <h2 className="text-[19px] font-bold text-[#313133] font-['Roboto']">Welcome to KRYROS</h2>
         <p className="text-[12px] text-[#75757A] mt-0.5 font-['Roboto']">
@@ -448,14 +447,11 @@ export default function AuthPage() {
           </div>
         </>
       )}
-      <SupportFooter mt="mt-3" />
     </div>
   );
 
   const renderLoginStep = () => (
     <form onSubmit={handleLogin} className="flex flex-col">
-      <BackButton onClick={() => goTo("identifier")} />
-      <Logo mb="mb-1.5" />
       <div className="text-center mb-4">
         <h2 className="text-[19px] font-bold text-[#313133] font-['Roboto']">Welcome back!</h2>
         <p className="text-[12px] text-[#75757A] mt-0.5 font-['Roboto']">Enter your password to sign in.</p>
@@ -497,15 +493,11 @@ export default function AuthPage() {
       <button type="submit" disabled={active} className={bp}>
         {active ? <Spinner /> : "Sign In"}
       </button>
-
-      <SupportFooter mt="mt-3" />
     </form>
   );
 
   const renderRegisterPasswordStep = () => (
     <div className="flex flex-col">
-      <BackButton onClick={() => goTo("identifier")} />
-      <Logo mb="mb-1.5" />
       <div className="text-center mb-4">
         <h2 className="text-[19px] font-bold text-[#313133] font-['Roboto']">Create your account</h2>
         <p className="text-[12px] text-[#75757A] mt-0.5 font-['Roboto']">Secure your account with a strong password.</p>
@@ -576,15 +568,11 @@ export default function AuthPage() {
       >
         Continue
       </button>
-
-      <SupportFooter mt="mt-3" />
     </div>
   );
 
   const renderDetailsStep = () => (
-    <div className="flex flex-col mt-[-10px]">
-      <BackButton onClick={() => goTo("register-password")} />
-      <Logo mb="mb-1" />
+    <div className="flex flex-col">
       <div className="text-center mb-3">
         <h2 className="text-[19px] font-bold text-[#313133] font-['Roboto']">Personal details</h2>
         <p className="text-[12px] text-[#75757A] mt-0.5 font-['Roboto']">We just need you to fill in some details.</p>
@@ -656,15 +644,11 @@ export default function AuthPage() {
       >
         {active ? <Spinner /> : "Continue"}
       </button>
-
-      <SupportFooter mt="mt-2.5" />
     </div>
   );
 
   const renderOTPStep = () => (
-    <div className="flex flex-col mt-[-10px]">
-      <BackButton onClick={() => goTo("register-details")} />
-      <Logo mb="mb-1.5" />
+    <div className="flex flex-col">
       <div className="text-center mb-4">
         <h2 className="text-[19px] font-bold text-[#313133] font-['Roboto']">Verify your phone number</h2>
         <p className="text-[12px] text-[#75757A] mt-0.5 font-['Roboto']">We have sent a verification code to</p>
@@ -717,8 +701,6 @@ export default function AuthPage() {
       >
         {active ? <Spinner /> : "Submit"}
       </button>
-
-      <SupportFooter mt="mt-3" />
     </div>
   );
 
@@ -735,8 +717,7 @@ export default function AuthPage() {
   }, [step]);
 
   const renderSuccessStep = () => (
-    <div className="flex flex-col items-center text-center mt-[-10px]">
-      <Logo mb="mb-1.5" />
+    <div className="flex flex-col items-center text-center">
       <div className="w-[64px] h-[64px] bg-[#2DBE60] rounded-full flex items-center justify-center mb-4 mt-1 shadow-sm">
         <Check className="w-8 h-8 text-white" strokeWidth={3} />
       </div>
@@ -751,30 +732,62 @@ export default function AuthPage() {
       >
         Continue Shopping
       </button>
-
-      <SupportFooter />
     </div>
   );
 
   const renderChecking = () => (
-    <div className="flex flex-col items-center justify-center py-8">
+    <div className="flex flex-col items-center justify-center py-12">
       <Logo />
       <Spinner />
       <p className="text-[14px] text-[#75757A] mt-4 font-['Roboto']">Checking your account...</p>
     </div>
   );
 
+  const renderStepContainer = (
+    content: React.ReactNode,
+    showBack: boolean,
+    onBack?: () => void
+  ) => (
+    <div className="flex flex-col justify-between w-full min-h-[calc(100vh-3rem)] max-w-[360px] mx-auto py-2 relative bg-white">
+      <div className="flex flex-col w-full">
+        {/* Consistent Top Header row containing Logo and Back Button */}
+        <div className="h-14 relative mb-4 flex items-center justify-center shrink-0">
+          {showBack && onBack && <BackButton onClick={onBack} />}
+          <Logo mb="mb-0" />
+        </div>
+        <NoticeBanner />
+        {content}
+      </div>
+      <SupportFooter mt="mt-auto pt-6" />
+    </div>
+  );
+
+  const renderCurrentStepContent = () => {
+    switch (step) {
+      case "identifier":
+        return renderStepContainer(renderIdentifierStep(), false);
+      case "login":
+        return renderStepContainer(renderLoginStep(), true, () => goTo("identifier"));
+      case "register-password":
+        return renderStepContainer(renderRegisterPasswordStep(), true, () => goTo("identifier"));
+      case "register-details":
+        return renderStepContainer(renderDetailsStep(), true, () => goTo("register-password"));
+      case "register-otp":
+        return renderStepContainer(renderOTPStep(), true, () => goTo("register-details"));
+      case "success":
+        return renderStepContainer(renderSuccessStep(), false);
+      case "checking":
+        return renderChecking();
+      default:
+        return null;
+    }
+  };
+
   return (
-    <div className="fixed inset-0 bg-[#F5F5F5] flex items-center justify-center p-4" style={{ overflow: "hidden" }}>
-      <div className="w-full max-w-[400px] bg-white rounded-[16px] shadow-[0_4px_30px_rgba(0,0,0,0.06)] border border-[#E5E5E5] p-6 pb-7 relative overflow-hidden">
-        <div key={step} style={{ animation: "fadeSlideIn 0.3s ease-out" }}>
-          {step === "checking" && renderChecking()}
-          {step === "identifier" && <><NoticeBanner />{renderIdentifierStep()}</>}
-          {step === "login" && <><NoticeBanner />{renderLoginStep()}</>}
-          {step === "register-password" && <><NoticeBanner />{renderRegisterPasswordStep()}</>}
-          {step === "register-details" && <><NoticeBanner />{renderDetailsStep()}</>}
-          {step === "register-otp" && <><NoticeBanner />{renderOTPStep()}</>}
-          {step === "success" && renderSuccessStep()}
+    <div className="min-h-screen w-full bg-white flex flex-col justify-start items-center overflow-y-auto overflow-x-hidden">
+      <div className="w-full max-w-[400px] bg-white px-6 py-4 relative flex flex-col flex-grow">
+        <div key={step} className="flex flex-col flex-grow" style={{ animation: "fadeSlideIn 0.3s ease-out" }}>
+          {renderCurrentStepContent()}
         </div>
       </div>
       <style>{`@keyframes fadeSlideIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}`}</style>
