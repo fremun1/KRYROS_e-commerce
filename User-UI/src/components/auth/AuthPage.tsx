@@ -311,24 +311,22 @@ export default function AuthPage() {
       <img
         src="/kryros-logo.png"
         alt="KRYROS"
-        className="w-[48px] h-[48px] object-contain mb-1.5"
+        className="w-[44px] h-[44px] object-contain"
         loading="eager"
       />
-      <div className="text-[12px] font-black tracking-[0.15em] uppercase text-[#313133] font-['Roboto']">KRYROS</div>
     </div>
   );
 
-  const SupportFooter = ({ mt = "mt-8" }: { mt?: string }) => (
-    <div className={`${mt} text-center border-t border-[#F0F0F0] pt-5 font-['Roboto'] shrink-0`}>
+  const SupportFooter = ({ mt = "mt-4" }: { mt?: string }) => (
+    <div className={`${mt} text-center border-t border-[#F0F0F0] pt-3 font-['Roboto'] shrink-0`}>
       <p className="text-[11px] text-[#75757A] leading-relaxed">
         Need help? Visit our <a href="#" className="text-[var(--kryros-primary)] font-medium hover:underline">Help Center</a> or contact us on
       </p>
-      <p className="text-[12px] font-bold text-[#313133] mt-1">
-        08000-KRYROS
+      <p className="text-[12px] font-bold text-[#313133] mt-0.5">
+        +260966423719
       </p>
-      <div className="flex items-center justify-center gap-1.5 mt-3">
+      <div className="flex items-center justify-center gap-1.5 mt-2">
         <span className="text-[11px] font-black uppercase tracking-[0.15em] text-[#A0A0A5]">KRYROS</span>
-        <span className="w-1.5 h-1.5 rounded-full bg-[var(--kryros-primary)]"></span>
       </div>
     </div>
   );
@@ -340,7 +338,7 @@ export default function AuthPage() {
   };
 
   const ShownEmail = ({ onEdit }: { onEdit: () => void }) => (
-    <div className="bg-[#FAFAFA] border border-[#E5E5E5] rounded-[8px] px-4 py-3 mb-5 flex items-center justify-between font-['Roboto']">
+    <div className="bg-[#FAFAFA] border border-[#E5E5E5] rounded-[8px] px-4 py-2.5 mb-3.5 flex items-center justify-between font-['Roboto']">
       <span className="text-[14px] text-[#313133] truncate flex-1 font-medium">{identifier}</span>
       <button type="button" onClick={onEdit} className="text-[var(--kryros-primary)] text-[12px] font-bold bg-transparent border-none cursor-pointer hover:underline ml-2 shrink-0 font-['Roboto']">Edit</button>
     </div>
@@ -369,14 +367,14 @@ export default function AuthPage() {
 
   const renderIdentifierStep = () => (
     <div className="flex flex-col">
-      <div className="text-center mb-5">
+      <div className="text-center mb-3.5">
         <h2 className="text-[20px] font-extrabold text-[#313133] font-['Roboto'] tracking-tight">Welcome to KRYROS</h2>
-        <p className="text-[13px] text-[#75757A] mt-1.5 font-['Roboto']">
+        <p className="text-[13px] text-[#75757A] mt-1 font-['Roboto']">
           {checkFallback ? "Let's get you set up" : "Use your email or phone to log in or sign up."}
         </p>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-3.5">
         <div>
           <label className={lc}>Email or Mobile Number*</label>
           <input
@@ -401,36 +399,36 @@ export default function AuthPage() {
               {active ? <Spinner /> : "Continue"}
             </button>
 
-            <div className="flex items-center gap-3 py-1 mt-1">
+            <div className="flex items-center gap-3 py-0.5 mt-0.5">
               <div className="flex-grow h-px bg-[#E5E5E5]" />
               <span className="text-[11px] text-[#9E9E9E] uppercase tracking-[0.05em] font-['Roboto']">or log in with</span>
               <div className="flex-grow h-px bg-[#E5E5E5]" />
             </div>
 
-            <div className="flex items-center justify-center gap-5 my-1">
+            <div className="flex items-center justify-center gap-5 my-0.5">
               <button
                 type="button"
-                className="w-[50px] h-[50px] rounded-full border border-[#E5E5E5] bg-white flex items-center justify-center hover:border-[var(--kryros-primary)] hover:shadow-sm active:scale-95 transition-all cursor-pointer"
+                className="w-[46px] h-[46px] rounded-full border border-[#E5E5E5] bg-white flex items-center justify-center hover:border-[var(--kryros-primary)] hover:shadow-sm active:scale-95 transition-all cursor-pointer"
               >
                 <GoogleIcon />
               </button>
               <button
                 type="button"
-                className="w-[50px] h-[50px] rounded-full border border-[#E5E5E5] bg-white flex items-center justify-center hover:border-[var(--kryros-primary)] hover:shadow-sm active:scale-95 transition-all cursor-pointer"
+                className="w-[46px] h-[46px] rounded-full border border-[#E5E5E5] bg-white flex items-center justify-center hover:border-[var(--kryros-primary)] hover:shadow-sm active:scale-95 transition-all cursor-pointer"
               >
                 <FacebookIcon />
               </button>
             </div>
 
-            <p className="text-center text-[11.5px] text-[#75757A] leading-relaxed font-['Roboto'] pt-2 px-2">
+            <p className="text-center text-[11.5px] text-[#75757A] leading-relaxed font-['Roboto'] pt-1 px-2">
               By continuing you agree to KRYROS's <br />
               <a href="#" className="text-[var(--kryros-primary)] hover:underline font-medium">Terms and Conditions</a> & <a href="#" className="text-[var(--kryros-primary)] hover:underline font-medium">Privacy Policy</a>
             </p>
           </>
         ) : (
           <>
-            <p className="text-center text-[13px] text-[#75757A] mb-3 font-['Roboto']">Is this a new or existing account?</p>
-            <div className="flex flex-col gap-3">
+            <p className="text-center text-[13px] text-[#75757A] mb-2 font-['Roboto']">Is this a new or existing account?</p>
+            <div className="flex flex-col gap-2.5">
               <button
                 type="button"
                 onClick={() => goTo("login")}
@@ -456,14 +454,14 @@ export default function AuthPage() {
 
   const renderLoginStep = () => (
     <form onSubmit={handleLogin} className="flex flex-col">
-      <div className="text-center mb-5">
+      <div className="text-center mb-3.5">
         <h2 className="text-[20px] font-extrabold text-[#313133] font-['Roboto'] tracking-tight">Welcome back!</h2>
-        <p className="text-[13px] text-[#75757A] mt-1.5 font-['Roboto']">Enter your password to sign in.</p>
+        <p className="text-[13px] text-[#75757A] mt-1 font-['Roboto']">Enter your password to sign in.</p>
       </div>
 
       <ShownEmail onEdit={() => goTo("identifier")} />
 
-      <div className="space-y-4">
+      <div className="space-y-3.5">
         <div>
           <label className={lc}>Password</label>
           <div className="relative">
@@ -504,14 +502,14 @@ export default function AuthPage() {
 
   const renderRegisterPasswordStep = () => (
     <div className="flex flex-col">
-      <div className="text-center mb-5">
+      <div className="text-center mb-3.5">
         <h2 className="text-[20px] font-extrabold text-[#313133] font-['Roboto'] tracking-tight">Create your account</h2>
-        <p className="text-[13px] text-[#75757A] mt-1.5 font-['Roboto']">Secure your account with a strong password.</p>
+        <p className="text-[13px] text-[#75757A] mt-1 font-['Roboto']">Secure your account with a strong password.</p>
       </div>
 
       <ShownEmail onEdit={() => goTo("identifier")} />
 
-      <div className="space-y-4">
+      <div className="space-y-3.5">
         <div>
           <label className={lc}>Create Password</label>
           <div className="relative">
@@ -534,8 +532,8 @@ export default function AuthPage() {
             </button>
           </div>
           {password.length > 0 && (
-            <div className="mt-2.5">
-              <div className="flex justify-between items-center mb-1.5">
+            <div className="mt-1.5">
+              <div className="flex justify-between items-center mb-1">
                 <span className="text-[12px] font-bold" style={{ color: strengthColor() }}>
                   {passwordEval.label}
                 </span>
@@ -568,7 +566,7 @@ export default function AuthPage() {
             </button>
           </div>
           {confirmPassword && password !== confirmPassword && (
-            <p className="text-[11.5px] text-[#D63031] mt-1.5 font-['Roboto'] font-medium">Passwords do not match</p>
+            <p className="text-[11.5px] text-[#D63031] mt-1 font-['Roboto'] font-medium">Passwords do not match</p>
           )}
         </div>
 
@@ -586,12 +584,12 @@ export default function AuthPage() {
 
   const renderDetailsStep = () => (
     <div className="flex flex-col">
-      <div className="text-center mb-5">
+      <div className="text-center mb-3.5">
         <h2 className="text-[20px] font-extrabold text-[#313133] font-['Roboto'] tracking-tight">Personal details</h2>
-        <p className="text-[13px] text-[#75757A] mt-1.5 font-['Roboto']">We just need you to fill in some details.</p>
+        <p className="text-[13px] text-[#75757A] mt-1 font-['Roboto']">We just need you to fill in some details.</p>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-3">
         <div>
           <label className={lc}>First Name*</label>
           <input
@@ -662,7 +660,7 @@ export default function AuthPage() {
         </div>
 
         {/* Mandatory Consent Checkbox */}
-        <div className="flex items-start gap-2.5 pt-1 pb-1 select-none cursor-pointer" onClick={() => setAcceptedTerms(!acceptedTerms)}>
+        <div className="flex items-start gap-2.5 pt-0.5 pb-0.5 select-none cursor-pointer" onClick={() => setAcceptedTerms(!acceptedTerms)}>
           <input
             type="checkbox"
             checked={acceptedTerms}
@@ -690,15 +688,15 @@ export default function AuthPage() {
     const isEmail = identifier.includes("@");
     return (
       <div className="flex flex-col">
-        <div className="text-center mb-5">
+        <div className="text-center mb-3.5">
           <h2 className="text-[20px] font-extrabold text-[#313133] font-['Roboto'] tracking-tight">
             {isEmail ? "Verify your email" : "Verify your phone number"}
           </h2>
-          <p className="text-[13px] text-[#75757A] mt-1.5 font-['Roboto']">We have sent a verification code to</p>
+          <p className="text-[13px] text-[#75757A] mt-1 font-['Roboto']">We have sent a verification code to</p>
           <p className="text-[14px] font-bold text-[#313133] mt-0.5 font-['Roboto']">{identifier}</p>
         </div>
 
-        <div className="space-y-5">
+        <div className="space-y-4">
           <div className="flex gap-2 justify-between" onPaste={handleOTPPaste}>
             {otp.map((digit, i) => (
               <input
@@ -720,7 +718,7 @@ export default function AuthPage() {
             📧 For non-Zambia users, the code is sent to your email. Zambia users receive via SMS.
           </p>
 
-          <div className="text-center py-1">
+          <div className="text-center py-0.5">
             {countdown > 0 ? (
               <span className="text-[12.5px] text-[#75757A] font-['Roboto']">
                 Resend code in <strong className="text-[#313133]">{Math.floor(countdown / 60)}:{(countdown % 60).toString().padStart(2, "0")}</strong>
@@ -763,13 +761,13 @@ export default function AuthPage() {
   }, [step, setLocation]);
 
   const renderSuccessStep = () => (
-    <div className="flex flex-col items-center text-center py-4">
-      <div className="w-[72px] h-[72px] bg-[var(--kryros-success)] rounded-full flex items-center justify-center mb-5 shadow-sm animate-bounce">
-        <Check className="w-9 h-9 text-white" strokeWidth={3} />
+    <div className="flex flex-col items-center text-center py-2">
+      <div className="w-[64px] h-[64px] bg-[var(--kryros-success)] rounded-full flex items-center justify-center mb-4 shadow-sm animate-bounce">
+        <Check className="w-8 h-8 text-white" strokeWidth={3} />
       </div>
-      <h2 className="text-[20px] font-extrabold text-[#313133] mb-1.5 font-['Roboto'] tracking-tight">Account created! 🎉</h2>
-      <p className="text-[13px] text-[#75757A] mb-1 font-['Roboto']">Your KRYROS account is ready.</p>
-      <p className="text-[12px] text-[#9E9E9E] mb-5 font-['Roboto']">Redirecting to your dashboard...</p>
+      <h2 className="text-[20px] font-extrabold text-[#313133] mb-1 font-['Roboto'] tracking-tight">Account created! 🎉</h2>
+      <p className="text-[13px] text-[#75757A] mb-0.5 font-['Roboto']">Your KRYROS account is ready.</p>
+      <p className="text-[12px] text-[#9E9E9E] mb-4 font-['Roboto']">Redirecting to your dashboard...</p>
 
       <button
         type="button"
@@ -817,12 +815,12 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="h-screen h-[100dvh] w-full bg-white flex flex-col items-center justify-between font-['Roboto'] overflow-hidden py-6 px-4 select-none">
+    <div className="h-screen h-[100dvh] w-full bg-white flex flex-col items-center justify-between font-['Roboto'] overflow-hidden py-4 px-4 select-none">
       <div className="w-full max-w-[360px] flex-1 flex flex-col justify-between relative">
 
         {/* TOP HEADER */}
         {step !== "checking" ? (
-          <div className="w-full relative flex items-center justify-center mb-4 shrink-0">
+          <div className="w-full relative flex items-center justify-center mb-2 shrink-0">
             {showBack && <BackButton onClick={onBack} />}
             <Logo />
           </div>
@@ -840,12 +838,17 @@ export default function AuthPage() {
 
         {/* SUPPORT FOOTER */}
         {step !== "checking" ? (
-          <SupportFooter mt="mt-4" />
+          <SupportFooter mt="mt-2" />
         ) : (
-          <div className="h-12 shrink-0" />
+          <div className="h-8 shrink-0" />
         )}
       </div>
-      <style>{`@keyframes fadeSlideIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}`}</style>
+      <style>{`
+        @keyframes fadeSlideIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+        iframe[src*="salesiq"], iframe[src*="zoho"], div[id*="zsiq"], div[class*="zsiq"], [id*="zoho"], [class*="zoho"], .zsiq_floatmain {
+          display: none !important;
+        }
+      `}</style>
     </div>
   );
 }
