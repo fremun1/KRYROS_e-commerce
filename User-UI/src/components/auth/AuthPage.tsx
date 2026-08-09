@@ -307,10 +307,12 @@ export default function AuthPage() {
 
   const Logo = () => (
     <div className="flex flex-col items-center mb-5 select-none">
-      <div className="w-[50px] h-[50px] rounded-full bg-[var(--kryros-primary)] flex items-center justify-center text-white text-[24px] font-black shadow-md">
-        K
-      </div>
-      <div className="text-[12px] font-black tracking-[0.1em] uppercase text-[#313133] mt-2 font-['Roboto']">KRYROS</div>
+      <img
+        src="/kryros-logo.png"
+        alt="KRYROS"
+        className="w-[56px] h-[56px] object-contain mb-1.5"
+      />
+      <div className="text-[12px] font-black tracking-[0.1em] uppercase text-[#313133] font-['Roboto']">KRYROS</div>
     </div>
   );
 
