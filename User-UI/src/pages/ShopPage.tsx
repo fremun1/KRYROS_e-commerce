@@ -24,9 +24,31 @@ import UnifiedProductCard from "@/components/UnifiedProductCard";
 
 export default function ShopPage() {
   const [location] = useLocation();
-  const [sections, setSections] = useState<ApiCMSSection[]>([]);
+  const [sections, setSections] = useState<ApiCMSSection[]>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const cached = localStorage.getItem("kryros_sections_shop");
+        if (cached) {
+          return JSON.parse(cached);
+        }
+      } catch (err) {
+        console.error("Error reading shop cache:", err);
+      }
+    }
+    return [];
+  });
   const [products, setProducts] = useState<Product[]>([]);
-  const [sectionsLoading, setSectionsLoading] = useState(true);
+  const [sectionsLoading, setSectionsLoading] = useState(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const cached = localStorage.getItem("kryros_sections_shop");
+        if (cached) {
+          return false; // Skip loading if we have cached data for instant load
+        }
+      } catch (_) {}
+    }
+    return true;
+  });
   const [searchLoading, setSearchLoading] = useState(false);
   const [sectionsError, setSectionsError] = useState<string | null>(null);
   const [searchError, setSearchError] = useState<string | null>(null);
@@ -40,7 +62,9 @@ export default function ShopPage() {
 
   useEffect(() => {
     const fetchSections = async () => {
-      setSectionsLoading(true);
+      if (sections.length === 0) {
+        setSectionsLoading(true);
+      }
       setSectionsError(null);
 
       try {
@@ -62,9 +86,17 @@ export default function ShopPage() {
           .sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
 
         setSections(activeSections);
+        try {
+          localStorage.setItem("kryros_sections_shop", JSON.stringify(activeSections));
+        } catch (cacheErr) {
+          console.error("Error saving shop cache:", cacheErr);
+        }
       } catch (err) {
-        setSectionsError(err instanceof Error ? err.message : "Failed to load sections");
-        setSections([]);
+        console.error("Error fetching shop sections:", err);
+        if (sections.length === 0) {
+          setSectionsError(err instanceof Error ? err.message : "Failed to load sections");
+          setSections([]);
+        }
       } finally {
         setSectionsLoading(false);
       }

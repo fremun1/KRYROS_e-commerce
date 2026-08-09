@@ -21,14 +21,39 @@ import NewsletterPopup from "@/components/NewsletterPopup";
  */
 
 export default function HomePage() {
-  const [sections, setSections] = useState<ApiCMSSection[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [sections, setSections] = useState<ApiCMSSection[]>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const cached = localStorage.getItem("kryros_sections_homepage");
+        if (cached) {
+          return JSON.parse(cached);
+        }
+      } catch (err) {
+        console.error("Error reading homepage cache:", err);
+      }
+    }
+    return [];
+  });
+  const [loading, setLoading] = useState(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const cached = localStorage.getItem("kryros_sections_homepage");
+        if (cached) {
+          return false; // Skip showing skeleton if we have cached data for instant load
+        }
+      } catch (_) {}
+    }
+    return true;
+  });
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
     const fetchSections = async () => {
-      setLoading(true);
+      // If we don't have any cached sections, show the loading skeleton
+      if (sections.length === 0) {
+        setLoading(true);
+      }
       setError(null);
 
       try {
@@ -56,11 +81,19 @@ export default function HomePage() {
           .sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
 
         setSections(activeSections);
+        try {
+          localStorage.setItem("kryros_sections_homepage", JSON.stringify(activeSections));
+        } catch (cacheErr) {
+          console.error("Error saving homepage cache:", cacheErr);
+        }
       } catch (err) {
         if (err instanceof Error && err.name === 'AbortError') return;
         console.error("Error fetching homepage sections:", err);
-        setError(err instanceof Error ? err.message : "Failed to load sections");
-        setSections([]);
+        // Only show a giant blocking error if we don't have cached sections to show
+        if (sections.length === 0) {
+          setError(err instanceof Error ? err.message : "Failed to load sections");
+          setSections([]);
+        }
       } finally {
         setLoading(false);
       }

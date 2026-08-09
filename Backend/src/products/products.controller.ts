@@ -1,5 +1,4 @@
 import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards, UseInterceptors, UploadedFiles, BadRequestException, Request } from '@nestjs/common';
-import { CacheInterceptor } from '@nestjs/cache-manager';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { ProductsService } from './products.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
@@ -93,7 +92,6 @@ export class ProductsController {
   }
 
   @Get('credit')
-  @UseInterceptors(CacheInterceptor)
   @ApiOperation({ summary: 'Get products available for credit (Public)' })
   getCreditProducts(@Query('skip') skip?: number, @Query('take') take?: number) {
     return this.productsService.findAll({
@@ -105,21 +103,18 @@ export class ProductsController {
   }
 
   @Get('featured')
-  @UseInterceptors(CacheInterceptor)
   @ApiOperation({ summary: 'Get featured products (Public)' })
   getFeatured(@Query('take') take?: number) {
     return this.productsService.getFeaturedProducts(take ? Number(take) : undefined);
   }
 
   @Get('flash-sales')
-  @UseInterceptors(CacheInterceptor)
   @ApiOperation({ summary: 'Get flash sale products (Public)' })
   getFlashSales() {
     return this.productsService.getFlashSaleProducts();
   }
 
   @Get('grouped')
-  @UseInterceptors(CacheInterceptor)
   @ApiOperation({ summary: 'Get products grouped by category and brand (Public)' })
   getGrouped(
     @Query('featured') featured?: string,

@@ -65,6 +65,19 @@ export function useScreenshotRestriction() {
 
     // 8. Disable Developer Tools shortcuts
     document.addEventListener("keydown", handleDevToolsShortcuts, true);
+
+    // 9. Blur content on print actions
+    window.addEventListener("beforeprint", handleBlur);
+    window.addEventListener("afterprint", handleFocus);
+
+    // 10. Notify mobile wrapper apps (Android/iOS) via MobileBridge to restrict hardware screenshot natively
+    if (typeof window !== "undefined" && (window as any).MobileBridge) {
+      try {
+        (window as any).MobileBridge.postMessage("enable_screenshot_restriction");
+      } catch (err) {
+        console.warn("[ScreenshotRestriction] Failed to post to MobileBridge:", err);
+      }
+    }
   };
 
   const removeRestrictions = () => {
@@ -78,10 +91,21 @@ export function useScreenshotRestriction() {
     window.removeEventListener("blur", handleBlur);
     window.removeEventListener("focus", handleFocus);
     document.removeEventListener("keydown", handleDevToolsShortcuts, true);
+    window.removeEventListener("beforeprint", handleBlur);
+    window.removeEventListener("afterprint", handleFocus);
     removeWatermark();
     // Remove blur overlay if exists
     const overlay = document.getElementById("screenshot-blur-overlay");
     if (overlay) overlay.remove();
+
+    // Notify mobile wrapper apps (Android/iOS) via MobileBridge to remove hardware screenshot restriction
+    if (typeof window !== "undefined" && (window as any).MobileBridge) {
+      try {
+        (window as any).MobileBridge.postMessage("disable_screenshot_restriction");
+      } catch (err) {
+        console.warn("[ScreenshotRestriction] Failed to post to MobileBridge:", err);
+      }
+    }
   };
 
   const preventDefault = (e: Event) => {
