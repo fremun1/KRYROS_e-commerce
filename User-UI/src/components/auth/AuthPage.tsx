@@ -305,26 +305,26 @@ export default function AuthPage() {
     </svg>
   );
 
-  const Logo = () => (
-    <div className="flex flex-col items-center mb-5 select-none">
+  const Logo = ({ mb = "mb-2" }: { mb?: string }) => (
+    <div className={`flex flex-col items-center ${mb} select-none`}>
       <img
         src="/kryros-logo.png"
         alt="KRYROS"
-        className="w-[56px] h-[56px] object-contain mb-1.5"
+        className="w-[50px] h-[50px] object-contain mb-1"
       />
-      <div className="text-[12px] font-black tracking-[0.1em] uppercase text-[#313133] font-['Roboto']">KRYROS</div>
+      <div className="text-[11px] font-black tracking-[0.1em] uppercase text-[#313133] font-['Roboto']">KRYROS</div>
     </div>
   );
 
-  const SupportFooter = () => (
-    <div className="mt-8 text-center border-t border-[#F0F0F0] pt-5 font-['Roboto']">
+  const SupportFooter = ({ mt = "mt-4" }: { mt?: string }) => (
+    <div className={`${mt} text-center border-t border-[#F0F0F0] pt-4 font-['Roboto']`}>
       <p className="text-[11px] text-[#75757A] leading-relaxed">
         Need help? Visit our <a href="#" className="text-[var(--kryros-primary)] font-medium hover:underline">Help Center</a> or contact us on
       </p>
       <p className="text-[12px] font-bold text-[#313133] mt-1">
         08000-KRYROS
       </p>
-      <div className="flex items-center justify-center gap-1.5 mt-4">
+      <div className="flex items-center justify-center gap-1.5 mt-3">
         <span className="text-[11px] font-black uppercase tracking-[0.15em] text-[#A0A0A5]">KRYROS</span>
         <span className="w-1.5 h-1.5 rounded-full bg-[var(--kryros-primary)]"></span>
       </div>
@@ -367,15 +367,15 @@ export default function AuthPage() {
 
   const renderIdentifierStep = () => (
     <div className="flex flex-col">
-      <Logo />
-      <div className="text-center mb-6">
-        <h2 className="text-[20px] font-bold text-[#313133] font-['Roboto']">Welcome to KRYROS</h2>
-        <p className="text-[13px] text-[#75757A] mt-1 font-['Roboto']">
+      <Logo mb="mb-1.5" />
+      <div className="text-center mb-4">
+        <h2 className="text-[19px] font-bold text-[#313133] font-['Roboto']">Welcome to KRYROS</h2>
+        <p className="text-[12px] text-[#75757A] mt-0.5 font-['Roboto']">
           {checkFallback ? "Let's get you set up" : "Use your email or phone to log in or sign up."}
         </p>
       </div>
 
-      <div className="mb-4">
+      <div className="mb-3">
         <label className={lc}>Email or Mobile Number*</label>
         <input
           type="text"
@@ -399,22 +399,22 @@ export default function AuthPage() {
             {active ? <Spinner /> : "Continue"}
           </button>
 
-          <div className="flex items-center gap-3 my-5">
+          <div className="flex items-center gap-3 my-3.5">
             <div className="flex-1 h-px bg-[#E5E5E5]" />
             <span className="text-[11px] text-[#9E9E9E] uppercase tracking-[0.05em] font-['Roboto']">or continue with</span>
             <div className="flex-1 h-px bg-[#E5E5E5]" />
           </div>
 
-          <div className="flex items-center justify-center gap-4 mb-6">
+          <div className="flex items-center justify-center gap-4 mb-4">
             <button
               type="button"
-              className="w-[48px] h-[48px] rounded-full border border-[#E5E5E5] bg-white flex items-center justify-center hover:border-[var(--kryros-primary)] hover:text-[var(--kryros-primary)] transition-all cursor-pointer"
+              className="w-[44px] h-[44px] rounded-full border border-[#E5E5E5] bg-white flex items-center justify-center hover:border-[var(--kryros-primary)] hover:text-[var(--kryros-primary)] transition-all cursor-pointer"
             >
               <GoogleIcon />
             </button>
             <button
               type="button"
-              className="w-[48px] h-[48px] rounded-full border border-[#E5E5E5] bg-white flex items-center justify-center hover:border-[var(--kryros-primary)] hover:text-[var(--kryros-primary)] transition-all cursor-pointer"
+              className="w-[44px] h-[44px] rounded-full border border-[#E5E5E5] bg-white flex items-center justify-center hover:border-[var(--kryros-primary)] hover:text-[var(--kryros-primary)] transition-all cursor-pointer"
             >
               <FacebookIcon />
             </button>
@@ -427,8 +427,8 @@ export default function AuthPage() {
         </>
       ) : (
         <>
-          <p className="text-center text-[12px] text-[#75757A] mb-4 font-['Roboto']">Is this a new or existing account?</p>
-          <div className="flex flex-col gap-3">
+          <p className="text-center text-[12px] text-[#75757A] mb-3 font-['Roboto']">Is this a new or existing account?</p>
+          <div className="flex flex-col gap-2.5">
             <button
               type="button"
               onClick={() => goTo("login")}
@@ -448,22 +448,22 @@ export default function AuthPage() {
           </div>
         </>
       )}
-      <SupportFooter />
+      <SupportFooter mt="mt-3" />
     </div>
   );
 
   const renderLoginStep = () => (
     <form onSubmit={handleLogin} className="flex flex-col">
       <BackButton onClick={() => goTo("identifier")} />
-      <Logo />
-      <div className="text-center mb-6">
-        <h2 className="text-[20px] font-bold text-[#313133] font-['Roboto']">Welcome back!</h2>
-        <p className="text-[13px] text-[#75757A] mt-1 font-['Roboto']">Enter your password to sign in.</p>
+      <Logo mb="mb-1.5" />
+      <div className="text-center mb-4">
+        <h2 className="text-[19px] font-bold text-[#313133] font-['Roboto']">Welcome back!</h2>
+        <p className="text-[12px] text-[#75757A] mt-0.5 font-['Roboto']">Enter your password to sign in.</p>
       </div>
 
       <ShownEmail onEdit={() => goTo("identifier")} />
 
-      <div className="mb-4">
+      <div className="mb-3">
         <label className={lc}>Password</label>
         <div className="relative">
           <input
@@ -489,7 +489,7 @@ export default function AuthPage() {
       <button
         type="button"
         onClick={() => setLocation("/forgot-password")}
-        className="self-start text-[13px] text-[var(--kryros-primary)] font-medium hover:underline mb-5 bg-transparent border-none cursor-pointer font-['Roboto']"
+        className="self-start text-[12px] text-[var(--kryros-primary)] font-medium hover:underline mb-3.5 bg-transparent border-none cursor-pointer font-['Roboto']"
       >
         Forgot password?
       </button>
@@ -498,22 +498,22 @@ export default function AuthPage() {
         {active ? <Spinner /> : "Sign In"}
       </button>
 
-      <SupportFooter />
+      <SupportFooter mt="mt-3" />
     </form>
   );
 
   const renderRegisterPasswordStep = () => (
     <div className="flex flex-col">
       <BackButton onClick={() => goTo("identifier")} />
-      <Logo />
-      <div className="text-center mb-6">
-        <h2 className="text-[20px] font-bold text-[#313133] font-['Roboto']">Create your account</h2>
-        <p className="text-[13px] text-[#75757A] mt-1 font-['Roboto']">Secure your account with a strong password.</p>
+      <Logo mb="mb-1.5" />
+      <div className="text-center mb-4">
+        <h2 className="text-[19px] font-bold text-[#313133] font-['Roboto']">Create your account</h2>
+        <p className="text-[12px] text-[#75757A] mt-0.5 font-['Roboto']">Secure your account with a strong password.</p>
       </div>
 
       <ShownEmail onEdit={() => goTo("identifier")} />
 
-      <div className="mb-4">
+      <div className="mb-3">
         <label className={lc}>Create Password</label>
         <div className="relative">
           <input
@@ -539,23 +539,11 @@ export default function AuthPage() {
             <div className="h-[4px] bg-[#E5E5E5] rounded-[2px] overflow-hidden">
               <div className="h-full rounded-[2px] transition-all duration-300" style={{ width: strengthWidth(), backgroundColor: strengthColor() }} />
             </div>
-            <div className="flex flex-wrap gap-1.5 mt-2.5">
-              {Object.entries(passwordEval.checks).map(([key, passed]) => (
-                <span
-                  key={key}
-                  className={`text-[10px] px-2 py-0.5 rounded-[4px] font-bold font-['Roboto'] transition-all duration-200 ${
-                    passed ? "bg-[#E8F5E9] text-[#2DBE60]" : "bg-[#F5F5F5] text-[#9E9E9E]"
-                  }`}
-                >
-                  {key === "length" ? "8+ chars" : key === "uppercase" ? "A-Z" : key === "lowercase" ? "a-z" : key === "number" ? "0-9" : "!#$%"}
-                </span>
-              ))}
-            </div>
           </div>
         )}
       </div>
 
-      <div className="mb-6">
+      <div className="mb-4">
         <label className={lc}>Confirm Password</label>
         <div className="relative">
           <input
@@ -589,20 +577,20 @@ export default function AuthPage() {
         Continue
       </button>
 
-      <SupportFooter />
+      <SupportFooter mt="mt-3" />
     </div>
   );
 
   const renderDetailsStep = () => (
-    <div className="flex flex-col">
+    <div className="flex flex-col mt-[-10px]">
       <BackButton onClick={() => goTo("register-password")} />
-      <Logo />
-      <div className="text-center mb-6">
-        <h2 className="text-[20px] font-bold text-[#313133] font-['Roboto']">Personal details</h2>
-        <p className="text-[13px] text-[#75757A] mt-1 font-['Roboto']">We just need you to fill in some details.</p>
+      <Logo mb="mb-1" />
+      <div className="text-center mb-3">
+        <h2 className="text-[19px] font-bold text-[#313133] font-['Roboto']">Personal details</h2>
+        <p className="text-[12px] text-[#75757A] mt-0.5 font-['Roboto']">We just need you to fill in some details.</p>
       </div>
 
-      <div className="mb-4">
+      <div className="mb-3">
         <label className={lc}>First Name*</label>
         <input
           type="text"
@@ -615,7 +603,7 @@ export default function AuthPage() {
         />
       </div>
 
-      <div className="mb-4">
+      <div className="mb-3">
         <label className={lc}>Last Name*</label>
         <input
           type="text"
@@ -627,7 +615,7 @@ export default function AuthPage() {
         />
       </div>
 
-      <div className="mb-6">
+      <div className="mb-4">
         <label className={lc}>Phone Number {selectedIso === "ZM" ? "(Zambia: mandatory)" : "(Optional)"}</label>
         <div className="flex gap-2 h-[48px]">
           <div className="relative w-[100px] shrink-0">
@@ -669,21 +657,21 @@ export default function AuthPage() {
         {active ? <Spinner /> : "Continue"}
       </button>
 
-      <SupportFooter />
+      <SupportFooter mt="mt-2.5" />
     </div>
   );
 
   const renderOTPStep = () => (
-    <div className="flex flex-col">
+    <div className="flex flex-col mt-[-10px]">
       <BackButton onClick={() => goTo("register-details")} />
-      <Logo />
-      <div className="text-center mb-6">
-        <h2 className="text-[20px] font-bold text-[#313133] font-['Roboto']">Verify your phone number</h2>
-        <p className="text-[13px] text-[#75757A] mt-1 font-['Roboto']">We have sent a verification code to</p>
-        <p className="text-[14px] font-bold text-[#313133] mt-1 font-['Roboto']">{identifier}</p>
+      <Logo mb="mb-1.5" />
+      <div className="text-center mb-4">
+        <h2 className="text-[19px] font-bold text-[#313133] font-['Roboto']">Verify your phone number</h2>
+        <p className="text-[12px] text-[#75757A] mt-0.5 font-['Roboto']">We have sent a verification code to</p>
+        <p className="text-[13px] font-bold text-[#313133] mt-0.5 font-['Roboto']">{identifier}</p>
       </div>
 
-      <div className="flex gap-2 justify-center mb-5" onPaste={handleOTPPaste}>
+      <div className="flex gap-2 justify-center mb-4" onPaste={handleOTPPaste}>
         {otp.map((digit, i) => (
           <input
             key={i}
@@ -694,19 +682,19 @@ export default function AuthPage() {
             value={digit}
             onChange={(e) => handleOTPChange(i, e.target.value)}
             onKeyDown={(e) => handleOTPKeyDown(i, e)}
-            className="w-[46px] h-[54px] border border-[#E5E5E5] rounded-[8px] text-center text-[22px] font-bold text-[#313133] bg-[#FAFAFA] font-['Roboto'] outline-none focus:border-[var(--kryros-primary)] focus:bg-white focus:ring-1 focus:ring-[var(--kryros-primary)]/20 transition-all duration-200"
+            className="w-[44px] h-[50px] border border-[#E5E5E5] rounded-[8px] text-center text-[20px] font-bold text-[#313133] bg-[#FAFAFA] font-['Roboto'] outline-none focus:border-[var(--kryros-primary)] focus:bg-white focus:ring-1 focus:ring-[var(--kryros-primary)]/20 transition-all duration-200"
             autoFocus={i === 0}
           />
         ))}
       </div>
 
-      <p className="text-center text-[12px] text-[#75757A] mb-5 font-['Roboto'] px-4 leading-relaxed">
+      <p className="text-center text-[11px] text-[#75757A] mb-3.5 font-['Roboto'] px-4 leading-relaxed">
         📧 For non-Zambia users, the code is sent to your email. Zambia users receive via SMS.
       </p>
 
-      <div className="text-center mb-6">
+      <div className="text-center mb-4">
         {countdown > 0 ? (
-          <span className="text-[13px] text-[#75757A] font-['Roboto']">
+          <span className="text-[12px] text-[#75757A] font-['Roboto']">
             Resend code in <strong className="text-[#313133]">{Math.floor(countdown / 60)}:{(countdown % 60).toString().padStart(2, "0")}</strong>
           </span>
         ) : (
@@ -714,7 +702,7 @@ export default function AuthPage() {
             type="button"
             onClick={handleResendOTP}
             disabled={active}
-            className="text-[13px] text-[var(--kryros-primary)] font-bold hover:underline bg-transparent border-none cursor-pointer font-['Roboto']"
+            className="text-[12px] text-[var(--kryros-primary)] font-bold hover:underline bg-transparent border-none cursor-pointer font-['Roboto']"
           >
             Resend code
           </button>
@@ -730,7 +718,7 @@ export default function AuthPage() {
         {active ? <Spinner /> : "Submit"}
       </button>
 
-      <SupportFooter />
+      <SupportFooter mt="mt-3" />
     </div>
   );
 
@@ -747,14 +735,14 @@ export default function AuthPage() {
   }, [step]);
 
   const renderSuccessStep = () => (
-    <div className="flex flex-col items-center text-center">
-      <Logo />
-      <div className="w-[72px] h-[72px] bg-[#2DBE60] rounded-full flex items-center justify-center mb-5 mt-2 shadow-md">
-        <Check className="w-9 h-9 text-white" strokeWidth={3} />
+    <div className="flex flex-col items-center text-center mt-[-10px]">
+      <Logo mb="mb-1.5" />
+      <div className="w-[64px] h-[64px] bg-[#2DBE60] rounded-full flex items-center justify-center mb-4 mt-1 shadow-sm">
+        <Check className="w-8 h-8 text-white" strokeWidth={3} />
       </div>
-      <h2 className="text-[20px] font-bold text-[#313133] mb-1 font-['Roboto']">Account created! 🎉</h2>
-      <p className="text-[13px] text-[#75757A] mb-1 font-['Roboto']">Your KRYROS account is ready.</p>
-      <p className="text-[12px] text-[#9E9E9E] mb-6 font-['Roboto']">Redirecting to your dashboard...</p>
+      <h2 className="text-[19px] font-bold text-[#313133] mb-1 font-['Roboto']">Account created! 🎉</h2>
+      <p className="text-[12px] text-[#75757A] mb-0.5 font-['Roboto']">Your KRYROS account is ready.</p>
+      <p className="text-[11px] text-[#9E9E9E] mb-4 font-['Roboto']">Redirecting to your dashboard...</p>
 
       <button
         type="button"
