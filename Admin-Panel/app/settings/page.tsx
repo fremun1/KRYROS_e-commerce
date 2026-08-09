@@ -126,7 +126,10 @@ function SettingsContent() {
         admin_screenshot_restriction_enabled: String(screenshotRestrictionEnabled),
       });
       toast.success('Settings saved successfully');
-    } catch { toast.error('Failed to save settings — check connection'); }
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || err?.message || 'check connection';
+      toast.error(`Failed to save settings — ${msg}`);
+    }
     setSaving(false);
   };
 

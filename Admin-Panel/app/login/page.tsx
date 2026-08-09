@@ -134,6 +134,8 @@ function LoginForm() {
       if ((window as any).MobileBridge) {
         (window as any).MobileBridge.postMessage('user_logged_in');
       }
+      router.replace("/dashboard");
+      return;
     } else {
       setTwoFaError("Invalid code. Please try again — codes refresh every 30 seconds.");
     }

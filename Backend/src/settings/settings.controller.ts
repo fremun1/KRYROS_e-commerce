@@ -60,9 +60,9 @@ export class SettingsController {
 
   @Put()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Bulk update settings (Admin only)' })
+  @ApiOperation({ summary: 'Bulk update settings (Admin/Manager only)' })
   async updateBulk(@Body() data: Record<string, string>) {
     await Promise.all(
       Object.entries(data).map(([key, value]) => this.settingsService.update(key, String(value)))
@@ -72,9 +72,9 @@ export class SettingsController {
 
   @Put(':key')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Update a setting by key (Admin only)' })
+  @ApiOperation({ summary: 'Update a setting by key (Admin/Manager only)' })
   update(@Param('key') key: string, @Body('value') value: string) {
     return this.settingsService.update(key, value);
   }
