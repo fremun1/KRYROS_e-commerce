@@ -3,7 +3,7 @@ import { Link, useLocation } from "wouter";
 import {
   LayoutDashboard, Package, Heart, MapPin, CreditCard, Zap,
   MessageCircle, Bell, RefreshCcw, Star, Settings, ChevronRight, Check,
-  Truck, MoreVertical, Plus, X, Search,
+  Truck, MoreVertical, Plus, X, Search, DollarSign,
   ChevronDown, Menu, ShoppingBag, Info, Tag, AlertCircle, LogOut,
   UserCircle, Phone, Mail, Edit2, Save, Loader2, Home, Building2, Clock,
 } from "lucide-react";

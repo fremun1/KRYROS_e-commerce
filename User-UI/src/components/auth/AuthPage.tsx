@@ -291,43 +291,65 @@ export default function AuthPage() {
   const strengthColor = () => passwordEval.score <= 2 ? "#D63031" : passwordEval.score === 3 ? "#F68B1E" : "#2DBE60";
   const strengthWidth = () => password.length === 0 ? "0%" : `${(passwordEval.score / 5) * 100}%`;
 
-  const ic = "w-full h-[48px] border border-[#E5E5E5] rounded-[10px] bg-[#FAFAFA] text-[#313133] text-[14px] px-[14px] outline-none placeholder:text-[#9E9E9E] font-['Roboto'] focus:border-[#C0151B] focus:bg-white focus:ring-1 focus:ring-[#C0151B]/20 transition-all duration-200";
-  const bp = "w-full h-[48px] border-none rounded-[10px] bg-[#C0151B] text-white text-[14px] font-bold font-['Roboto'] cursor-pointer tracking-[0.02em] transition-all duration-200 hover:bg-[#A01015] active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2";
-  const bs = "w-full h-[48px] border border-[#E5E5E5] rounded-[10px] bg-white text-[#313133] text-[14px] font-medium font-['Roboto'] cursor-pointer transition-all duration-200 hover:border-[#C0151B] hover:text-[#C0151B] active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2";
-  const bn = "w-full h-[48px] border-none rounded-[10px] bg-[#344a64] text-white text-[14px] font-bold font-['Roboto'] cursor-pointer tracking-[0.02em] transition-all duration-200 hover:bg-[#2a3d52] active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2";
+  // Dynamic CSS-based styling matching Jumia aesthetics perfectly
+  const ic = "w-full h-[48px] border border-[#E5E5E5] rounded-[8px] bg-white text-[#313133] text-[14px] px-[14px] outline-none placeholder:text-[#9E9E9E] font-['Roboto'] focus:border-[var(--kryros-primary)] focus:ring-1 focus:ring-[var(--kryros-primary)]/20 transition-all duration-200";
+  const bp = "w-full h-[48px] border-none rounded-[8px] bg-[var(--kryros-primary)] text-white text-[14px] font-bold font-['Roboto'] cursor-pointer tracking-[0.02em] transition-all duration-200 hover:bg-[var(--kryros-primary-hover)] active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2";
+  const bs = "w-full h-[48px] border border-[#E5E5E5] rounded-[8px] bg-white text-[#313133] text-[14px] font-medium font-['Roboto'] cursor-pointer transition-all duration-200 hover:border-[var(--kryros-primary)] hover:text-[var(--kryros-primary)] active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2";
+  const bn = "w-full h-[48px] border-none rounded-[8px] bg-[var(--kryros-secondary)] text-white text-[14px] font-bold font-['Roboto'] cursor-pointer tracking-[0.02em] transition-all duration-200 hover:opacity-90 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2";
   const lc = "block text-[12px] font-bold text-[#313133] mb-[6px] uppercase tracking-[0.04em] font-['Roboto']";
 
   const Spinner = () => (
-    <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
+    <svg className="animate-spin w-4 h-4 text-white" viewBox="0 0 24 24" fill="none">
       <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeOpacity="0.25" />
       <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
     </svg>
   );
+
   const Logo = () => (
-    <div className="text-center mb-5">
-      <h1 className="text-[24px] font-black tracking-[-0.5px] leading-none m-0 font-['Roboto']">
-        <span className="text-[#313133]">KRY</span><span className="text-[#C0151B]">ROS</span>
-      </h1>
+    <div className="flex flex-col items-center mb-5 select-none">
+      <div className="w-[50px] h-[50px] rounded-full bg-[var(--kryros-primary)] flex items-center justify-center text-white text-[24px] font-black shadow-md">
+        K
+      </div>
+      <div className="text-[12px] font-black tracking-[0.1em] uppercase text-[#313133] mt-2 font-['Roboto']">KRYROS</div>
     </div>
   );
+
+  const SupportFooter = () => (
+    <div className="mt-8 text-center border-t border-[#F0F0F0] pt-5 font-['Roboto']">
+      <p className="text-[11px] text-[#75757A] leading-relaxed">
+        Need help? Visit our <a href="#" className="text-[var(--kryros-primary)] font-medium hover:underline">Help Center</a> or contact us on
+      </p>
+      <p className="text-[12px] font-bold text-[#313133] mt-1">
+        08000-KRYROS
+      </p>
+      <div className="flex items-center justify-center gap-1.5 mt-4">
+        <span className="text-[11px] font-black uppercase tracking-[0.15em] text-[#A0A0A5]">KRYROS</span>
+        <span className="w-1.5 h-1.5 rounded-full bg-[var(--kryros-primary)]"></span>
+      </div>
+    </div>
+  );
+
   const NoticeBanner = () => {
     const msg = notice || error; if (!msg) return null;
     const isErr = !!error;
     return <div className={`mb-4 px-4 py-3 rounded-[8px] text-[13px] leading-snug font-['Roboto'] ${isErr ? "bg-[#FFF0F0] text-[#D63031] border border-[#FFD0D0]" : "bg-[#F0F7FF] text-[#344a64] border border-[#D0E0F0]"}`}>{msg}</div>;
   };
+
   const ShownEmail = ({ onEdit }: { onEdit: () => void }) => (
-    <div className="bg-[#F0F0F0] rounded-[10px] px-4 py-3 mb-5 flex items-center justify-between font-['Roboto']">
-      <span className="text-[14px] text-[#313133] truncate flex-1">{identifier}</span>
-      <button type="button" onClick={onEdit} className="text-[#C0151B] text-[12px] font-medium bg-transparent border-none cursor-pointer hover:underline ml-2 shrink-0 font-['Roboto']">Edit</button>
+    <div className="bg-[#FAFAFA] border border-[#E5E5E5] rounded-[8px] px-4 py-3 mb-5 flex items-center justify-between font-['Roboto']">
+      <span className="text-[14px] text-[#313133] truncate flex-1 font-medium">{identifier}</span>
+      <button type="button" onClick={onEdit} className="text-[var(--kryros-primary)] text-[12px] font-bold bg-transparent border-none cursor-pointer hover:underline ml-2 shrink-0 font-['Roboto']">Edit</button>
     </div>
   );
+
   const BackButton = ({ onClick }: { onClick: () => void }) => (
     <button type="button" onClick={onClick} className="absolute top-5 left-5 bg-transparent border-none cursor-pointer text-[#75757A] hover:text-[#313133] transition-colors p-1 flex items-center gap-1">
       <ArrowLeft className="w-5 h-5" />
     </button>
   );
+
   const GoogleIcon = () => (
-    <svg width="18" height="18" viewBox="0 0 24 24">
+    <svg width="20" height="20" viewBox="0 0 24 24">
       <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/>
       <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
       <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
@@ -335,40 +357,96 @@ export default function AuthPage() {
     </svg>
   );
 
+  const FacebookIcon = () => (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="#1877F2">
+      <path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c4.56-.93 8-4.96 8-9.75z" />
+    </svg>
+  );
+
   const renderIdentifierStep = () => (
     <div className="flex flex-col">
       <Logo />
-      <p className="text-center text-[13px] text-[#75757A] mb-6 font-['Roboto']">
-        {checkFallback ? "Sign in or create a new account" : "Enter your email or phone to continue"}
-      </p>
+      <div className="text-center mb-6">
+        <h2 className="text-[20px] font-bold text-[#313133] font-['Roboto']">Welcome to KRYROS</h2>
+        <p className="text-[13px] text-[#75757A] mt-1 font-['Roboto']">
+          {checkFallback ? "Let's get you set up" : "Use your email or phone to log in or sign up."}
+        </p>
+      </div>
+
+      <div className="mb-4">
+        <label className={lc}>Email or Mobile Number*</label>
+        <input
+          type="text"
+          value={identifier}
+          onChange={(e) => { setIdentifier(e.target.value); setCheckFallback(false); }}
+          placeholder="Enter your email or phone"
+          className={ic}
+          autoFocus
+          autoComplete="email"
+        />
+      </div>
+
       {!checkFallback ? (
         <>
-          <div className="mb-4">
-            <label className={lc}>Email Address or Phone Number</label>
-            <input type="text" value={identifier} onChange={(e) => { setIdentifier(e.target.value); setCheckFallback(false); }} placeholder="Enter your email or phone number" className={ic} autoFocus autoComplete="email" />
-          </div>
-          <button type="button" onClick={handleCheckIdentifier} disabled={active || !identifier.trim()} className={bp}>
-            {active ? <Spinner /> : "Continue"}{!active && <ChevronRight className="w-4 h-4" />}
+          <button
+            type="button"
+            onClick={handleCheckIdentifier}
+            disabled={active || !identifier.trim()}
+            className={bp}
+          >
+            {active ? <Spinner /> : "Continue"}
           </button>
+
           <div className="flex items-center gap-3 my-5">
-            <div className="flex-1 h-px bg-[#E5E5E5]" /><span className="text-[11px] text-[#9E9E9E] uppercase tracking-[0.05em] font-['Roboto']">or continue with</span><div className="flex-1 h-px bg-[#E5E5E5]" />
+            <div className="flex-1 h-px bg-[#E5E5E5]" />
+            <span className="text-[11px] text-[#9E9E9E] uppercase tracking-[0.05em] font-['Roboto']">or continue with</span>
+            <div className="flex-1 h-px bg-[#E5E5E5]" />
           </div>
-          <button type="button" className={bs} disabled={active}><GoogleIcon />Continue with Google</button>
+
+          <div className="flex items-center justify-center gap-4 mb-6">
+            <button
+              type="button"
+              className="w-[48px] h-[48px] rounded-full border border-[#E5E5E5] bg-white flex items-center justify-center hover:border-[var(--kryros-primary)] hover:text-[var(--kryros-primary)] transition-all cursor-pointer"
+            >
+              <GoogleIcon />
+            </button>
+            <button
+              type="button"
+              className="w-[48px] h-[48px] rounded-full border border-[#E5E5E5] bg-white flex items-center justify-center hover:border-[var(--kryros-primary)] hover:text-[var(--kryros-primary)] transition-all cursor-pointer"
+            >
+              <FacebookIcon />
+            </button>
+          </div>
+
+          <p className="text-center text-[11px] text-[#75757A] leading-relaxed font-['Roboto'] px-2">
+            By continuing you agree to KRYROS's <br />
+            <a href="#" className="text-[var(--kryros-primary)] hover:underline font-medium">Terms and Conditions</a> & <a href="#" className="text-[var(--kryros-primary)] hover:underline font-medium">Privacy Policy</a>
+          </p>
         </>
       ) : (
         <>
-          <div className="mb-4">
-            <label className={lc}>Email Address or Phone Number</label>
-            <input type="text" value={identifier} onChange={(e) => { setIdentifier(e.target.value); setCheckFallback(false); }} placeholder="Enter your email or phone number" className={ic} autoFocus autoComplete="email" />
-          </div>
           <p className="text-center text-[12px] text-[#75757A] mb-4 font-['Roboto']">Is this a new or existing account?</p>
-          <button type="button" onClick={() => goTo("login")} disabled={!identifier.trim()} className={bn}><Lock className="w-4 h-4" />Sign In</button>
-          <div className="flex items-center gap-3 my-3"><div className="flex-1 h-px bg-[#E5E5E5]" /><span className="text-[11px] text-[#9E9E9E] font-['Roboto']">or</span><div className="flex-1 h-px bg-[#E5E5E5]" /></div>
-          <button type="button" onClick={() => goTo("register-password")} disabled={!identifier.trim()} className={bp}><User className="w-4 h-4" />Create Account</button>
-          <div className="flex items-center gap-3 my-3"><div className="flex-1 h-px bg-[#E5E5E5]" /><span className="text-[11px] text-[#9E9E9E] uppercase tracking-[0.05em] font-['Roboto']">or</span><div className="flex-1 h-px bg-[#E5E5E5]" /></div>
-          <button type="button" className={bs} disabled={active}><GoogleIcon />Continue with Google</button>
+          <div className="flex flex-col gap-3">
+            <button
+              type="button"
+              onClick={() => goTo("login")}
+              disabled={!identifier.trim()}
+              className={bn}
+            >
+              <Lock className="w-4 h-4" /> Sign In
+            </button>
+            <button
+              type="button"
+              onClick={() => goTo("register-password")}
+              disabled={!identifier.trim()}
+              className={bp}
+            >
+              <User className="w-4 h-4" /> Create Account
+            </button>
+          </div>
         </>
       )}
+      <SupportFooter />
     </div>
   );
 
@@ -376,19 +454,49 @@ export default function AuthPage() {
     <form onSubmit={handleLogin} className="flex flex-col">
       <BackButton onClick={() => goTo("identifier")} />
       <Logo />
-      <p className="text-center text-[13px] text-[#75757A] mb-5 font-['Roboto']">Welcome back! Enter your password to sign in.</p>
+      <div className="text-center mb-6">
+        <h2 className="text-[20px] font-bold text-[#313133] font-['Roboto']">Welcome back!</h2>
+        <p className="text-[13px] text-[#75757A] mt-1 font-['Roboto']">Enter your password to sign in.</p>
+      </div>
+
       <ShownEmail onEdit={() => goTo("identifier")} />
+
       <div className="mb-4">
         <label className={lc}>Password</label>
         <div className="relative">
-          <input type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Enter your password" className={ic} style={{ paddingRight: "44px" }} autoFocus autoComplete="current-password" />
-          <button type="button" onClick={() => setShowPassword((v) => !v)} className="absolute right-[14px] top-1/2 -translate-y-1/2 bg-transparent border-none cursor-pointer text-[#75757A] hover:text-[#313133] p-0 flex">
+          <input
+            type={showPassword ? "text" : "password"}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Enter your password"
+            className={ic}
+            style={{ paddingRight: "44px" }}
+            autoFocus
+            autoComplete="current-password"
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword((v) => !v)}
+            className="absolute right-[14px] top-1/2 -translate-y-1/2 bg-transparent border-none cursor-pointer text-[#75757A] hover:text-[#313133] p-0 flex"
+          >
             {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
           </button>
         </div>
       </div>
-      <button type="button" onClick={() => setLocation("/forgot-password")} className="self-end text-[12px] text-[#C0151B] font-medium hover:underline mb-4 bg-transparent border-none cursor-pointer font-['Roboto']">Forgot password?</button>
-      <button type="submit" disabled={active} className={bn}>{active ? <Spinner /> : "Sign In"}</button>
+
+      <button
+        type="button"
+        onClick={() => setLocation("/forgot-password")}
+        className="self-start text-[13px] text-[var(--kryros-primary)] font-medium hover:underline mb-5 bg-transparent border-none cursor-pointer font-['Roboto']"
+      >
+        Forgot password?
+      </button>
+
+      <button type="submit" disabled={active} className={bp}>
+        {active ? <Spinner /> : "Sign In"}
+      </button>
+
+      <SupportFooter />
     </form>
   );
 
@@ -396,24 +504,47 @@ export default function AuthPage() {
     <div className="flex flex-col">
       <BackButton onClick={() => goTo("identifier")} />
       <Logo />
-      <p className="text-center text-[13px] text-[#75757A] mb-5 font-['Roboto']">Create your KRYROS account</p>
+      <div className="text-center mb-6">
+        <h2 className="text-[20px] font-bold text-[#313133] font-['Roboto']">Create your account</h2>
+        <p className="text-[13px] text-[#75757A] mt-1 font-['Roboto']">Secure your account with a strong password.</p>
+      </div>
+
       <ShownEmail onEdit={() => goTo("identifier")} />
+
       <div className="mb-4">
         <label className={lc}>Create Password</label>
         <div className="relative">
-          <input type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Minimum 8 characters" className={ic} style={{ paddingRight: "44px" }} autoFocus autoComplete="new-password" />
-          <button type="button" onClick={() => setShowPassword((v) => !v)} className="absolute right-[14px] top-1/2 -translate-y-1/2 bg-transparent border-none cursor-pointer text-[#75757A] hover:text-[#313133] p-0 flex">
+          <input
+            type={showPassword ? "text" : "password"}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Minimum 8 characters"
+            className={ic}
+            style={{ paddingRight: "44px" }}
+            autoFocus
+            autoComplete="new-password"
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword((v) => !v)}
+            className="absolute right-[14px] top-1/2 -translate-y-1/2 bg-transparent border-none cursor-pointer text-[#75757A] hover:text-[#313133] p-0 flex"
+          >
             {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
           </button>
         </div>
         {password.length > 0 && (
-          <div className="mt-2">
+          <div className="mt-3">
             <div className="h-[4px] bg-[#E5E5E5] rounded-[2px] overflow-hidden">
               <div className="h-full rounded-[2px] transition-all duration-300" style={{ width: strengthWidth(), backgroundColor: strengthColor() }} />
             </div>
-            <div className="flex flex-wrap gap-2 mt-2">
+            <div className="flex flex-wrap gap-1.5 mt-2.5">
               {Object.entries(passwordEval.checks).map(([key, passed]) => (
-                <span key={key} className={`text-[10px] px-2 py-0.5 rounded-[4px] font-['Roboto'] ${passed ? "bg-[#E8F5E9] text-[#2DBE60]" : "bg-[#F5F5F5] text-[#9E9E9E]"}`}>
+                <span
+                  key={key}
+                  className={`text-[10px] px-2 py-0.5 rounded-[4px] font-bold font-['Roboto'] transition-all duration-200 ${
+                    passed ? "bg-[#E8F5E9] text-[#2DBE60]" : "bg-[#F5F5F5] text-[#9E9E9E]"
+                  }`}
+                >
                   {key === "length" ? "8+ chars" : key === "uppercase" ? "A-Z" : key === "lowercase" ? "a-z" : key === "number" ? "0-9" : "!#$%"}
                 </span>
               ))}
@@ -421,17 +552,42 @@ export default function AuthPage() {
           </div>
         )}
       </div>
-      <div className="mb-5">
+
+      <div className="mb-6">
         <label className={lc}>Confirm Password</label>
         <div className="relative">
-          <input type={showConfirmPassword ? "text" : "password"} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Re-enter your password" className={ic} style={{ paddingRight: "44px" }} autoComplete="new-password" />
-          <button type="button" onClick={() => setShowConfirmPassword((v) => !v)} className="absolute right-[14px] top-1/2 -translate-y-1/2 bg-transparent border-none cursor-pointer text-[#75757A] hover:text-[#313133] p-0 flex">
+          <input
+            type={showConfirmPassword ? "text" : "password"}
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            placeholder="Re-enter your password"
+            className={ic}
+            style={{ paddingRight: "44px" }}
+            autoComplete="new-password"
+          />
+          <button
+            type="button"
+            onClick={() => setShowConfirmPassword((v) => !v)}
+            className="absolute right-[14px] top-1/2 -translate-y-1/2 bg-transparent border-none cursor-pointer text-[#75757A] hover:text-[#313133] p-0 flex"
+          >
             {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
           </button>
         </div>
-        {confirmPassword && password !== confirmPassword && <p className="text-[11px] text-[#D63031] mt-1 font-['Roboto']">Passwords do not match</p>}
+        {confirmPassword && password !== confirmPassword && (
+          <p className="text-[11px] text-[#D63031] mt-1.5 font-['Roboto'] font-medium">Passwords do not match</p>
+        )}
       </div>
-      <button type="button" onClick={handlePasswordContinue} disabled={active || !password || password !== confirmPassword} className={bp}>Continue <ChevronRight className="w-4 h-4" /></button>
+
+      <button
+        type="button"
+        onClick={handlePasswordContinue}
+        disabled={active || !password || password !== confirmPassword}
+        className={bp}
+      >
+        Continue
+      </button>
+
+      <SupportFooter />
     </div>
   );
 
@@ -439,33 +595,79 @@ export default function AuthPage() {
     <div className="flex flex-col">
       <BackButton onClick={() => goTo("register-password")} />
       <Logo />
-      <p className="text-center text-[13px] text-[#75757A] mb-5 font-['Roboto']">Tell us about yourself</p>
-      <div className="mb-4"><label className={lc}>First Name</label><input type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="Enter your first name" className={ic} autoFocus autoComplete="given-name" /></div>
-      <div className="mb-4"><label className={lc}>Last Name</label><input type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Enter your last name" className={ic} autoComplete="family-name" /></div>
-      <div className="mb-5">
-        <label className={lc}>Phone Number {selectedIso === "ZM" ? "(Mandatory)" : "(Optional)"}</label>
+      <div className="text-center mb-6">
+        <h2 className="text-[20px] font-bold text-[#313133] font-['Roboto']">Personal details</h2>
+        <p className="text-[13px] text-[#75757A] mt-1 font-['Roboto']">We just need you to fill in some details.</p>
+      </div>
+
+      <div className="mb-4">
+        <label className={lc}>First Name*</label>
+        <input
+          type="text"
+          value={firstName}
+          onChange={(e) => setFirstName(e.target.value)}
+          placeholder="First Name"
+          className={ic}
+          autoFocus
+          autoComplete="given-name"
+        />
+      </div>
+
+      <div className="mb-4">
+        <label className={lc}>Last Name*</label>
+        <input
+          type="text"
+          value={lastName}
+          onChange={(e) => setLastName(e.target.value)}
+          placeholder="Last Name"
+          className={ic}
+          autoComplete="family-name"
+        />
+      </div>
+
+      <div className="mb-6">
+        <label className={lc}>Phone Number {selectedIso === "ZM" ? "(Zambia: mandatory)" : "(Optional)"}</label>
         <div className="flex gap-2 h-[48px]">
           <div className="relative w-[100px] shrink-0">
-            <select 
-              value={countryCode} 
+            <select
+              value={countryCode}
               onChange={(e) => {
                 const val = e.target.value;
                 setCountryCode(val);
                 const found = COUNTRY_CODES.find(c => c.code === val);
                 if (found) setSelectedIso(found.iso);
-              }} 
-              className={`${ic} w-full pr-8 appearance-none cursor-pointer text-center px-2`}
+              }}
+              className={`${ic} w-full pr-8 appearance-none cursor-pointer text-center px-2 font-bold`}
             >
               {COUNTRY_CODES.map((c) => (<option key={c.code} value={c.code}>{c.code}</option>))}
             </select>
-            <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-[#75757A]">
-              <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[#75757A]">
+              <svg width="10" height="6" viewBox="0 0 10 6" fill="none">
+                <path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
             </div>
           </div>
-          <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))} placeholder="Phone number" className={`${ic} flex-1`} autoComplete="tel" />
+          <input
+            type="tel"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))}
+            placeholder="Phone number"
+            className={`${ic} flex-1`}
+            autoComplete="tel"
+          />
         </div>
       </div>
-      <button type="button" onClick={handleRegisterAndSendOTP} disabled={active || !firstName.trim() || !lastName.trim()} className={bn}>{active ? <Spinner /> : "Continue"}{!active && <ChevronRight className="w-4 h-4" />}</button>
+
+      <button
+        type="button"
+        onClick={handleRegisterAndSendOTP}
+        disabled={active || !firstName.trim() || !lastName.trim()}
+        className={bp}
+      >
+        {active ? <Spinner /> : "Continue"}
+      </button>
+
+      <SupportFooter />
     </div>
   );
 
@@ -473,28 +675,63 @@ export default function AuthPage() {
     <div className="flex flex-col">
       <BackButton onClick={() => goTo("register-details")} />
       <Logo />
-      <p className="text-center text-[13px] text-[#75757A] mb-1 font-['Roboto']">We sent a verification code to</p>
-      <p className="text-center text-[14px] font-bold text-[#313133] mb-6 font-['Roboto']">{identifier}</p>
+      <div className="text-center mb-6">
+        <h2 className="text-[20px] font-bold text-[#313133] font-['Roboto']">Verify your phone number</h2>
+        <p className="text-[13px] text-[#75757A] mt-1 font-['Roboto']">We have sent a verification code to</p>
+        <p className="text-[14px] font-bold text-[#313133] mt-1 font-['Roboto']">{identifier}</p>
+      </div>
+
       <div className="flex gap-2 justify-center mb-5" onPaste={handleOTPPaste}>
         {otp.map((digit, i) => (
-          <input key={i} ref={(el) => { otpRefs.current[i] = el; }} type="text" inputMode="numeric" maxLength={1} value={digit}
-            onChange={(e) => handleOTPChange(i, e.target.value)} onKeyDown={(e) => handleOTPKeyDown(i, e)}
-            className="w-[46px] h-[54px] border border-[#E5E5E5] rounded-[10px] text-center text-[22px] font-bold text-[#313133] bg-[#FAFAFA] font-['Roboto'] outline-none focus:border-[#C0151B] focus:bg-white focus:ring-1 focus:ring-[#C0151B]/20 transition-all duration-200"
-            autoFocus={i === 0} />
+          <input
+            key={i}
+            ref={(el) => { otpRefs.current[i] = el; }}
+            type="text"
+            inputMode="numeric"
+            maxLength={1}
+            value={digit}
+            onChange={(e) => handleOTPChange(i, e.target.value)}
+            onKeyDown={(e) => handleOTPKeyDown(i, e)}
+            className="w-[46px] h-[54px] border border-[#E5E5E5] rounded-[8px] text-center text-[22px] font-bold text-[#313133] bg-[#FAFAFA] font-['Roboto'] outline-none focus:border-[var(--kryros-primary)] focus:bg-white focus:ring-1 focus:ring-[var(--kryros-primary)]/20 transition-all duration-200"
+            autoFocus={i === 0}
+          />
         ))}
       </div>
-      <div className="text-center mb-5">
+
+      <p className="text-center text-[12px] text-[#75757A] mb-5 font-['Roboto'] px-4 leading-relaxed">
+        📧 For non-Zambia users, the code is sent to your email. Zambia users receive via SMS.
+      </p>
+
+      <div className="text-center mb-6">
         {countdown > 0 ? (
-          <span className="text-[12px] text-[#75757A] font-['Roboto']">Resend code in <strong className="text-[#313133]">{Math.floor(countdown / 60)}:{(countdown % 60).toString().padStart(2, "0")}</strong></span>
+          <span className="text-[13px] text-[#75757A] font-['Roboto']">
+            Resend code in <strong className="text-[#313133]">{Math.floor(countdown / 60)}:{(countdown % 60).toString().padStart(2, "0")}</strong>
+          </span>
         ) : (
-          <button type="button" onClick={handleResendOTP} disabled={active} className="text-[12px] text-[#C0151B] font-medium hover:underline bg-transparent border-none cursor-pointer font-['Roboto']">Resend code</button>
+          <button
+            type="button"
+            onClick={handleResendOTP}
+            disabled={active}
+            className="text-[13px] text-[var(--kryros-primary)] font-bold hover:underline bg-transparent border-none cursor-pointer font-['Roboto']"
+          >
+            Resend code
+          </button>
         )}
       </div>
-      <button type="button" onClick={handleVerifyOTP} disabled={active || otp.some((d) => !d)} className={bp}>{active ? <Spinner /> : "Verify & Continue"}</button>
+
+      <button
+        type="button"
+        onClick={handleVerifyOTP}
+        disabled={active || otp.some((d) => !d)}
+        className={bp}
+      >
+        {active ? <Spinner /> : "Submit"}
+      </button>
+
+      <SupportFooter />
     </div>
   );
 
-  // Success redirect effect at component level (not inside render function)
   const successRedirected = useRef(false);
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -510,20 +747,36 @@ export default function AuthPage() {
   const renderSuccessStep = () => (
     <div className="flex flex-col items-center text-center">
       <Logo />
-      <div className="w-[72px] h-[72px] bg-[#2DBE60] rounded-full flex items-center justify-center mb-5 mt-2"><Check className="w-9 h-9 text-white" strokeWidth={3} /></div>
-      <h2 className="text-[18px] font-bold text-[#313133] mb-1 font-['Roboto']">{firstName ? `${firstName}, your account has been created!` : "Account created successfully!"}</h2>
-      <p className="text-[13px] text-[#75757A] mb-6 font-['Roboto']">Redirecting you to your dashboard...</p>
-      <button type="button" onClick={() => setLocation("/dashboard")} className={bp}>Continue Shopping</button>
+      <div className="w-[72px] h-[72px] bg-[#2DBE60] rounded-full flex items-center justify-center mb-5 mt-2 shadow-md">
+        <Check className="w-9 h-9 text-white" strokeWidth={3} />
+      </div>
+      <h2 className="text-[20px] font-bold text-[#313133] mb-1 font-['Roboto']">Account created! 🎉</h2>
+      <p className="text-[13px] text-[#75757A] mb-1 font-['Roboto']">Your KRYROS account is ready.</p>
+      <p className="text-[12px] text-[#9E9E9E] mb-6 font-['Roboto']">Redirecting to your dashboard...</p>
+
+      <button
+        type="button"
+        onClick={() => setLocation("/dashboard")}
+        className={bp}
+      >
+        Continue Shopping
+      </button>
+
+      <SupportFooter />
     </div>
   );
 
   const renderChecking = () => (
-    <div className="flex flex-col items-center justify-center py-8"><Logo /><Spinner /><p className="text-[14px] text-[#75757A] mt-4 font-['Roboto']">Checking your account...</p></div>
+    <div className="flex flex-col items-center justify-center py-8">
+      <Logo />
+      <Spinner />
+      <p className="text-[14px] text-[#75757A] mt-4 font-['Roboto']">Checking your account...</p>
+    </div>
   );
 
   return (
     <div className="fixed inset-0 bg-[#F5F5F5] flex items-center justify-center p-4" style={{ overflow: "hidden" }}>
-      <div className="w-full max-w-[400px] bg-white rounded-[20px] shadow-[0_4px_30px_rgba(0,0,0,0.08)] border border-[#E5E5E5] p-6 pb-7 relative overflow-hidden">
+      <div className="w-full max-w-[400px] bg-white rounded-[16px] shadow-[0_4px_30px_rgba(0,0,0,0.06)] border border-[#E5E5E5] p-6 pb-7 relative overflow-hidden">
         <div key={step} style={{ animation: "fadeSlideIn 0.3s ease-out" }}>
           {step === "checking" && renderChecking()}
           {step === "identifier" && <><NoticeBanner />{renderIdentifierStep()}</>}
