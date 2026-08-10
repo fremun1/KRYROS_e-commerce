@@ -42,21 +42,12 @@ export class CountriesController {
     const geoData = await this.geolocationService.detectCountryByIp(clientIp);
     
     if (!geoData) {
+      // Geolocation failed — return the configured default currency
       const defaultCountry = await this.countriesService.getDefaultCountry();
-      if (!defaultCountry) {
-        const fallback = await this.countriesService.findByCode('US');
-        return {
-          success: true,
-          detected: false,
-          reason: 'Geolocation failed, returning fallback USD',
-          country: fallback,
-          clientIp,
-        };
-      }
       return {
         success: true,
         detected: false,
-        reason: 'Geolocation failed, returning default currency',
+        reason: 'Geolocation failed, returning configured default currency',
         country: defaultCountry,
         clientIp,
       };
@@ -65,23 +56,12 @@ export class CountriesController {
     const country = await this.countriesService.findByCode(geoData.countryCode);
     
     if (!country) {
+      // Country detected but not configured — return the configured default currency
       const defaultCountry = await this.countriesService.getDefaultCountry();
-      if (!defaultCountry) {
-        const fallback = await this.countriesService.findByCode('US');
-        return {
-          success: true,
-          detected: true,
-          reason: `Country ${geoData.countryCode} not configured in system, returning fallback USD`,
-          detectedCountryCode: geoData.countryCode,
-          country: fallback,
-          clientIp,
-          geoData,
-        };
-      }
       return {
         success: true,
         detected: true,
-        reason: `Country ${geoData.countryCode} not configured in system, returning default currency`,
+        reason: `Country ${geoData.countryCode} not configured in system, returning configured default currency`,
         detectedCountryCode: geoData.countryCode,
         country: defaultCountry,
         clientIp,

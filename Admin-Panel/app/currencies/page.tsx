@@ -16,7 +16,6 @@ type CurrencyRow = {
   rate: number;
   autoRate: boolean;
   countries: string;
-  status: string;
   isDefault: boolean;
 };
 
@@ -93,7 +92,6 @@ function CurrenciesContent() {
           rate: Number(c.exchangeRate || c.rate || 1),
           autoRate: c.autoRate !== false,
           countries: c.name || '',
-          status: Number(c.exchangeRate || c.rate || 1) === 1 ? 'Base' : 'Active',
           isDefault,
         });
       });
@@ -238,7 +236,7 @@ function CurrenciesContent() {
     setSettingDefault(true);
     try {
       await api.post('/api/countries/default', { currencyCode: code });
-      toast.success(`Default currency set to ${code}`);
+      toast.success(`✓ Default currency set to ${code}. This will be used as the fallback when geolocation fails or a country is not configured.`);
       fetchData();
     } catch (e: any) {
       toast.error(e?.response?.data?.message || 'Failed to set default currency');
@@ -285,11 +283,21 @@ function CurrenciesContent() {
         );
       }
     },
-    { key: 'status', label: 'Status', render: (v) => (
-        <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 600, background: v === 'Base' ? 'rgba(246,176,30,0.12)' : 'rgba(192,21,27,0.10)', color: v === 'Base' ? 'var(--gold)' : 'var(--primary)' }}>
-          {String(v)}
-        </span>
-      )
+    { key: 'isDefault', label: 'Base Currency', render: (v, row) => {
+        const r = row as unknown as CurrencyRow;
+        if (r.isDefault) {
+          return (
+            <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 600, background: 'rgba(246,176,30,0.12)', color: 'var(--gold)' }}>
+              ✓ Base
+            </span>
+          );
+        }
+        return (
+          <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 600, background: 'rgba(192,21,27,0.10)', color: 'var(--text-muted)' }}>
+            —
+          </span>
+        );
+      }
     },
   ];
 
