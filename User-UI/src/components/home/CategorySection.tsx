@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { fetchCategories, ApiCategory } from '../../lib/api';
 import { normalizePageContext, getScopedBrowsePath } from '@/lib/pageContext';
+import { getOptimizedImageUrl } from "@/lib/utils";
 
 interface CategorySectionProps {
   title?: string;
@@ -15,8 +16,33 @@ export default function CategorySection({
   limit = 8,
   pageSlug = 'shop'
 }: CategorySectionProps) {
-  const [categories, setCategories] = useState<ApiCategory[]>([]);
-  const [loading, setLoading] = useState(true);
+  const cacheKey = `categories_${limit}`;
+  const [categories, setCategories] = useState<ApiCategory[]>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const cached = localStorage.getItem(cacheKey);
+        if (cached) {
+          return JSON.parse(cached);
+        }
+      } catch (err) {
+        console.error("Error reading categories cache:", err);
+      }
+    }
+    return [];
+  });
+
+  const [loading, setLoading] = useState(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const cached = localStorage.getItem(cacheKey);
+        if (cached) {
+          return false;
+        }
+      } catch (_) {}
+    }
+    return true;
+  });
+
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isPaused, setIsPaused] = useState(false);
 
@@ -26,7 +52,13 @@ export default function CategorySection({
         const list = Array.isArray(data) ? data : [];
         // Prefer top-level categories; fall back to all if none
         const topLevel = list.filter((c: any) => !c.parentId);
-        setCategories((topLevel.length > 0 ? topLevel : list).slice(0, limit));
+        const activeList = (topLevel.length > 0 ? topLevel : list).slice(0, limit);
+        setCategories(activeList);
+        try {
+          localStorage.setItem(cacheKey, JSON.stringify(activeList));
+        } catch (cacheErr) {
+          console.error("Error saving categories cache:", cacheErr);
+        }
       })
       .catch(() => setCategories([]))
       .finally(() => setLoading(false));
@@ -78,7 +110,7 @@ export default function CategorySection({
         <div className="w-full aspect-square overflow-hidden rounded-xl bg-muted/60">
           {cat.image ? (
             <img
-              src={cat.image}
+              src={getOptimizedImageUrl(cat.image, 200)}
               alt={cat.name}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               loading="lazy"

@@ -8,6 +8,7 @@ import { useCurrencyStore } from "@/store/currencyStore";
 import { useStoreStatus } from "@/hooks/useStoreStatus";
 import type { Product } from "@/lib/api";
 import { getCreditMessage, getProductDisplayPrice, getProductPurchaseMode, getCreditPaymentDetails } from "@/lib/productPurchaseMode";
+import { getOptimizedImageUrl } from "@/lib/utils";
 
 interface UnifiedProductCardProps {
   product: Product;
@@ -81,7 +82,7 @@ export default function UnifiedProductCard({
       <div className="relative group aspect-square rounded-xl overflow-hidden bg-muted">
         {!imgErr && product.image ? (
           <img
-            src={product.image}
+            src={getOptimizedImageUrl(product.image, 400)}
             alt={product.name}
             /*
              * Hardware-accelerated micro-zoom on hover.

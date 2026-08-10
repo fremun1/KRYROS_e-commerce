@@ -6,6 +6,35 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /**
+ * Optimizes Cloudinary URLs in real-time by appending f_auto, q_auto and width parameters.
+ * If the URL is not a Cloudinary URL, it returns it unmodified.
+ */
+export function getOptimizedImageUrl(url: string | null | undefined, width?: number): string {
+  if (!url) return "";
+  if (typeof url !== "string") return "";
+
+  // Check if it is a Cloudinary URL
+  if (url.includes("res.cloudinary.com")) {
+    // If it doesn't already have optimization options applied
+    if (!url.includes("/f_auto") && !url.includes("/q_auto")) {
+      const uploadIndex = url.indexOf("/upload/");
+      if (uploadIndex !== -1) {
+        const prefix = url.substring(0, uploadIndex + 8); // includes "/upload/"
+        const suffix = url.substring(uploadIndex + 8);
+
+        let transformation = "f_auto,q_auto";
+        if (width) {
+          transformation += `,w_${width},c_limit`;
+        }
+
+        return `${prefix}${transformation}/${suffix}`;
+      }
+    }
+  }
+  return url;
+}
+
+/**
  * Formats product specifications from various formats into a readable string.
  * Handles:
  * - Structured array: [{key: string, value: string}, ...]

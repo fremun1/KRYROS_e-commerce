@@ -1,6 +1,6 @@
 'use client';
 import React, { useRef, useEffect, useState } from 'react';
-import { X, AlertTriangle, ChevronDown, Check } from 'lucide-react';
+import { X, AlertTriangle, ChevronDown, Check, ArrowLeft } from 'lucide-react';
 
 // ── Custom Select (no native browser picker) ───────────────
 interface CustomSelectProps {
@@ -120,7 +120,84 @@ export function Modal({ open, onClose, title, children, maxWidth = '500px' }: Mo
   const textMain = 'var(--text-main)';
   const textMuted = 'var(--text-muted)';
 
+  const [isMobile, setIsMobile] = useState(false);
+  const [slideIn, setSlideIn] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const checkMobile = () => setIsMobile(window.innerWidth < 768);
+      checkMobile();
+      window.addEventListener('resize', checkMobile);
+      return () => window.removeEventListener('resize', checkMobile);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (open) {
+      const timer = setTimeout(() => setSlideIn(true), 10);
+      return () => clearTimeout(timer);
+    } else {
+      setSlideIn(false);
+    }
+  }, [open]);
+
   if (!open) return null;
+
+  if (isMobile) {
+    return (
+      <div
+        style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 9999,
+          background: bg,
+          display: 'flex',
+          flexDirection: 'column',
+          transform: slideIn ? 'translateX(0)' : 'translateX(100%)',
+          transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+          boxSizing: 'border-box',
+          overflowY: 'auto',
+          height: '100vh',
+          width: '100vw'
+        }}
+      >
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          padding: '16px 20px',
+          borderBottom: `1px solid ${border}`,
+          background: bg,
+          position: 'sticky',
+          top: 0,
+          zIndex: 10
+        }}>
+          <button
+            onClick={onClose}
+            style={{
+              width: '32px',
+              height: '32px',
+              borderRadius: '8px',
+              background: 'var(--surface)',
+              border: `1px solid ${border}`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              flexShrink: 0
+            }}
+          >
+            <ArrowLeft size={16} color={textMuted} />
+          </button>
+          <h2 style={{ fontSize: '16px', fontWeight: 700, color: textMain, margin: 0, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {title}
+          </h2>
+        </div>
+        <div style={{ padding: '20px', flex: 1 }}>{children}</div>
+      </div>
+    );
+  }
+
   return (
     <div
       style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'var(--overlay)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', backdropFilter: 'blur(3px)' }}

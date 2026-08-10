@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { useLocation } from "wouter";
 import { api } from "@/lib/api";
 import { inferPageContext, getScopedBrowsePath } from "@/lib/pageContext";
+import { getOptimizedImageUrl } from "@/lib/utils";
 
 interface CmsBrand {
   name: string;
@@ -26,7 +27,22 @@ export default function BrandsSection({
 }: BrandsSectionProps) {
   const [location] = useLocation();
   const pageContext = useMemo(() => inferPageContext(location), [location]);
-  const [brands, setBrands] = useState<CmsBrand[]>([]);
+  const cacheKey = `brands_${dataSourceId}`;
+
+  const [brands, setBrands] = useState<CmsBrand[]>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const cached = localStorage.getItem(cacheKey);
+        if (cached) {
+          return JSON.parse(cached);
+        }
+      } catch (err) {
+        console.error("Error reading brands cache:", err);
+      }
+    }
+    return [];
+  });
+
   const scrollRef = useRef<HTMLDivElement>(null);
   const dirRef = useRef<1 | -1>(1);
   const animRef = useRef<number>(0);
@@ -38,11 +54,17 @@ export default function BrandsSection({
       try {
         const response = await api.get(`/api/cms/sections/brands-by-source?dataSourceId=${dataSourceId}`);
         if (response.data && response.data.length > 0) {
-          setBrands(response.data.map((b: any) => ({
+          const list = response.data.map((b: any) => ({
             name: b.name || "",
             logo: b.logo || "",
             shopSlug: b.slug || b.name?.toLowerCase().replace(/\s+/g, "-") || "",
-          })));
+          }));
+          setBrands(list);
+          try {
+            localStorage.setItem(cacheKey, JSON.stringify(list));
+          } catch (cacheErr) {
+            console.error("Error saving brands cache:", cacheErr);
+          }
           return;
         }
       } catch (err) {
@@ -119,7 +141,7 @@ export default function BrandsSection({
             >
               {brand.logo && displayMode !== 'minimal' ? (
                 <img
-                  src={brand.logo}
+                  src={getOptimizedImageUrl(brand.logo, 200)}
                   alt={brand.name}
                   className="max-w-[56px] max-h-[32px] md:max-w-[64px] md:max-h-[36px] object-contain"
                   loading="lazy"

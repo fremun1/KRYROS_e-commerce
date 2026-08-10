@@ -29,6 +29,7 @@ import { useWishlistStore } from "@/store/wishlistStore";
 import { useCurrencyStore } from "@/store/currencyStore";
 import UnifiedProductCard from "@/components/UnifiedProductCard";
 import { getCreditMessage, getProductDisplayPrice, getProductPurchaseMode, getCreditPaymentDetails } from "@/lib/productPurchaseMode";
+import { getOptimizedImageUrl } from "@/lib/utils";
 
 const SLIDE_INTERVAL = 3500;
 
@@ -353,7 +354,7 @@ export default function ProductPage() {
           onTouchEnd={handleTouchEnd}
         >
           <img
-            src={activeImg}
+            src={getOptimizedImageUrl(activeImg, 800)}
             alt={product.name}
             className="w-full h-full object-contain mix-blend-multiply transition-opacity duration-300"
             draggable={false}
@@ -383,7 +384,7 @@ export default function ProductPage() {
             {images.map((img, i) => (
               <button key={i} onClick={() => goToSlide(i)}
                 className={`flex-shrink-0 w-20 h-20 rounded-2xl border-2 overflow-hidden transition-all bg-muted ${activeIndex === i ? "border-primary shadow-md scale-95" : "border-transparent"}`}>
-                <img src={img} alt="" className="w-full h-full object-contain mix-blend-multiply" />
+                <img src={getOptimizedImageUrl(img, 200)} alt="" className="w-full h-full object-contain mix-blend-multiply" />
               </button>
             ))}
           </div>

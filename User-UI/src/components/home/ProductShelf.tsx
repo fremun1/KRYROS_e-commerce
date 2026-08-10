@@ -65,9 +65,35 @@ export default function ProductShelf({
   loadingCount = 8,
   params = {}
 }: ProductShelfProps) {
+  const cacheKey = `shelf_products_${dataSourceId}_${limit}_${JSON.stringify(params)}`;
+
   // ─── ALL hooks must be declared first, before any conditional returns ───
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [products, setProducts] = useState<Product[]>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const cached = localStorage.getItem(cacheKey);
+        if (cached) {
+          return JSON.parse(cached);
+        }
+      } catch (err) {
+        console.error("Error reading shelf products cache:", err);
+      }
+    }
+    return [];
+  });
+
+  const [loading, setLoading] = useState(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const cached = localStorage.getItem(cacheKey);
+        if (cached) {
+          return false; // Skip showing loading skeleton if cached products are available
+        }
+      } catch (_) {}
+    }
+    return true;
+  });
+
   const [error, setError] = useState<string | null>(null);
 
   // Timer state - MUST be here before any early return to avoid React error #300
@@ -157,7 +183,13 @@ export default function ProductShelf({
 
         // Handle both direct array and { data: [] } response formats
         const productList = Array.isArray(data) ? data : data.data || [];
-        setProducts(productList.map(normalizeProduct).slice(0, limit));
+        const normalized = productList.map(normalizeProduct).slice(0, limit);
+        setProducts(normalized);
+        try {
+          localStorage.setItem(cacheKey, JSON.stringify(normalized));
+        } catch (cacheErr) {
+          console.error("Error saving shelf products cache:", cacheErr);
+        }
       } catch (err) {
         if (err instanceof Error && err.name === "AbortError") return;
         console.error(
