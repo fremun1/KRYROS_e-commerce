@@ -6,7 +6,7 @@ import { Modal, ConfirmDialog, FormField, ModalFooter } from '@/components/admin
 import CloudinaryUpload from '@/components/ui/file-upload';
 import {
   Plus, Edit, Trash2, GripVertical, Eye, EyeOff, ChevronUp, ChevronDown,
-  Zap, ShoppingBag, Users, TrendingUp, Layout, MousePointer, Info, Image
+  Zap, ShoppingBag, Users, TrendingUp, Layout, MousePointer, Info, Image, Palette, Save, RefreshCw
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { 
@@ -19,8 +19,11 @@ import {
   moveCmsSection,
   getCmsPages,
   getBrands,
-  getCategories
+  getCategories,
+  getSettings,
+  updateSettings
 } from '@/lib/api';
+import { THEME_COLOR_CATALOG, THEME_COLOR_CATEGORIES } from '@/lib/theme-catalog';
 
 // Reusable template icons mapping
 const TEMPLATE_ICONS: Record<string, any> = {
@@ -115,7 +118,21 @@ export default function CMSPagesPage() {
   const textMain = 'var(--text-main)';
   const textMuted = 'var(--text-muted)';
   const surface = 'var(--card)';
-  
+  const card = 'var(--card)';
+  const inputStyle = { width:'100%', background:surface, border:`1px solid ${border}`, borderRadius:'9px', color:textMain, fontSize:'13.5px', fontFamily:'var(--font-inter)', outline:'none', padding:'10px 14px' };
+
+  // Top-level tab: 'cms' | 'theme'
+  const [mainTab, setMainTab] = useState<'cms' | 'theme'>('cms');
+
+  // Theme Colors state
+  const [themeColors, setThemeColors] = useState<Record<string, string>>(() => {
+    const init: Record<string, string> = {};
+    THEME_COLOR_CATALOG.forEach(t => { init[t.key] = t.defaultValue; });
+    return init;
+  });
+  const [themePreviewActive, setThemePreviewActive] = useState(false);
+  const [themeSaving, setThemeSaving] = useState(false);
+
   const [sections, setSections] = useState<any[]>([]);
   const [rulesGrouped, setRulesGrouped] = useState<Record<string, any[]>>({});
   const [pages, setPages] = useState<{ value: string; label: string }[]>([]);
@@ -134,7 +151,32 @@ export default function CMSPagesPage() {
     fetchPages();
     fetchBrands();
     fetchCategories();
+    // Load saved theme colors from settings
+    getSettings().then((r: any) => {
+      const list = Array.isArray(r.data) ? r.data : [];
+      const sMap: Record<string, string> = {};
+      list.forEach((s: any) => { if (s?.key) sMap[s.key] = s.value; });
+      const colorUpdates: Record<string, string> = {};
+      THEME_COLOR_CATALOG.forEach(t => {
+        if (sMap[t.key]) colorUpdates[t.key] = sMap[t.key];
+      });
+      if (Object.keys(colorUpdates).length > 0) {
+        setThemeColors(prev => ({ ...prev, ...colorUpdates }));
+      }
+    }).catch(() => {});
   }, []);
+
+  const handleSaveTheme = async () => {
+    setThemeSaving(true);
+    try {
+      await updateSettings({ ...themeColors });
+      toast.success('Theme colors saved successfully');
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || err?.message || 'check connection';
+      toast.error(`Failed to save theme colors — ${msg}`);
+    }
+    setThemeSaving(false);
+  };
 
   useEffect(() => {
     if (selectedPage && view === 'page-sections') {
@@ -309,7 +351,151 @@ export default function CMSPagesPage() {
   return (
     <AdminShell>
       <div className="space-y-6 max-w-5xl mx-auto">
-        {view === 'page-list' ? (
+        {/* Top-level Tab Bar */}
+        <div className="flex items-center gap-1 p-1 bg-muted/50 rounded-2xl border w-fit">
+          <button
+            onClick={() => setMainTab('cms')}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${
+              mainTab === 'cms'
+                ? 'bg-card text-primary shadow-sm border border-border'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <Layout size={16} />
+            CMS & Pages
+          </button>
+          <button
+            onClick={() => setMainTab('theme')}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${
+              mainTab === 'theme'
+                ? 'bg-card text-primary shadow-sm border border-border'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <Palette size={16} />
+            Theme Colors
+          </button>
+        </div>
+
+        {/* ── THEME COLORS TAB ── */}
+        {mainTab === 'theme' && (
+          <div>
+            <PageHeader
+              title="Theme Colors"
+              subtitle="All CSS color variables used across the storefront. Changes are saved to the database and applied dynamically at runtime — no code deployment needed."
+              icon={Palette}
+            />
+
+            {/* Live Preview Toggle */}
+            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'12px 16px', background:card, border:`1px solid ${border}`, borderRadius:'12px', marginBottom:'24px' }}>
+              <div>
+                <div style={{ fontSize:'13.5px', fontWeight:700, color:textMain }}>Live Preview in Admin</div>
+                <div style={{ fontSize:'12px', color:textMuted, marginTop:'2px' }}>Apply color changes instantly in this panel to preview them before saving</div>
+              </div>
+              <button
+                onClick={() => {
+                  const next = !themePreviewActive;
+                  setThemePreviewActive(next);
+                  if (next) {
+                    THEME_COLOR_CATALOG.forEach(t => {
+                      document.documentElement.style.setProperty(t.cssVar, themeColors[t.key] ?? t.defaultValue);
+                    });
+                  } else {
+                    THEME_COLOR_CATALOG.forEach(t => {
+                      document.documentElement.style.removeProperty(t.cssVar);
+                    });
+                  }
+                }}
+                style={{ width:'44px', height:'24px', borderRadius:'12px', background:themePreviewActive?'var(--primary)':'rgba(100,116,139,0.3)', border:'none', cursor:'pointer', padding:'2px', transition:'all 0.2s', display:'flex', alignItems:'center', justifyContent:themePreviewActive?'flex-end':'flex-start', flexShrink:0 }}
+              >
+                <div style={{ width:'20px', height:'20px', borderRadius:'50%', background:'white', boxShadow:'0 1px 3px rgba(0,0,0,0.2)' }} />
+              </button>
+            </div>
+
+            {/* Color groups */}
+            {THEME_COLOR_CATEGORIES.map(cat => {
+              const tokens = THEME_COLOR_CATALOG.filter(t => t.category === cat.id);
+              if (tokens.length === 0) return null;
+              return (
+                <div key={cat.id} style={{ marginBottom:'32px' }}>
+                  <div style={{ fontSize:'13px', fontWeight:700, color:textMuted, textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:'14px', paddingBottom:'8px', borderBottom:`1px solid ${border}` }}>
+                    {cat.label}
+                  </div>
+                  <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(220px, 1fr))', gap:'14px' }}>
+                    {tokens.map(token => {
+                      const isSimpleColor = /^#[0-9a-fA-F]{3,8}$/.test(themeColors[token.key] ?? token.defaultValue);
+                      const currentVal = themeColors[token.key] ?? token.defaultValue;
+                      return (
+                        <div key={token.key} style={{ background:card, border:`1px solid ${border}`, borderRadius:'12px', padding:'12px', display:'flex', flexDirection:'column', gap:'8px' }}>
+                          {/* Swatch + label */}
+                          <div style={{ display:'flex', alignItems:'center', gap:'10px' }}>
+                            <div style={{ width:'36px', height:'36px', borderRadius:'8px', background:currentVal, border:`1px solid ${border}`, flexShrink:0, boxShadow:'0 1px 4px rgba(0,0,0,0.08)' }} />
+                            <div style={{ flex:1, minWidth:0 }}>
+                              <div style={{ fontSize:'12.5px', fontWeight:700, color:textMain, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{token.label}</div>
+                              <div style={{ fontSize:'10.5px', color:textMuted, fontFamily:'monospace', marginTop:'1px' }}>{token.cssVar}</div>
+                            </div>
+                            {/* Color picker — only for simple hex values */}
+                            {isSimpleColor && (
+                              <input
+                                type="color"
+                                value={currentVal.length === 7 ? currentVal : '#000000'}
+                                onChange={e => {
+                                  const v = e.target.value;
+                                  setThemeColors(prev => ({ ...prev, [token.key]: v }));
+                                  if (themePreviewActive) document.documentElement.style.setProperty(token.cssVar, v);
+                                }}
+                                style={{ width:'28px', height:'28px', border:'none', padding:0, cursor:'pointer', borderRadius:'6px', background:'transparent', flexShrink:0 }}
+                                title="Pick color"
+                              />
+                            )}
+                          </div>
+                          {/* Hex / value input */}
+                          <input
+                            style={{ ...inputStyle, fontSize:'12px', padding:'7px 10px', fontFamily:'monospace' }}
+                            value={currentVal}
+                            onChange={e => {
+                              const v = e.target.value;
+                              setThemeColors(prev => ({ ...prev, [token.key]: v }));
+                              if (themePreviewActive) document.documentElement.style.setProperty(token.cssVar, v);
+                            }}
+                            placeholder={token.defaultValue}
+                          />
+                          {/* Reset to default */}
+                          {currentVal !== token.defaultValue && (
+                            <button
+                              onClick={() => {
+                                setThemeColors(prev => ({ ...prev, [token.key]: token.defaultValue }));
+                                if (themePreviewActive) document.documentElement.style.setProperty(token.cssVar, token.defaultValue);
+                              }}
+                              style={{ fontSize:'11px', color:textMuted, background:'transparent', border:`1px solid ${border}`, borderRadius:'6px', padding:'3px 8px', cursor:'pointer', alignSelf:'flex-start' }}
+                            >
+                              Reset to default
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+
+            {/* Save Button */}
+            <div style={{ marginTop:'32px', paddingTop:'24px', borderTop:`1px solid ${border}`, display:'flex', justifyContent:'flex-end' }}>
+              <button
+                onClick={handleSaveTheme}
+                disabled={themeSaving}
+                style={{ background:'var(--primary)', color:'white', border:'none', borderRadius:'10px', padding:'12px 24px', fontSize:'14px', fontWeight:700, cursor:themeSaving?'not-allowed':'pointer', display:'flex', alignItems:'center', gap:'8px', boxShadow:'0 4px 12px rgba(192,21,27,0.15)', opacity:themeSaving?0.7:1 }}
+              >
+                {themeSaving ? <RefreshCw size={18} className="animate-spin" /> : <Save size={18} />}
+                {themeSaving ? 'Saving...' : 'Save Theme Colors'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ── CMS PAGES TAB ── */}
+        {mainTab === 'cms' && view === 'page-list' ? (
           <>
             <PageHeader
               title="Pages"
@@ -347,7 +533,7 @@ export default function CMSPagesPage() {
               )}
             </div>
           </>
-        ) : (
+        ) : mainTab === 'cms' ? (
           <>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
               <div>
@@ -457,9 +643,8 @@ export default function CMSPagesPage() {
               )}
             </div>
           </>
-        )}
+        ) : null}
       </div>
-
       {/* Type Selector Modal */}
       {showTypeSelector && (
         <Modal open={showTypeSelector} onClose={() => setShowTypeSelector(false)} title="Add New Section">

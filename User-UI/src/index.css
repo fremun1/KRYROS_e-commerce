@@ -113,6 +113,34 @@
   --kryros-receipt-muted: #aaaaaa;
   --kryros-receipt-red: #b91c1c;
   --kryros-receipt-teal: #27B9AF;
+
+  /* AUTH / FORM COLORS */
+  --kryros-form-bg: #FAFAFA;
+  --kryros-form-border: #E5E5E5;
+  --kryros-form-text-muted: #75757A;
+  --kryros-form-text-hint: #9E9E9E;
+  --kryros-form-text-label: #A0A0A5;
+  --kryros-form-error-bg: #FFF0F0;
+  --kryros-form-error-border: #FFD0D0;
+  --kryros-form-info-bg: #F0F7FF;
+  --kryros-form-info-border: #D0E0F0;
+  --kryros-form-success-bg: #E8F5E9;
+  --kryros-form-success-icon: #2DBE60;
+  --kryros-form-strength-bar-bg: #E5E5E5;
+  --kryros-page-bg-start: #FAFAFA;
+  --kryros-page-bg-end: #FFFFFF;
+  --kryros-card-shadow: rgba(0,0,0,0.08);
+
+  /* ANNOUNCEMENT BAR */
+  --kryros-announcement-text: #333333;
+  --kryros-announcement-closed-bg: #dc2626;
+  --kryros-announcement-closed-text: #ffffff;
+
+  /* SOCIAL BRAND COLORS */
+  --kryros-social-facebook: #1877F2;
+  --kryros-social-instagram: #E4405F;
+  --kryros-social-twitter: #1DA1F2;
+  --kryros-social-youtube: #FF0000;
 }
 
 @theme inline {

@@ -1,4 +1,4 @@
-import { IsArray, IsBoolean, IsInt, IsNumber, IsOptional, IsString, Min, ValidateIf } from 'class-validator';
+import { IsArray, IsBoolean, IsInt, IsNumber, IsOptional, IsString, Min, ValidateIf, Allow } from 'class-validator';
 import { Type, Transform } from 'class-transformer';
 
 export class UpdateProductDto {
@@ -21,10 +21,9 @@ export class UpdateProductDto {
   price?: number;
 
   @IsOptional()
-  @IsNumber()
-  @Min(0)
-  @Type(() => Number)
-  salePrice?: number;
+  @Transform(({ value }) => (value === null || value === '' || value === undefined) ? null : Number(value))
+  @Allow()
+  salePrice?: number | null;
 
   @IsOptional()
   @IsString()

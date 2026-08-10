@@ -87,10 +87,10 @@ export default function ContactPage() {
         <p className="text-sm font-bold text-foreground mb-3">Follow Us</p>
         <div className="flex gap-3">
           {[
-            { icon: Facebook, color: "text-[#1877F2]", bg: "bg-[#1877F2]/10 border-[#1877F2]/20" },
-            { icon: Instagram, color: "text-[#E4405F]", bg: "bg-[#E4405F]/10 border-[#E4405F]/20" },
-            { icon: Twitter, color: "text-[#1DA1F2]", bg: "bg-[#1DA1F2]/10 border-[#1DA1F2]/20" },
-            { icon: Youtube, color: "text-[#FF0000]", bg: "bg-[#FF0000]/10 border-[#FF0000]/20" },
+            { icon: Facebook, color: "text-[var(--kryros-social-facebook)]", bg: "bg-[var(--kryros-social-facebook)]/10 border-[var(--kryros-social-facebook)]/20" },
+            { icon: Instagram, color: "text-[var(--kryros-social-instagram)]", bg: "bg-[var(--kryros-social-instagram)]/10 border-[var(--kryros-social-instagram)]/20" },
+            { icon: Twitter, color: "text-[var(--kryros-social-twitter)]", bg: "bg-[var(--kryros-social-twitter)]/10 border-[var(--kryros-social-twitter)]/20" },
+            { icon: Youtube, color: "text-[var(--kryros-social-youtube)]", bg: "bg-[var(--kryros-social-youtube)]/10 border-[var(--kryros-social-youtube)]/20" },
           ].map(({ icon: Icon, color, bg }, i) => (
             <button key={i} className={`w-11 h-11 rounded-xl border flex items-center justify-center hover:scale-105 transition-transform ${bg}`}>
               <Icon className={`w-5 h-5 ${color}`} />

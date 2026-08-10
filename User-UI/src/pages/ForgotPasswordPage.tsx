@@ -137,7 +137,7 @@ export default function ForgotPasswordPage() {
   };
 
   const strengthColor = () =>
-    passwordEval.score <= 2 ? "#D63031" : passwordEval.score === 3 ? "#F68B1E" : "#2DBE60";
+    passwordEval.score <= 2 ? 'var(--kryros-error)' : passwordEval.score === 3 ? 'var(--kryros-warning)' : 'var(--kryros-success)';
   const strengthWidth = () => (newPassword.length === 0 ? "0%" : `${(passwordEval.score / 5) * 100}%`);
 
   const ic =
@@ -176,28 +176,28 @@ export default function ForgotPasswordPage() {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#FAFAFA] to-white flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-b from-[var(--kryros-page-bg-start)] to-white flex items-center justify-center p-4">
       <div className="w-full max-w-[380px] relative">
         {step !== "request" && <BackButton onClick={() => setLocation("/login")} />}
 
-        <div className="bg-white rounded-[16px] shadow-[0_4px_16px_rgba(0,0,0,0.08)] p-8">
+        <div className="bg-white rounded-[16px] shadow-[0_4px_16px_var(--kryros-card-shadow)] p-8">
           <Logo />
 
           {/* Request Reset Step */}
           {step === "request" && (
             <>
-              <p className="text-center text-[13px] text-[#75757A] mb-6 font-['Roboto']">
+              <p className="text-center text-[13px] text-[var(--kryros-form-text-muted)] mb-6 font-['Roboto']">
                 Enter your email or phone number to receive a password reset link
               </p>
 
               {error && (
-                <div className="mb-4 px-4 py-3 rounded-[8px] text-[13px] leading-snug font-['Roboto'] bg-[#FFF0F0] text-[#D63031] border border-[#FFD0D0]">
+                <div className="mb-4 px-4 py-3 rounded-[8px] text-[13px] leading-snug font-['Roboto'] bg-[var(--kryros-form-error-bg)] text-[var(--kryros-error)] border border-[var(--kryros-form-error-border)]">
                   {error}
                 </div>
               )}
 
               {notice && (
-                <div className="mb-4 px-4 py-3 rounded-[8px] text-[13px] leading-snug font-['Roboto']" style={{ background:'#F0F7FF', color:'var(--kryros-secondary)', border:'1px solid #D0E0F0' }}>
+                <div className="mb-4 px-4 py-3 rounded-[8px] text-[13px] leading-snug font-['Roboto']" style={{ background:'var(--kryros-form-info-bg)', color:'var(--kryros-secondary)', border:'1px solid var(--kryros-form-info-border)' }}>
                   {notice}
                 </div>
               )}
@@ -206,7 +206,7 @@ export default function ForgotPasswordPage() {
                 <div>
                   <label className={lc}>Email or Phone</label>
                   <div className="relative">
-                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#9E9E9E] pointer-events-none" />
+                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--kryros-form-text-hint)] pointer-events-none" />
                     <input
                       type="text"
                       value={identifier}
@@ -229,8 +229,8 @@ export default function ForgotPasswordPage() {
                 </button>
               </form>
 
-              <div className="mt-6 pt-6 border-t border-[#E5E5E5] text-center">
-                <p className="text-[13px] text-[#75757A] font-['Roboto']">
+              <div className="mt-6 pt-6 border-t border-[var(--kryros-form-border)] text-center">
+                <p className="text-[13px] text-[var(--kryros-form-text-muted)] font-['Roboto']">
                   Remember your password?{" "}
                   <button
                     type="button"
@@ -247,12 +247,12 @@ export default function ForgotPasswordPage() {
           {/* Reset Password Step */}
           {step === "reset" && (
             <>
-              <p className="text-center text-[13px] text-[#75757A] mb-6 font-['Roboto']">
+              <p className="text-center text-[13px] text-[var(--kryros-form-text-muted)] mb-6 font-['Roboto']">
                 Create a new password for your account
               </p>
 
               {error && (
-                <div className="mb-4 px-4 py-3 rounded-[8px] text-[13px] leading-snug font-['Roboto'] bg-[#FFF0F0] text-[#D63031] border border-[#FFD0D0]">
+                <div className="mb-4 px-4 py-3 rounded-[8px] text-[13px] leading-snug font-['Roboto'] bg-[var(--kryros-form-error-bg)] text-[var(--kryros-error)] border border-[var(--kryros-form-error-border)]">
                   {error}
                 </div>
               )}
@@ -261,7 +261,7 @@ export default function ForgotPasswordPage() {
                 <div>
                   <label className={lc}>New Password</label>
                   <div className="relative">
-                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#9E9E9E] pointer-events-none" />
+                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--kryros-form-text-hint)] pointer-events-none" />
                     <input
                       type={showPassword ? "text" : "password"}
                       value={newPassword}
@@ -281,7 +281,7 @@ export default function ForgotPasswordPage() {
                   {newPassword && (
                     <div className="mt-2">
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-[11px] text-[#75757A] font-['Roboto']">Password strength</span>
+                        <span className="text-[11px] text-[var(--kryros-form-text-muted)] font-['Roboto']">Password strength</span>
                         <span
                           className="text-[11px] font-bold font-['Roboto']"
                           style={{ color: strengthColor() }}
@@ -289,7 +289,7 @@ export default function ForgotPasswordPage() {
                           {passwordEval.label}
                         </span>
                       </div>
-                      <div className="w-full h-1 bg-[#E5E5E5] rounded-full overflow-hidden">
+                      <div className="w-full h-1 bg-[var(--kryros-form-strength-bar-bg)] rounded-full overflow-hidden">
                         <div
                           className="h-full transition-all duration-300"
                           style={{ width: strengthWidth(), backgroundColor: strengthColor() }}
@@ -302,7 +302,7 @@ export default function ForgotPasswordPage() {
                 <div>
                   <label className={lc}>Confirm Password</label>
                   <div className="relative">
-                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#9E9E9E] pointer-events-none" />
+                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--kryros-form-text-hint)] pointer-events-none" />
                     <input
                       type={showConfirmPassword ? "text" : "password"}
                       value={confirmPassword}
@@ -338,12 +338,12 @@ export default function ForgotPasswordPage() {
           {step === "success" && (
             <div className="text-center">
               <div className="mb-6 flex justify-center">
-                <div className="w-16 h-16 bg-[#E8F5E9] rounded-full flex items-center justify-center">
-                  <Check className="w-8 h-8 text-[#2DBE60]" />
+                <div className="w-16 h-16 bg-[var(--kryros-form-success-bg)] rounded-full flex items-center justify-center">
+                  <Check className="w-8 h-8 text-[var(--kryros-success)]" />
                 </div>
               </div>
               <h2 className="text-[18px] font-bold mb-2 font-['Roboto']" style={{ color:'var(--kryros-primary-text)' }}>Password Reset Successful</h2>
-              <p className="text-[13px] text-[#75757A] mb-6 font-['Roboto']">
+              <p className="text-[13px] text-[var(--kryros-form-text-muted)] mb-6 font-['Roboto']">
                 Your password has been reset. You can now sign in with your new password.
               </p>
               <button

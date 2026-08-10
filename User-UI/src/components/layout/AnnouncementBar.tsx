@@ -93,13 +93,13 @@ export default function AnnouncementBar({
 
   return (
     <div
-      className="bg-white text-[#333333] text-[10px] md:text-xs border-b border-border"
+      className="bg-[var(--kryros-white)] text-[var(--kryros-announcement-text)] text-[10px] md:text-xs border-b border-border"
       style={{
         ...(config?.bgColor ? { backgroundColor: config.bgColor } : {}),
         ...(config?.textColor ? { color: config.textColor } : {}),
       }}
     >
-      <div className="flex items-center justify-between px-4 md:px-6 py-2 lg:max-w-screen-xl lg:mx-auto lg:px-8" style={isClosed ? { backgroundColor: '#dc2626', color: '#ffffff' } : undefined}>
+      <div className="flex items-center justify-between px-4 md:px-6 py-2 lg:max-w-screen-xl lg:mx-auto lg:px-8" style={isClosed ? { backgroundColor: 'var(--kryros-announcement-closed-bg)', color: 'var(--kryros-announcement-closed-text)' } : undefined}>
         <div className="flex items-center gap-2 font-bold">
           {isClosed && <span className="px-2 py-0.5 bg-white text-destructive rounded text-[9px] uppercase tracking-wider font-black">STORE CLOSED</span>}
           <span>{displayMessage}</span>

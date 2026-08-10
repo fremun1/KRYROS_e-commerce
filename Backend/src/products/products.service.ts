@@ -860,7 +860,7 @@ export class ProductsService {
         description: dto.description ?? undefined,
         shortDescription: dto.shortDescription ?? undefined,
         price: dto.price !== undefined ? (isNaN(Number(dto.price)) ? 0 : Number(dto.price)) : undefined,
-        salePrice: dto.salePrice !== undefined ? (isNaN(Number(dto.salePrice)) ? null : Number(dto.salePrice)) : undefined,
+        salePrice: dto.salePrice !== undefined ? (dto.salePrice === null ? null : (isNaN(Number(dto.salePrice)) ? null : Number(dto.salePrice))) : undefined,
         sku: dto.sku?.trim() || undefined,
         weight: dto.weight !== undefined && dto.weight !== null ? (isNaN(Number(dto.weight)) ? null : Number(dto.weight)) : undefined,
         metaTitle: dto.metaTitle !== undefined ? dto.metaTitle : undefined,
