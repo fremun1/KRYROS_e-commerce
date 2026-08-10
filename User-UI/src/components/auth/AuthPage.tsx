@@ -307,25 +307,23 @@ export default function AuthPage() {
   );
 
   const Logo = () => (
-    <div className="flex flex-col items-center select-none">
-      <img
-        src="/kryros-logo.png"
-        alt="KRYROS"
-        className="w-[44px] h-[44px] object-contain"
-        loading="eager"
-      />
-    </div>
+    <img
+      src="/kryros-logo.png"
+      alt="KRYROS"
+      className="w-[36px] h-[36px] object-contain"
+      loading="eager"
+    />
   );
 
-  const SupportFooter = ({ mt = "mt-4" }: { mt?: string }) => (
-    <div className={`${mt} text-center border-t border-[#F0F0F0] pt-3 font-['Roboto'] shrink-0`}>
+  const SupportFooter = () => (
+    <div className="text-center pt-3 pb-1 font-['Roboto'] shrink-0">
       <p className="text-[11px] text-[#75757A] leading-relaxed">
         Need help? Visit our <a href="#" className="text-[var(--kryros-primary)] font-medium hover:underline">Help Center</a> or contact us on
       </p>
       <p className="text-[12px] font-bold text-[#313133] mt-0.5">
         +260966423719
       </p>
-      <div className="flex items-center justify-center gap-1.5 mt-2">
+      <div className="flex items-center justify-center gap-1.5 mt-1.5">
         <span className="text-[11px] font-black uppercase tracking-[0.15em] text-[#A0A0A5]">KRYROS</span>
       </div>
     </div>
@@ -405,24 +403,25 @@ export default function AuthPage() {
               <div className="flex-grow h-px bg-[#E5E5E5]" />
             </div>
 
-            <div className="flex items-center justify-center gap-5 my-0.5">
+            <div className="flex flex-col gap-2.5 my-0.5">
               <button
                 type="button"
-                className="w-[46px] h-[46px] rounded-full border border-[#E5E5E5] bg-white flex items-center justify-center hover:border-[var(--kryros-primary)] hover:shadow-sm active:scale-95 transition-all cursor-pointer"
+                className="w-full h-[48px] border border-[#E5E5E5] rounded-[8px] bg-white flex items-center justify-center gap-2.5 text-[14px] font-medium text-[#313133] hover:bg-[#FAFAFA] active:bg-[#F0F0F0] transition-colors cursor-pointer font-['Roboto']"
               >
-                <GoogleIcon />
+                <FacebookIcon />
+                Log in with Facebook
               </button>
               <button
                 type="button"
-                className="w-[46px] h-[46px] rounded-full border border-[#E5E5E5] bg-white flex items-center justify-center hover:border-[var(--kryros-primary)] hover:shadow-sm active:scale-95 transition-all cursor-pointer"
+                className="w-full h-[48px] border border-[#E5E5E5] rounded-[8px] bg-white flex items-center justify-center gap-2.5 text-[14px] font-medium text-[#313133] hover:bg-[#FAFAFA] active:bg-[#F0F0F0] transition-colors cursor-pointer font-['Roboto']"
               >
-                <FacebookIcon />
+                <GoogleIcon />
+                Login with Google
               </button>
             </div>
 
             <p className="text-center text-[11.5px] text-[#75757A] leading-relaxed font-['Roboto'] pt-1 px-2">
-              By continuing you agree to KRYROS's <br />
-              <a href="#" className="text-[var(--kryros-primary)] hover:underline font-medium">Terms and Conditions</a> & <a href="#" className="text-[var(--kryros-primary)] hover:underline font-medium">Privacy Policy</a>
+              By continuing you agree to KRYROS's <a href="#" className="text-[var(--kryros-primary)] hover:underline font-medium">Terms and Conditions</a> & <a href="#" className="text-[var(--kryros-primary)] hover:underline font-medium">Privacy Policy</a>
             </p>
           </>
         ) : (
@@ -820,7 +819,7 @@ export default function AuthPage() {
 
         {/* TOP HEADER */}
         {step !== "checking" ? (
-          <div className="w-full relative flex items-center justify-center pt-1 pb-3 shrink-0">
+          <div className="w-full relative flex items-center pt-1 pb-3 shrink-0">
             {showBack && <BackButton onClick={onBack} />}
             <Logo />
           </div>
@@ -841,7 +840,7 @@ export default function AuthPage() {
 
         {/* SUPPORT FOOTER */}
         {step !== "checking" ? (
-          <SupportFooter mt="mt-0" />
+          <SupportFooter />
         ) : (
           <div className="h-8 shrink-0" />
         )}
