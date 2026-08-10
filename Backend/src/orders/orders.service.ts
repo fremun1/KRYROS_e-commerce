@@ -32,12 +32,7 @@ export class OrdersService {
     const take = Math.min(Math.max(1, Number(rawTake) || 20), 500); // Admin can fetch up to 500 orders
     const where: any = userId ? { userId } : {};
     if (status) where.status = status;
-    // Exclude direct/whatsapp placeholder orders from main order list
-    where.AND = [
-      ...(where.AND || []),
-      { orderNumber: { not: { startsWith: 'DIR-' } } },
-      { orderNumber: { not: { startsWith: 'WA-' } } }
-    ];
+    // Include all orders in admin order list
 
     const baseSelect = {
       id: true,
