@@ -535,44 +535,6 @@ export default function CMSPagesPage() {
               onChange={(v) => setFormData({...formData, subtitle: v})}
               border={border} textMain={textMain} textMuted={textMuted} surface={surface}
             />
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-muted-foreground uppercase">Title Alignment</label>
-                <select
-                  value={formData.config?.titleAlign || 'left'}
-                  onChange={(e) => setFormData({
-                    ...formData,
-                    config: {
-                      ...(formData.config || {}),
-                      titleAlign: e.target.value
-                    }
-                  })}
-                  className="w-full p-2.5 bg-background border rounded-lg text-sm outline-none focus:ring-2 focus:ring-primary/20"
-                >
-                  <option value="left">Left Aligned</option>
-                  <option value="center">Centered</option>
-                  <option value="right">Right Aligned</option>
-                </select>
-              </div>
-
-              <div className="flex items-center gap-3 h-full pt-6">
-                <input
-                  type="checkbox"
-                  id="show-see-all-toggle"
-                  checked={formData.config?.showSeeAll !== false}
-                  onChange={(e) => setFormData({
-                    ...formData,
-                    config: {
-                      ...(formData.config || {}),
-                      showSeeAll: e.target.checked
-                    }
-                  })}
-                  className="w-4 h-4 rounded border-primary text-primary focus:ring-primary"
-                />
-                <label htmlFor="show-see-all-toggle" className="text-sm font-bold text-muted-foreground cursor-pointer uppercase select-none">Show "See All" Link</label>
-              </div>
-            </div>
             
             <div className="p-4 bg-muted/30 rounded-xl border space-y-4">
               <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Configuration</h4>

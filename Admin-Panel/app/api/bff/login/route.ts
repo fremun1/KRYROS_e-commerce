@@ -24,52 +24,41 @@ export async function POST(req: NextRequest) {
     }
 
     const { accessToken, refreshToken, user } = data;
-
     if (!accessToken) {
       return NextResponse.json({ message: "Authentication failed" }, { status: 401 });
     }
 
     // ── Server-side admin role gate ──────────────────────────────────────
-    // Only admin-level roles may enter the admin panel.
+    // Only admin-level roles may enter the admin panel. Customer and
+    // Wholesale accounts are rejected here (403) instead of being logged
+    // out later by the frontend, and no session cookies are set.
     const ADMIN_ROLES = new Set(["SUPERADMIN", "ADMIN", "MANAGER", "STAFF"]);
     const normalizedRole = ((user?.role ?? "") as string)
       .toUpperCase()
       .replace(/[\s_]+/g, "");
-
     if (!ADMIN_ROLES.has(normalizedRole) || normalizedRole === "") {
       return NextResponse.json(
         {
-          message: "This account does not have admin panel access. Please log in through the customer portal.",
+          message:
+            "This account does not have admin panel access. Please log in through the customer portal.",
           reason: "insufficient_role",
         },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
     const res = NextResponse.json({ success: true, user: user ?? null });
-
-    // Set cookies with proper settings
     res.cookies.set("kryros_token", accessToken, {
-      httpOnly: true,
-      secure: isProd,
-      sameSite: "lax",
-      maxAge: 15 * 60,
-      path: "/",
+      httpOnly: true, secure: isProd, sameSite: "strict", maxAge: 15 * 60, path: "/",
     });
-
     if (refreshToken) {
       res.cookies.set("kryros_refresh", refreshToken, {
-        httpOnly: true,
-        secure: isProd,
-        sameSite: "lax",
-        maxAge: 7 * 24 * 60 * 60,
-        path: "/",
+        httpOnly: true, secure: isProd, sameSite: "strict", maxAge: 7 * 24 * 60 * 60, path: "/",
       });
     }
-
     res.cookies.set("kryros_admin_token", "", { maxAge: 0, path: "/" });
-
     return res;
+
   } catch {
     return NextResponse.json({ message: "Backend unavailable" }, { status: 503 });
   }

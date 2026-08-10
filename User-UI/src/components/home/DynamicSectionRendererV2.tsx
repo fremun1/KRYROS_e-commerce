@@ -128,8 +128,6 @@ export default function DynamicSectionRendererV2({
                 accentColor={section.config?.accentColor}
                 headerBgColor={section.config?.headerBgColor}
                 textColor={section.config?.textColor}
-                titleAlign={section.config?.titleAlign || 'left'}
-                showSeeAll={section.config?.showSeeAll !== false}
                 params={{
                   isFeatured: section.config?.filter_by === 'Featured' || section.config?.filterType === 'Featured' || section.config?.isFeatured,
                   allowCredit: section.config?.allowCredit,
@@ -155,16 +153,8 @@ export default function DynamicSectionRendererV2({
               <BrandSection
                 key={section.id}
                 title={section.title}
-                subtitle={section.subtitle}
                 limit={section.config?.limit || 8}
                 pageSlug={pageSlug}
-                titleAlign={section.config?.titleAlign || 'left'}
-                showSeeAll={section.config?.showSeeAll !== false && Boolean(section.config?.viewAllHref || section.config?.ctaLink || section.config?.button_link)}
-                viewAllHref={section.config?.viewAllHref || section.config?.ctaLink || section.config?.button_link || '/brands'}
-                viewAllText={section.config?.viewAllText || section.config?.ctaText || section.config?.button_text || 'See All'}
-                accentColor={section.config?.accentColor}
-                textColor={section.config?.textColor}
-                headerBgColor={section.config?.headerBgColor}
               />
             );
 
@@ -332,17 +322,9 @@ export default function DynamicSectionRendererV2({
               <CategorySection
                 key={section.id}
                 title={section.title}
-                subtitle={section.subtitle}
                 layout={section.config?.layout || 'grid'}
                 limit={section.config?.limit || 8}
                 pageSlug={pageSlug}
-                titleAlign={section.config?.titleAlign || 'left'}
-                showSeeAll={section.config?.showSeeAll !== false && Boolean(section.config?.viewAllHref || section.config?.ctaLink || section.config?.button_link)}
-                viewAllHref={section.config?.viewAllHref || section.config?.ctaLink || section.config?.button_link || '/categories'}
-                viewAllText={section.config?.viewAllText || section.config?.ctaText || section.config?.button_text || 'See All'}
-                accentColor={section.config?.accentColor}
-                textColor={section.config?.textColor}
-                headerBgColor={section.config?.headerBgColor}
               />
             );
 
@@ -358,15 +340,6 @@ export default function DynamicSectionRendererV2({
                 duration={section.config?.duration || 5}
                 showDots={section.config?.showDots !== false}
                 showArrows={section.config?.showArrows !== false}
-                title={section.title}
-                subtitle={section.subtitle}
-                titleAlign={section.config?.titleAlign || 'left'}
-                showSeeAll={section.config?.showSeeAll !== false && Boolean(section.config?.viewAllHref || section.config?.ctaLink || section.config?.button_link)}
-                viewAllHref={section.config?.viewAllHref || section.config?.ctaLink || section.config?.button_link || '#'}
-                viewAllText={section.config?.viewAllText || section.config?.ctaText || section.config?.button_text || 'See All'}
-                accentColor={section.config?.accentColor}
-                textColor={section.config?.textColor}
-                headerBgColor={section.config?.headerBgColor}
               />
             );
 

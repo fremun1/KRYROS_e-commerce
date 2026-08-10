@@ -37,10 +37,6 @@ interface ProductShelfProps {
   headerBgColor?: string;
   textColor?: string;  // Separate text color for heading (independent of background)
   
-  // Layout control
-  titleAlign?: 'left' | 'center' | 'right';
-  showSeeAll?: boolean;
-
   // Optional decorative banner above the section
   topBanner?: ReactNode;
   
@@ -65,8 +61,6 @@ export default function ProductShelf({
   accentColor,
   headerBgColor,
   textColor,
-  titleAlign = 'left',
-  showSeeAll = true,
   topBanner,
   loadingCount = 8,
   params = {}
@@ -265,29 +259,11 @@ export default function ProductShelf({
 
         {/* Section header */}
         <div 
-          className={
-            titleAlign === 'center'
-              ? `flex flex-col items-center justify-center text-center px-4 md:px-6 py-4 gap-2 ${headerBgColor ? 'mb-4' : ''}`
-              : titleAlign === 'right'
-              ? `flex flex-row-reverse items-center justify-between px-4 md:px-6 py-3 ${headerBgColor ? 'mb-4' : ''}`
-              : `flex items-center justify-between px-4 md:px-6 py-3 ${headerBgColor ? 'mb-4' : ''}`
-          }
+          className={`flex items-center justify-between px-4 md:px-6 py-3 ${headerBgColor ? 'mb-4' : ''}`}
           style={headerBgColor ? { backgroundColor: headerBgColor } : undefined}
         >
-          <div className={
-            titleAlign === 'center'
-              ? 'flex flex-col items-center justify-center text-center min-w-0'
-              : titleAlign === 'right'
-              ? 'text-right min-w-0'
-              : 'min-w-0'
-          }>
-            <div className={
-              titleAlign === 'center'
-                ? 'flex flex-col sm:flex-row items-center justify-center gap-2'
-                : titleAlign === 'right'
-                ? 'flex flex-row-reverse items-center gap-3'
-                : 'flex items-center gap-3'
-            }>
+          <div className="min-w-0">
+            <div className="flex items-center gap-3">
               <h2 
                 className="text-[20px] leading-[28px] font-bold tracking-tight"
                 style={textColor || accentColor ? { color: textColor || accentColor } : undefined}
@@ -296,7 +272,7 @@ export default function ProductShelf({
               </h2>
               
               {showTimer && !loading && products.length > 0 && (
-                <div className={`flex items-center gap-1.5 ${titleAlign === 'center' ? 'justify-center mt-1 sm:mt-0 sm:ml-2' : titleAlign === 'right' ? 'mr-2' : 'ml-2'}`}>
+                <div className="flex items-center gap-1.5 ml-2">
                   <span className={`text-[11px] font-bold uppercase tracking-wider opacity-80 ${headerBgColor ? 'text-white' : 'text-muted-foreground'}`}>
                     Ends in:
                   </span>
@@ -309,22 +285,20 @@ export default function ProductShelf({
               )}
             </div>
             {subtitle && (
-              <p className={`text-[13px] leading-[18px] mt-0.5 ${headerBgColor ? 'text-white/80' : 'text-muted-foreground'} ${titleAlign === 'center' ? 'text-center' : titleAlign === 'right' ? 'text-right' : 'text-left'}`}>
+              <p className={`text-[13px] leading-[18px] mt-0.5 ${headerBgColor ? 'text-white/80' : 'text-muted-foreground'}`}>
                 {subtitle}
               </p>
             )}
           </div>
 
-          {showSeeAll && (
-            <a
-              href={viewAllHref}
-              className={`flex items-center gap-0.5 text-[14px] font-semibold hover:opacity-80 transition-colors shrink-0 whitespace-nowrap ${titleAlign === 'center' ? 'mt-2' : titleAlign === 'right' ? 'mr-4' : 'ml-4'}`}
-              style={textColor || accentColor ? { color: textColor || accentColor } : undefined}
-            >
-              {viewAllText}
-              <ChevronRight className="w-4 h-4" strokeWidth={2.5} />
-            </a>
-          )}
+          <a
+            href={viewAllHref}
+            className={`flex items-center gap-0.5 text-[14px] font-semibold hover:opacity-80 transition-colors shrink-0 whitespace-nowrap ml-4`}
+            style={textColor || accentColor ? { color: textColor || accentColor } : undefined}
+          >
+            {viewAllText}
+            <ChevronRight className="w-4 h-4" strokeWidth={2.5} />
+          </a>
         </div>
 
         {/* Loading skeleton */}

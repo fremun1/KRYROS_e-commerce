@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { ChevronRight } from 'lucide-react';
 
 interface BannerSlide {
   image: string;
@@ -20,17 +19,6 @@ interface BannerCarouselProps {
   duration?: number;
   showDots?: boolean;
   showArrows?: boolean;
-
-  // Layout control
-  title?: string;
-  subtitle?: string;
-  titleAlign?: 'left' | 'center' | 'right';
-  showSeeAll?: boolean;
-  viewAllHref?: string;
-  viewAllText?: string;
-  accentColor?: string;
-  textColor?: string;
-  headerBgColor?: string;
 }
 
 const bannerFrameClassName =
@@ -48,15 +36,6 @@ export default function BannerCarousel({
   duration = 5,
   showDots = true,
   showArrows = true,
-  title,
-  subtitle,
-  titleAlign = 'left',
-  showSeeAll = false,
-  viewAllHref = '#',
-  viewAllText = 'See All',
-  accentColor,
-  textColor,
-  headerBgColor
 }: BannerCarouselProps) {
   const [current, setCurrent] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
@@ -169,49 +148,6 @@ export default function BannerCarousel({
     const slide = slides[0];
     return (
       <div className={bannerFrameClassName}>
-        {title && (
-          <div
-            className={
-              titleAlign === 'center'
-                ? `flex flex-col items-center justify-center text-center py-4 gap-2 mb-4 ${headerBgColor ? 'px-4 md:px-6' : ''}`
-                : titleAlign === 'right'
-                ? `flex flex-row-reverse items-center justify-between py-3 mb-4 ${headerBgColor ? 'px-4 md:px-6' : ''}`
-                : `flex items-center justify-between py-3 mb-4 ${headerBgColor ? 'px-4 md:px-6' : ''}`
-            }
-            style={headerBgColor ? { backgroundColor: headerBgColor } : undefined}
-          >
-            <div className={
-              titleAlign === 'center'
-                ? 'flex flex-col items-center justify-center text-center min-w-0'
-                : titleAlign === 'right'
-                ? 'text-right min-w-0'
-                : 'min-w-0'
-            }>
-              <h2
-                className="text-xl font-bold tracking-tight text-foreground"
-                style={textColor || accentColor ? { color: textColor || accentColor } : undefined}
-              >
-                {title}
-              </h2>
-              {subtitle && (
-                <p className={`text-[13px] leading-[18px] mt-0.5 ${headerBgColor ? 'text-white/80' : 'text-muted-foreground'} ${titleAlign === 'center' ? 'text-center' : titleAlign === 'right' ? 'text-right' : 'text-left'}`}>
-                  {subtitle}
-                </p>
-              )}
-            </div>
-
-            {showSeeAll && (
-              <a
-                href={viewAllHref}
-                className={`flex items-center gap-0.5 text-[14px] font-semibold hover:opacity-80 transition-colors shrink-0 whitespace-nowrap ${titleAlign === 'center' ? 'mt-2' : titleAlign === 'right' ? 'mr-4' : 'ml-4'}`}
-                style={textColor || accentColor ? { color: textColor || accentColor } : undefined}
-              >
-                {viewAllText}
-                <ChevronRight className="w-4 h-4" strokeWidth={2.5} />
-              </a>
-            )}
-          </div>
-        )}
         <a href={slide.linkUrl || '#'} className="block w-full">
           <div className={bannerShellClassName}>
             <div className="pointer-events-none absolute inset-x-0 top-0 z-[1] h-px bg-white/70" />
@@ -251,49 +187,6 @@ export default function BannerCarousel({
 
   return (
     <div className={bannerFrameClassName}>
-      {title && (
-        <div
-          className={
-            titleAlign === 'center'
-              ? `flex flex-col items-center justify-center text-center py-4 gap-2 mb-4 ${headerBgColor ? 'px-4 md:px-6' : ''}`
-              : titleAlign === 'right'
-              ? `flex flex-row-reverse items-center justify-between py-3 mb-4 ${headerBgColor ? 'px-4 md:px-6' : ''}`
-              : `flex items-center justify-between py-3 mb-4 ${headerBgColor ? 'px-4 md:px-6' : ''}`
-          }
-          style={headerBgColor ? { backgroundColor: headerBgColor } : undefined}
-        >
-          <div className={
-            titleAlign === 'center'
-              ? 'flex flex-col items-center justify-center text-center min-w-0'
-              : titleAlign === 'right'
-              ? 'text-right min-w-0'
-              : 'min-w-0'
-          }>
-            <h2
-              className="text-xl font-bold tracking-tight text-foreground"
-              style={textColor || accentColor ? { color: textColor || accentColor } : undefined}
-            >
-              {title}
-            </h2>
-            {subtitle && (
-              <p className={`text-[13px] leading-[18px] mt-0.5 ${headerBgColor ? 'text-white/80' : 'text-muted-foreground'} ${titleAlign === 'center' ? 'text-center' : titleAlign === 'right' ? 'text-right' : 'text-left'}`}>
-                {subtitle}
-              </p>
-            )}
-          </div>
-
-          {showSeeAll && (
-            <a
-              href={viewAllHref}
-              className={`flex items-center gap-0.5 text-[14px] font-semibold hover:opacity-80 transition-colors shrink-0 whitespace-nowrap ${titleAlign === 'center' ? 'mt-2' : titleAlign === 'right' ? 'mr-4' : 'ml-4'}`}
-              style={textColor || accentColor ? { color: textColor || accentColor } : undefined}
-            >
-              {viewAllText}
-              <ChevronRight className="w-4 h-4" strokeWidth={2.5} />
-            </a>
-          )}
-        </div>
-      )}
       <div
         className={`${bannerShellClassName} group`}
         onMouseEnter={() => setIsPaused(true)}
