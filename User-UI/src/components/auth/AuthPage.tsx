@@ -307,12 +307,14 @@ export default function AuthPage() {
   );
 
   const Logo = () => (
-    <img
-      src="/kryros-logo.png"
-      alt="KRYROS"
-      className="w-[36px] h-[36px] object-contain"
-      loading="eager"
-    />
+    <div className="flex flex-col items-center select-none">
+      <img
+        src="/kryros-logo.png"
+        alt="KRYROS"
+        className="w-[44px] h-[44px] object-contain"
+        loading="eager"
+      />
+    </div>
   );
 
   const SupportFooter = () => (
@@ -814,12 +816,10 @@ export default function AuthPage() {
   return (
     <div className="h-[100dvh] w-full bg-white flex flex-col items-center font-['Roboto'] overflow-hidden py-3 px-4 select-none">
       <div className="w-full max-w-[360px] flex-1 flex flex-col relative min-h-0">
-        {/* TOP SPACER - balances content vertically */}
-        <div className="flex-1" />
 
         {/* TOP HEADER */}
         {step !== "checking" ? (
-          <div className="w-full relative flex items-center pt-1 pb-3 shrink-0">
+          <div className="w-full relative flex items-center justify-center pt-1 pb-3 shrink-0">
             {showBack && <BackButton onClick={onBack} />}
             <Logo />
           </div>
