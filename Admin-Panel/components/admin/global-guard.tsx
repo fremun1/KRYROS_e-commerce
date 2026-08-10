@@ -1,12 +1,14 @@
 "use client";
 import { useScreenshotRestriction } from "@/hooks/useScreenshotRestriction";
 import { useRegionRestriction } from "@/hooks/useRegionRestriction";
+import { useMobileScreenshotProtection } from "@/hooks/useMobileScreenshotProtection";
 import { usePathname } from "next/navigation";
 
 export default function GlobalGuard({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { enabled: screenshotBlocked } = useScreenshotRestriction();
   const { blocked: regionBlocked, loaded: regionLoaded, message: regionMessage } = useRegionRestriction();
+  useMobileScreenshotProtection(screenshotBlocked);
 
   // Show region blocked message if enabled and user is from blocked region
   // This will now block even the login page
@@ -41,10 +43,15 @@ export default function GlobalGuard({ children }: { children: React.ReactNode })
   }
 
   return (
-    <div style={{ 
-      userSelect: screenshotBlocked ? 'none' : 'auto', 
-      WebkitUserSelect: screenshotBlocked ? 'none' : 'auto' 
-    }}>
+    <div 
+      style={{ 
+        userSelect: screenshotBlocked ? 'none' : 'auto', 
+        WebkitUserSelect: screenshotBlocked ? 'none' : 'auto',
+        WebkitTouchCallout: screenshotBlocked ? 'none' : 'auto',
+        WebkitUserDrag: screenshotBlocked ? 'none' : 'auto'
+      }}
+      onContextMenu={screenshotBlocked ? (e) => e.preventDefault() : undefined}
+    >
       {children}
     </div>
   );
