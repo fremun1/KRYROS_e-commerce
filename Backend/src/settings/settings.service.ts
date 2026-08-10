@@ -22,6 +22,7 @@ export class SettingsService implements OnModuleInit {
       { key: 'opening_time', value: '08:00', type: 'string', category: 'general' },
       { key: 'closing_time', value: '18:00', type: 'string', category: 'general' },
       { key: 'is_store_closed_manual', value: 'false', type: 'boolean', category: 'general' },
+      { key: 'store_auto_schedule_enabled', value: 'false', type: 'boolean', category: 'general' },
       { key: 'store_closed_message', value: 'We are currently closed. Please come back later.', type: 'string', category: 'general' },
       { key: 'store_operating_days', value: 'Mon - Sun', type: 'string', category: 'general' },
       { key: 'next_opening_time', value: '06:00 PM', type: 'string', category: 'general' },

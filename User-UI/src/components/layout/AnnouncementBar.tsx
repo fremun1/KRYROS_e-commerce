@@ -75,8 +75,21 @@ export default function AnnouncementBar({
     fetchAnnouncement();
   }, [text, pageSlug]);
 
-  const isActive = enabled && config?.enabled && config?.text && !hidden;
+  const [storeStatus, setStoreStatus] = useState<any>(null);
+
+  useEffect(() => {
+    import("@/lib/api").then(({ fetchStoreStatus }) => {
+      fetchStoreStatus().then(res => setStoreStatus(res)).catch(() => {});
+    });
+  }, []);
+
+  const isClosed = storeStatus?.isStoreClosed;
+  const closedMessage = storeStatus?.message || "The store is currently closed for purchases.";
+
+  const isActive = (enabled && config?.enabled && config?.text && !hidden) || isClosed;
   if (!isActive) return null;
+
+  const displayMessage = isClosed ? closedMessage : config?.text;
 
   return (
     <div
@@ -86,23 +99,28 @@ export default function AnnouncementBar({
         ...(config?.textColor ? { color: config.textColor } : {}),
       }}
     >
-      <div className="flex items-center justify-between px-4 md:px-6 py-1.5 md:py-2 lg:max-w-screen-xl lg:mx-auto lg:px-8">
-        <span>{config.text}</span>
+      <div className="flex items-center justify-between px-4 md:px-6 py-2 lg:max-w-screen-xl lg:mx-auto lg:px-8" style={isClosed ? { backgroundColor: '#dc2626', color: '#ffffff' } : undefined}>
+        <div className="flex items-center gap-2 font-bold">
+          {isClosed && <span className="px-2 py-0.5 bg-white text-destructive rounded text-[9px] uppercase tracking-wider font-black">STORE CLOSED</span>}
+          <span>{displayMessage}</span>
+        </div>
         <div className="flex items-center gap-2">
-          {config.ctaText && config.ctaLink && (
+          {!isClosed && config?.ctaText && config?.ctaLink && (
             <Link href={config.ctaLink}>
               <span className="flex items-center gap-0.5 cursor-pointer hover:opacity-80 transition-opacity font-medium">
                 {config.ctaText} <span className="text-[10px]">&rsaquo;</span>
               </span>
             </Link>
           )}
-          <button
-            onClick={() => setHidden(true)}
-            className="p-0.5 rounded hover:bg-white/20 transition-colors ml-1 flex-shrink-0"
-            aria-label="Dismiss announcement"
-          >
-            <X className="w-3 h-3" />
-          </button>
+          {!isClosed && (
+            <button
+              onClick={() => setHidden(true)}
+              className="p-0.5 rounded hover:bg-white/20 transition-colors ml-1 flex-shrink-0"
+              aria-label="Dismiss announcement"
+            >
+              <X className="w-3 h-3" />
+            </button>
+          )}
         </div>
       </div>
     </div>

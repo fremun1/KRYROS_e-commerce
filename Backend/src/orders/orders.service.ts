@@ -246,14 +246,46 @@ export class OrdersService {
       throw new BadRequestException('Order items are required');
     }
 
-    // Check if store is closed
-    const storeStatus = await this.settingsService.getByKey('is_store_closed_manual');
-    const isStoreClosed = storeStatus?.value === 'true';
-    
-    if (isStoreClosed) {
-      const closureMessage = await this.settingsService.getByKey('store_closed_message');
+    // Check if store is closed (manual or scheduled)
+    const [manualClosedSetting, autoScheduleSetting, openingTimeSetting, closingTimeSetting, closureMessageSetting] = await Promise.all([
+      this.settingsService.getByKey('is_store_closed_manual'),
+      this.settingsService.getByKey('store_auto_schedule_enabled'),
+      this.settingsService.getByKey('opening_time'),
+      this.settingsService.getByKey('closing_time'),
+      this.settingsService.getByKey('store_closed_message'),
+    ]);
+
+    const manualClosed = manualClosedSetting?.value === 'true';
+    const autoSchedule = autoScheduleSetting?.value === 'true';
+    const openingTime = openingTimeSetting?.value || '08:00';
+    const closingTime = closingTimeSetting?.value || '18:00';
+
+    let scheduledClosed = false;
+    if (autoSchedule && openingTime && closingTime) {
+      const now = new Date();
+      const currentHours = now.getHours();
+      const currentMinutes = now.getMinutes();
+      const currentTimeVal = currentHours * 60 + currentMinutes;
+
+      const [openH, openM] = openingTime.split(':').map(Number);
+      const [closeH, closeM] = closingTime.split(':').map(Number);
+      const openVal = (openH || 0) * 60 + (openM || 0);
+      const closeVal = (closeH || 0) * 60 + (closeM || 0);
+
+      if (openVal < closeVal) {
+        if (currentTimeVal < openVal || currentTimeVal >= closeVal) {
+          scheduledClosed = true;
+        }
+      } else if (openVal > closeVal) {
+        if (currentTimeVal >= closeVal && currentTimeVal < openVal) {
+          scheduledClosed = true;
+        }
+      }
+    }
+
+    if (manualClosed || scheduledClosed) {
       throw new BadRequestException(
-        closureMessage?.value || 'The store is currently closed. Please try again later.'
+        closureMessageSetting?.value || 'The store is currently closed for purchases. Please try again later.'
       );
     }
 

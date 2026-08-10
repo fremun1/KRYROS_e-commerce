@@ -37,6 +37,7 @@ export class SettingsController {
       operatingDaysSetting,
       nextOpeningTimeSetting,
       nextOpeningDaySetting,
+      autoScheduleEnabledSetting,
     ] = await Promise.all([
       this.settingsService.getByKey('is_store_closed_manual'),
       this.settingsService.getByKey('store_closed_message'),
@@ -45,13 +46,49 @@ export class SettingsController {
       this.settingsService.getByKey('store_operating_days'),
       this.settingsService.getByKey('next_opening_time'),
       this.settingsService.getByKey('next_opening_day'),
+      this.settingsService.getByKey('store_auto_schedule_enabled'),
     ]);
 
+    const manualClosed = isClosedSetting?.value === 'true';
+    const openingTime = openingTimeSetting?.value || '08:00';
+    const closingTime = closingTimeSetting?.value || '18:00';
+    const autoSchedule = autoScheduleEnabledSetting?.value === 'true';
+
+    let scheduledClosed = false;
+    if (autoSchedule && openingTime && closingTime) {
+      const now = new Date();
+      const currentHours = now.getHours();
+      const currentMinutes = now.getMinutes();
+      const currentTimeVal = currentHours * 60 + currentMinutes;
+
+      const [openH, openM] = openingTime.split(':').map(Number);
+      const [closeH, closeM] = closingTime.split(':').map(Number);
+      const openVal = (openH || 0) * 60 + (openM || 0);
+      const closeVal = (closeH || 0) * 60 + (closeM || 0);
+
+      // If opening time < closing time (e.g. 08:00 to 18:00): closed if current time < open or current time >= close
+      if (openVal < closeVal) {
+        if (currentTimeVal < openVal || currentTimeVal >= closeVal) {
+          scheduledClosed = true;
+        }
+      } else if (openVal > closeVal) {
+        // Overnight hours (e.g. 20:00 to 06:00)
+        if (currentTimeVal >= closeVal && currentTimeVal < openVal) {
+          scheduledClosed = true;
+        }
+      }
+    }
+
+    const isStoreClosed = manualClosed || scheduledClosed;
+    const message = messageSetting?.value || 'We are currently closed. Please come back later.';
+
     return {
-      isStoreClosed: isClosedSetting?.value === 'true',
-      message: messageSetting?.value || 'We are currently closed. Please come back later.',
-      openingTime: openingTimeSetting?.value || '08:00',
-      closingTime: closingTimeSetting?.value || '18:00',
+      isStoreClosed,
+      manualClosed,
+      scheduledClosed,
+      message,
+      openingTime,
+      closingTime,
       operatingDays: operatingDaysSetting?.value || 'Mon - Sun',
       nextOpeningTime: nextOpeningTimeSetting?.value || '06:00 PM',
       nextOpeningDay: nextOpeningDaySetting?.value || 'Thursday',
