@@ -4,7 +4,13 @@ import App from "./App";
 import { initFirebase } from "@/lib/firebase";
 import { getNativeFcmToken } from "@/lib/notificationTokens";
 import { registerNativeTokenWithSession } from "@/store/authStore";
+import { loadThemeFromCMS } from "@/lib/themeLoader";
 import "./index.css";
+
+// Load theme colors from CMS before mounting the app.
+// This runs in the background; the app mounts immediately with CSS defaults
+// and any CMS overrides are applied as soon as the response arrives.
+loadThemeFromCMS().catch(() => undefined);
 
 initFirebase().catch(() => undefined);
 

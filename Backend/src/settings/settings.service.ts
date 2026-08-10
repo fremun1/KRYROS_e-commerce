@@ -2,6 +2,7 @@ import { Injectable, OnModuleInit, Inject } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import type { Cache } from 'cache-manager';
 import { PrismaService } from '../prisma/prisma.service';
+import { THEME_COLOR_CATALOG } from './theme-catalog';
 
 const SETTINGS_TTL = 5 * 60 * 1000; // 5 minutes — settings rarely change
 
@@ -34,7 +35,17 @@ export class SettingsService implements OnModuleInit {
       { key: 'admin_screenshot_restriction_enabled', value: 'false', type: 'boolean', category: 'security' },
     ];
 
-    for (const s of defaultSettings) {
+    // Seed theme color defaults
+    const themeDefaults = THEME_COLOR_CATALOG.map((token) => ({
+      key: token.key,
+      value: token.defaultValue,
+      type: 'string',
+      category: 'theme',
+    }));
+
+    const allDefaults = [...defaultSettings, ...themeDefaults];
+
+    for (const s of allDefaults) {
       const existing = await this.prisma.setting.findUnique({ where: { key: s.key } });
       if (!existing) {
         await this.prisma.setting.create({ data: s });
@@ -46,6 +57,7 @@ export class SettingsService implements OnModuleInit {
     await Promise.all([
       this.cacheManager.del('settings:all'),
       this.cacheManager.del('settings:shipping'),
+      this.cacheManager.del('settings:theme'),
     ]);
   }
 
@@ -114,6 +126,33 @@ export class SettingsService implements OnModuleInit {
       minPrice: Number(minPrice?.value || 100),
     };
     await this.cacheManager.set('settings:shipping', result, SETTINGS_TTL);
+    return result;
+  }
+
+  /**
+   * Returns a public map of { cssVar -> value } for all theme color tokens.
+   * This endpoint is intentionally public — it only exposes color values,
+   * not any sensitive configuration.
+   */
+  async getThemeColors(): Promise<Record<string, string>> {
+    const cached = await this.cacheManager.get<Record<string, string>>('settings:theme');
+    if (cached) return cached;
+
+    const keys = THEME_COLOR_CATALOG.map((t) => t.key);
+    const rows = await this.prisma.setting.findMany({
+      where: { key: { in: keys } },
+    });
+
+    // Build a map keyed by cssVar so the frontend can apply them directly
+    const rowMap: Record<string, string> = {};
+    rows.forEach((r) => { rowMap[r.key] = r.value; });
+
+    const result: Record<string, string> = {};
+    for (const token of THEME_COLOR_CATALOG) {
+      result[token.cssVar] = rowMap[token.key] ?? token.defaultValue;
+    }
+
+    await this.cacheManager.set('settings:theme', result, SETTINGS_TTL);
     return result;
   }
 }

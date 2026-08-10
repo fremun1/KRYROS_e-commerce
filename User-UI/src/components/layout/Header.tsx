@@ -460,18 +460,26 @@ export default function Header() {
         </div>
 
         {/* Desktop: Sub nav — lg: extra px so nav links sit inside max-width area */}
-        <div className="hidden md:flex items-center gap-1 px-6 py-1.5 border-t border-[#E5E5E5] bg-[#F5F5F5] lg:px-8 xl:px-14">
+        <div className="hidden md:flex items-center gap-1 px-6 py-1.5 border-t lg:px-8 xl:px-14" style={{ borderColor:'var(--kryros-border)', background:'var(--kryros-secondary-bg)' }}>
           {desktopNav.map(({ label, href }) => {
             const isActive = location === href || (href !== "/" && location.startsWith(href));
             return (
               <Link key={href} href={href}>
-                <button className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${isActive ? "bg-[#C0151B] text-white" : "text-[#333333] hover:text-[#C0151B] hover:bg-white"}`}>
+                <button
+                  className="px-3 py-1.5 rounded-lg text-sm font-medium transition-all"
+                  style={isActive
+                    ? { background:'var(--kryros-primary)', color:'var(--kryros-white-text)' }
+                    : { color:'var(--kryros-primary-text)' }
+                  }
+                  onMouseEnter={e => { if (!isActive) { (e.currentTarget as HTMLButtonElement).style.color='var(--kryros-primary)'; (e.currentTarget as HTMLButtonElement).style.background='var(--kryros-white)'; } }}
+                  onMouseLeave={e => { if (!isActive) { (e.currentTarget as HTMLButtonElement).style.color='var(--kryros-primary-text)'; (e.currentTarget as HTMLButtonElement).style.background='transparent'; } }}
+                >
                   {label}
                 </button>
               </Link>
             );
           })}
-          <span className="ml-auto px-3 py-1.5 rounded-lg text-sm font-semibold text-white bg-[#C0151B] cursor-pointer hover:bg-[#A01015] transition-colors">
+          <span className="ml-auto px-3 py-1.5 rounded-lg text-sm font-semibold cursor-pointer transition-colors" style={{ background:'var(--kryros-primary)', color:'var(--kryros-white-text)' }}>
             Hot Deals
           </span>
         </div>

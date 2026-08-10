@@ -184,7 +184,7 @@ export default function UnifiedProductCard({
 
           {/* 2. Condition badge */}
           {!!product.condition && !isWholesaleProduct && !isCreditProduct && (
-            <span className="text-[9px] md:text-[10px] font-bold tracking-[0.01em] text-white bg-[#C0151B] px-2.5 md:px-3 py-1 rounded-full whitespace-nowrap flex-shrink-0 shadow-sm">
+            <span className="text-[9px] md:text-[10px] font-bold tracking-[0.01em] px-2.5 md:px-3 py-1 rounded-full whitespace-nowrap flex-shrink-0 shadow-sm" style={{ background:'var(--kryros-primary)', color:'var(--kryros-white-text)' }}>
               {product.condition}
             </span>
           )}

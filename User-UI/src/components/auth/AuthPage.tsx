@@ -294,10 +294,10 @@ export default function AuthPage() {
   const strengthWidth = () => password.length === 0 ? "0%" : `${(passwordEval.score / 5) * 100}%`;
 
   // Dynamic CSS-based styling matching Jumia aesthetics perfectly
-  const ic = "w-full h-[48px] border border-[#E5E5E5] rounded-[8px] bg-white text-[#313133] text-[14px] px-[14px] outline-none placeholder:text-[#9E9E9E] font-['Roboto'] focus:border-[var(--kryros-primary)] focus:ring-4 focus:ring-[var(--kryros-primary)]/10 transition-all duration-200";
+  const ic = "w-full h-[48px] border border-[var(--kryros-border)] rounded-[8px] bg-[var(--kryros-card-bg)] text-[var(--kryros-primary-text)] text-[14px] px-[14px] outline-none placeholder:text-[var(--kryros-disabled-text)] font-['Roboto'] focus:border-[var(--kryros-primary)] focus:ring-4 focus:ring-[var(--kryros-primary)]/10 transition-all duration-200";
   const bp = "w-full h-[48px] border-none rounded-[8px] bg-[var(--kryros-primary)] text-white text-[14.5px] font-bold font-['Roboto'] cursor-pointer tracking-[0.02em] transition-all duration-200 hover:bg-[var(--kryros-primary-hover)] active:scale-[0.98] disabled:bg-[var(--kryros-disabled-btn)] disabled:text-white disabled:opacity-100 disabled:cursor-not-allowed flex items-center justify-center gap-2";
   const bn = "w-full h-[48px] border-none rounded-[8px] bg-[var(--kryros-secondary)] text-white text-[14.5px] font-bold font-['Roboto'] cursor-pointer tracking-[0.02em] transition-all duration-200 hover:opacity-90 active:scale-[0.98] disabled:bg-[var(--kryros-disabled-btn)] disabled:text-white disabled:opacity-100 disabled:cursor-not-allowed flex items-center justify-center gap-2";
-  const lc = "block text-[12px] font-bold text-[#313133] mb-[6px] uppercase tracking-[0.04em] font-['Roboto']";
+  const lc = "block text-[12px] font-bold text-[var(--kryros-primary-text)] mb-[6px] uppercase tracking-[0.04em] font-['Roboto']";
 
   const Spinner = () => (
     <svg className="animate-spin w-4 h-4 text-white" viewBox="0 0 24 24" fill="none">
@@ -320,7 +320,7 @@ export default function AuthPage() {
       <p className="text-[11px] text-[#75757A] leading-relaxed">
         Need help? Visit our <a href="#" className="text-[var(--kryros-primary)] font-medium hover:underline">Help Center</a> or contact us on
       </p>
-      <p className="text-[12px] font-bold text-[#313133] mt-0.5">
+      <p className="text-[12px] font-bold mt-0.5" style={{ color:'var(--kryros-primary-text)' }}>
         +260966423719
       </p>
       <div className="flex items-center justify-center gap-1.5 mt-1.5">
@@ -332,18 +332,18 @@ export default function AuthPage() {
   const NoticeBanner = () => {
     const msg = notice || error; if (!msg) return null;
     const isErr = !!error;
-    return <div className={`mb-4 px-4 py-3 rounded-[8px] text-[13px] leading-snug font-['Roboto'] ${isErr ? "bg-[#FFF0F0] text-[#D63031] border border-[#FFD0D0]" : "bg-[#F0F7FF] text-[#344a64] border border-[#D0E0F0]"}`}>{msg}</div>;
+    return <div className="mb-4 px-4 py-3 rounded-[8px] text-[13px] leading-snug font-['Roboto']" style={isErr ? { background:'#FFF0F0', color:'var(--kryros-error)', border:'1px solid #FFD0D0' } : { background:'#F0F7FF', color:'var(--kryros-secondary)', border:'1px solid #D0E0F0' }}>{msg}</div>;
   };
 
   const ShownEmail = ({ onEdit }: { onEdit: () => void }) => (
     <div className="bg-[#FAFAFA] border border-[#E5E5E5] rounded-[8px] px-4 py-2.5 mb-3.5 flex items-center justify-between font-['Roboto']">
-      <span className="text-[14px] text-[#313133] truncate flex-1 font-medium">{identifier}</span>
+      <span className="text-[14px] truncate flex-1 font-medium" style={{ color:'var(--kryros-primary-text)' }}>{identifier}</span>
       <button type="button" onClick={onEdit} className="text-[var(--kryros-primary)] text-[12px] font-bold bg-transparent border-none cursor-pointer hover:underline ml-2 shrink-0 font-['Roboto']">Edit</button>
     </div>
   );
 
   const BackButton = ({ onClick }: { onClick: () => void }) => (
-    <button type="button" onClick={onClick} className="absolute top-5 left-1 bg-transparent border-none cursor-pointer text-[#75757A] hover:text-[#313133] transition-colors p-1 flex items-center gap-1">
+    <button type="button" onClick={onClick} className="absolute top-5 left-1 bg-transparent border-none cursor-pointer transition-colors p-1 flex items-center gap-1" style={{ color:'var(--kryros-secondary-text)' }} onMouseEnter={e=>(e.currentTarget.style.color='var(--kryros-primary-text)')} onMouseLeave={e=>(e.currentTarget.style.color='var(--kryros-secondary-text)')}>
       <ArrowLeft className="w-5 h-5" />
     </button>
   );
@@ -366,7 +366,7 @@ export default function AuthPage() {
   const renderIdentifierStep = () => (
     <div className="flex flex-col">
       <div className="text-center mb-3.5">
-        <h2 className="text-[20px] font-extrabold text-[#313133] font-['Roboto'] tracking-tight">Welcome to KRYROS</h2>
+        <h2 className="text-[20px] font-extrabold font-['Roboto'] tracking-tight" style={{ color:'var(--kryros-primary-text)' }}>Welcome to KRYROS</h2>
         <p className="text-[13px] text-[#75757A] mt-1 font-['Roboto']">
           {checkFallback ? "Let's get you set up" : "Use your email or phone to log in or sign up."}
         </p>
@@ -406,14 +406,14 @@ export default function AuthPage() {
             <div className="flex flex-col gap-2.5 my-0.5">
               <button
                 type="button"
-                className="w-full h-[48px] border border-[#E5E5E5] rounded-[8px] bg-white flex items-center justify-center gap-2.5 text-[14px] font-medium text-[#313133] hover:bg-[#FAFAFA] active:bg-[#F0F0F0] transition-colors cursor-pointer font-['Roboto']"
+                className="w-full h-[48px] border rounded-[8px] flex items-center justify-center gap-2.5 text-[14px] font-medium transition-colors cursor-pointer font-['Roboto']" style={{ borderColor:'var(--kryros-border)', background:'var(--kryros-card-bg)', color:'var(--kryros-primary-text)' }}
               >
                 <FacebookIcon />
                 Log in with Facebook
               </button>
               <button
                 type="button"
-                className="w-full h-[48px] border border-[#E5E5E5] rounded-[8px] bg-white flex items-center justify-center gap-2.5 text-[14px] font-medium text-[#313133] hover:bg-[#FAFAFA] active:bg-[#F0F0F0] transition-colors cursor-pointer font-['Roboto']"
+                className="w-full h-[48px] border rounded-[8px] flex items-center justify-center gap-2.5 text-[14px] font-medium transition-colors cursor-pointer font-['Roboto']" style={{ borderColor:'var(--kryros-border)', background:'var(--kryros-card-bg)', color:'var(--kryros-primary-text)' }}
               >
                 <GoogleIcon />
                 Login with Google
@@ -454,7 +454,7 @@ export default function AuthPage() {
   const renderLoginStep = () => (
     <form onSubmit={handleLogin} className="flex flex-col">
       <div className="text-center mb-3.5">
-        <h2 className="text-[20px] font-extrabold text-[#313133] font-['Roboto'] tracking-tight">Welcome back!</h2>
+        <h2 className="text-[20px] font-extrabold font-['Roboto'] tracking-tight" style={{ color:'var(--kryros-primary-text)' }}>Welcome back!</h2>
         <p className="text-[13px] text-[#75757A] mt-1 font-['Roboto']">Enter your password to sign in.</p>
       </div>
 
@@ -477,7 +477,7 @@ export default function AuthPage() {
             <button
               type="button"
               onClick={() => setShowPassword((v) => !v)}
-              className="absolute right-[14px] top-1/2 -translate-y-1/2 bg-transparent border-none cursor-pointer text-[#75757A] hover:text-[#313133] p-0 flex"
+              className="absolute right-[14px] top-1/2 -translate-y-1/2 bg-transparent border-none cursor-pointer p-0 flex" style={{ color:'var(--kryros-secondary-text)' }}
             >
               {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
             </button>
@@ -502,7 +502,7 @@ export default function AuthPage() {
   const renderRegisterPasswordStep = () => (
     <div className="flex flex-col">
       <div className="text-center mb-3.5">
-        <h2 className="text-[20px] font-extrabold text-[#313133] font-['Roboto'] tracking-tight">Create your account</h2>
+        <h2 className="text-[20px] font-extrabold font-['Roboto'] tracking-tight" style={{ color:'var(--kryros-primary-text)' }}>Create your account</h2>
         <p className="text-[13px] text-[#75757A] mt-1 font-['Roboto']">Secure your account with a strong password.</p>
       </div>
 
@@ -525,7 +525,7 @@ export default function AuthPage() {
             <button
               type="button"
               onClick={() => setShowPassword((v) => !v)}
-              className="absolute right-[14px] top-1/2 -translate-y-1/2 bg-transparent border-none cursor-pointer text-[#75757A] hover:text-[#313133] p-0 flex"
+              className="absolute right-[14px] top-1/2 -translate-y-1/2 bg-transparent border-none cursor-pointer p-0 flex" style={{ color:'var(--kryros-secondary-text)' }}
             >
               {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
             </button>
@@ -559,7 +559,7 @@ export default function AuthPage() {
             <button
               type="button"
               onClick={() => setShowConfirmPassword((v) => !v)}
-              className="absolute right-[14px] top-1/2 -translate-y-1/2 bg-transparent border-none cursor-pointer text-[#75757A] hover:text-[#313133] p-0 flex"
+              className="absolute right-[14px] top-1/2 -translate-y-1/2 bg-transparent border-none cursor-pointer p-0 flex" style={{ color:'var(--kryros-secondary-text)' }}
             >
               {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
             </button>
@@ -584,7 +584,7 @@ export default function AuthPage() {
   const renderDetailsStep = () => (
     <div className="flex flex-col">
       <div className="text-center mb-3.5">
-        <h2 className="text-[20px] font-extrabold text-[#313133] font-['Roboto'] tracking-tight">Personal details</h2>
+        <h2 className="text-[20px] font-extrabold font-['Roboto'] tracking-tight" style={{ color:'var(--kryros-primary-text)' }}>Personal details</h2>
         <p className="text-[13px] text-[#75757A] mt-1 font-['Roboto']">We just need you to fill in some details.</p>
       </div>
 
@@ -688,11 +688,11 @@ export default function AuthPage() {
     return (
       <div className="flex flex-col">
         <div className="text-center mb-3.5">
-          <h2 className="text-[20px] font-extrabold text-[#313133] font-['Roboto'] tracking-tight">
+          <h2 className="text-[20px] font-extrabold font-['Roboto'] tracking-tight" style={{ color:'var(--kryros-primary-text)' }}>
             {isEmail ? "Verify your email" : "Verify your phone number"}
           </h2>
           <p className="text-[13px] text-[#75757A] mt-1 font-['Roboto']">We have sent a verification code to</p>
-          <p className="text-[14px] font-bold text-[#313133] mt-0.5 font-['Roboto']">{identifier}</p>
+          <p className="text-[14px] font-bold mt-0.5 font-['Roboto']" style={{ color:'var(--kryros-primary-text)' }}>{identifier}</p>
         </div>
 
         <div className="space-y-3">
@@ -707,7 +707,7 @@ export default function AuthPage() {
                 value={digit}
                 onChange={(e) => handleOTPChange(i, e.target.value)}
                 onKeyDown={(e) => handleOTPKeyDown(i, e)}
-                className="w-[48px] h-[54px] border border-[#E5E5E5] rounded-[8px] text-center text-[22px] font-bold text-[#313133] bg-[#FAFAFA] font-['Roboto'] outline-none focus:border-[var(--kryros-primary)] focus:bg-white focus:ring-4 focus:ring-[var(--kryros-primary)]/10 transition-all duration-200"
+                className="w-[48px] h-[54px] border rounded-[8px] text-center text-[22px] font-bold font-['Roboto'] outline-none focus:ring-4 focus:ring-[var(--kryros-primary)]/10 transition-all duration-200" style={{ borderColor:'var(--kryros-border)', color:'var(--kryros-primary-text)', background:'var(--kryros-secondary-bg)' }}
                 autoFocus={i === 0}
               />
             ))}
@@ -718,7 +718,7 @@ export default function AuthPage() {
           <div className="text-center py-0.5">
             {countdown > 0 ? (
               <span className="text-[12.5px] text-[#75757A] font-['Roboto']">
-                Resend code in <strong className="text-[#313133]">{Math.floor(countdown / 60)}:{(countdown % 60).toString().padStart(2, "0")}</strong>
+                Resend code in <strong style={{ color:'var(--kryros-primary-text)' }}>{Math.floor(countdown / 60)}:{(countdown % 60).toString().padStart(2, "0")}</strong>
               </span>
             ) : (
               <button
@@ -762,7 +762,7 @@ export default function AuthPage() {
       <div className="w-[64px] h-[64px] bg-[var(--kryros-success)] rounded-full flex items-center justify-center mb-3 shadow-sm animate-bounce">
         <Check className="w-8 h-8 text-white" strokeWidth={3} />
       </div>
-      <h2 className="text-[20px] font-extrabold text-[#313133] mb-1 font-['Roboto'] tracking-tight">Account created! 🎉</h2>
+      <h2 className="text-[20px] font-extrabold mb-1 font-['Roboto'] tracking-tight" style={{ color:'var(--kryros-primary-text)' }}>Account created! 🎉</h2>
       <p className="text-[13px] text-[#75757A] mb-0.5 font-['Roboto']">Your KRYROS account is ready.</p>
       <p className="text-[12px] text-[#9E9E9E] mb-4 font-['Roboto']">Redirecting to your dashboard...</p>
 

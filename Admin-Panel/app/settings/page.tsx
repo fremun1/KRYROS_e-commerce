@@ -1,4 +1,5 @@
 'use client';
+import { THEME_COLOR_CATALOG, THEME_COLOR_CATEGORIES } from '@/lib/theme-catalog';
 import AdminShell from '@/components/admin/admin-shell';
 import PageHeader from '@/components/admin/page-header';
 import { Settings, Store, Bell, Shield, CreditCard, Palette, Save, Send, CheckCircle, RefreshCw, Globe, Lock } from 'lucide-react';
@@ -45,6 +46,14 @@ function SettingsContent() {
   const [twoFASecret, setTwoFASecret] = useState(''); // Secret key for manual entry
   const [twoFACode, setTwoFACode] = useState('');
   const [twoFABusy, setTwoFABusy] = useState(false);
+  // ── Theme color state ───────────────────────────────────────────────────────
+  const [themeColors, setThemeColors] = useState<Record<string, string>>(() => {
+    const init: Record<string, string> = {};
+    THEME_COLOR_CATALOG.forEach(t => { init[t.key] = t.defaultValue; });
+    return init;
+  });
+  const [themePreviewActive, setThemePreviewActive] = useState(false);
+
   const [saving, setSaving] = useState(false);
   const [testEmail, setTestEmail] = useState('');
   const [testEmailSending, setTestEmailSending] = useState(false);
@@ -82,6 +91,15 @@ function SettingsContent() {
       if (sMap.admin_region_restriction_enabled) setRegionRestrictionEnabled(sMap.admin_region_restriction_enabled === 'true');
       if (sMap.admin_blocked_countries) setBlockedCountries(sMap.admin_blocked_countries);
       if (sMap.admin_screenshot_restriction_enabled) setScreenshotRestrictionEnabled(sMap.admin_screenshot_restriction_enabled === 'true');
+
+      // Load theme colors
+      const colorUpdates: Record<string, string> = {};
+      THEME_COLOR_CATALOG.forEach(t => {
+        if (sMap[t.key]) colorUpdates[t.key] = sMap[t.key];
+      });
+      if (Object.keys(colorUpdates).length > 0) {
+        setThemeColors(prev => ({ ...prev, ...colorUpdates }));
+      }
       
       setStoreSettings({
         isStoreClosed: sMap.is_store_closed_manual === 'true',
@@ -124,6 +142,8 @@ function SettingsContent() {
         admin_region_restriction_enabled: String(regionRestrictionEnabled),
         admin_blocked_countries: blockedCountries,
         admin_screenshot_restriction_enabled: String(screenshotRestrictionEnabled),
+        // Theme colors
+        ...themeColors,
       });
       toast.success('Settings saved successfully');
     } catch (err: any) {
@@ -674,32 +694,96 @@ function SettingsContent() {
       );
       case 'appearance': return (
         <div>
-          <SectionTitle title="Appearance" sub="Customize the look and feel of your store" />
-          <Row label="Compact UI" sub="Reduce spacing and padding across the dashboard"><ToggleSwitch value={false} onChange={()=>{}} /></Row>
-          
-          <div style={{ marginTop:'24px' }}>
-            <SectionTitle title="Brand Colors" sub="Main colors used in the user interface" />
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:'16px' }}>
-              <Field label="Primary Color">
-                <div style={{ display:'flex', gap:'8px' }}>
-                  <div style={{ width:'36px', height:'36px', borderRadius:'8px', background:'var(--primary)', border:`1px solid ${border}` }} />
-                  <input style={inputStyle} defaultValue="var(--primary)" />
-                </div>
-              </Field>
-              <Field label="Secondary Color">
-                <div style={{ display:'flex', gap:'8px' }}>
-                  <div style={{ width:'36px', height:'36px', borderRadius:'8px', background:'var(--text-main)', border:`1px solid ${border}` }} />
-                  <input style={inputStyle} defaultValue="var(--text-main)" />
-                </div>
-              </Field>
-              <Field label="Accent Color">
-                <div style={{ display:'flex', gap:'8px' }}>
-                  <div style={{ width:'36px', height:'36px', borderRadius:'8px', background:'var(--gold)', border:`1px solid ${border}` }} />
-                  <input style={inputStyle} defaultValue="var(--gold)" />
-                </div>
-              </Field>
+          <SectionTitle title="Theme Colors" sub="All CSS color variables used across the user-facing storefront. Changes are saved to the database and applied dynamically at runtime — no code deployment needed." />
+
+          {/* Live Preview Toggle */}
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'12px 16px', background:surface, border:`1px solid ${border}`, borderRadius:'12px', marginBottom:'24px' }}>
+            <div>
+              <div style={{ fontSize:'13.5px', fontWeight:700, color:textMain }}>Live Preview in Admin</div>
+              <div style={{ fontSize:'12px', color:textMuted, marginTop:'2px' }}>Apply color changes instantly in this panel to preview them before saving</div>
             </div>
+            <ToggleSwitch value={themePreviewActive} onChange={() => {
+              const next = !themePreviewActive;
+              setThemePreviewActive(next);
+              if (next) {
+                THEME_COLOR_CATALOG.forEach(t => {
+                  document.documentElement.style.setProperty(t.cssVar, themeColors[t.key] ?? t.defaultValue);
+                });
+              } else {
+                THEME_COLOR_CATALOG.forEach(t => {
+                  document.documentElement.style.removeProperty(t.cssVar);
+                });
+              }
+            }} />
           </div>
+
+          {/* Color groups */}
+          {THEME_COLOR_CATEGORIES.map(cat => {
+            const tokens = THEME_COLOR_CATALOG.filter(t => t.category === cat.id);
+            if (tokens.length === 0) return null;
+            return (
+              <div key={cat.id} style={{ marginBottom:'32px' }}>
+                <div style={{ fontSize:'13px', fontWeight:700, color:textMuted, textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:'14px', paddingBottom:'8px', borderBottom:`1px solid ${border}` }}>
+                  {cat.label}
+                </div>
+                <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(220px, 1fr))', gap:'14px' }}>
+                  {tokens.map(token => {
+                    const isSimpleColor = /^#[0-9a-fA-F]{3,8}$/.test(themeColors[token.key] ?? token.defaultValue);
+                    const currentVal = themeColors[token.key] ?? token.defaultValue;
+                    return (
+                      <div key={token.key} style={{ background:card, border:`1px solid ${border}`, borderRadius:'12px', padding:'12px', display:'flex', flexDirection:'column', gap:'8px' }}>
+                        {/* Swatch + label */}
+                        <div style={{ display:'flex', alignItems:'center', gap:'10px' }}>
+                          <div style={{ width:'36px', height:'36px', borderRadius:'8px', background:currentVal, border:`1px solid ${border}`, flexShrink:0, boxShadow:'0 1px 4px rgba(0,0,0,0.08)' }} />
+                          <div style={{ flex:1, minWidth:0 }}>
+                            <div style={{ fontSize:'12.5px', fontWeight:700, color:textMain, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{token.label}</div>
+                            <div style={{ fontSize:'10.5px', color:textMuted, fontFamily:'monospace', marginTop:'1px' }}>{token.cssVar}</div>
+                          </div>
+                          {/* Color picker — only for simple hex values */}
+                          {isSimpleColor && (
+                            <input
+                              type="color"
+                              value={currentVal.length === 7 ? currentVal : '#000000'}
+                              onChange={e => {
+                                const v = e.target.value;
+                                setThemeColors(prev => ({ ...prev, [token.key]: v }));
+                                if (themePreviewActive) document.documentElement.style.setProperty(token.cssVar, v);
+                              }}
+                              style={{ width:'28px', height:'28px', border:'none', padding:0, cursor:'pointer', borderRadius:'6px', background:'transparent', flexShrink:0 }}
+                              title="Pick color"
+                            />
+                          )}
+                        </div>
+                        {/* Hex / value input */}
+                        <input
+                          style={{ ...inputStyle, fontSize:'12px', padding:'7px 10px', fontFamily:'monospace' }}
+                          value={currentVal}
+                          onChange={e => {
+                            const v = e.target.value;
+                            setThemeColors(prev => ({ ...prev, [token.key]: v }));
+                            if (themePreviewActive) document.documentElement.style.setProperty(token.cssVar, v);
+                          }}
+                          placeholder={token.defaultValue}
+                        />
+                        {/* Reset to default */}
+                        {currentVal !== token.defaultValue && (
+                          <button
+                            onClick={() => {
+                              setThemeColors(prev => ({ ...prev, [token.key]: token.defaultValue }));
+                              if (themePreviewActive) document.documentElement.style.setProperty(token.cssVar, token.defaultValue);
+                            }}
+                            style={{ fontSize:'11px', color:textMuted, background:'transparent', border:`1px solid ${border}`, borderRadius:'6px', padding:'3px 8px', cursor:'pointer', alignSelf:'flex-start' }}
+                          >
+                            Reset to default
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
         </div>
       );
       default: return null;

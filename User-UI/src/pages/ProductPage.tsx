@@ -513,7 +513,7 @@ export default function ProductPage() {
 
         {/* Condition row */}
         <div className="py-3 border-t border-border">
-          <span className="inline-flex items-center rounded-full bg-[#C0151B] px-4 py-1.5 text-xs font-bold text-white shadow-sm">
+          <span className="inline-flex items-center rounded-full px-4 py-1.5 text-xs font-bold shadow-sm" style={{ background:'var(--kryros-primary)', color:'var(--kryros-white-text)' }}>
             {product.condition || "New"}
           </span>
         </div>

@@ -141,10 +141,10 @@ export default function ForgotPasswordPage() {
   const strengthWidth = () => (newPassword.length === 0 ? "0%" : `${(passwordEval.score / 5) * 100}%`);
 
   const ic =
-    "w-full h-[48px] border border-[#E5E5E5] rounded-[10px] bg-[#FAFAFA] text-[#313133] text-[14px] px-[14px] outline-none placeholder:text-[#9E9E9E] font-['Roboto'] focus:border-[#C0151B] focus:bg-white focus:ring-1 focus:ring-[#C0151B]/20 transition-all duration-200";
+    "w-full h-[48px] border border-[var(--kryros-border)] rounded-[10px] bg-[var(--kryros-secondary-bg)] text-[var(--kryros-primary-text)] text-[14px] px-[14px] outline-none placeholder:text-[var(--kryros-disabled-text)] font-['Roboto'] focus:border-[var(--kryros-primary)] focus:bg-[var(--kryros-card-bg)] focus:ring-1 focus:ring-[var(--kryros-primary)]/20 transition-all duration-200";
   const bp =
-    "w-full h-[48px] border-none rounded-[10px] bg-[#C0151B] text-white text-[14px] font-bold font-['Roboto'] cursor-pointer tracking-[0.02em] transition-all duration-200 hover:bg-[#A01015] active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2";
-  const lc = "block text-[12px] font-bold text-[#313133] mb-[6px] uppercase tracking-[0.04em] font-['Roboto']";
+    "w-full h-[48px] border-none rounded-[10px] bg-[var(--kryros-primary)] text-white text-[14px] font-bold font-['Roboto'] cursor-pointer tracking-[0.02em] transition-all duration-200 hover:bg-[var(--kryros-primary-hover)] active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2";
+  const lc = "block text-[12px] font-bold text-[var(--kryros-primary-text)] mb-[6px] uppercase tracking-[0.04em] font-['Roboto']";
 
   const Spinner = () => (
     <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
@@ -156,8 +156,8 @@ export default function ForgotPasswordPage() {
   const Logo = () => (
     <div className="text-center mb-5">
       <h1 className="text-[24px] font-black tracking-[-0.5px] leading-none m-0 font-['Roboto']">
-        <span className="text-[#313133]">KRY</span>
-        <span className="text-[#C0151B]">ROS</span>
+        <span style={{ color:'var(--kryros-primary-text)' }}>KRY</span>
+        <span style={{ color:'var(--kryros-primary)' }}>ROS</span>
       </h1>
     </div>
   );
@@ -166,7 +166,10 @@ export default function ForgotPasswordPage() {
     <button
       type="button"
       onClick={onClick}
-      className="absolute top-5 left-5 bg-transparent border-none cursor-pointer text-[#75757A] hover:text-[#313133] transition-colors p-1 flex items-center gap-1"
+      className="absolute top-5 left-5 bg-transparent border-none cursor-pointer transition-colors p-1 flex items-center gap-1"
+      style={{ color:'var(--kryros-secondary-text)' }}
+      onMouseEnter={e=>(e.currentTarget.style.color='var(--kryros-primary-text)')}
+      onMouseLeave={e=>(e.currentTarget.style.color='var(--kryros-secondary-text)')}
     >
       <ArrowLeft className="w-5 h-5" />
     </button>
@@ -194,7 +197,7 @@ export default function ForgotPasswordPage() {
               )}
 
               {notice && (
-                <div className="mb-4 px-4 py-3 rounded-[8px] text-[13px] leading-snug font-['Roboto'] bg-[#F0F7FF] text-[#344a64] border border-[#D0E0F0]">
+                <div className="mb-4 px-4 py-3 rounded-[8px] text-[13px] leading-snug font-['Roboto']" style={{ background:'#F0F7FF', color:'var(--kryros-secondary)', border:'1px solid #D0E0F0' }}>
                   {notice}
                 </div>
               )}
@@ -232,7 +235,7 @@ export default function ForgotPasswordPage() {
                   <button
                     type="button"
                     onClick={() => setLocation("/login")}
-                    className="text-[#C0151B] font-medium hover:underline bg-transparent border-none cursor-pointer"
+                    className="font-medium hover:underline bg-transparent border-none cursor-pointer" style={{ color:'var(--kryros-primary)' }}
                   >
                     Sign in
                   </button>
@@ -270,7 +273,7 @@ export default function ForgotPasswordPage() {
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 bg-transparent border-none cursor-pointer text-[#9E9E9E] hover:text-[#313133]"
+                      className="absolute right-4 top-1/2 -translate-y-1/2 bg-transparent border-none cursor-pointer" style={{ color:'var(--kryros-disabled-text)' }}
                     >
                       {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </button>
@@ -311,7 +314,7 @@ export default function ForgotPasswordPage() {
                     <button
                       type="button"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 bg-transparent border-none cursor-pointer text-[#9E9E9E] hover:text-[#313133]"
+                      className="absolute right-4 top-1/2 -translate-y-1/2 bg-transparent border-none cursor-pointer" style={{ color:'var(--kryros-disabled-text)' }}
                     >
                       {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </button>
@@ -339,7 +342,7 @@ export default function ForgotPasswordPage() {
                   <Check className="w-8 h-8 text-[#2DBE60]" />
                 </div>
               </div>
-              <h2 className="text-[18px] font-bold text-[#313133] mb-2 font-['Roboto']">Password Reset Successful</h2>
+              <h2 className="text-[18px] font-bold mb-2 font-['Roboto']" style={{ color:'var(--kryros-primary-text)' }}>Password Reset Successful</h2>
               <p className="text-[13px] text-[#75757A] mb-6 font-['Roboto']">
                 Your password has been reset. You can now sign in with your new password.
               </p>

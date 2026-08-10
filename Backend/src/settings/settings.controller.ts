@@ -95,6 +95,17 @@ export class SettingsController {
     };
   }
 
+  /**
+   * Public endpoint — returns a map of CSS variable names to their current color values.
+   * The User-UI fetches this at boot time and applies the values to document.documentElement.
+   * No authentication required: only color values are exposed, no sensitive data.
+   */
+  @Get('theme')
+  @ApiOperation({ summary: 'Get theme color CSS variables (Public)' })
+  getThemeColors() {
+    return this.settingsService.getThemeColors();
+  }
+
   @Put()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER)

@@ -133,7 +133,10 @@ export default function SearchAutocomplete({
         {showSearchButton && (
           <button
             type="submit"
-            className="px-4 py-2.5 bg-[#C0151B] text-white hover:bg-[#A01015] transition-colors text-sm font-medium"
+            className="px-4 py-2.5 transition-colors text-sm font-medium"
+            style={{ background:'var(--kryros-primary)', color:'var(--kryros-white-text)' }}
+            onMouseEnter={e => (e.currentTarget.style.background = 'var(--kryros-primary-hover)')}
+            onMouseLeave={e => (e.currentTarget.style.background = 'var(--kryros-primary)')}
           >
             <Search className="w-4 h-4" />
           </button>
