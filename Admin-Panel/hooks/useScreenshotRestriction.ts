@@ -232,6 +232,10 @@ export function useScreenshotRestriction() {
         { key: "S", metaKey: true, shiftKey: true },
         // Alt+PrintScreen
         { key: "PrintScreen", altKey: true },
+        // Mac Screenshot: Cmd+Shift+3, Cmd+Shift+4, Cmd+Shift+5
+        { key: "3", metaKey: true, shiftKey: true },
+        { key: "4", metaKey: true, shiftKey: true },
+        { key: "5", metaKey: true, shiftKey: true },
       ];
 
       for (const combo of blockedCombos) {
@@ -280,6 +284,14 @@ export function useScreenshotRestriction() {
       }
     };
 
+    const handleCopy = (e: ClipboardEvent) => {
+      preventDefault(e);
+      if (e.clipboardData) {
+        e.clipboardData.setData('text/plain', 'Content is protected.');
+      }
+      showToast("⛔ Copying is restricted");
+    };
+
     handlersRef.current = {
       preventDefault,
       handleKeyDown,
@@ -288,6 +300,7 @@ export function useScreenshotRestriction() {
       handleBlur,
       handleFocus,
       handleVisibilityChange,
+      handleCopy: handleCopy as any,
     };
 
     // 1. Right-click
@@ -300,7 +313,7 @@ export function useScreenshotRestriction() {
     document.addEventListener("selectstart", preventDefault, true);
     document.addEventListener("dragstart", preventDefault, true);
     // 4. Copy / cut
-    document.addEventListener("copy", preventDefault, true);
+    document.addEventListener("copy", handleCopy as any, true);
     document.addEventListener("cut", preventDefault, true);
     // 5. Window blur/focus (deters screen-recording & Alt+Tab screenshots)
     window.addEventListener("blur", handleBlur);
@@ -310,6 +323,9 @@ export function useScreenshotRestriction() {
     // 7. Print
     window.addEventListener("beforeprint", handleBlur);
     window.addEventListener("afterprint", handleFocus);
+    // 8. Mouse Leave (deters some snipping tools)
+    document.addEventListener("mouseleave", handleBlur);
+    document.addEventListener("mouseenter", handleFocus);
 
     // 8. CSS-level protection
     const cssStyle = document.createElement("style");
@@ -355,13 +371,15 @@ export function useScreenshotRestriction() {
       document.removeEventListener("keyup", h.handleKeyUp, true);
       document.removeEventListener("selectstart", h.preventDefault, true);
       document.removeEventListener("dragstart", h.preventDefault, true);
-      document.removeEventListener("copy", h.preventDefault, true);
+      document.removeEventListener("copy", (h as any).handleCopy, true);
       document.removeEventListener("cut", h.preventDefault, true);
       window.removeEventListener("blur", h.handleBlur);
       window.removeEventListener("focus", h.handleFocus);
       document.removeEventListener("visibilitychange", h.handleVisibilityChange);
       window.removeEventListener("beforeprint", h.handleBlur);
       window.removeEventListener("afterprint", h.handleFocus);
+      document.removeEventListener("mouseleave", h.handleBlur);
+      document.removeEventListener("mouseenter", h.handleFocus);
       handlersRef.current = null;
     }
 

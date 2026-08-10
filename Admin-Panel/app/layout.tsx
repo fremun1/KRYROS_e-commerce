@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "react-hot-toast";
+import GlobalGuard from "@/components/admin/global-guard";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -19,7 +20,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body className={inter.variable}>
-        {children}
+        <GlobalGuard>
+          {children}
+        </GlobalGuard>
         <Toaster
           position="top-right"
           toastOptions={{

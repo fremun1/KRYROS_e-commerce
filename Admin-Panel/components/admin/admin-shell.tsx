@@ -5,15 +5,14 @@ import { AuthProvider, useAuth } from "@/contexts/auth-context";
 import Sidebar from "@/components/admin/sidebar";
 import Topbar from "@/components/admin/topbar";
 import { useScreenshotRestriction } from "@/hooks/useScreenshotRestriction";
-import { useRegionRestriction } from "@/hooks/useRegionRestriction";
+// Removed useRegionRestriction (moved to GlobalGuard)
 
 function AdminShellInner({ children, noPadding }: { children: React.ReactNode; noPadding?: boolean }) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(() => typeof window !== "undefined" ? window.innerWidth < 768 : true);
   const { isAuthenticated, loading } = useAuth();
-  const { enabled: screenshotBlocked, loaded: screenshotLoaded } = useScreenshotRestriction();
-  const { blocked: regionBlocked, loaded: regionLoaded, message: regionMessage } = useRegionRestriction();
+  const { enabled: screenshotBlocked } = useScreenshotRestriction();
   const router = useRouter();
   const sidebarW = collapsed ? 60 : 260;
 
@@ -30,34 +29,6 @@ function AdminShellInner({ children, noPadding }: { children: React.ReactNode; n
       router.replace("/login");
     }
   }, [loading, isAuthenticated, router]);
-
-  // Show region blocked message if enabled and user is from blocked region
-  if (regionLoaded && regionBlocked) {
-    return (
-      <div style={{
-        minHeight: "100vh",
-        background: "var(--bg)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "24px",
-        textAlign: "center"
-      }}>
-        <div style={{ maxWidth: "400px" }}>
-          <div style={{ fontSize: "64px", marginBottom: "16px" }}>🌍</div>
-          <h1 style={{ fontSize: "24px", fontWeight: 700, color: "var(--text-main)", marginBottom: "12px" }}>
-            Access Restricted
-          </h1>
-          <p style={{ fontSize: "16px", color: "var(--text-muted)", lineHeight: 1.6 }}>
-            {regionMessage}
-          </p>
-          <p style={{ fontSize: "14px", color: "var(--text-muted)", marginTop: "16px" }}>
-            If you believe this is an error, please contact your administrator.
-          </p>
-        </div>
-      </div>
-    );
-  }
 
   if (loading) {
     return (
