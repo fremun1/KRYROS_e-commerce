@@ -26,12 +26,13 @@ export class UsersController {
   findAll(
     @Query('skip') skip?: number,
     @Query('take') take?: number,
+    @Query('limit') limit?: number,
     @Query('search') search?: string,
     @Query('showInactive') showInactive?: string,
   ) {
     return this.usersService.findAll({
       skip: skip ? Number(skip) : undefined,
-      take: take ? Number(take) : undefined,
+      take: (take || limit) ? Number(take || limit) : undefined,
       search,
       showInactive: showInactive === 'true',
     });

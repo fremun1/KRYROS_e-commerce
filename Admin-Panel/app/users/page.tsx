@@ -117,7 +117,7 @@ function UsersContent() {
 
   useEffect(() => {
     setIsLoading(true);
-    getUsers({ limit: 500 })
+    getUsers({ take: 500, showInactive: true })
       .then(r => {
         const raw: any[] = Array.isArray(r.data?.data)
           ? r.data.data

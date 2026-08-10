@@ -226,7 +226,7 @@ export class UsersService {
 
   async findAll(params: { skip?: number; take?: number; search?: string; showInactive?: boolean } = {}) {
     const { skip = 0, take: rawTake = 20, search, showInactive = false } = params;
-    const take = Math.min(Math.max(1, Number(rawTake) || 20), 100);
+    const take = Math.min(Math.max(1, Number(rawTake) || 20), 1000);
 
     const where: any = {};
     if (!showInactive) where.isActive = true;
