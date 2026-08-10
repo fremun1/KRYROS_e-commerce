@@ -5,8 +5,9 @@ export function getBackendUrl(): string {
     if (process.env.NODE_ENV === 'production') {
       throw new Error('NEXT_PUBLIC_API_URL must be set in production');
     }
-    return ''; // Should be handled by environment variable in production
+    return 'http://localhost:4000';
   }
+  // Remove trailing /api if present
   return raw.replace(/\/api$/, '');
 }
 export const isProd = process.env.NODE_ENV === 'production';
