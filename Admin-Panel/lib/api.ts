@@ -142,12 +142,29 @@ export const getUsers = (params?: Record<string, unknown>) =>
   api.get("/api/users", { params });
 export const getUser = (id: string) =>
   api.get(`/api/users/${id}`);
+/** Create a user or admin via the admin management endpoint */
 export const createUser = (data: Record<string, unknown>) =>
   api.post("/api/admin/users", data);
 export const updateUser = (id: string, data: Record<string, unknown>) =>
   api.put(`/api/users/${id}`, data);
 export const deleteUser = (id: string) =>
-  api.delete(`/api/users/${id}`);
+  api.delete(`/api/admin/users/${id}`);
+
+// ── Admin User Management (role-based actions) ─────────────
+export const promoteUser = (id: string, newRole: string) =>
+  api.put(`/api/admin/users/${id}/promote`, { newRole });
+export const demoteUser = (id: string, newRole: string) =>
+  api.put(`/api/admin/users/${id}/demote`, { newRole });
+export const suspendUser = (id: string, durationHours: number, reason?: string) =>
+  api.put(`/api/admin/users/${id}/suspend`, { durationHours, reason });
+export const restrictUser = (id: string, durationHours: number, reason?: string) =>
+  api.put(`/api/admin/users/${id}/restrict`, { durationHours, reason });
+export const blockUser = (id: string, reason?: string) =>
+  api.put(`/api/admin/users/${id}/block`, { reason });
+export const unblockUser = (id: string) =>
+  api.put(`/api/admin/users/${id}/unblock`, {});
+export const getUserAuditLog = (id: string, skip = 0, take = 50) =>
+  api.get(`/api/admin/users/${id}/audit-log`, { params: { skip, take } });
 
 // ── Categories ────────────────────────────────────────────
 export const getCategories = (params?: Record<string, unknown>) =>
