@@ -204,9 +204,15 @@ export class UsersService {
       avatarUrl = await this.cloudinary.uploadImage(avatar, 'kryros/avatars');
     }
 
+    // Hash password if provided
+    const hashedPassword = coreFields.password
+      ? await bcrypt.hash(coreFields.password, BCRYPT_ROUNDS)
+      : undefined;
+
     const user = await this.prisma.user.create({
       data: {
         ...coreFields,
+        ...(hashedPassword ? { password: hashedPassword } : {}),
         ...(normalizedEmail !== undefined ? { email: normalizedEmail } : {}),
         ...(normalizedPhone !== undefined ? { phone: normalizedPhone } : {}),
         role,

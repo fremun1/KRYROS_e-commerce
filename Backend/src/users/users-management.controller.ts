@@ -64,7 +64,9 @@ export class UsersManagementController {
 
     // Generate password reset link
     const adminDomain = process.env.ADMIN_DOMAIN || 'https://admin.yourdomain.com';
-    await this.passwordResetService.generateResetToken(user.id, adminDomain);
+    // If a password was provided (e.g. from the admin panel's temp password flow),
+    // pass it to the reset service so it can be included in the email.
+    await this.passwordResetService.generateResetToken(user.id, adminDomain, createUserDto.password);
 
     // Log the action
     await this.auditService.log({

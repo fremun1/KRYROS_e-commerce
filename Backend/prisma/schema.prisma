@@ -11,8 +11,8 @@ model User {
   id                       String                 @id @default(uuid())
   email                    String?                @unique
   password                 String
-  firstName                String
-  lastName                 String
+  firstName                String?
+  lastName                 String?
   phone                    String?                @unique
   dob                      String?
   avatar                   String?
@@ -1197,6 +1197,7 @@ model ExchangeRateConfig {
   fallbackApiUrl  String   @default("https://open.er-api.com/v6/latest/USD")
   isActive        Boolean  @default(true)
   updateInterval  Int      @default(3600000) // 1 hour in milliseconds
+  rateMarkup      Float    @default(0.0)    // Percentage markup (e.g. 2.0 for 2%)
   lastUpdate      DateTime?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt

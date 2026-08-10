@@ -17,7 +17,7 @@ export class PasswordResetService {
    * Generate a secure, one-time password reset token
    * Token expires in 6 hours and can only be used once
    */
-  async generateResetToken(userId: string, adminDomain: string): Promise<string> {
+  async generateResetToken(userId: string, adminDomain: string, tempPassword?: string): Promise<string> {
     // Verify user exists
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
@@ -55,8 +55,9 @@ export class PasswordResetService {
     // Send email with reset link
     await this.emailService.sendPasswordResetEmail(
       user.email,
-      user.firstName,
+      user.firstName || user.email.split('@')[0],
       resetLink,
+      tempPassword,
     );
 
     return resetToken.id;

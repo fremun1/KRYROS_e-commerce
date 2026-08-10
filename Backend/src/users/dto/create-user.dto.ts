@@ -22,18 +22,18 @@ export class CreateUserDto {
   password!: string;
 
   @ApiProperty({ example: 'John' })
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
   @MaxLength(100, { message: 'First name must not exceed 100 characters' })
   @Transform(({ value }) => value?.trim())
-  firstName!: string;
+  firstName?: string;
 
   @ApiProperty({ example: 'Doe' })
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
   @MaxLength(100, { message: 'Last name must not exceed 100 characters' })
   @Transform(({ value }) => value?.trim())
-  lastName!: string;
+  lastName?: string;
 
   @ApiProperty({ example: '+260966423719', required: false })
   @IsOptional()

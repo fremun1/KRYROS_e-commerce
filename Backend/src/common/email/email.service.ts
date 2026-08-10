@@ -52,15 +52,32 @@ export class EmailService {
   }
 
   // Alias for compatibility with password-reset.service.ts
-  async sendPasswordResetEmail(to: string, firstName: string, link: string): Promise<void> {
-    await this.send(to, 'Reset Your KRYROS Password', `
-      <div style="font-family:Arial,sans-serif;max-width:480px;margin:auto;padding:32px;background:#f9f9f9;border-radius:8px;">
+  async sendPasswordResetEmail(to: string, firstName: string, link: string, tempPassword?: string): Promise<void> {
+    const content = tempPassword
+      ? `
+        <h2 style="color:#313133;margin-bottom:8px;">Hi ${firstName},</h2>
+        <p style="color:#555;">An admin account has been created for you on the KRYROS Platform.</p>
+        <div style="margin:24px 0;padding:16px;background:#fff;border:1px solid #eee;border-radius:6px;">
+          <p style="margin:0 0 8px 0;color:#888;font-size:13px;">Temporary Password:</p>
+          <span style="font-size:20px;font-weight:bold;color:#C0151B;font-family:monospace;">${tempPassword}</span>
+        </div>
+        <p style="color:#555;">You can log in with this temporary password or use the link below to set your own password immediately:</p>
+        <a href="${link}" style="display:inline-block;margin:16px 0;padding:12px 28px;background:#C0151B;color:#fff;border-radius:6px;text-decoration:none;font-weight:bold;">
+          Set Your Password
+        </a>
+      `
+      : `
         <h2 style="color:#313133;margin-bottom:8px;">Hi ${firstName},</h2>
         <p style="color:#555;">You requested a password reset for your KRYROS account.</p>
         <a href="${link}" style="display:inline-block;margin:24px 0;padding:12px 28px;background:#C0151B;color:#fff;border-radius:6px;text-decoration:none;font-weight:bold;">
           Reset Password
         </a>
-        <p style="color:#999;font-size:13px;">This link expires in <strong>6 hours</strong>. If you didn't request this, ignore this email.</p>
+      `;
+
+    await this.send(to, tempPassword ? 'Your KRYROS Admin Account' : 'Reset Your KRYROS Password', `
+      <div style="font-family:Arial,sans-serif;max-width:480px;margin:auto;padding:32px;background:#f9f9f9;border-radius:8px;">
+        ${content}
+        <p style="color:#999;font-size:13px;margin-top:24px;">This link expires in <strong>6 hours</strong>. If you didn't request this, ignore this email.</p>
         <p style="color:#ccc;font-size:12px;margin-top:24px;">Or copy this URL: <a href="${link}" style="color:#888;">${link}</a></p>
       </div>
     `);

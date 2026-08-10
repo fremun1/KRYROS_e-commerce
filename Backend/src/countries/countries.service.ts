@@ -141,14 +141,26 @@ export class CountriesService implements OnModuleInit {
     }
   }
 
-  @Cron(CronExpression.EVERY_HOUR)
+  @Cron(CronExpression.EVERY_5_MINUTES)
   async updateExchangeRates() {
-    this.logger.log('Updating exchange rates (Hourly Cron)...');
-    
     // Get exchange rate configuration from database
     const config = await this.prisma.exchangeRateConfig.findFirst({
       where: { isActive: true }
     });
+
+    if (!config) return;
+
+    // Check if enough time has passed since last update based on updateInterval
+    const now = new Date();
+    const lastUpdate = config.lastUpdate ? new Date(config.lastUpdate) : new Date(0);
+    const intervalMs = config.updateInterval || 3600000; // Default 1 hour
+
+    if (now.getTime() - lastUpdate.getTime() < intervalMs) {
+      // Not enough time passed, skip
+      return;
+    }
+
+    this.logger.log(`Updating exchange rates (Dynamic Interval: ${intervalMs}ms)...`);
 
     const primaryApiUrl = config?.primaryApiUrl || this.DEFAULT_PRIMARY_EXCHANGE_API;
     const fallbackApiUrl = config?.fallbackApiUrl || this.DEFAULT_FALLBACK_EXCHANGE_API;
@@ -201,8 +213,14 @@ export class CountriesService implements OnModuleInit {
           // Skip USD as it's the base
           if (country.currencyCode === 'USD') continue;
 
-          const newRate = rates[country.currencyCode];
+          let newRate = rates[country.currencyCode];
           if (newRate) {
+            // Apply markup if configured
+            if (config?.rateMarkup && config.rateMarkup > 0) {
+              const markupMultiplier = 1 + (config.rateMarkup / 100);
+              newRate = newRate * markupMultiplier;
+            }
+
             await this.prisma.country.update({
               where: { id: country.id },
               data: {

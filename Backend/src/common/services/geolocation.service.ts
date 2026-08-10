@@ -1,4 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Inject } from '@nestjs/common';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import type { Cache } from 'cache-manager';
 import axios from 'axios';
 
 export interface GeoLocationData {
@@ -18,6 +20,11 @@ export class GeolocationService {
   // ip-api: https://ip-api.com/json/<ip>
   private readonly PRIMARY_GEO_API = 'https://ipapi.co';
   private readonly FALLBACK_GEO_API = 'https://ip-api.com/json/';
+  private readonly CACHE_TTL = 300000; // 5 minutes
+
+  constructor(
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+  ) {}
 
   /**
    * Detect user's country by IP address
@@ -34,6 +41,14 @@ export class GeolocationService {
       return null;
     }
 
+    // Check cache first
+    const cacheKey = `geo:${normalizedIp}`;
+    const cached = await this.cacheManager.get<GeoLocationData>(cacheKey);
+    if (cached) {
+      this.logger.debug(`Returning cached geolocation for IP: ${normalizedIp}`);
+      return cached;
+    }
+
     // Try primary provider
     try {
       this.logger.debug(`Attempting geolocation for IP ${normalizedIp} via primary provider`);
@@ -42,7 +57,7 @@ export class GeolocationService {
       });
 
       if (response.data && response.data.country_code) {
-        return {
+        const result = {
           countryCode: response.data.country_code.toUpperCase(),
           countryName: response.data.country_name || '',
           city: response.data.city || undefined,
@@ -51,6 +66,9 @@ export class GeolocationService {
           longitude: response.data.longitude,
           timezone: response.data.timezone || undefined,
         };
+        // Cache successful result
+        await this.cacheManager.set(cacheKey, result, this.CACHE_TTL);
+        return result;
       }
     } catch (primaryError) {
       this.logger.warn(`Primary geolocation provider failed: ${primaryError.message}`);
@@ -64,7 +82,7 @@ export class GeolocationService {
       });
 
       if (response.data && response.data.countryCode) {
-        return {
+        const result = {
           countryCode: response.data.countryCode.toUpperCase(),
           countryName: response.data.country || '',
           city: response.data.city || undefined,
@@ -73,6 +91,9 @@ export class GeolocationService {
           longitude: response.data.lon,
           timezone: response.data.timezone || undefined,
         };
+        // Cache successful result
+        await this.cacheManager.set(cacheKey, result, this.CACHE_TTL);
+        return result;
       }
     } catch (fallbackError) {
       this.logger.error(`Fallback geolocation provider failed: ${fallbackError.message}`);
@@ -89,21 +110,21 @@ export class GeolocationService {
    * @returns Client IP address
    */
   getClientIp(request: any): string {
-    // Check for IP from various headers (proxy headers)
-    const forwarded = request.headers['x-forwarded-for'];
-    if (forwarded) {
-      // x-forwarded-for can contain multiple IPs, take the first one
-      return this.normalizeIp(forwarded.split(',')[0].trim());
-    }
+    // Check for IP from various headers in priority order
+    // 1. Cloudflare: cf-connecting-ip
+    // 2. AWS CloudFront / Generic Proxy: x-forwarded-for
+    // 3. Other common headers: x-real-ip, x-client-ip
+    const ip =
+      request.headers['cf-connecting-ip'] ||
+      (request.headers['x-forwarded-for'] ? request.headers['x-forwarded-for'].split(',')[0].trim() : null) ||
+      request.headers['x-real-ip'] ||
+      request.headers['x-client-ip'] ||
+      request.socket.remoteAddress ||
+      request.ip;
 
-    // Check other common proxy headers
-    const clientIp = request.headers['x-client-ip'] ||
-                     request.headers['x-real-ip'] ||
-                     request.socket.remoteAddress ||
-                     request.connection.remoteAddress ||
-                     request.ip;
-
-    return this.normalizeIp(clientIp || 'unknown');
+    const normalized = this.normalizeIp(ip || 'unknown');
+    this.logger.debug(`Detected client IP: ${normalized} (Source: ${ip})`);
+    return normalized;
   }
 
   /**
