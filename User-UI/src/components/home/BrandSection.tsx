@@ -2,16 +2,36 @@ import { useState, useEffect, useRef } from 'react';
 import { fetchBrands, ApiBrand } from '../../lib/api';
 import { normalizePageContext, getScopedBrowsePath } from '@/lib/pageContext';
 
+import { ChevronRight } from 'lucide-react';
+
 interface BrandSectionProps {
   title?: string;
+  subtitle?: string;
   limit?: number;
   pageSlug?: string;
+
+  // Layout control
+  titleAlign?: 'left' | 'center' | 'right';
+  showSeeAll?: boolean;
+  viewAllHref?: string;
+  viewAllText?: string;
+  accentColor?: string;
+  textColor?: string;
+  headerBgColor?: string;
 }
 
 export default function BrandSection({
   title = 'Top Brands',
+  subtitle,
   limit = 12,
-  pageSlug = 'shop'
+  pageSlug = 'shop',
+  titleAlign = 'left',
+  showSeeAll = false,
+  viewAllHref = '/brands',
+  viewAllText = 'See All',
+  accentColor,
+  textColor,
+  headerBgColor
 }: BrandSectionProps) {
   const [brands, setBrands] = useState<ApiBrand[]>([]);
   const [loading, setLoading] = useState(true);
@@ -91,7 +111,49 @@ export default function BrandSection({
 
   return (
     <section className="w-full max-w-7xl mx-auto px-4 py-6">
-      {title && <h2 className="text-xl font-bold mb-4 text-foreground">{title}</h2>}
+      {title && (
+        <div
+          className={
+            titleAlign === 'center'
+              ? `flex flex-col items-center justify-center text-center py-4 gap-2 ${headerBgColor ? 'mb-4 px-4 md:px-6' : 'mb-4'}`
+              : titleAlign === 'right'
+              ? `flex flex-row-reverse items-center justify-between py-3 ${headerBgColor ? 'mb-4 px-4 md:px-6' : 'mb-4'}`
+              : `flex items-center justify-between py-3 ${headerBgColor ? 'mb-4 px-4 md:px-6' : 'mb-4'}`
+          }
+          style={headerBgColor ? { backgroundColor: headerBgColor } : undefined}
+        >
+          <div className={
+            titleAlign === 'center'
+              ? 'flex flex-col items-center justify-center text-center min-w-0'
+              : titleAlign === 'right'
+              ? 'text-right min-w-0'
+              : 'min-w-0'
+          }>
+            <h2
+              className="text-xl font-bold tracking-tight text-foreground"
+              style={textColor || accentColor ? { color: textColor || accentColor } : undefined}
+            >
+              {title}
+            </h2>
+            {subtitle && (
+              <p className={`text-[13px] leading-[18px] mt-0.5 ${headerBgColor ? 'text-white/80' : 'text-muted-foreground'} ${titleAlign === 'center' ? 'text-center' : titleAlign === 'right' ? 'text-right' : 'text-left'}`}>
+                {subtitle}
+              </p>
+            )}
+          </div>
+
+          {showSeeAll && (
+            <a
+              href={viewAllHref}
+              className={`flex items-center gap-0.5 text-[14px] font-semibold hover:opacity-80 transition-colors shrink-0 whitespace-nowrap ${titleAlign === 'center' ? 'mt-2' : titleAlign === 'right' ? 'mr-4' : 'ml-4'}`}
+              style={textColor || accentColor ? { color: textColor || accentColor } : undefined}
+            >
+              {viewAllText}
+              <ChevronRight className="w-4 h-4" strokeWidth={2.5} />
+            </a>
+          )}
+        </div>
+      )}
       <div
         ref={scrollRef}
         className="flex flex-nowrap gap-3 overflow-x-auto pb-2 snap-x snap-mandatory"
