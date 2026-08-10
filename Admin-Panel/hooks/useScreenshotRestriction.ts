@@ -49,6 +49,7 @@ export function useScreenshotRestriction() {
     handleBlur: () => void;
     handleFocus: () => void;
     handleVisibilityChange: () => void;
+    handleCopy?: (e: any) => void;
   } | null>(null);
 
   const blurOverlayRef = useRef<HTMLDivElement | null>(null);

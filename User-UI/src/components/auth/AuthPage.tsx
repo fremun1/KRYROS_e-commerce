@@ -307,23 +307,25 @@ export default function AuthPage() {
   );
 
   const Logo = () => (
-    <img
-      src="/kryros-logo.png"
-      alt="KRYROS"
-      className="w-[36px] h-[36px] object-contain"
-      loading="eager"
-    />
+    <div className="flex flex-col items-center select-none">
+      <img
+        src="/kryros-logo.png"
+        alt="KRYROS"
+        className="w-[44px] h-[44px] object-contain"
+        loading="eager"
+      />
+    </div>
   );
 
-  const SupportFooter = () => (
-    <div className="text-center pt-3 pb-1 font-['Roboto'] shrink-0">
+  const SupportFooter = ({ mt = "mt-4" }: { mt?: string }) => (
+    <div className={`${mt} text-center border-t border-[#F0F0F0] pt-3 font-['Roboto'] shrink-0`}>
       <p className="text-[11px] text-[#75757A] leading-relaxed">
         Need help? Visit our <a href="#" className="text-[var(--kryros-primary)] font-medium hover:underline">Help Center</a> or contact us on
       </p>
       <p className="text-[12px] font-bold text-[#313133] mt-0.5">
         +260966423719
       </p>
-      <div className="flex items-center justify-center gap-1.5 mt-1.5">
+      <div className="flex items-center justify-center gap-1.5 mt-2">
         <span className="text-[11px] font-black uppercase tracking-[0.15em] text-[#A0A0A5]">KRYROS</span>
       </div>
     </div>
@@ -403,25 +405,24 @@ export default function AuthPage() {
               <div className="flex-grow h-px bg-[#E5E5E5]" />
             </div>
 
-            <div className="flex flex-col gap-2.5 my-0.5">
+            <div className="flex items-center justify-center gap-5 my-0.5">
               <button
                 type="button"
-                className="w-full h-[48px] border border-[#E5E5E5] rounded-[8px] bg-white flex items-center justify-center gap-2.5 text-[14px] font-medium text-[#313133] hover:bg-[#FAFAFA] active:bg-[#F0F0F0] transition-colors cursor-pointer font-['Roboto']"
+                className="w-[46px] h-[46px] rounded-full border border-[#E5E5E5] bg-white flex items-center justify-center hover:border-[var(--kryros-primary)] hover:shadow-sm active:scale-95 transition-all cursor-pointer"
               >
-                <FacebookIcon />
-                Log in with Facebook
+                <GoogleIcon />
               </button>
               <button
                 type="button"
-                className="w-full h-[48px] border border-[#E5E5E5] rounded-[8px] bg-white flex items-center justify-center gap-2.5 text-[14px] font-medium text-[#313133] hover:bg-[#FAFAFA] active:bg-[#F0F0F0] transition-colors cursor-pointer font-['Roboto']"
+                className="w-[46px] h-[46px] rounded-full border border-[#E5E5E5] bg-white flex items-center justify-center hover:border-[var(--kryros-primary)] hover:shadow-sm active:scale-95 transition-all cursor-pointer"
               >
-                <GoogleIcon />
-                Login with Google
+                <FacebookIcon />
               </button>
             </div>
 
             <p className="text-center text-[11.5px] text-[#75757A] leading-relaxed font-['Roboto'] pt-1 px-2">
-              By continuing you agree to KRYROS's <a href="#" className="text-[var(--kryros-primary)] hover:underline font-medium">Terms and Conditions</a> & <a href="#" className="text-[var(--kryros-primary)] hover:underline font-medium">Privacy Policy</a>
+              By continuing you agree to KRYROS's <br />
+              <a href="#" className="text-[var(--kryros-primary)] hover:underline font-medium">Terms and Conditions</a> & <a href="#" className="text-[var(--kryros-primary)] hover:underline font-medium">Privacy Policy</a>
             </p>
           </>
         ) : (
@@ -695,7 +696,7 @@ export default function AuthPage() {
           <p className="text-[14px] font-bold text-[#313133] mt-0.5 font-['Roboto']">{identifier}</p>
         </div>
 
-        <div className="space-y-3">
+        <div className="space-y-4">
           <div className="flex gap-2 justify-between" onPaste={handleOTPPaste}>
             {otp.map((digit, i) => (
               <input
@@ -713,7 +714,9 @@ export default function AuthPage() {
             ))}
           </div>
 
-
+          <p className="text-center text-[11.5px] text-[#75757A] leading-relaxed px-2 font-['Roboto']">
+            📧 For non-Zambia users, the code is sent to your email. Zambia users receive via SMS.
+          </p>
 
           <div className="text-center py-0.5">
             {countdown > 0 ? (
@@ -758,8 +761,8 @@ export default function AuthPage() {
   }, [step, setLocation]);
 
   const renderSuccessStep = () => (
-    <div className="flex flex-col items-center text-center">
-      <div className="w-[64px] h-[64px] bg-[var(--kryros-success)] rounded-full flex items-center justify-center mb-3 shadow-sm animate-bounce">
+    <div className="flex flex-col items-center text-center py-2">
+      <div className="w-[64px] h-[64px] bg-[var(--kryros-success)] rounded-full flex items-center justify-center mb-4 shadow-sm animate-bounce">
         <Check className="w-8 h-8 text-white" strokeWidth={3} />
       </div>
       <h2 className="text-[20px] font-extrabold text-[#313133] mb-1 font-['Roboto'] tracking-tight">Account created! 🎉</h2>
@@ -812,16 +815,13 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="h-[100dvh] w-full bg-white flex flex-col items-center font-['Roboto'] overflow-hidden py-3 px-4 select-none">
-      <div className="w-full max-w-[360px] flex-1 flex flex-col relative min-h-0">
-        {showBack && <BackButton onClick={onBack} />}
-
-        {/* TOP SPACER - balances content vertically */}
-        <div className="flex-1" />
+    <div className="h-screen h-[100dvh] w-full bg-white flex flex-col items-center justify-between font-['Roboto'] overflow-hidden py-4 px-4 select-none">
+      <div className="w-full max-w-[360px] flex-1 flex flex-col justify-between relative">
 
         {/* TOP HEADER */}
         {step !== "checking" ? (
-          <div className="w-full relative flex items-center justify-center pt-1 pb-3 shrink-0">
+          <div className="w-full relative flex items-center justify-center mb-2 shrink-0">
+            {showBack && <BackButton onClick={onBack} />}
             <Logo />
           </div>
         ) : (
@@ -829,19 +829,16 @@ export default function AuthPage() {
         )}
 
         {/* MAIN BODY */}
-        <div className="flex flex-col shrink-0">
+        <div className="flex-1 flex flex-col justify-center my-auto min-h-0">
           <NoticeBanner />
           <div key={step} className="flex flex-col" style={{ animation: "fadeSlideIn 0.3s ease-out" }}>
             {renderCurrentStepContent()}
           </div>
         </div>
 
-        {/* SPACER - pushes footer to bottom like Jumia */}
-        <div className="flex-1" />
-
         {/* SUPPORT FOOTER */}
         {step !== "checking" ? (
-          <SupportFooter />
+          <SupportFooter mt="mt-2" />
         ) : (
           <div className="h-8 shrink-0" />
         )}

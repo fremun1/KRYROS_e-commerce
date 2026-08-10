@@ -47,9 +47,9 @@ export default function GlobalGuard({ children }: { children: React.ReactNode })
       style={{ 
         userSelect: screenshotBlocked ? 'none' : 'auto', 
         WebkitUserSelect: screenshotBlocked ? 'none' : 'auto',
-        WebkitTouchCallout: screenshotBlocked ? 'none' : 'auto',
+        WebkitTouchCallout: screenshotBlocked ? 'none' : 'default',
         WebkitUserDrag: screenshotBlocked ? 'none' : 'auto'
-      }}
+      } as any}
       onContextMenu={screenshotBlocked ? (e) => e.preventDefault() : undefined}
     >
       {children}
